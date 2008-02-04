@@ -1,0 +1,211 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ev="http://www.w3.org/2001/xml-events"
+	xmlns:xf="http://www.w3.org/2002/xforms"
+	xmlns:xs="http://www.w3.org/2001/XMLSchema">
+<head>
+
+<title><xf:output model="data_model"
+	ref="instance('localized_strings')/form.title[@lang=instance('localized_strings')/current_language]" />
+</title>
+<xf:model id="submission_model" schema="#fb-schema">
+	<xf:instance id="data-instance" xmlns="">
+		<data> <form_id>template id</form_id> <Kenitalla_fbc_5 /> <Last_name_fbc_6 />
+		<Address_fbc_9 /> <Postcode_fbc_10 /> <Municipality_fbc_11 /> <Home_phone_fbc_12 />
+		<Work_phone_fbc_13 /> <Mobile_phone_fbc_14 /> <Name_address_and_phone_fbc_17 />
+		<Information_about_the_purchased_product_service_fbc_19 /> <The_dispute_fbc_20 />
+		<Claim__Argumentation_fbc_21 /> <List_of_supplied_documents_fbc_22 />
+		<Defendant_name_fbc_27 /> <Defendant_address_fbc_28 /> <Defendant_phone_fbc_29 />
+		<First_name_fbc_30 /> </data>
+	</xf:instance>
+	<xf:submission action="webdav:/files/forms/submissions/"
+		id="submit_data_submission" method="put" replace="none" />
+	<xf:bind id="bind.fbc_5" nodeset="Kenitalla_fbc_5" type="string" />
+	<xf:bind id="bind.fbc_6" nodeset="Last_name_fbc_6" type="string" />
+	<xf:bind id="bind.fbc_9" nodeset="Address_fbc_9" type="string" />
+	<xf:bind id="bind.fbc_10" nodeset="Postcode_fbc_10" type="string" />
+	<xf:bind id="bind.fbc_11" nodeset="Municipality_fbc_11" type="string" />
+	<xf:bind id="bind.fbc_12" nodeset="Home_phone_fbc_12" type="string" />
+	<xf:bind id="bind.fbc_13" nodeset="Work_phone_fbc_13" type="string" />
+	<xf:bind id="bind.fbc_14" nodeset="Mobile_phone_fbc_14" type="string" />
+	<xf:bind id="bind.fbc_17" nodeset="Name_address_and_phone_fbc_17"
+		type="string" />
+	<xf:bind id="bind.fbc_19"
+		nodeset="Information_about_the_purchased_product_service_fbc_19"
+		type="string" />
+	<xf:bind id="bind.fbc_20" nodeset="The_dispute_fbc_20" type="string" />
+	<xf:bind id="bind.fbc_21" nodeset="Claim__Argumentation_fbc_21"
+		type="string" />
+	<xf:bind id="bind.fbc_22" nodeset="List_of_supplied_documents_fbc_22"
+		type="string" />
+	<xf:bind id="bind.fbc_27" nodeset="Defendant_name_fbc_27" type="string" />
+	<xf:bind id="bind.fbc_28" nodeset="Defendant_address_fbc_28"
+		type="string" />
+	<xf:bind id="bind.fbc_29" nodeset="Defendant_phone_fbc_29"
+		type="string" />
+	<xf:bind id="bind.fbc_30" nodeset="First_name_fbc_30" type="string" />
+</xf:model>
+<xf:model id="data_model">
+	<xf:instance id="localized_strings" xmlns="">
+		<localized_strings> <default_language>en</default_language>
+		<current_language>en</current_language> <form.title lang="en">Request
+		for ruling of "kærunefndar lausafjár- og þjónustukaupa"</form.title> <page-1.label
+			lang="en">First section</page-1.label> <page-2.label lang="en">Submitted</page-2.label>
+		<page-2.info lang="en">Form submitted, thank You!</page-2.info> <fbc_5.title
+			lang="is">Simple text input</fbc_5.title> <fbc_5.title lang="en">Kenitalla:</fbc_5.title>
+		<fbc_6.title lang="is">Simple text input</fbc_6.title> <fbc_6.title
+			lang="en">Last name:</fbc_6.title> <fbc_8.text lang="en">Your
+		information:</fbc_8.text> <fbc_9.title lang="is">Simple text input</fbc_9.title> <fbc_9.title
+			lang="en">Address:</fbc_9.title> <fbc_10.title lang="is">Simple
+		text input</fbc_10.title> <fbc_10.title lang="en">Postcode:</fbc_10.title> <fbc_11.title
+			lang="is">Simple text input</fbc_11.title> <fbc_11.title lang="en">Municipality:</fbc_11.title>
+		<fbc_12.title lang="is">Simple text input</fbc_12.title> <fbc_12.title
+			lang="en">Home phone:</fbc_12.title> <fbc_13.title lang="is">Simple
+		text input</fbc_13.title> <fbc_13.title lang="en">Work phone:</fbc_13.title> <fbc_14.title
+			lang="is">Simple text input</fbc_14.title> <fbc_14.title lang="en">Mobile
+		phone:</fbc_14.title> <fbc_15.label lang="en">Section</fbc_15.label> <fbc_16.text
+			lang="en">Information about the defendant</fbc_16.text> <fbc_17.title
+			lang="is">Paragraph text input</fbc_17.title> <fbc_17.title lang="en">Name,
+		address and phone:</fbc_17.title> <fbc_17.error lang="en" /> <fbc_18.text lang="en">Complaint:</fbc_18.text>
+		<fbc_19.title lang="is">Paragraph text input</fbc_19.title> <fbc_19.title
+			lang="en">Information about the purchased product
+		/service:</fbc_19.title> <fbc_20.title lang="is">Paragraph text input</fbc_20.title>
+		<fbc_20.title lang="en">The dispute</fbc_20.title> <fbc_21.title
+			lang="is">Paragraph text input</fbc_21.title> <fbc_21.title lang="en">Claim
+		/ Argumentation:</fbc_21.title> <fbc_22.title lang="is">Paragraph text
+		input</fbc_22.title> <fbc_22.title lang="en">List of supplied
+		documents:</fbc_22.title> <fbc_24.label lang="en">Further</fbc_24.label> <fbc_26.label
+			lang="en">Submit</fbc_26.label> <fbc_27.title lang="is">Simple
+		text input</fbc_27.title> <fbc_27.title lang="en">Defendant name:</fbc_27.title> <fbc_28.title
+			lang="is">Simple text input</fbc_28.title> <fbc_28.title lang="en">Defendant
+		address:</fbc_28.title> <fbc_29.title lang="is">Simple text input</fbc_29.title> <fbc_29.title
+			lang="en">Defendant phone</fbc_29.title> <fbc_30.title lang="is">Simple
+		text input</fbc_30.title> <fbc_30.title lang="en">First name:</fbc_30.title> </localized_strings>
+	</xf:instance>
+</xf:model>
+<xs:schema id="fb-schema" />
+</head>
+<body>
+<xf:group appearance="full">
+	<xf:switch>
+		<xf:case id="fbc_1">
+			<xf:group appearance="full">
+				<xf:label model="data_model"
+					ref="instance('localized_strings')/page-1.label[@lang=instance('localized_strings')/current_language]" />
+				<div class="fbc_header_text" id="fbc_8" name="fbc_header_text">
+				<xf:output model="data_model"
+					ref="instance('localized_strings')/fbc_8.text[@lang=instance('localized_strings')/current_language]" />
+				</div>
+				<xf:input bind="bind.fbc_30" id="fbc_30">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_30.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_6" id="fbc_6">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_6.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_9" id="fbc_9">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_9.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_10" id="fbc_10">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_10.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_11" id="fbc_11">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_11.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_12" id="fbc_12">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_12.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_13" id="fbc_13">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_13.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_14" id="fbc_14">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_14.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_5" id="fbc_5">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_5.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<div class="fbc_button_area" id="fbc_2" name="fbc_button_area">
+				<xf:trigger id="fbc_24" name="fbc_button_next">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_24.label[@lang=instance('localized_strings')/current_language]" />
+					<xf:toggle case="fbc_15" ev:event="DOMActivate" />
+					<xf:refresh />
+				</xf:trigger></div>
+			</xf:group>
+		</xf:case>
+		<xf:case id="fbc_15">
+			<xf:group appearance="full">
+				<xf:label model="data_model"
+					ref="instance('localized_strings')/fbc_15.label[@lang=instance('localized_strings')/current_language]" />
+				<xf:input bind="bind.fbc_27" id="fbc_27">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_27.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<div class="fbc_header_text" id="fbc_16" name="fbc_header_text">
+				<xf:output model="data_model"
+					ref="instance('localized_strings')/fbc_16.text[@lang=instance('localized_strings')/current_language]" />
+				</div>
+				<xf:input bind="bind.fbc_28" id="fbc_28">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_28.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:textarea bind="bind.fbc_17" id="fbc_17">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_17.title[@lang=instance('localized_strings')/current_language]" />
+					<xf:alert>
+						<xf:output model="data_model"
+							ref="instance('localized_strings')/fbc_17.error[@lang=instance('localized_strings')/current_language]" />
+					</xf:alert>
+				</xf:textarea>
+				<div class="fbc_header_text" id="fbc_18" name="fbc_header_text">
+				<xf:output model="data_model"
+					ref="instance('localized_strings')/fbc_18.text[@lang=instance('localized_strings')/current_language]" />
+				</div>
+				<xf:textarea bind="bind.fbc_20" id="fbc_20">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_20.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:textarea>
+				<xf:textarea bind="bind.fbc_21" id="fbc_21">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_21.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:textarea>
+				<xf:textarea bind="bind.fbc_22" id="fbc_22">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_22.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:textarea>
+				<xf:textarea bind="bind.fbc_19" id="fbc_19">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_19.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:textarea>
+				<xf:input bind="bind.fbc_29" id="fbc_29">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_29.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<div class="fbc_button_area" id="fbc_25" name="fbc_button_area">
+				<xf:trigger id="fbc_26" name="fbc_button_submit">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_26.label[@lang=instance('localized_strings')/current_language]" />
+					<xf:send submission="submit_data_submission" />
+					<xf:toggle case="fbc_4" ev:event="DOMActivate" />
+				</xf:trigger></div>
+			</xf:group>
+		</xf:case>
+		<xf:case id="fbc_4" name="thx_page">
+			<xf:group appearance="full">
+				<xf:label model="data_model"
+					ref="instance('localized_strings')/page-2.label[@lang=instance('localized_strings')/current_language]" />
+				<xf:output model="data_model"
+					ref="instance('localized_strings')/page-2.info[@lang=instance('localized_strings')/current_language]" />
+			</xf:group>
+		</xf:case>
+	</xf:switch>
+</xf:group>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beansProjectDescription>
+	<configExtensions>
+		<configExtension>xml</configExtension>
+	</configExtensions>
+	<configs>
+	</configs>
+	<configSets>
+		<configSet>
+			<name><![CDATA[all]]></name>
+			<allowBeanDefinitionOverriding>true</allowBeanDefinitionOverriding>
+			<incomplete>false</incomplete>
+			<configs>
+				<config>/com.idega.block.form/WEB-INF/applicationContext.xml</config>
+				<config>/org.jboss.jbpm/WEB-INF/applicationContext.xml</config>
+			</configs>
+		</configSet>
+	</configSets>
+</beansProjectDescription>

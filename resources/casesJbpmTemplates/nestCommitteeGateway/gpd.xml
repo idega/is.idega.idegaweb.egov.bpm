@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-diagram name="nestSomeProcess" width="1071" height="707">
+  <node name="start" x="5" y="16" width="104" height="32">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="submitNewCase" x="24" y="97" width="125" height="39">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="sendNewCaseMessages" x="39" y="202" width="140" height="40">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="caseOverview" x="62" y="293" width="140" height="40">
+    <transition name="moreInfoNeeded">
+      <label x="-74" y="-9"/>
+      <bendpoint w1="-20" h1="46" w2="-21" h2="-41"/>
+    </transition>
+    <transition name="addComment">
+      <label x="-34" y="-9"/>
+      <bendpoint w1="105" h1="-35" w2="-110" h2="-28"/>
+    </transition>
+    <transition name="inviteDefendant">
+      <label x="-28" y="-7"/>
+    </transition>
+    <transition name="rule">
+      <label x="5" y="-10"/>
+      <bendpoint w1="82" h1="129" w2="-119" h2="-27"/>
+    </transition>
+  </node>
+  <node name="moreInfoNeeded" x="92" y="533" width="63" height="20">
+    <transition name="moreInfoNeeded">
+      <label x="-53" y="-10"/>
+    </transition>
+    <transition name="back">
+      <label x="5" y="-10"/>
+      <bendpoint w1="31" h1="-39" w2="32" h2="48"/>
+    </transition>
+  </node>
+  <node name="submitMessageToPlaintiff" x="89" y="602" width="140" height="40">
+    <transition name="">
+      <label x="5" y="-10"/>
+      <bendpoint w1="101" h1="-15" w2="-17" h2="361"/>
+    </transition>
+  </node>
+  <node name="submitAdditionalInformation" x="199" y="97" width="-1" height="40">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="additionalInformationEnd" x="423" y="93" width="148" height="40"/>
+  <node name="submitComment" x="451" y="288" width="140" height="40">
+    <transition name="toCaseOverview">
+      <label x="-14" y="1"/>
+      <bendpoint w1="-164" h1="23" w2="225" h2="18"/>
+    </transition>
+  </node>
+  <node name="addComment" x="290" y="294" width="63" height="19">
+    <transition name="addComment">
+      <label x="-32" y="-11"/>
+      <bendpoint w1="72" h1="-28" w2="-102" h2="-30"/>
+    </transition>
+    <transition name="back">
+      <label x="-17" y="-10"/>
+    </transition>
+  </node>
+  <node name="inviteDefendant" x="276" y="386" width="51" height="18">
+    <transition name="sendEmail">
+      <label x="5" y="-10"/>
+      <bendpoint w1="7" h1="-178" w2="-144" h2="0"/>
+    </transition>
+    <transition name="back">
+      <label x="5" y="-10"/>
+      <bendpoint w1="-106" h1="-19" w2="83" h2="67"/>
+    </transition>
+  </node>
+  <node name="sendEmail" x="413" y="208" width="118" height="26">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="submitCaseAnswer" x="433" y="674" width="118" height="32">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="caseAnswerEnd" x="657" y="676" width="123" height="24"/>
+  <node name="submitRuling" x="284" y="449" width="112" height="25">
+    <transition name="">
+      <label x="5" y="-10"/>
+      <bendpoint w1="236" h1="-103" w2="-128" h2="139"/>
+    </transition>
+  </node>
+  <node name="sendRulingMessages" x="636" y="206" width="136" height="27">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="processEnd" x="862" y="299" width="105" height="29"/>
+</process-diagram>

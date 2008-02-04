@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<projectDescription>
+	<name>is.idega.idegaweb.egov.bpm</name>
+	<comment>
+  </comment>
+	<projects>
+		<project>com.idega.block.form</project>
+		<project>com.idega.block.process</project>
+		<project>com.idega.block.school</project>
+		<project>com.idega.block.web2.0</project>
+		<project>com.idega.core</project>
+		<project>com.idega.documentmanager</project>
+		<project>com.idega.user</project>
+		<project>is.idega.block.family</project>
+		<project>is.idega.idegaweb.egov.application</project>
+		<project>org.apache.axis</project>
+		<project>org.chiba.web</project>
+		<project>org.jboss.jbpm</project>
+	</projects>
+	<buildSpec>
+		<buildCommand>
+			<name>org.eclipse.jdt.core.javabuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.maven.ide.eclipse.maven2Builder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+		<buildCommand>
+			<name>org.springframework.ide.eclipse.core.springbuilder</name>
+			<arguments>
+			</arguments>
+		</buildCommand>
+	</buildSpec>
+	<natures>
+		<nature>org.springframework.ide.eclipse.core.springnature</nature>
+		<nature>org.eclipse.jdt.core.javanature</nature>
+		<nature>org.maven.ide.eclipse.maven2Nature</nature>
+	</natures>
+</projectDescription>

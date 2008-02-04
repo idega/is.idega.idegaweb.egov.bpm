@@ -1,0 +1,15 @@
+<!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://www.getahead.ltd.uk/dwr//dwr20.dtd">
+
+<dwr>
+  	<allow>
+        <create creator="jsf" javascript="CasesJbpmProcessArtifacts">
+            <param name="managedBeanName" value="casesJbpmProcessArtifacts" />
+            <param name="class" value="com.idega.jbpm.exe.ProcessArtifacts" />
+            <include method="getProcessArtifactsList" />
+            <include method="getProcessTasksList" />
+            <include method="getViewDisplay" />
+        </create>
+  	</allow>
+  	<signatures>
+	</signatures>
+</dwr>
