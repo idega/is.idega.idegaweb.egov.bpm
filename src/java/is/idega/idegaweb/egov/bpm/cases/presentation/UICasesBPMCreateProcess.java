@@ -15,9 +15,9 @@ import com.idega.presentation.ui.Form;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/04 19:05:38 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/05 19:32:16 $ by $Author: civilis $
  *
  */
 public class UICasesBPMCreateProcess extends IWBaseComponent {
@@ -39,7 +39,7 @@ public class UICasesBPMCreateProcess extends IWBaseComponent {
 		//form.setMarkupAttribute("enctype", "multipart/form-data");
 		
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
-		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.cases.bundle/facelets/UICasesBPMCreateProcess.xhtml");
+		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMCreateProcess.xhtml");
 
 		div.getChildren().add(facelet);
 		

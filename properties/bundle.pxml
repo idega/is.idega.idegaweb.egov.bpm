@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pxml>
+  <map>
+    <key>
+      <name>iw_bundle_identifier</name>
+      <type>java.lang.String</type>
+      <value>is.idega.idegaweb.egov.bpm</value>
+    </key>
+    <key>
+      <name>iw_components</name>
+      <value>
+        <map />
+      </value>
+      <type>map</type>
+    </key>
+  </map>
+</pxml>
+
