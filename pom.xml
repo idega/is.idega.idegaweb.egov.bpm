@@ -35,10 +35,18 @@
       <groupId>com.idega.block.platform</groupId>
       <artifactId>com.idega.core</artifactId>
      </dependency>
+     <dependency>
+      <groupId>com.idega.block.platform</groupId>
+  	  <artifactId>com.idega.springframework</artifactId>
+    </dependency>
     <dependency>
       <groupId>com.idega.block.egov</groupId>
   	  <artifactId>is.idega.idegaweb.egov.cases</artifactId>
      </dependency>
+     <dependency>
+      <groupId>com.idega.block.egov</groupId>
+      <artifactId>is.idega.idegaweb.egov.application</artifactId>
+    </dependency>
      <dependency>
       <groupId>com.idega.block.addon</groupId>
   	  <artifactId>org.jboss.jbpm</artifactId>

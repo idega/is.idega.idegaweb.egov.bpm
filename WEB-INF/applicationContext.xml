@@ -55,4 +55,7 @@
         <property name="documentManagerFactory" ref="xformsDocumentManagerFact" />
         <property name="casesBPMDAO" ref="casesBPMDAO" />
     </bean>
+    
+    <bean id="appTypeBPM" class="is.idega.idegaweb.egov.bpm.application.ApplicationTypeBPM" scope="singleton" />
+    
 </beans>
