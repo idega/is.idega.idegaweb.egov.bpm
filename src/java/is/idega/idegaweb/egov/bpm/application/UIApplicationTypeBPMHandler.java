@@ -13,9 +13,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/05 19:32:16 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
  *
  */
 public class UIApplicationTypeBPMHandler extends Block {
@@ -36,7 +36,7 @@ public class UIApplicationTypeBPMHandler extends Block {
 		
 		if(application != null) {
 		
-//			menu.setSelectedElement("");
+			menu.setSelectedElement(getApplicationTypeBPM().getSelectedElement(application));
 		}
 		
 		Layer container = new Layer(Layer.SPAN);

@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.bundle;
 
-import is.idega.idegaweb.egov.cases.util.CaseConstants;
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMManagersCreator;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,17 +17,17 @@ import org.jbpm.graph.def.ProcessDefinition;
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.cases.data.CasesBPMBind;
-import com.idega.idegaweb.egov.bpm.cases.data.CasesBPMDAO;
+import com.idega.idegaweb.egov.bpm.data.CasesBPMBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.def.ProcessBundle;
 import com.idega.jbpm.def.ViewResource;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * 
- * Last modified: $Date: 2008/02/05 19:32:16 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
  * 
  */
 public class CasesBPMProcessBundle implements ProcessBundle {
@@ -122,11 +123,11 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	}
 
 	public IWBundle getBundle() {
-
+		bundle = null;
 		if (bundle == null) {
 			IWMainApplication iwma = IWMainApplication
 					.getIWMainApplication(FacesContext.getCurrentInstance());
-			bundle = iwma.getBundle(CaseConstants.IW_BUNDLE_IDENTIFIER);
+			bundle = iwma.getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		}
 		return bundle;
 	}
@@ -168,5 +169,10 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	public void setCaseMetaInf(Long caseCategoryId, Long caseTypeId) {
 		this.caseCategoryId = caseCategoryId;
 		this.caseTypeId = caseTypeId;
+	}
+	
+	public String getManagersType() {
+		
+		return CasesBPMManagersCreator.MANAGERS_TYPE;
 	}
 }

@@ -13,7 +13,6 @@ import javax.faces.context.FacesContext;
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
-import org.jbpm.taskmgmt.def.Task;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 
 import com.idega.business.IBOLookup;
@@ -34,9 +33,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/04 19:05:38 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 

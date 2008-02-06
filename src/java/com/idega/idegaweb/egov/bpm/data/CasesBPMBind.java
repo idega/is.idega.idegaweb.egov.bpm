@@ -1,4 +1,4 @@
-package com.idega.idegaweb.egov.bpm.cases.data;
+package com.idega.idegaweb.egov.bpm.data;
 
 
 import java.io.Serializable;
@@ -14,7 +14,7 @@ import javax.persistence.Table;
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/02/05 19:32:16 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
  */
 @Entity
 @Table(name="CASES_JBPM_BINDINGS")

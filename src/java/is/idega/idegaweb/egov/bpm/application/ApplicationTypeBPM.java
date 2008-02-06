@@ -17,6 +17,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import com.idega.idegaweb.egov.bpm.data.AppBPMBind;
+import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
 import com.idega.jbpm.data.dao.BpmBindsDAO;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.DropdownMenu;
@@ -25,15 +27,16 @@ import com.idega.presentation.ui.DropdownMenu;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/02/05 19:32:16 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
 
 	private ApplicationContext ctx;
 	private BpmBindsDAO bpmBindsDAO;
+	private AppBPMDAO appBPMDAO;
 	public static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
 	
@@ -52,10 +55,40 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		return appType;
 	}
 
-	public void save(IWContext iwc, Application app) {
+	public void beforeStore(IWContext iwc, Application app) {
+	}
+	
+	public boolean afterStore(IWContext iwc, Application app) {
 		
 		String procDef = iwc.getParameter(UIApplicationTypeBPMHandler.menuParam);
 		System.out.println("saving ..BPM... "+procDef);
+		System.out.println("saving ..BPM..appid. "+app.getPrimaryKey());
+		
+		Long procDefId = new Long(procDef);
+		
+		if(procDefId == -1)
+			return false;
+
+		Integer appId = getAppId(app.getPrimaryKey());
+		AppBPMBind bind = getAppBPMDAO().find(AppBPMBind.class, appId);
+		
+		if(bind == null) {
+			bind = new AppBPMBind();
+			bind.setApplicationId(appId);
+		}
+		
+		bind.setProcDefId(procDefId);
+		getAppBPMDAO().persist(bind);
+		
+		return false;
+	}
+	
+	private Integer getAppId(Object pk) {
+		
+		if(pk instanceof Integer)
+			return (Integer)pk;
+		else
+			return new Integer(pk.toString());
 	}
 
 	public void setApplicationContext(ApplicationContext applicationcontext)
@@ -85,7 +118,6 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 
 		List<ProcessDefinition> procDefs = getBpmBindsDAO().getAllManagersTypeProcDefs();
 		
-		
 		if(procDefs != null) {
 			
 			for (ProcessDefinition processDefinition : procDefs) {
@@ -93,5 +125,26 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 				menu.addMenuElement(String.valueOf(processDefinition.getId()), processDefinition.getName());
 			}
 		}
+	}
+	
+	public String getSelectedElement(Application app) {
+		
+		Integer appId = getAppId(app.getPrimaryKey());
+		AppBPMBind bind = getAppBPMDAO().find(AppBPMBind.class, appId);
+		
+		if(bind != null) {
+			
+			return String.valueOf(bind.getProcDefId());
+		}
+		
+		return "-1";
+	}
+
+	public AppBPMDAO getAppBPMDAO() {
+		return appBPMDAO;
+	}
+
+	public void setAppBPMDAO(AppBPMDAO appBPMDAO) {
+		this.appBPMDAO = appBPMDAO;
 	}
 }
