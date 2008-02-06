@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xml>
+  <page type="egov_bpm">
+  	<region id="content" label="content">
+  		<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>content</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    	<!--  
+    	<module id="" class="com.idega.block.form.presentation.FormViewer" />
+    	-->
+    </region>
+    <region id="toolbar" label="toolbar">
+    	<module id="" class="com.idega.block.navigation.presentation.NavigationList">
+    		<property>
+    			<name>:method:1:implied:void:setAddStyleClassOnSelectedItem:boolean:</name>
+    			<value>N</value>
+    			<type>java.lang.String</type>
+    		</property>
+    		<property>
+				<name>:method:1:implied:void:setShowRoot:boolean:</name>
+				<value>Y</value>
+				<type>java.lang.String</type>
+			</property>
+			<property>
+				<name>:method:1:implied:void:setDisplaySelectedPageAsLink:boolean:</name>
+				<value>Y</value>
+				<type>java.lang.String</type>
+			</property>
+    	</module>
+    </region>
+    <region id="sidebar" label="sidebar">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>sidebar</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+    <region id="breadcrumbcontainer" label="breadcrumbcontainer">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>breadcrumb</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    	<module id="" class="com.idega.block.navigation.presentation.NavigationBreadCrumbsList" />
+    </region>
+    <region id="footer" label="footer">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>footer</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+    <region id="sidebar_title" label="sidebar_title">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>sidebar_title</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+    <region id="site_slogan" label="site_slogan">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>site_slogan</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+    <region id="site_title" label="site_title">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>site_title</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+    <region id="title" label="title">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>title</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+    <region id="toolbar" label="toolbar">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>toolbar</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+    <region id="logo" label="logo">
+    	<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
+      		<property>
+        		<name>:method:1:implied:void:setApplicationPropertyKey:java.lang.String:</name>
+        		<value>logo</value>
+        		<type>java.lang.String</type>
+      		</property>
+    	</module>
+    </region>
+  </page>
+</xml>

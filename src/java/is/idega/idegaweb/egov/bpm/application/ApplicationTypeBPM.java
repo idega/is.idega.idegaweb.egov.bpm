@@ -1,10 +1,12 @@
 package is.idega.idegaweb.egov.bpm.application;
 
-import java.util.List;
-
 import is.idega.idegaweb.egov.application.business.ApplicationType;
 import is.idega.idegaweb.egov.application.business.ApplicationTypePluggedInEvent;
 import is.idega.idegaweb.egov.application.data.Application;
+
+import java.rmi.RemoteException;
+import java.util.Collection;
+import java.util.List;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
@@ -17,6 +19,12 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import com.idega.core.builder.business.BuilderService;
+import com.idega.core.builder.business.BuilderServiceFactory;
+import com.idega.core.builder.data.ICPage;
+import com.idega.core.builder.data.ICPageHome;
+import com.idega.data.IDOLookup;
+import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.AppBPMBind;
 import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
 import com.idega.jbpm.data.dao.BpmBindsDAO;
@@ -27,9 +35,9 @@ import com.idega.presentation.ui.DropdownMenu;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/06 18:19:53 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -39,6 +47,7 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	private AppBPMDAO appBPMDAO;
 	public static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
+	private static final String egovBPMPageType = "egov_bpm";
 	
 	public UIComponent getHandlerComponent(FacesContext ctx, Application app) {
 		
@@ -56,13 +65,13 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	}
 
 	public void beforeStore(IWContext iwc, Application app) {
+		
+		app.setElectronic(true);
 	}
 	
 	public boolean afterStore(IWContext iwc, Application app) {
 		
 		String procDef = iwc.getParameter(UIApplicationTypeBPMHandler.menuParam);
-		System.out.println("saving ..BPM... "+procDef);
-		System.out.println("saving ..BPM..appid. "+app.getPrimaryKey());
 		
 		Long procDefId = new Long(procDef);
 		
@@ -75,10 +84,17 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		if(bind == null) {
 			bind = new AppBPMBind();
 			bind.setApplicationId(appId);
+			bind.setProcDefId(procDefId);
+			getAppBPMDAO().persist(bind);
+			
+		} else {
+			
+			if(!bind.getProcDefId().equals(procDefId)) {
+				
+				bind.setProcDefId(procDefId);
+				getAppBPMDAO().flush();
+			}
 		}
-		
-		bind.setProcDefId(procDefId);
-		getAppBPMDAO().persist(bind);
 		
 		return false;
 	}
@@ -146,5 +162,52 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 
 	public void setAppBPMDAO(AppBPMDAO appBPMDAO) {
 		this.appBPMDAO = appBPMDAO;
+	}
+	
+	protected BuilderService getBuilderService(IWApplicationContext iwac) {
+		
+		try {
+			return BuilderServiceFactory.getBuilderService(iwac);
+		} catch (RemoteException e) {
+			throw new RuntimeException("Failed to resolve builder service", e);
+		}
+	}
+
+	public String getUrl(IWApplicationContext iwac, Application app) {
+		
+		Collection<ICPage> icpages = getPages(egovBPMPageType);
+		
+		ICPage icPage = null;
+		
+		if(icpages == null || icpages.isEmpty()) {
+			
+//			TODO: create egov bpm page, as not found
+			throw new RuntimeException("No egov bpm page found yet");			
+		}
+		
+		if(icPage == null)
+			icPage = icpages.iterator().next();
+		
+		String uri = icPage.getDefaultPageURI();
+		
+		if(!uri.startsWith("/pages"))
+			uri = "/pages"+uri;
+		
+		return iwac.getIWMainApplication().getTranslatedURIWithContext(uri);
+	}
+	
+	public Collection<ICPage> getPages(String pageSubType) {
+		
+		try {
+		
+			ICPageHome home = (ICPageHome) IDOLookup.getHome(ICPage.class);
+			@SuppressWarnings("unchecked")
+			Collection<ICPage> icpages = home.findBySubType(pageSubType, false);
+			
+			return icpages;
+			
+		} catch (Exception e) {
+			throw new RuntimeException("Exception while resolving icpages by subType: "+pageSubType, e);
+		}
 	}
 }
