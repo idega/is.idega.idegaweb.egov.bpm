@@ -33,9 +33,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/07 13:57:05 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 
@@ -109,7 +109,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			ctx.close();
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 	
@@ -152,7 +152,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 	    	submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
 			
 		} finally {
-			ctx.close();
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 }

@@ -13,8 +13,8 @@
 			mapping="string:plaintiffPurchaseInformation" /> <actionTaken
 			mapping="string:actionTaken" /> </data>
 	</xf:instance>
-	<xf:submission action="webdav:/files/forms/submissions/"
-		id="submit_data_submission" method="put" replace="none" />
+	<xf:submission action="xformsBPM:/nouri"
+                id="submit_data_submission" method="post" replace="none"/>
 	<xf:bind id="bind.fbc_7" nodeset="bind.fbc_7" />
 	<xf:bind id="bind.fbc_8" nodeset="bind.fbc_8" />
 	<xf:bind id="actionTaken" nodeset="actionTaken" type="string" />

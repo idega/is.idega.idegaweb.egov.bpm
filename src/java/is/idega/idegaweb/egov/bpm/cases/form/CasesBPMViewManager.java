@@ -13,6 +13,7 @@ import javax.faces.context.FacesContext;
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.taskmgmt.def.Task;
+import org.jbpm.taskmgmt.def.TaskMgmtDefinition;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 
 import com.idega.block.form.process.XFormsView;
@@ -38,9 +39,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/02/06 11:49:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/07 13:57:04 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -83,13 +84,17 @@ public class CasesBPMViewManager implements ViewManager {
 			
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
 			
+			System.out.println("name: "+pd.getName());
+			
 //			Task initTask = pd.getTaskMgmtDefinition().getTask(initTaskName);
-			Task initTask = pd.getTaskMgmtDefinition().getStartTask();
+			TaskMgmtDefinition mgdef = pd.getTaskMgmtDefinition();
+			Task initTask = mgdef.getStartTask();
 			
 			System.out.println("start task: "+initTask);
 			
 //			View view = getViewToTaskBinder().getView(initTask.getId());
 			View view = getBpmFactory().getView(initTask.getId(), true);
+			System.out.println("	view identifier: "+view.getViewId());
 			
 //			move this to protected method setupInitView(view:View):void
 			Map<String, String> parameters = new HashMap<String, String>(4);
@@ -111,7 +116,7 @@ public class CasesBPMViewManager implements ViewManager {
 			
 		} finally {
 			
-			ctx.close();
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 	
@@ -163,7 +168,7 @@ public class CasesBPMViewManager implements ViewManager {
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			ctx.close();
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 	

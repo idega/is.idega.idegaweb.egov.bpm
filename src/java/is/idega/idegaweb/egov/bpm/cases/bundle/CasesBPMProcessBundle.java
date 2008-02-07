@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import javax.faces.context.FacesContext;
 
 import org.jbpm.graph.def.ProcessDefinition;
+import org.jbpm.taskmgmt.def.Task;
 
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWBundle;
@@ -25,9 +26,9 @@ import com.idega.jbpm.def.ViewResource;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * 
- * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/07 13:57:05 $ by $Author: civilis $
  * 
  */
 public class CasesBPMProcessBundle implements ProcessBundle {
@@ -38,10 +39,12 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	private static final String dotRegExp = "\\.";
 	private static final String taskPrefix = "task";
 	
+	private static final String initTaskProp = "init_task";
+	private static final String taskNamePostfixProp = ".name";
+	
 	private static final String XFFileNamePropertyPostfix = ".view.xforms.file_name";
 
 	private IWBundle bundle;
-	private List<ViewResource> viewResources;
 	private String templateBundleLocationWithinBundle;
 	private DocumentManagerFactory documentManagerFactory;
 	private CasesBPMDAO casesBPMDAO;
@@ -76,50 +79,41 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	public List<ViewResource> getViewResources(String taskName)
 			throws IOException {
 
-		if (viewResources == null) {
+		String templateBundleLocationWithinBundle = getTemplateBundleLocationWithinBundle();
 
-			String templateBundleLocationWithinBundle = getTemplateBundleLocationWithinBundle();
+		if (templateBundleLocationWithinBundle == null)
+			throw new IllegalStateException(
+					"No templateBundleLocationWithinBundle set");
 
-			if (templateBundleLocationWithinBundle == null)
-				throw new IllegalStateException(
-						"No templateBundleLocationWithinBundle set");
+		String formsPathWithin = templateBundleLocationWithinBundle	+ formsPath;
+		Properties properties = resolveBundleProperties();
 
-			String formsPathWithin = templateBundleLocationWithinBundle	+ formsPath;
+		for (Entry<Object, Object> entry : properties.entrySet()) {
 
-			InputStream propertiesIs = bundle
-					.getResourceInputStream(templateBundleLocationWithinBundle
-							+ propertiesFileName);
+			if (taskName.equals(entry.getValue())) {
 
-			Properties properties = new Properties();
-			properties.load(propertiesIs);
+				String key = (String) entry.getKey();
+				
+				if(!key.startsWith(taskPrefix))
+					continue;
+				
+				String taskIdentifier = key.split(dotRegExp)[0];
+				String fileName = properties.getProperty(taskIdentifier
+						+ XFFileNamePropertyPostfix);
 
-			for (Entry<Object, Object> entry : properties.entrySet()) {
+				CasesBPMBundledFormViewResource resource = new CasesBPMBundledFormViewResource();
+				resource.setTaskName(taskName);
+				resource.setDocumentManagerFactory(getDocumentManagerFactory());
+				String pathWithinBundle = formsPathWithin + fileName;
+				resource.setResourceLocation(getBundle(), pathWithinBundle);
 
-				if (taskName.equals(entry.getValue())) {
-
-					String key = (String) entry.getKey();
-					
-					if(!key.startsWith(taskPrefix))
-						continue;
-					
-					String taskIdentifier = key.split(dotRegExp)[0];
-					String fileName = properties.getProperty(taskIdentifier
-							+ XFFileNamePropertyPostfix);
-
-					CasesBPMBundledFormViewResource resource = new CasesBPMBundledFormViewResource();
-					resource.setTaskName(taskName);
-					resource.setDocumentManagerFactory(getDocumentManagerFactory());
-					String pathWithinBundle = formsPathWithin + fileName;
-					resource.setResourceLocation(getBundle(), pathWithinBundle);
-
-					viewResources = new ArrayList<ViewResource>(1);
-					viewResources.add(resource);
-					break;
-				}
+				ArrayList<ViewResource> viewResources = new ArrayList<ViewResource>(1);
+				viewResources.add(resource);
+				return viewResources;
 			}
 		}
 
-		return viewResources;
+		return null;
 	}
 
 	public IWBundle getBundle() {
@@ -145,7 +139,29 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 		this.templateBundleLocationWithinBundle = templateBundleLocationWithinBundle;
 	}
 	
+	private Properties resolveBundleProperties() throws IOException {
+		
+		InputStream propertiesIs = bundle
+		.getResourceInputStream(templateBundleLocationWithinBundle
+				+ propertiesFileName);
+
+		Properties properties = new Properties();
+		properties.load(propertiesIs);
+		return properties;
+	}
+	
 	public void configure(ProcessDefinition pd) {
+		
+		try {
+			Properties properties = resolveBundleProperties();
+			String initTaskKey = properties.getProperty(initTaskProp);
+			String initTaskName = properties.getProperty(initTaskKey+taskNamePostfixProp);
+			Task initTask = pd.getTaskMgmtDefinition().getTask(initTaskName);
+			pd.getTaskMgmtDefinition().setStartTask(initTask);
+			
+		} catch (IOException e) {
+			throw new RuntimeException("IOException while accessing process bundle properties");
+		}
 
 		if(caseCategoryId != null && caseTypeId != null) {
 		

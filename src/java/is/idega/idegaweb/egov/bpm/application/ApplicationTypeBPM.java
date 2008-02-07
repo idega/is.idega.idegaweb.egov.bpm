@@ -28,16 +28,18 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.AppBPMBind;
 import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
 import com.idega.jbpm.data.dao.BpmBindsDAO;
+import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.DropdownMenu;
+import com.idega.util.URIUtil;
 
 /**
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/02/06 18:19:53 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/07 13:57:04 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -192,6 +194,17 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		
 		if(!uri.startsWith("/pages"))
 			uri = "/pages"+uri;
+		
+		Integer appId = getAppId(app.getPrimaryKey());
+		
+		AppBPMBind bind = getAppBPMDAO().find(AppBPMBind.class, appId);
+		
+		if(bind == null)
+			throw new RuntimeException("No application bpm bind found for app requested. App id: "+app.getPrimaryKey());
+		
+		URIUtil uriUtil = new URIUtil(uri);
+		uriUtil.setParameter(BPMTaskViewer.PROCESS_DEFINITION_PROPERTY, String.valueOf(bind.getProcDefId()));
+		uri = uriUtil.getUri();
 		
 		return iwac.getIWMainApplication().getTranslatedURIWithContext(uri);
 	}
