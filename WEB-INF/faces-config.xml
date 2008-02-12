@@ -42,4 +42,22 @@
       </idegaweb-info>
     </component-extension>
   </component>
+  <component>
+	<component-type>CasesListViewer</component-type>
+	<component-class>is.idega.idegaweb.egov.bpm.cases.presentation.CasesListViewer</component-class>
+  </component>
+  <component>
+	<component-type>CasesTypesSelector</component-type>
+	<component-class>is.idega.idegaweb.egov.bpm.cases.presentation.CasesTypesSelector</component-class>
+  </component>
+  <component>
+    <component-type>com.idega.UICasesBPMAssets</component-type>
+    <component-class>is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets</component-class>
+    <component-extension>
+      <idegaweb-info>
+        <builder-visible>true</builder-visible>
+        <object-type>jsf.uicomponent</object-type>
+      </idegaweb-info>
+    </component-extension>
+  </component>
 </faces-config>

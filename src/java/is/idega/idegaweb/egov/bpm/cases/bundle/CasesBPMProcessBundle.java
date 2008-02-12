@@ -18,7 +18,7 @@ import org.jbpm.taskmgmt.def.Task;
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CasesBPMBind;
+import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.def.ProcessBundle;
 import com.idega.jbpm.def.ViewResource;
@@ -26,9 +26,9 @@ import com.idega.jbpm.def.ViewResource;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * 
- * Last modified: $Date: 2008/02/07 13:57:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:24 $ by $Author: civilis $
  * 
  */
 public class CasesBPMProcessBundle implements ProcessBundle {
@@ -165,7 +165,7 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 
 		if(caseCategoryId != null && caseTypeId != null) {
 		
-			CasesBPMBind bind = new CasesBPMBind();
+			CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
 			bind.setCasesCategoryId(caseCategoryId);
 			bind.setCasesTypeId(caseTypeId);
 			bind.setProcDefId(pd.getId());

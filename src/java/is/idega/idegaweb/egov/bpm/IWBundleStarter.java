@@ -6,9 +6,9 @@ import com.idega.idegaweb.IWBundleStartable;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/05 19:32:16 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
  *
  */
 public class IWBundleStarter implements IWBundleStartable {
@@ -17,7 +17,6 @@ public class IWBundleStarter implements IWBundleStartable {
 
 	public void start(IWBundle starterBundle) {
 		
-		System.out.println("________________________________________________starting bPM EGOV");
 		EgovBPMViewManager viewManager = EgovBPMViewManager.getInstance(starterBundle.getApplication());
 		viewManager.initializeStandardNodes(starterBundle);
 	}

@@ -14,35 +14,32 @@ import javax.persistence.Table;
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
  */
 @Entity
-@Table(name="CASES_JBPM_BINDINGS")
+@Table(name="BPM_CASETYPES_PROCDEF")
 @NamedQueries(
 		{
-			@NamedQuery(name=CasesBPMBind.CASES_PROCESSES_DEFINITIONS_QUERY_NAME, query="select pd.id, pd.name from org.jbpm.graph.def.ProcessDefinition pd, CasesBPMBind cb where pd.id = cb.procDefId"),
-			@NamedQuery(name=CasesBPMBind.CASES_PROCESSES_GET_ALL_QUERY_NAME, query="from CasesBPMBind")
+			@NamedQuery(name=CaseTypesProcDefBind.CASES_PROCESSES_DEFINITIONS_QUERY_NAME, query="select pd.id, pd.name from org.jbpm.graph.def.ProcessDefinition pd, CaseTypesProcDefBind ctpdb where pd.id = ctpdb.procDefId"),
+			@NamedQuery(name=CaseTypesProcDefBind.CASES_PROCESSES_GET_ALL_QUERY_NAME, query="from CaseTypesProcDefBind")
 		}
 )
-public class CasesBPMBind implements Serializable {
+public class CaseTypesProcDefBind implements Serializable {
 	
 	private static final long serialVersionUID = -3222584305636229751L;
 	
-	public static final String CASES_PROCESSES_DEFINITIONS_QUERY_NAME = "CasesBPMBind.simpleCasesProcessesDefinitionsQuery";
-	public static final String CASES_PROCESSES_GET_ALL_QUERY_NAME = "CasesBPMBind.getAllQuery";
+	public static final String CASES_PROCESSES_DEFINITIONS_QUERY_NAME = "CaseTypesProcDefBind.simpleCasesProcessesDefinitionsQuery";
+	public static final String CASES_PROCESSES_GET_ALL_QUERY_NAME = "CaseTypesProcDefBind.getAllQuery";
 
 	@Id
-	@Column(name="process_definition_id")
+	@Column(name="process_definition_id", nullable=false)
     private Long procDefId;
 	
-	@Column(name="cases_category_id")
+	@Column(name="cases_category_id", nullable=false)
 	private Long casesCategoryId;
 	
-	@Column(name="cases_type_id")
+	@Column(name="cases_type_id", nullable=false)
 	private Long casesTypeId;
-	
-	@Column(name="init_task_name")
-	private String initTaskName;
 	
 	public Long getCasesCategoryId() {
 		return casesCategoryId;
@@ -60,7 +57,7 @@ public class CasesBPMBind implements Serializable {
 		this.casesTypeId = casesTypeId;
 	}
 
-	public CasesBPMBind() { }
+	public CaseTypesProcDefBind() { }
 
 	public Long getProcDefId() {
 		return procDefId;
@@ -68,13 +65,5 @@ public class CasesBPMBind implements Serializable {
 
 	public void setProcDefId(Long procDefId) {
 		this.procDefId = procDefId;
-	}
-
-	public String getInitTaskName() {
-		return initTaskName;
-	}
-
-	public void setInitTaskName(String initTaskName) {
-		this.initTaskName = initTaskName;
 	}
 }

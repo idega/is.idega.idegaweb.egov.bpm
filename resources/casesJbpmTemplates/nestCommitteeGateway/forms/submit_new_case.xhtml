@@ -3,22 +3,22 @@
 	xmlns:xf="http://www.w3.org/2002/xforms"
 	xmlns:xs="http://www.w3.org/2001/XMLSchema">
 <head>
-
 <title><xf:output model="data_model"
 	ref="instance('localized_strings')/form.title[@lang=instance('localized_strings')/current_language]" />
 </title>
 <xf:model id="submission_model" schema="#fb-schema">
 	<xf:instance id="data-instance" xmlns="">
-		<data> <form_id>template id</form_id> <Kenitalla_fbc_5 /> <Last_name_fbc_6 />
-		<Address_fbc_9 /> <Postcode_fbc_10 /> <Municipality_fbc_11 /> <Home_phone_fbc_12 />
-		<Work_phone_fbc_13 /> <Mobile_phone_fbc_14 /> <Name_address_and_phone_fbc_17 />
-		<Information_about_the_purchased_product_service_fbc_19 /> <The_dispute_fbc_20 />
-		<Claim__Argumentation_fbc_21 /> <List_of_supplied_documents_fbc_22 />
+		<data> <form_id>template_id</form_id> <Kenitalla_fbc_5 /> <Last_name_fbc_6
+			mapping="string:plaintiffLastName" /> <Address_fbc_9 /> <Postcode_fbc_10 />
+		<Municipality_fbc_11 /> <Home_phone_fbc_12 /> <Work_phone_fbc_13 /> <Mobile_phone_fbc_14 />
+		<Name_address_and_phone_fbc_17 /> <Information_about_the_purchased_product_service_fbc_19 />
+		<The_dispute_fbc_20 /> <Claim__Argumentation_fbc_21 /> <List_of_supplied_documents_fbc_22 />
 		<Defendant_name_fbc_27 /> <Defendant_address_fbc_28 /> <Defendant_phone_fbc_29 />
-		<First_name_fbc_30 /> </data>
+		<First_name_fbc_30 mapping="string:plaintiffFirstName" /> <Simple_text_input_fbc_31 />
+		</data>
 	</xf:instance>
-	<xf:submission action="xformsBPM:/nouri"
-                id="submit_data_submission" method="post" replace="none"/>
+	<xf:submission action="xformsBPM:/nouri" id="submit_data_submission"
+		method="post" replace="none" />
 	<xf:bind id="bind.fbc_5" nodeset="Kenitalla_fbc_5" type="string" />
 	<xf:bind id="bind.fbc_6" nodeset="Last_name_fbc_6" type="string" />
 	<xf:bind id="bind.fbc_9" nodeset="Address_fbc_9" type="string" />
@@ -43,6 +43,8 @@
 	<xf:bind id="bind.fbc_29" nodeset="Defendant_phone_fbc_29"
 		type="string" />
 	<xf:bind id="bind.fbc_30" nodeset="First_name_fbc_30" type="string" />
+	<xf:bind id="bind.fbc_31" nodeset="Simple_text_input_fbc_31"
+		type="string" />
 </xf:model>
 <xf:model id="data_model">
 	<xf:instance id="localized_strings" xmlns="">
@@ -79,7 +81,9 @@
 			lang="is">Simple text input</fbc_28.title> <fbc_28.title lang="en">Defendant
 		address:</fbc_28.title> <fbc_29.title lang="is">Simple text input</fbc_29.title> <fbc_29.title
 			lang="en">Defendant phone</fbc_29.title> <fbc_30.title lang="is">Simple
-		text input</fbc_30.title> <fbc_30.title lang="en">First name:</fbc_30.title> </localized_strings>
+		text input</fbc_30.title> <fbc_30.title lang="en">First name:</fbc_30.title> <fbc_31.title
+			lang="is">Simple text input</fbc_31.title> <fbc_31.title lang="en">Simple
+		text input</fbc_31.title> </localized_strings>
 	</xf:instance>
 </xf:model>
 <xs:schema id="fb-schema" />
@@ -130,6 +134,10 @@
 				<xf:input bind="bind.fbc_5" id="fbc_5">
 					<xf:label model="data_model"
 						ref="instance('localized_strings')/fbc_5.title[@lang=instance('localized_strings')/current_language]" />
+				</xf:input>
+				<xf:input bind="bind.fbc_31" id="fbc_31">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_31.title[@lang=instance('localized_strings')/current_language]" />
 				</xf:input>
 				<div class="fbc_button_area" id="fbc_2" name="fbc_button_area">
 				<xf:trigger id="fbc_24" name="fbc_button_next">

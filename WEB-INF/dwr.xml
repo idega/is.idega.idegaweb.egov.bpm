@@ -9,6 +9,10 @@
             <include method="getProcessTasksList" />
             <include method="getViewDisplay" />
         </create>
+        <create creator="jsf" javascript="CasesBPMAssets">
+	    	<param name="managedBeanName" value="casesBPMAssets" />
+	    	<param name="class" value="is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMAssetsEngineBean" />
+    	</create>
   	</allow>
   	<signatures>
 	</signatures>

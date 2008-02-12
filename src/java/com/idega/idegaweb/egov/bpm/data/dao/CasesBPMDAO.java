@@ -3,17 +3,17 @@ package com.idega.idegaweb.egov.bpm.data.dao;
 import java.util.List;
 
 import com.idega.core.persistence.GenericDao;
-import com.idega.idegaweb.egov.bpm.data.CasesBPMBind;
+import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
  */
 public interface CasesBPMDAO extends GenericDao {
 
-	public abstract List<CasesBPMBind> getAllCasesJbpmBinds();
+	public abstract List<CaseTypesProcDefBind> getAllCaseTypesProcDefBinds();
 	
-	public abstract List<Object[]> getCasesProcessDefinitions();
+	public abstract List<Object[]> getCaseTypesProcessDefinitions();
 }

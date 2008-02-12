@@ -12,15 +12,14 @@ import javax.persistence.Table;
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
  */
 @Entity
-@Table(name="APP_BPM_BINDINGS")
-public class AppBPMBind implements Serializable {
+@Table(name="BPM_APP_PROCDEF")
+public class AppProcDefBind implements Serializable {
 	
 	private static final long serialVersionUID = -3413662786833844673L;
 
-	
 	@Column(name="process_definition_id", nullable=false)
     private Long procDefId;
 	
@@ -28,7 +27,7 @@ public class AppBPMBind implements Serializable {
 	@Column(name="application_id", nullable=false)
 	private Integer applicationId;
 	
-	public AppBPMBind() { }
+	public AppProcDefBind() { }
 
 	public Long getProcDefId() {
 		return procDefId;

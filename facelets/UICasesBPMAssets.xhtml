@@ -1,0 +1,49 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html	xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:t="http://myfaces.apache.org/tomahawk"
+		xmlns:ws="http://xmlns.idega.com/com.idega.workspace"
+		xmlns:eb="http://xmlns.idega.com/is.idega.idegaweb.egov.cases.bpm"
+>
+
+		<h:form id="casesBPMAssets">
+			<script type="text/javascript">
+				window.addEvent('domready', function() {
+					getLocalizationForCases();
+					initializeActions(true);
+				});
+			</script>
+			
+			<t:div id="mainCasesContainer">
+				
+				<t:div>
+					<eb:CasesTypesSelector />
+				</t:div>
+				<t:div styleClass="spacer"/>
+				
+				<t:div id="tabsContainer" forceId="true" style="float: left;">
+					<t:panelTabbedPane selectedIndex="0" serverSideTabSwitch="true" id="tabsPanel">
+						<t:panelTab label="#{localizedStrings['com.idega.block.process']['my_cases']}">
+							<t:div styleClass="casesListViewerContainerStyle">
+								<eb:CasesListViewer />
+							</t:div>
+						</t:panelTab>
+						<t:panelTab label="#{localizedStrings['com.idega.block.process']['processed']}">
+						</t:panelTab>
+						<t:panelTab label="#{localizedStrings['com.idega.block.process']['closed']}">
+						</t:panelTab>
+					</t:panelTabbedPane>
+				</t:div>
+				
+				<t:div id="buttonsContainer" forceId="true" style="float: left;">
+					<t:commandButton id="searchForCasesButton" forceId="true" type="button" onclick="openTableFilter()" title="#{localizedStrings['com.idega.block.process']['search']}" value="#{localizedStrings['com.idega.block.process']['search']}"></t:commandButton>
+					<t:commandButton id="clearSearchForCasesButton" forceId="true" type="button" onclick="clearSearchResults()" title="#{localizedStrings['com.idega.block.process']['clear']}" value="#{localizedStrings['com.idega.block.process']['clear']}"></t:commandButton>
+				</t:div>
+				<t:div styleClass="spacer"/>
+				
+				<t:div id="caseOverviewContainer" forceId="true" />
+			</t:div>
+		</h:form>
+</html>

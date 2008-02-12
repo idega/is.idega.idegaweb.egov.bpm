@@ -23,7 +23,7 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWApplicationContext;
-import com.idega.idegaweb.egov.bpm.data.CasesBPMBind;
+import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.data.dao.BpmBindsDAO;
 import com.idega.jbpm.def.View;
@@ -39,9 +39,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/02/07 13:57:04 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -75,7 +75,7 @@ public class CasesBPMViewManager implements ViewManager {
 		
 		try {
 //			TODO: make this generic bind
-			CasesBPMBind bind = getBpmBindsDAO().find(CasesBPMBind.class, processDefinitionId);
+			CaseTypesProcDefBind bind = getBpmBindsDAO().find(CaseTypesProcDefBind.class, processDefinitionId);
 			
 			//String initTaskName = bind.getInitTaskName();
 			

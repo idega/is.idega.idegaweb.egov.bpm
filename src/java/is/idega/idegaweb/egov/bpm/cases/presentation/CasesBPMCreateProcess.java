@@ -27,9 +27,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/02/06 11:49:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
  *
  */
 public class CasesBPMCreateProcess {
@@ -205,7 +205,7 @@ public class CasesBPMCreateProcess {
 		addDefaultSelectItem(casesProcessesDefinitions);
 		
 		try {
-			List<Object[]> casesProcesses = getCasesBPMDAO().getCasesProcessDefinitions();
+			List<Object[]> casesProcesses = getCasesBPMDAO().getCaseTypesProcessDefinitions();
 			
 			if(casesProcesses == null)
 				return casesProcessesDefinitions;

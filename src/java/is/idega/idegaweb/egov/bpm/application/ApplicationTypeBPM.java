@@ -25,7 +25,7 @@ import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
-import com.idega.idegaweb.egov.bpm.data.AppBPMBind;
+import com.idega.idegaweb.egov.bpm.data.AppProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
 import com.idega.jbpm.data.dao.BpmBindsDAO;
 import com.idega.jbpm.presentation.BPMTaskViewer;
@@ -37,9 +37,9 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/02/07 13:57:04 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/12 14:37:24 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -81,10 +81,10 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 			return false;
 
 		Integer appId = getAppId(app.getPrimaryKey());
-		AppBPMBind bind = getAppBPMDAO().find(AppBPMBind.class, appId);
+		AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
 		
 		if(bind == null) {
-			bind = new AppBPMBind();
+			bind = new AppProcDefBind();
 			bind.setApplicationId(appId);
 			bind.setProcDefId(procDefId);
 			getAppBPMDAO().persist(bind);
@@ -148,7 +148,7 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	public String getSelectedElement(Application app) {
 		
 		Integer appId = getAppId(app.getPrimaryKey());
-		AppBPMBind bind = getAppBPMDAO().find(AppBPMBind.class, appId);
+		AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
 		
 		if(bind != null) {
 			
@@ -197,7 +197,7 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		
 		Integer appId = getAppId(app.getPrimaryKey());
 		
-		AppBPMBind bind = getAppBPMDAO().find(AppBPMBind.class, appId);
+		AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
 		
 		if(bind == null)
 			throw new RuntimeException("No application bpm bind found for app requested. App id: "+app.getPrimaryKey());
