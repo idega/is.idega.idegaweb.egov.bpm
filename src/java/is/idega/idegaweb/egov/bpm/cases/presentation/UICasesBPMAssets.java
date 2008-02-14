@@ -19,9 +19,9 @@ import com.idega.presentation.IWBaseComponent;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/02/14 15:49:53 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/14 21:29:53 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -45,8 +45,6 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		div.getChildren().add(facelet);
 		
 		getFacets().put(containerFacet, div);
-		
-		addClientResources(context);
 	}
 	
 	@Override
@@ -99,8 +97,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		UIComponent container = getFacet(containerFacet);
 		
 		if(container != null) {
-//			Form form = new Form();
-//			form.add(container);
+			
+			addClientResources(context);
 			container.setRendered(true);
 			renderChild(context, container);
 		}

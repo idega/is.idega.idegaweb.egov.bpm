@@ -26,9 +26,9 @@ import com.idega.presentation.text.Link;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/02/14 15:49:53 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/14 21:29:53 $ by $Author: civilis $
  */
 public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextAware, ApplicationListener {
 
@@ -72,7 +72,7 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 		
 		link.addParameter(PARAMETER_PROCESS_INSTANCE_PK, String.valueOf(theCase.getCaseHandler()));
 		link.addParameter(CasesProcessor.PARAMETER_CASE_PK, theCase.getPrimaryKey().toString());
-		link.addParameter(CasesProcessor.PARAMETER_ACTION, CasesProcessor.ACTION_CASE_HANDLER_INVOLVED);
+		link.addParameter(CasesProcessor.PARAMETER_ACTION, CasesProcessor.SHOW_CASE_HANDLER);
 		
 		links.add(link);
 

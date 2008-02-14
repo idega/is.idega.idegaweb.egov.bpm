@@ -4,14 +4,16 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:t="http://myfaces.apache.org/tomahawk"
 		
 		class="casesBPMAssets"
 >
 
 	<h:form>
-		<h:inputHidden  />
+		<t:saveState id="storeCaseHandlerState" value="#{caseHandlerState}"/>
 		<div class="title">
 			<ui:insert name="title">No title</ui:insert>
+			<h:commandButton value="Show cases list" action="#{caseHandlerState.reset}" immediate="true" />
 		</div>
 		<div class="caseInfo">
 			Short case info x
