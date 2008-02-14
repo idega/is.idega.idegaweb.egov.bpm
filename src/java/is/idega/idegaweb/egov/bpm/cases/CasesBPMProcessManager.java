@@ -20,6 +20,8 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.def.View;
 import com.idega.jbpm.exe.ProcessManager;
@@ -33,15 +35,24 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/02/12 14:37:24 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/14 15:49:53 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 
 	private VariablesHandler variablesHandler;
 	private IdegaJbpmContext idegaJbpmContext;
+	private CasesBPMDAO casesBPMDAO;
 	
+	public CasesBPMDAO getCasesBPMDAO() {
+		return casesBPMDAO;
+	}
+
+	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
+		this.casesBPMDAO = casesBPMDAO;
+	}
+
 	public IdegaJbpmContext getIdegaJbpmContext() {
 		return idegaJbpmContext;
 	}
@@ -105,6 +116,11 @@ public class CasesBPMProcessManager implements ProcessManager {
 			
 			getVariablesHandler().submitVariables(caseData, taskInstance.getId());
 			submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
+			
+			CaseProcInstBind bind = new CaseProcInstBind();
+			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
+			bind.setProcDefId(pi.getId());
+			getCasesBPMDAO().persist(bind);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);

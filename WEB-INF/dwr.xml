@@ -2,6 +2,8 @@
 
 <dwr>
   	<allow>
+  	
+  		<!--  
         <create creator="jsf" javascript="CasesJbpmProcessArtifacts">
             <param name="managedBeanName" value="casesJbpmProcessArtifacts" />
             <param name="class" value="com.idega.jbpm.exe.ProcessArtifacts" />
@@ -9,10 +11,13 @@
             <include method="getProcessTasksList" />
             <include method="getViewDisplay" />
         </create>
+        -->
+        <!-- from valdas 
         <create creator="jsf" javascript="CasesBPMAssets">
 	    	<param name="managedBeanName" value="casesBPMAssets" />
 	    	<param name="class" value="is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMAssetsEngineBean" />
     	</create>
+    	-->
   	</allow>
   	<signatures>
 	</signatures>

@@ -1,5 +1,46 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+<div
+		xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:t="http://myfaces.apache.org/tomahawk"
+		xmlns:ws="http://xmlns.idega.com/com.idega.workspace"
+		xmlns:eb="http://xmlns.idega.com/is.idega.idegaweb.egov.cases.bpm"
+>
+
+	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
+
+	<ui:define name="title">
+		the title x
+	</ui:define>
+	<ui:define name="content">
+		<div id="example" class="flora">
+            <ul>
+                <li><a href="#caseOverviewTab"><span>Case overview</span></a></li>
+                <li><a href="#tasksTab"><span>Tasks</span></a></li>
+                <li><a href="#documentsTab"><span>Documents</span></a></li>
+            </ul>
+            <div id="caseOverviewTab">
+            	<div>Case status: good</div>
+  				<div>Case creator: Mr. JavaBean</div>
+  				<div>Case create date: 2200-12-12</div>
+  				<div>Case category: xcatx</div>
+  				<div>Case type: xtypex</div>
+            </div>
+            <div id="tasksTab">
+	            <table id="tasksTable" class="scroll" cellpadding="0" cellspacing="0"></table>
+            </div>
+            <div id="documentsTab">
+            	<table id="documentsTable" class="scroll" cellpadding="0" cellspacing="0"></table>
+            </div>
+        </div>
+	</ui:define>
+	
+	</ui:composition>
+</div>
+
+<!--  
 <html	xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:h="http://java.sun.com/jsf/html"
@@ -46,4 +87,5 @@
 				<t:div id="caseOverviewContainer" forceId="true" />
 			</t:div>
 		</h:form>
-</html>
+</html
+-->

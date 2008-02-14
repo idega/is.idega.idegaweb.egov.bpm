@@ -1,4 +1,128 @@
-var SEARCH_WINDOW_TITLE = 'Search for cases';
+jQuery.noConflict();
+	
+jQuery(document).ready(function() {
+    jQuery("#example > ul").tabs({ selected: 0 });
+    
+    jQuery('.ui-tabs-nav').bind('select.ui-tabs', function(event, ui) {
+    
+    if(CasesBPMAssets.tabIndexes.tasks == ui.panel.id) {
+    	CasesBPMAssets.initTaskTab(ui.panel);
+    	
+    } else if(CasesBPMAssets.tabIndexes.documents == ui.panel.id) {
+    	CasesBPMAssets.initDocumentsTab(ui.panel);
+    }
+    //ui.instance // internal widget instance
+    ///ui.options // options used to intialize this widget
+    //ui.tab // anchor element of the currently shown tab
+    //ui.panel // element, that contains the contents of the currently shown tab
+    //console.log(ui.panel);
+	});
+});
+
+if(CasesBPMAssets == null) var CasesBPMAssets = {};
+
+CasesBPMAssets.tabIndexes = {
+
+	tasks: 'tasksTab',
+	documents: 'documentsTab'
+};
+
+CasesBPMAssets.initTaskTab = function(tabContainer) {
+
+	if(CasesBPMAssets.initTaskTab.inited)
+		return;
+		
+	var params = new JQGridParams();
+	
+	params.populateFromFunction = function(params, callback) {
+            
+            console.log('callled poplate from function: '+params);
+                params.piId = 25;
+                                
+                BPMProcessAssets.getProcessTasksList(params,
+                    {
+                        callback: function(result) {
+                            callback(result);
+                        }
+                    }
+                );
+	};
+	
+	params.colNames = ['Nr','Task name', 'Submitted date']; 
+    params.colModel = [
+    	        {name:'id',index:'id'},
+                {name:'name',index:'name'}, 
+                {name:'createdDate',index:'createdDate'}
+    ];
+	
+	params.onSelectRow = function(rowId) {
+  
+      console.log('callled on select row');
+	};
+
+	var grid = new JQGrid();
+	grid.createGrid(jQuery(tabContainer).children('table')[0], params);
+	
+	jQuery(jQuery(tabContainer).children('div')).each(
+		function(i) {
+			jQuery(this).css({width: "auto", height: "auto"});
+		}
+	);
+	
+	CasesBPMAssets.initTaskTab.inited = true;
+};
+
+CasesBPMAssets.initTaskTab.inited = false;
+
+CasesBPMAssets.initDocumentsTab = function(tabContainer) {
+
+	if(CasesBPMAssets.initDocumentsTab.inited)
+		return;
+		
+	var params = new JQGridParams();
+	
+	params.populateFromFunction = function(params, callback) {
+            
+            console.log('callled poplate from function: '+params);
+                params.piId = 25;
+                                
+                BPMProcessAssets.getProcessDocumentsList(params,
+                    {
+                        callback: function(result) {
+                            callback(result);
+                        }
+                    }
+                );
+	};
+	
+	params.colNames = ['Nr','Task name', 'Submitted date']; 
+    params.colModel = [
+    	        {name:'id',index:'id'},
+                {name:'name',index:'name'}, 
+                {name:'createdDate',index:'createdDate'}
+    ];
+	
+	params.onSelectRow = function(rowId) {
+  
+      console.log('callled on select row');
+	};
+
+	var grid = new JQGrid();
+	grid.createGrid(jQuery(tabContainer).children('table')[0], params);
+	
+	jQuery(jQuery(tabContainer).children('div')).each(
+		function(i) {
+			jQuery(this).css({width: "auto", height: "auto"});
+		}
+	);
+	
+	CasesBPMAssets.initDocumentsTab.inited = true; 	
+}
+
+CasesBPMAssets.initDocumentsTab.inited = false;
+
+
+/*var SEARCH_WINDOW_TITLE = 'Search for cases';
 var INVALID_SEARCH_TEXT = 'Enter any text to search for';
 var LOADING_TEXT = 'Loading...';
 
@@ -171,4 +295,4 @@ function getCaseOverviewCallback(component) {
 	}
 	
 	insertNodesToContainer(component, container);
-}
+}*/
