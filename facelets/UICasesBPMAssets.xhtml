@@ -4,6 +4,7 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:t="http://myfaces.apache.org/tomahawk"
 >
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
@@ -23,8 +24,6 @@
   				<div>Case create date: 2200-12-12</div>
   				<div>Case category: xcatx</div>
   				<div>Case type: xtypex</div>
-  				<div></div>
-  				
             </div>
             <div id="tasksTab">
 	            <table id="tasksTable" class="scroll" cellpadding="0" cellspacing="0"></table>
@@ -33,6 +32,11 @@
             	<table id="documentsTable" class="scroll" cellpadding="0" cellspacing="0"></table>
             </div>
         </div>
+        <span class="assetsState" style="display: none;">
+			<h:commandButton class="state_gotoTaskView" value="Go to task view" action="#{casesBPMAssetsState.selectTaskView}" />
+			<h:commandButton class="state_gotoDocumentsView" value="Go to documents view" action="#{casesBPMAssetsState.selectDocumentsView}" />
+			<t:inputHidden id="state_viewSelected" value="#{casesBPMAssetsState.viewSelected}" forceId="true" />
+		</span>
 	</ui:define>
 	
 	</ui:composition>

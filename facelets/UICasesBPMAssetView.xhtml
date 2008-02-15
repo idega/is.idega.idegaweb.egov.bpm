@@ -1,0 +1,18 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<div
+		xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:jp="http://xmlns.idega.com/org.jboss.jbpm"
+>
+	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
+
+	<ui:define name="title">
+		the title x
+	</ui:define>
+	<ui:define name="content">
+		<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
+	</ui:define>
+	
+	</ui:composition>
+</div>

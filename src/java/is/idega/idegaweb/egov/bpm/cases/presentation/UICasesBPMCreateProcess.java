@@ -13,9 +13,9 @@ import com.idega.presentation.IWBaseComponent;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/15 10:19:35 $ by $Author: civilis $
  *
  */
 public class UICasesBPMCreateProcess extends IWBaseComponent {
@@ -27,14 +27,8 @@ public class UICasesBPMCreateProcess extends IWBaseComponent {
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
 		
-		System.out.println("asssssssssss");
 		HtmlTag div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		div.setValue("div");
-		
-		System.out.println("ppa: "+context.getExternalContext().getRequestServletPath());
-		System.out.println("ppa: "+context.getExternalContext().getRequestPathInfo());
-		
-		//form.setMarkupAttribute("enctype", "multipart/form-data");
 		
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMCreateProcess.xhtml");

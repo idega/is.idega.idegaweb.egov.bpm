@@ -19,32 +19,43 @@ import com.idega.presentation.IWBaseComponent;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/02/14 21:29:53 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/15 10:19:35 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
 	
 	public static final String COMPONENT_TYPE = "com.idega.UICasesBPMAssets";
-	
-	private static final String containerFacet = "container";
+
+	private static final String assetsFacet = "assets";
+	private static final String assetViewFacet = "assetView";
 	private static final String web2BeanIdentifier = "web2bean";
 
 	@Override
 	@SuppressWarnings("unchecked")
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
-		
+	
 		HtmlTag div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
-		div.setValue("div");
+		div.setValue(divTag);
 		
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssets.xhtml");
+		
+		div.getChildren().add(facelet);
+		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetsRendered}"));
+		getFacets().put(assetsFacet, div);
+		
+		div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
+		div.setValue(divTag);
+		
+		facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
+		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetView.xhtml");
 
 		div.getChildren().add(facelet);
-		
-		getFacets().put(containerFacet, div);
+		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetViewRendered}"));
+		getFacets().put(assetViewFacet, div);
 	}
 	
 	@Override
@@ -94,13 +105,15 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	public void encodeChildren(FacesContext context) throws IOException {
 		super.encodeChildren(context);
 		
-		UIComponent container = getFacet(containerFacet);
+		UIComponent assets = getFacet(assetsFacet);
+		UIComponent assetView = getFacet(assetViewFacet);
 		
-		if(container != null) {
-			
+		if(assets.isRendered()) {
 			addClientResources(context);
-			container.setRendered(true);
-			renderChild(context, container);
+			renderChild(context, assets);
+			
+		} else if(assetView.isRendered()) {
+			renderChild(context, assetView);
 		}
 	}
 }

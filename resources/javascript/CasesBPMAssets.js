@@ -57,7 +57,8 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
 	
 	params.onSelectRow = function(rowId) {
   
-      console.log('callled on select row');
+      jQuery(CasesBPMAssets.exp_viewSelected)[0].value = rowId;
+      jQuery(CasesBPMAssets.exp_gotoTask)[0].click();
 	};
 
 	var grid = new JQGrid();
@@ -104,7 +105,7 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
 	
 	params.onSelectRow = function(rowId) {
   
-      console.log('callled on select row');
+      console.log('callled on select row: '+rowId);
 	};
 
 	var grid = new JQGrid();
@@ -120,6 +121,10 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
 }
 
 CasesBPMAssets.initDocumentsTab.inited = false;
+
+CasesBPMAssets.exp_gotoTask = '.assetsState .state_gotoTaskView';
+CasesBPMAssets.exp_gotoDocuments = '.assetsState .state_gotoDocumentsView';
+CasesBPMAssets.exp_viewSelected = '#state_viewSelected';
 
 
 /*var SEARCH_WINDOW_TITLE = 'Search for cases';
