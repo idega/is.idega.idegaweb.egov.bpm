@@ -36,9 +36,8 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
 	
 	params.populateFromFunction = function(params, callback) {
             
-            console.log('callled poplate from function: '+params);
-                params.piId = 25;
-                                
+                params.piId = jQuery(CasesBPMAssets.exp_piId)[0].value;
+                
                 BPMProcessAssets.getProcessTasksList(params,
                     {
                         callback: function(result) {
@@ -84,16 +83,15 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
 	
 	params.populateFromFunction = function(params, callback) {
             
-            console.log('callled poplate from function: '+params);
-                params.piId = 25;
+		params.piId = jQuery(CasesBPMAssets.exp_piId).value;
                                 
-                BPMProcessAssets.getProcessDocumentsList(params,
-                    {
-                        callback: function(result) {
-                            callback(result);
-                        }
-                    }
-                );
+		BPMProcessAssets.getProcessDocumentsList(params,
+            {
+            	callback: function(result) {
+                	callback(result);
+				}
+        	}
+		);
 	};
 	
 	params.colNames = ['Nr','Task name', 'Submitted date']; 
@@ -125,6 +123,7 @@ CasesBPMAssets.initDocumentsTab.inited = false;
 CasesBPMAssets.exp_gotoTask = '.assetsState .state_gotoTaskView';
 CasesBPMAssets.exp_gotoDocuments = '.assetsState .state_gotoDocumentsView';
 CasesBPMAssets.exp_viewSelected = '#state_viewSelected';
+CasesBPMAssets.exp_piId = '#state_processInstanceId';
 
 
 /*var SEARCH_WINDOW_TITLE = 'Search for cases';

@@ -35,9 +35,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/02/14 15:49:53 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/15 12:37:23 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 
@@ -119,7 +119,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
-			bind.setProcDefId(pi.getId());
+			bind.setProcInstId(pi.getId());
 			getCasesBPMDAO().persist(bind);
 			
 		} catch (Exception e) {

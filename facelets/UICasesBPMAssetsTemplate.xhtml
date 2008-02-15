@@ -15,6 +15,7 @@
 		<div class="title">
 			<ui:insert name="title">No title</ui:insert>
 			<h:commandButton value="Show cases list" action="#{caseHandlerState.reset}" immediate="true" />
+			<t:inputHidden id="state_processInstanceId" value="#{casesBPMAssetsState.processInstanceId}" forceId="true" />
 		</div>
 		<div class="caseInfo">
 			Short case info x
