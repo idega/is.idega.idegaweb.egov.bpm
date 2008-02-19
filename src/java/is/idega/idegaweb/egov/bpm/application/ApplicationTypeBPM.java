@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.List;
 
+import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
@@ -37,9 +38,9 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/02/12 14:37:24 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/19 16:55:12 $ by $Author: anton $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -74,31 +75,33 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	public boolean afterStore(IWContext iwc, Application app) {
 		
 		String procDef = iwc.getParameter(UIApplicationTypeBPMHandler.menuParam);
-		
-		Long procDefId = new Long(procDef);
-		
-		if(procDefId == -1)
-			return false;
+		try {
+			Long procDefId = new Long(procDef);
+	
+			Integer appId = getAppId(app.getPrimaryKey());
 
-		Integer appId = getAppId(app.getPrimaryKey());
-		AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
-		
-		if(bind == null) {
-			bind = new AppProcDefBind();
-			bind.setApplicationId(appId);
-			bind.setProcDefId(procDefId);
-			getAppBPMDAO().persist(bind);
+			AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
 			
-		} else {
-			
-			if(!bind.getProcDefId().equals(procDefId)) {
-				
+			if(bind == null) {
+				bind = new AppProcDefBind();
+				bind.setApplicationId(appId);
 				bind.setProcDefId(procDefId);
-				getAppBPMDAO().flush();
+				getAppBPMDAO().persist(bind);
+				
+			} else {
+				
+				if(!bind.getProcDefId().equals(procDefId)) {
+					
+					bind.setProcDefId(procDefId);
+					getAppBPMDAO().flush();
+				}
 			}
+		} catch(Exception exp) {
+			iwc.addMessage(null, new FacesMessage("Exception:" + exp.getMessage()));
+			return false;
 		}
 		
-		return false;
+		return true;
 	}
 	
 	private Integer getAppId(Object pk) {
