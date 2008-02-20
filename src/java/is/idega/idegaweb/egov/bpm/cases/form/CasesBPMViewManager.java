@@ -39,9 +39,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/20 14:38:12 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -77,24 +77,12 @@ public class CasesBPMViewManager implements ViewManager {
 //			TODO: make this generic bind
 			CaseTypesProcDefBind bind = getBpmBindsDAO().find(CaseTypesProcDefBind.class, processDefinitionId);
 			
-			//String initTaskName = bind.getInitTaskName();
-			
-//			if(initTaskName == null || CoreConstants.EMPTY.equals(initTaskName))
-//				throw new NullPointerException("Init task name not found on CasesJbpmBind.");
-			
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
 			
-			System.out.println("name: "+pd.getName());
-			
-//			Task initTask = pd.getTaskMgmtDefinition().getTask(initTaskName);
 			TaskMgmtDefinition mgdef = pd.getTaskMgmtDefinition();
 			Task initTask = mgdef.getStartTask();
 			
-			System.out.println("start task: "+initTask);
-			
-//			View view = getViewToTaskBinder().getView(initTask.getId());
 			View view = getBpmFactory().getView(initTask.getId(), true);
-			System.out.println("	view identifier: "+view.getViewId());
 			
 //			move this to protected method setupInitView(view:View):void
 			Map<String, String> parameters = new HashMap<String, String>(4);

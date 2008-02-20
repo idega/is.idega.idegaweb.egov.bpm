@@ -1,0 +1,52 @@
+.casesBPMAssets .assetView {
+	
+	border: 1px solid green;
+	float: left;
+	width: 100%;
+}
+
+.casesBPMAssets .assetView .left {
+
+	border: 1px grey solid;
+	border-width: 0 1px 0 0;
+	width: 250px;
+	float: left;
+	margin: 5px;
+}
+
+.casesBPMAssets .assetView .assetSection .assetHeader {
+
+	background-color: #0db143;
+	border: 1px grey solid;
+	border-width: 1px 0 1px 1px;
+	color: #ddeff8;	
+	text-align: center;
+	float: left;
+	width: 100%;
+}
+
+.casesBPMAssets .assetView .right {
+	margin: 5px;
+	margin-left: 10px;
+}
+
+.casesBPMAssets .assetView .assetContent {
+
+	margin: 2px;
+}
+
+.casesBPMAssets .assetView .assetSection .assetEntry {
+	float: left;
+	width: 100%;
+}
+
+.casesBPMAssets .assetView .assetSection .assetEntryLeft {
+	background-color: #ddeff8;
+	float: left;
+	width: 90px;
+}
+
+.casesBPMAssets .assetView .assetSection .assetEntryRight {
+	float: left;
+	margin-left: 2px;
+}

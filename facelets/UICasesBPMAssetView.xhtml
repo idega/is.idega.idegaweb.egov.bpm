@@ -5,13 +5,102 @@
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:jp="http://xmlns.idega.com/org.jboss.jbpm"
 >
+
+	
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
 	<ui:define name="title">
-		the title x
+		Task view
 	</ui:define>
 	<ui:define name="content">
-		<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
+	
+		<div class="assetView">
+			<div class="left">
+				<div class="assetSection">
+					<div class="assetHeader">
+						Task summary
+					</div>
+					<div class="assetContent">
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								Task Link
+							</div>
+							<div class="assetEntryRight">
+								Id 1
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								Name
+							</div>
+							<div class="assetEntryRight">
+								Foo name
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								Status
+							</div>
+							<div class="assetEntryRight">
+								Foo status
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								Assigned to
+							</div>
+							<div class="assetEntryRight">
+								Foo assigned
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								Created date
+							</div>
+							<div class="assetEntryRight">
+								Foo date
+							</div>
+						</div>
+					</div>
+				</div>	
+				
+				<div class="assetSection">
+					<div class="assetHeader">
+						Views
+					</div>
+					<div class="assetContent">
+						<div class="assetEntry">
+							Task form
+						</div>
+						<div class="assetEntry">
+							Comments
+						</div>
+					</div>
+				</div>			
+				
+				<div class="assetSection">
+					<div class="assetHeader">
+						Actions
+					</div>
+					<div class="assetContent">
+						<div class="assetEntry">
+							Start task
+						</div>
+						<div class="assetEntry">
+							Take task
+						</div>
+						<div class="assetEntry">
+							Assign task
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="right">
+				<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
+			</div>
+			
+		</div>
+		
 	</ui:define>
 	
 	</ui:composition>

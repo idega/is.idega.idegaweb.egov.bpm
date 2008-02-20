@@ -5,9 +5,12 @@
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:h="http://java.sun.com/jsf/html"
 		xmlns:t="http://myfaces.apache.org/tomahawk"
+		xmlns:fc="http://xmlns.idega.com/com.idega.facelets"
 		
 		class="casesBPMAssets"
 >
+
+	<fc:addResource resourcePath="/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/style/casesBPM.css" />
 
 	<h:form>
 		<t:saveState id="storeCaseHandlerState" value="#{caseHandlerState}"/>
@@ -15,10 +18,11 @@
 		<div class="title">
 			<ui:insert name="title">No title</ui:insert>
 			<h:commandButton value="Show cases list" action="#{caseHandlerState.reset}" immediate="true" />
+			<h:commandButton value="Back to case overview" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
 			<t:inputHidden id="state_processInstanceId" value="#{casesBPMAssetsState.processInstanceId}" forceId="true" />
 		</div>
 		<div class="caseInfo">
-			Short case info x
+			Case name, status etc
 		</div>
 		<div class="content">
 			<ui:insert name="content">No content</ui:insert>
