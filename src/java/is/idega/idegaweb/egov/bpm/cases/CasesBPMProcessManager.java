@@ -35,9 +35,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/02/15 12:37:23 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/25 16:16:25 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 
@@ -73,9 +73,9 @@ public class CasesBPMProcessManager implements ProcessManager {
 		
 		Map<String, String> parameters = view.resolveParameters();
 		
-		int userId = Integer.parseInt(parameters.get(CasesJbpmProcessConstants.userIdActionVariableName));
-		Long caseCatId = Long.parseLong(parameters.get(CasesJbpmProcessConstants.caseCategoryIdActionVariableName));
-		Long caseTypeId = Long.parseLong(parameters.get(CasesJbpmProcessConstants.caseTypeActionVariableName));
+		int userId = Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName));
+		Long caseCatId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseCategoryIdActionVariableName));
+		Long caseTypeId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseTypeActionVariableName));
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
@@ -106,13 +106,13 @@ public class CasesBPMProcessManager implements ProcessManager {
 			
 			
 			Map<String, Object> caseData = new HashMap<String, Object>();
-			caseData.put(CasesJbpmProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
-			caseData.put(CasesJbpmProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
-			caseData.put(CasesJbpmProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
-			caseData.put(CasesJbpmProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
+			caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
+			caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
+			caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
+			caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
 			
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
-			caseData.put(CasesJbpmProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
+			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
 			getVariablesHandler().submitVariables(caseData, taskInstance.getId());
 			submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
@@ -133,7 +133,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 		
 		getVariablesHandler().submitVariables(variables, ti.getId());
     	
-    	String actionTaken = (String)ti.getVariable(CasesJbpmProcessConstants.actionTakenVariableName);
+    	String actionTaken = (String)ti.getVariable(CasesBPMProcessConstants.actionTakenVariableName);
     	
     	if(actionTaken != null && !CoreConstants.EMPTY.equals(actionTaken) && false)
     		ti.end(actionTaken);

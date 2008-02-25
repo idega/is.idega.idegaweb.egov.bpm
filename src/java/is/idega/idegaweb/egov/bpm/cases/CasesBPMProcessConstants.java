@@ -5,12 +5,12 @@ package is.idega.idegaweb.egov.bpm.cases;
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/02/04 19:05:38 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/25 16:16:25 $ by $Author: civilis $
  *
  */
-public class CasesJbpmProcessConstants {
+public class CasesBPMProcessConstants {
 	
-	private CasesJbpmProcessConstants () {}
+	private CasesBPMProcessConstants () {}
 	
 	public static final String actionTakenVariableName = "string:actionTaken";
 	public static final String caseIdVariableName = "string:caseId";

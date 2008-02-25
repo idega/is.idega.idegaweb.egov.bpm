@@ -9,6 +9,7 @@
         		<type>java.lang.String</type>
       		</property>
     	</module>
+    	<module id="" class="com.idega.jbpm.presentation.BPMTaskViewer" />
     	<!--  
     	<module id="" class="com.idega.block.form.presentation.FormViewer" />
     	-->

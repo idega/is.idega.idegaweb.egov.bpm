@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesJbpmProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
@@ -23,9 +23,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/04 19:05:37 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/25 16:16:25 $ by $Author: civilis $
  */
 public class CasesAllocationHandler implements ActionHandler {
 
@@ -37,9 +37,9 @@ public class CasesAllocationHandler implements ActionHandler {
 
 	public void execute(ExecutionContext ctx) throws Exception {
 
-		String allocateToId = (String)ctx.getVariable(CasesJbpmProcessConstants.caseAllocateToVariableName);
-		String performerId = (String)ctx.getVariable(CasesJbpmProcessConstants.casePerformerIdVariableName);
-		String caseId = (String)ctx.getVariable(CasesJbpmProcessConstants.caseIdVariableName);
+		String allocateToId = (String)ctx.getVariable(CasesBPMProcessConstants.caseAllocateToVariableName);
+		String performerId = (String)ctx.getVariable(CasesBPMProcessConstants.casePerformerIdVariableName);
+		String caseId = (String)ctx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
 		
 		if(caseId == null) {
 			Logger.getLogger(CasesAllocationHandler.class.getName()).log(Level.SEVERE, "Case id not provided for allocation handler");

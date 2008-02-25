@@ -4,6 +4,7 @@
 		xmlns="http://www.w3.org/1999/xhtml"
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:jp="http://xmlns.idega.com/org.jboss.jbpm"
+		xmlns:h="http://java.sun.com/jsf/html"
 >
 
 	
@@ -12,8 +13,12 @@
 	<ui:define name="title">
 		Task view
 	</ui:define>
+	<ui:define name="actions">
+		<div>
+			<h:commandLink value="Back to case overview" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+		</div>
+	</ui:define>
 	<ui:define name="content">
-	
 		<div class="assetView">
 			<div class="left">
 				<div class="assetSection">
@@ -23,18 +28,10 @@
 					<div class="assetContent">
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
-								Task Link
-							</div>
-							<div class="assetEntryRight">
-								Id 1
-							</div>
-						</div>
-						<div class="assetEntry">
-							<div class="assetEntryLeft">
 								Name
 							</div>
 							<div class="assetEntryRight">
-								Foo name
+								#{casesBPMAssetsState.taskView.taskName}
 							</div>
 						</div>
 						<div class="assetEntry">
@@ -42,7 +39,7 @@
 								Status
 							</div>
 							<div class="assetEntryRight">
-								Foo status
+								#{casesBPMAssetsState.taskView.taskStatus}
 							</div>
 						</div>
 						<div class="assetEntry">
@@ -50,7 +47,7 @@
 								Assigned to
 							</div>
 							<div class="assetEntryRight">
-								Foo assigned
+								#{casesBPMAssetsState.taskView.assignedTo}
 							</div>
 						</div>
 						<div class="assetEntry">
@@ -58,7 +55,7 @@
 								Created date
 							</div>
 							<div class="assetEntryRight">
-								Foo date
+								#{casesBPMAssetsState.taskView.createdDate}
 							</div>
 						</div>
 					</div>
@@ -70,7 +67,11 @@
 					</div>
 					<div class="assetContent">
 						<div class="assetEntry">
-							Task form
+							<span class="selected">
+								<b>
+								Task form
+								</b>
+							</span>
 						</div>
 						<div class="assetEntry">
 							Comments

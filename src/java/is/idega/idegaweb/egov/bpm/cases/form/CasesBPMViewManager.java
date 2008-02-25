@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.form;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesJbpmProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.ArrayList;
@@ -39,9 +39,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/02/20 14:38:12 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/25 16:16:25 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -88,9 +88,9 @@ public class CasesBPMViewManager implements ViewManager {
 			Map<String, String> parameters = new HashMap<String, String>(4);
 			
 			parameters.put(ProcessConstants.PROCESS_DEFINITION_ID, String.valueOf(processDefinitionId));
-			parameters.put(CasesJbpmProcessConstants.userIdActionVariableName, String.valueOf(initiatorId));
-			parameters.put(CasesJbpmProcessConstants.caseCategoryIdActionVariableName, String.valueOf(bind.getCasesCategoryId()));
-			parameters.put(CasesJbpmProcessConstants.caseTypeActionVariableName, String.valueOf(bind.getCasesTypeId()));
+			parameters.put(CasesBPMProcessConstants.userIdActionVariableName, String.valueOf(initiatorId));
+			parameters.put(CasesBPMProcessConstants.caseCategoryIdActionVariableName, String.valueOf(bind.getCasesCategoryId()));
+			parameters.put(CasesBPMProcessConstants.caseTypeActionVariableName, String.valueOf(bind.getCasesTypeId()));
 			
 			view.populateParameters(parameters);
 //			--

@@ -5,13 +5,14 @@ import java.util.List;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
+import com.idega.idegaweb.egov.bpm.data.CaseUser;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/02/15 12:37:22 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/25 16:16:26 $ by $Author: civilis $
  */
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
@@ -37,5 +38,35 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return (CaseProcInstBind)getEntityManager().createNamedQuery(CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME)
 		.setParameter(CaseProcInstBind.caseIdParam, caseId)
 		.getSingleResult();
+	}
+	
+	public CaseUser getCaseUser(long processInstanceId, int userId, boolean createIfNotFound) {
+		
+		System.out.println("_________________x");
+		
+		@SuppressWarnings("unchecked")
+		List<CaseUser> u = getEntityManager().createNamedQuery(CaseUser.byUserIdNPID)
+		.setParameter(CaseUser.pidParam, processInstanceId)
+		.setParameter(CaseUser.userIdParam, userId)
+		.getResultList();
+		
+		if(u.isEmpty())
+		
+		System.out.println("f_________________x");
+		
+		if(u.isEmpty() && createIfNotFound) {
+			
+			CaseUser cu = new CaseUser();
+			cu.setProcessInstanceId(processInstanceId);
+			cu.setUserId(userId);
+			persist(cu);
+			return cu;
+			
+		} else if(!u.isEmpty()) {
+			
+			return u.iterator().next();
+			
+		} else
+			return null;
 	}
 }

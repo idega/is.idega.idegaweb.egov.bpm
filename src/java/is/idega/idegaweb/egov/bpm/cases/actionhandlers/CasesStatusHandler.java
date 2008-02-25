@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesJbpmProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.logging.Level;
@@ -22,9 +22,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/04 19:05:37 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/25 16:16:25 $ by $Author: civilis $
  */
 public class CasesStatusHandler implements ActionHandler {
 
@@ -36,9 +36,9 @@ public class CasesStatusHandler implements ActionHandler {
 
 	public void execute(ExecutionContext ctx) throws Exception {
 		
-		String status = (String)ctx.getVariable(CasesJbpmProcessConstants.caseStatusVariableName);
-		String caseId = (String)ctx.getVariable(CasesJbpmProcessConstants.caseIdVariableName);
-		String performerId = (String)ctx.getVariable(CasesJbpmProcessConstants.casePerformerIdVariableName);
+		String status = (String)ctx.getVariable(CasesBPMProcessConstants.caseStatusVariableName);
+		String caseId = (String)ctx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
+		String performerId = (String)ctx.getVariable(CasesBPMProcessConstants.casePerformerIdVariableName);
 		
 		if(status == null || caseId == null || performerId == null) {
 			Logger.getLogger(CasesStatusHandler.class.getName()).log(Level.WARNING, 

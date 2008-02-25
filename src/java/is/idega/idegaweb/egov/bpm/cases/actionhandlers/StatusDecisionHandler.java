@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesJbpmProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.logging.Level;
@@ -19,9 +19,9 @@ import com.idega.presentation.IWContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/04 19:05:37 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/25 16:16:25 $ by $Author: civilis $
  */
 public class StatusDecisionHandler implements ActionHandler {
 
@@ -36,7 +36,7 @@ public class StatusDecisionHandler implements ActionHandler {
 	public void execute(ExecutionContext ctx) throws Exception {
 		
 //		TODO: check the difference: ctx.getContextInstance().getVariable
-		String status = (String)ctx.getVariable(CasesJbpmProcessConstants.caseStatusVariableName);
+		String status = (String)ctx.getVariable(CasesBPMProcessConstants.caseStatusVariableName);
 		
 		if(status == null) {
 			

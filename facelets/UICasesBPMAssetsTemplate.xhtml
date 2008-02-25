@@ -16,13 +16,41 @@
 		<t:saveState id="storeCaseHandlerState" value="#{caseHandlerState}"/>
 		<t:saveState id="storeAssetsState" value="#{casesBPMAssetsState}"/>
 		<div class="title">
-			<ui:insert name="title">No title</ui:insert>
-			<h:commandButton value="Show cases list" action="#{caseHandlerState.reset}" immediate="true" />
-			<h:commandButton value="Back to case overview" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+			<h3>
+				<ui:insert name="title">No title</ui:insert>
+			</h3>
 			<t:inputHidden id="state_processInstanceId" value="#{casesBPMAssetsState.processInstanceId}" forceId="true" />
 		</div>
 		<div class="caseInfo">
-			Case name, status etc
+			<div class="caseInfoEntry">
+				<div class="caseInfoEntryLeft">
+					Case name
+				</div>
+				<div class="caseInfoEntryRight">
+					#{casesBPMAssetsState.processView.processName}
+				</div>
+			</div>
+			<div class="caseInfoEntry">
+				<div class="caseInfoEntryLeft">
+					Case status
+				</div>
+				<div class="caseInfoEntryRight">
+					#{casesBPMAssetsState.processView.processStatus}
+				</div>
+			</div>
+		</div>
+		<div class="actions">
+			<div>
+				<h:commandLink value="Show cases list" action="#{caseHandlerState.reset}" immediate="true" />
+			</div>
+			<div>
+				<h:commandLink value="Watch case" action="#{casesBPMAssetsState.takeWatch}" rendered="#{not casesBPMAssetsState.watched}" />
+				<h:commandLink value="Decline case watching" action="#{casesBPMAssetsState.removeWatch}" rendered="#{casesBPMAssetsState.watched}" />
+			</div>
+			<ui:insert name="actions" />
+		</div>
+		<div class="messages">
+			<h:messages layout="table" errorClass="errorMessage" infoClass="infoMessage" />
 		</div>
 		<div class="content">
 			<ui:insert name="content">No content</ui:insert>
