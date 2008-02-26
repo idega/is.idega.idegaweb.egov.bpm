@@ -5,7 +5,6 @@ import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.cases.business.CaseHandlerPluggedInEvent;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.presentation.CaseHandler;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.presentation.OpenCases;
@@ -26,6 +25,8 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -41,11 +42,11 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/02/26 15:46:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 17:58:24 $ by $Author: civilis $
  */
-public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextAware, ApplicationListener {
+public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextAware, ApplicationListener {
 
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
 	
@@ -79,7 +80,7 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 		return caseHandlerType;
 	}
 
-	public List<Link> getCaseLinks(GeneralCase theCase) {
+	public List<Link> getCaseLinks(Case theCase) {
 		
 		IWMainApplication iwma = IWMainApplication.getIWMainApplication(FacesContext.getCurrentInstance());
 		IWBundle bundle = iwma.getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
@@ -89,7 +90,7 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 		
 		Link link = new Link(bundle.getImage("images/folder-exec-16x16.png", bundle.getLocalizedString("openBPMProcess", "Open BPM process")));
 		
-		link.addParameter(PARAMETER_PROCESS_INSTANCE_PK, String.valueOf(theCase.getCaseHandler()));
+		link.addParameter(PARAMETER_PROCESS_INSTANCE_PK, String.valueOf(theCase.getCaseManagerType()));
 		link.addParameter(CasesProcessor.PARAMETER_CASE_PK, theCase.getPrimaryKey().toString());
 		link.addParameter(CasesProcessor.PARAMETER_ACTION, CasesProcessor.SHOW_CASE_HANDLER);
 		link.addParameter(PARAMETER_ACTION, ACTION_OPEN_PROCESS);
@@ -99,7 +100,7 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 		return links;
 	}
 
-	public UIComponent getView(IWContext iwc, GeneralCase theCase) {
+	public UIComponent getView(IWContext iwc, Case theCase) {
 		
 		FacesContext context = FacesContext.getCurrentInstance();
 		UICasesBPMAssets assets = (UICasesBPMAssets)context.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
@@ -107,11 +108,11 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 		return assets;
 	}
 
-	public boolean isDisplayedInList(GeneralCase theCase) {
+	public boolean isDisplayedInList(Case theCase) {
 		return true;
 	}
 
-	public Collection<GeneralCase> getCases(User user, String casesComponentType) {
+	public Collection<? extends Case> getCases(User user, String casesComponentType) {
 		
 		IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 		
