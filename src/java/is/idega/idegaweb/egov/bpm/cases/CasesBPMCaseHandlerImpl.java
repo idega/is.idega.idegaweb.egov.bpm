@@ -2,7 +2,6 @@ package is.idega.idegaweb.egov.bpm.cases;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
-import is.idega.idegaweb.egov.cases.business.CaseHandlerPluggedInEvent;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
@@ -25,6 +24,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ContextRefreshedEvent;
 
+import com.idega.block.process.business.CaseManagerPluggedInEvent;
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
@@ -42,9 +42,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/02/26 17:58:24 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 19:29:07 $ by $Author: civilis $
  */
 public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextAware, ApplicationListener {
 
@@ -68,7 +68,7 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 		if(applicationevent instanceof ContextRefreshedEvent) {
 			
 			//publish xforms factory registration
-			ctx.publishEvent(new CaseHandlerPluggedInEvent(this));
+			ctx.publishEvent(new CaseManagerPluggedInEvent(this));
 		}
 	}
 
@@ -106,10 +106,6 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 		UICasesBPMAssets assets = (UICasesBPMAssets)context.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
 		assets.setId(context.getViewRoot().createUniqueId());
 		return assets;
-	}
-
-	public boolean isDisplayedInList(Case theCase) {
-		return true;
 	}
 
 	public Collection<? extends Case> getCases(User user, String casesComponentType) {
