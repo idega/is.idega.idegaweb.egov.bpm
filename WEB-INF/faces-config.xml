@@ -60,8 +60,4 @@
       </idegaweb-info>
     </component-extension>
   </component>
-  <component>
-    <component-type>com.idega.UICasesBPMTakeWatch</component-type>
-    <component-class>is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMTakeWatch</component-class>
-  </component>
 </faces-config>

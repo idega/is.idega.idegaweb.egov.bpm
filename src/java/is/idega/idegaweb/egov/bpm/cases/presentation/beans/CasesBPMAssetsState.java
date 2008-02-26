@@ -18,6 +18,7 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
+import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
@@ -27,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/02/26 14:59:09 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 15:46:48 $ by $Author: civilis $
  *
  */
 public class CasesBPMAssetsState implements Serializable {
@@ -163,7 +164,7 @@ public class CasesBPMAssetsState implements Serializable {
 			
 			ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
 			
-			caseUser.setStatus(ProcessUserBind.PROCESS_WATCHED_STATUS);
+			caseUser.setStatus(Status.PROCESS_WATCHED);
 			
 			dao.merge(caseUser);
 			isWatched = null;
@@ -215,7 +216,7 @@ public class CasesBPMAssetsState implements Serializable {
 				User performer = iwc.getCurrentUser();
 				
 				ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
-				isWatched = ProcessUserBind.PROCESS_WATCHED_STATUS.equals(caseUser.getStatus());
+				isWatched = Status.PROCESS_WATCHED == caseUser.getStatus();
 				
 			} catch (Exception e) {
 				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while checking CaseUser status", e);

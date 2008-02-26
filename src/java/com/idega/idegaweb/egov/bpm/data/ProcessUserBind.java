@@ -6,6 +6,8 @@ import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -17,9 +19,9 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/26 14:59:12 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 15:46:49 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_PROCESS_USER")
@@ -33,7 +35,10 @@ public class ProcessUserBind implements Serializable {
 	
 	private static final long serialVersionUID = 4023013648108184230L;
 	
-	public static final String PROCESS_WATCHED_STATUS = "WATCHD";
+	public enum Status {
+		
+		PROCESS_WATCHED
+	}
 	
 	public static final String byUserIdNPID = "ProcessUserBind.byUserIdNPID";
 	public static final String byUserIdAndCaseId = "ProcessUserBind.byUserIdNCaseId";
@@ -49,7 +54,8 @@ public class ProcessUserBind implements Serializable {
     private Integer userId;
 	
 	@Column(name="status")
-	private String watchStatus;
+	@Enumerated(EnumType.STRING)
+	private Status status;
 
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "process_instance_id", referencedColumnName = CaseProcInstBind.procInstIdColumnName, nullable=false)
@@ -81,11 +87,11 @@ public class ProcessUserBind implements Serializable {
 		this.userId = userId;
 	}
 
-	public String getStatus() {
-		return watchStatus;
+	public Status getStatus() {
+		return status;
 	}
 
-	public void setStatus(String status) {
-		this.watchStatus = status;
+	public void setStatus(Status status) {
+		this.status = status;
 	}
 }

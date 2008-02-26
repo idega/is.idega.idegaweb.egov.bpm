@@ -2,7 +2,6 @@ package is.idega.idegaweb.egov.bpm.cases;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMTakeWatch;
 import is.idega.idegaweb.egov.cases.business.CaseHandlerPluggedInEvent;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
@@ -33,6 +32,7 @@ import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
+import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.text.Link;
@@ -41,9 +41,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/02/26 14:59:12 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 15:46:48 $ by $Author: civilis $
  */
 public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextAware, ApplicationListener {
 
@@ -56,7 +56,6 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 	
 	private static final String PARAMETER_ACTION = "cbcAct";
 	private static final String ACTION_OPEN_PROCESS = "cbcActOP";
-	private static final String ACTION_SHOW_WATCH = "cbcActSW";
 	
 	public void setApplicationContext(ApplicationContext applicationcontext)
 			throws BeansException {
@@ -102,22 +101,10 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 
 	public UIComponent getView(IWContext iwc, GeneralCase theCase) {
 		
-		String action = iwc.getParameter(PARAMETER_ACTION);
-		
-		if(ACTION_SHOW_WATCH.equals(action)) {
-			
-			FacesContext context = FacesContext.getCurrentInstance();
-			UICasesBPMTakeWatch takeWatch = (UICasesBPMTakeWatch)context.getApplication().createComponent(UICasesBPMTakeWatch.COMPONENT_TYPE);
-			takeWatch.setId(context.getViewRoot().createUniqueId());
-			return takeWatch;
-			
-		} else {
-		
-			FacesContext context = FacesContext.getCurrentInstance();
-			UICasesBPMAssets assets = (UICasesBPMAssets)context.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
-			assets.setId(context.getViewRoot().createUniqueId());
-			return assets;
-		}
+		FacesContext context = FacesContext.getCurrentInstance();
+		UICasesBPMAssets assets = (UICasesBPMAssets)context.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
+		assets.setId(context.getViewRoot().createUniqueId());
+		return assets;
 	}
 
 	public boolean isDisplayedInList(GeneralCase theCase) {
@@ -153,7 +140,7 @@ public class CasesBPMCaseHandlerImpl implements CaseHandler, ApplicationContextA
 				
 				for (ProcessUserBind processUserBind : binds) {
 
-					if(ProcessUserBind.PROCESS_WATCHED_STATUS.equals(processUserBind.getStatus())) {
+					if(Status.PROCESS_WATCHED == processUserBind.getStatus()) {
 						
 						if(casesNPKs.containsKey(processUserBind.getCaseProcessBind().getCaseId())) {
 							
