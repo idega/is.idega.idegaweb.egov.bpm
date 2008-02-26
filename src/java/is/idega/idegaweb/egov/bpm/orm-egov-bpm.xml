@@ -6,7 +6,7 @@
 
     <entity class="com.idega.idegaweb.egov.bpm.data.AppProcDefBind" />
     <entity class="com.idega.idegaweb.egov.bpm.data.CaseProcInstBind" />
-    <entity class="com.idega.idegaweb.egov.bpm.data.CaseUser" />
+    <entity class="com.idega.idegaweb.egov.bpm.data.ProcessUserBind" />
     <entity class="com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind" />
         
 </entity-mappings>

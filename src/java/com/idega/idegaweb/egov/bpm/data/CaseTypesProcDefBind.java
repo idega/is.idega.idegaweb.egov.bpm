@@ -12,9 +12,9 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 14:59:12 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_CASETYPES_PROCDEF")
@@ -31,6 +31,7 @@ public class CaseTypesProcDefBind implements Serializable {
 	public static final String CASES_PROCESSES_DEFINITIONS_QUERY_NAME = "CaseTypesProcDefBind.simpleCasesProcessesDefinitionsQuery";
 	public static final String CASES_PROCESSES_GET_ALL_QUERY_NAME = "CaseTypesProcDefBind.getAllQuery";
 
+//	TODO: try to use ProcessDefinition entity here instead of just Long id, check if it will work correctly without resolving it from jbpmContext
 	@Id
 	@Column(name="process_definition_id", nullable=false)
     private Long procDefId;

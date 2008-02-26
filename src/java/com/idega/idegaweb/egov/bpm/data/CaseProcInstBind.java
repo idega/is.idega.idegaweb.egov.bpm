@@ -12,9 +12,9 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/02/15 12:37:22 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 14:59:11 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_CASE_PROCINST")
@@ -29,9 +29,11 @@ public class CaseProcInstBind implements Serializable {
 	
 	public static final String BIND_BY_CASEID_QUERY_NAME = "CaseProcInstBind.bindByCaseIdQuery";
 	public static final String caseIdParam = "caseId";
+	
+	public static final String procInstIdColumnName = "process_instance_id";
 
 	@Id
-	@Column(name="process_instance_id", nullable=false)
+	@Column(name=procInstIdColumnName, nullable=false)
     private Long procInstId;
 	
 	@Column(name="case_id", nullable=false, unique=true)

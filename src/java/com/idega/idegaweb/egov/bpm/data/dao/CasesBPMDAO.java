@@ -1,17 +1,18 @@
 package com.idega.idegaweb.egov.bpm.data.dao;
 
+import java.util.Collection;
 import java.util.List;
 
 import com.idega.core.persistence.GenericDao;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.idegaweb.egov.bpm.data.CaseUser;
+import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/02/25 16:16:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/02/26 14:59:12 $ by $Author: civilis $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -21,5 +22,7 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract CaseProcInstBind getCaseProcInstBindByCaseId(Integer caseId);
 	
-	public CaseUser getCaseUser(long processInstanceId, int userId, boolean createIfNotFound);
+	public abstract ProcessUserBind getProcessUserBind(long processInstanceId, int userId, boolean createIfNotFound);
+	
+	public abstract List<ProcessUserBind> getProcessUserBinds(int userId, Collection<Integer> casesIds);
 }
