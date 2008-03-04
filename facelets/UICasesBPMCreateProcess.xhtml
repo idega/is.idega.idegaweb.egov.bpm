@@ -2,7 +2,7 @@
 	xmlns="http://www.w3.org/1999/xhtml"
     xmlns:h="http://java.sun.com/jsf/html"
 	xmlns:f="http://java.sun.com/jsf/core"
-	xmlns:jp="http://xmlns.idega.com/org.jboss.jbpm">
+	xmlns:jj="http://xmlns.idega.com/org.jboss.jbpm">
 	
 		<div>
 			<div style="color: red;">#{casesBPMCreateProcess.message}</div>
@@ -28,6 +28,6 @@
 			<h:commandButton value="Fillout form" action="#{casesBPMCreateProcess.showProcessInitiationView}" />
 		</div>
 		<div>
-			<jp:BPMTaskViewer processDefinitionId="#{casesBPMCreateProcess.chosenProcessDefinitionId}" />
+			<jj:BPMTaskViewer processDefinitionId="#{casesBPMCreateProcess.chosenProcessDefinitionId}" />
 		</div>
 </div>

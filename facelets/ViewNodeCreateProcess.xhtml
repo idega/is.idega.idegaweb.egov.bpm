@@ -4,13 +4,14 @@
     xmlns:h="http://java.sun.com/jsf/html"
 	xmlns:ws="http://xmlns.idega.com/com.idega.workspace"
 	xmlns:eb="http://xmlns.idega.com/is.idega.idegaweb.egov.cases.bpm"
+	xmlns:jj="http://xmlns.idega.com/org.jboss.jbpm"
 >
 
 <ws:page id="casesRootPage" showFunctionMenu="true">
 
 	<h:form enctype="multipart/form-data">
-	x
 		<eb:CasesBPMCreateProcess />
+		<jj:BPMIdentityMgmnt />
 	</h:form>
 </ws:page>
 </html>
