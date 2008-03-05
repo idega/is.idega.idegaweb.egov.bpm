@@ -51,6 +51,14 @@
             <variable name="string:plaintiffArgumentation" access="read"></variable>
             <variable name="files:plaintiffDocuments" access="read"></variable>
          </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                {taskAssignment: {roles: {role: [
+                   {roleName: "handler", accesses: {access: [read, write]}},
+                   {roleName: "owner", accesses: {access: [read, write]}} 
+                ]} }}
+            </expression>
+         </assignment>
       </task>
       <transition name="moreInfoNeeded" to="moreInfoNeeded"></transition>
       <transition name="addComment" to="addComment"></transition>
