@@ -39,9 +39,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/03/06 11:55:02 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/07 13:25:23 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -110,7 +110,6 @@ public class CasesBPMViewManager implements ViewManager {
 	
 	public View loadTaskInstanceView(long taskInstanceId, FacesContext context) {
 		
-		System.out.println("loading task inst view .........");
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {

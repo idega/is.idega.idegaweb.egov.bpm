@@ -9,7 +9,7 @@
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
 	<ui:define name="title">
-		the title x
+		the title
 	</ui:define>
 	<ui:define name="content">
 		<div id="example" class="flora">
@@ -34,7 +34,7 @@
         </div>
         <span class="assetsState" style="display: none;">
 			<h:commandButton class="state_gotoTaskView" value="Go to task view" action="#{casesBPMAssetsState.selectTaskView}" />
-			<h:commandButton class="state_gotoDocumentsView" value="Go to documents view" action="#{casesBPMAssetsState.selectDocumentsView}" />
+			<h:commandButton class="state_gotoDocumentsView" value="Go to documents view" action="#{casesBPMAssetsState.selectDocumentView}" />
 			<t:inputHidden id="state_viewSelected" value="#{casesBPMAssetsState.viewSelected}" forceId="true" />
 		</span>
 	</ui:define>
