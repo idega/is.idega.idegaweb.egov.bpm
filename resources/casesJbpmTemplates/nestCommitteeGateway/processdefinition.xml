@@ -8,49 +8,30 @@
    <task-node name="submitNewCase">
       <task name="Submit New Case">
          <controller>
-            <variable name="string:plaintiffFirstName" access="read,write,required"></variable>
-            <variable name="string:plaintiffLastName" access="read,write,required"></variable>
-            <variable name="string:plaintiffSocialNumber" access="read,write,required"></variable>
-            <variable name="string:plaintiffAddress"></variable>
-            <variable name="string:plaintiffPostCode"></variable>
-            <variable name="string:plaintiffMunicipality" access="read,write,required"></variable>
-            <variable name="string:plaintiffHomePhone"></variable>
-            <variable name="string:plaintiffWorkPhone"></variable>
-            <variable name="string:plaintiffMobilePhone" access="read"></variable>
-            <variable name="string:plaintiffProvidedDefendantName" access="read,write,required"></variable>
-            <variable name="string:plaintiffProvidedDefendantAddress"></variable>
-            <variable name="string:plaintiffProvidedDefendantPhone"></variable>
-            <variable name="string:plaintiffPurchaseInformation" access="read,write,required"></variable>
-            <variable name="string:plaintiffDispute" access="read,write,required"></variable>
-            <variable name="string:plaintiffArgumentation" access="read,write,required"></variable>
-            <variable name="files:plaintiffDocuments"></variable>
+            <variable name="string:ownerFirstName" access="read,write,required"></variable>
+            <variable name="string:ownerLastName" access="read,write,required"></variable>
+            <variable name="string:defendantName" access="read,write,required"></variable>
+            <variable name="string:ownerCaseInformation" access="read,write,required"></variable>
          </controller>
       </task>
-      <transition name="" to="sendNewCaseMessages"></transition>
+      <transition name="" to="sendNewCaseArrivedMessages"></transition>
    </task-node>
-   <node name="sendNewCaseMessages">
-      <transition name="" to="caseOverview"></transition>
+   <node name="sendNewCaseArrivedMessages">
+      <transition name="tr2" to="fork1"></transition>
    </node>
-   <task-node name="caseOverview">
-      <task name="Case Overview">
+   <task-node name="requestAdditionalInformation">
+      <task name="Request Additional Information">
          <controller>
-            <variable name="string:plaintiffFirstName" access="read"></variable>
-            <variable name="string:plaintiffLastName" access="read"></variable>
-            <variable name="string:plaintiffSocialNumber" access="read"></variable>
-            <variable name="string:plaintiffAddress" access="read"></variable>
-            <variable name="string:plaintiffPostCode" access="read"></variable>
-            <variable name="string:plaintiffMunicipality" access="read"></variable>
-            <variable name="string:plaintiffHomePhone" access="read"></variable>
-            <variable name="string:plaintiffWorkPhone" access="read"></variable>
-            <variable name="string:plaintiffMobilePhone" access="read"></variable>
-            <variable name="string:plaintiffProvidedDefendantName" access="read"></variable>
-            <variable name="string:plaintiffProvidedDefendantAddress" access="read"></variable>
-            <variable name="string:plaintiffProvidedDefendantPhone" access="read"></variable>
-            <variable name="string:plaintiffPurchaseInformation" access="read"></variable>
-            <variable name="string:plaintiffDispute" access="read"></variable>
-            <variable name="string:plaintiffArgumentation" access="read"></variable>
-            <variable name="files:plaintiffDocuments" access="read"></variable>
+            <variable name="string:additionalInformationRequestText" access="read,write,required"></variable>
          </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                {taskAssignment: {roles: {role: [
+                   {roleName: "handler", accesses: {access: [read, write]}}
+                ]} }}
+            </expression>
+         </assignment>
+         <!--  
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
                 {taskAssignment: {roles: {role: [
@@ -59,52 +40,84 @@
                 ]} }}
             </expression>
          </assignment>
+         -->
       </task>
-      <transition name="moreInfoNeeded" to="moreInfoNeeded"></transition>
-      <transition name="addComment" to="addComment"></transition>
-      <transition name="inviteDefendant" to="inviteDefendant"></transition>
-      <transition name="rule" to="submitRuling"></transition>
-   </task-node>
-   <fork name="moreInfoNeeded">
-      <transition name="moreInfoNeeded" to="submitMessageToPlaintiff"></transition>
-      <transition name="back" to="caseOverview"></transition>
-   </fork>
-   <task-node name="submitMessageToPlaintiff">
-      <transition name="" to="submitAdditionalInformation"></transition>
+      <transition name="" to="fork2"></transition>
    </task-node>
    <task-node name="submitAdditionalInformation">
+      <task name="Submit Additional Information">
+         <controller>
+            <variable name="string:additionalInformationRequestText" access="read"></variable>
+            <variable name="string:additionalInformation" access="read,write,required"></variable>
+         </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                {taskAssignment: {roles: {role: [
+                   {roleName: "handler", accesses: {access: [read]}},
+                   {roleName: "owner", accesses: {access: [read, write]}} 
+                ]} }}
+            </expression>
+         </assignment>
+      </task>
       <transition name="" to="additionalInformationEnd"></transition>
    </task-node>
    <end-state name="additionalInformationEnd"></end-state>
-   <task-node name="submitComment">
-      <task name="Submit comment">
-         <controller>
-            <variable name="string:plaintiffFirstName" access="read"></variable>
-            <variable name="string:comment" access="read,write,required"></variable>
-         </controller>
-      </task>
-      <transition name="toCaseOverview" to="caseOverview"></transition>
-   </task-node>
-   <fork name="addComment">
-      <transition name="addComment" to="submitComment"></transition>
-      <transition name="back" to="caseOverview"></transition>
+   <fork name="inviteDefendantFork">
+      <transition name="sendEmail" to="informDefendant"></transition>
+      <transition name="back" to="inviteDefandant"></transition>
    </fork>
-   <fork name="inviteDefendant">
-      <transition name="sendEmail" to="sendEmail"></transition>
-      <transition name="back" to="caseOverview"></transition>
-   </fork>
-   <node name="sendEmail">
+   <node name="informDefendant">
       <transition name="" to="submitCaseAnswer"></transition>
    </node>
    <task-node name="submitCaseAnswer">
       <transition name="" to="caseAnswerEnd"></transition>
    </task-node>
    <end-state name="caseAnswerEnd"></end-state>
-   <task-node name="submitRuling">
+   <task-node name="submitProcessRuling">
+      <task name="Submit Process Ruling">
+         <controller>
+            <variable name="string:rulingText" access="read,write,required"></variable>
+         </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                {taskAssignment: {roles: {role: [
+                   {roleName: "handler", accesses: {access: [read, write]}}
+                ]} }}
+            </expression>
+         </assignment>
+      </task>
       <transition name="" to="sendRulingMessages"></transition>
    </task-node>
    <node name="sendRulingMessages">
-      <transition name="" to="processEnd"></transition>
+      <transition name="" to="endProcess"></transition>
    </node>
-   <end-state name="processEnd"></end-state>
+   <end-state name="end"></end-state>
+   <fork name="fork1">
+      <transition name="toRequestAdditionalInformation" to="requestAdditionalInformation"></transition>
+      <transition name="toInviteDefendant" to="inviteDefandant"></transition>
+      <transition name="toSubmitProcessRuling" to="submitProcessRuling"></transition>
+   </fork>
+   <task-node name="inviteDefandant">
+      <task name="Invite Defendant">
+         <controller>
+            <variable name="string:inviteText" access="read,write,required"></variable>
+            <variable name="string:defendantEmail" access="read,write,required"></variable>
+         </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                {taskAssignment: {roles: {role: [
+                   {roleName: "handler", accesses: {access: [read]}}
+                ]} }}
+            </expression>
+         </assignment>
+      </task>
+      <transition name="" to="inviteDefendantFork"></transition>
+   </task-node>
+   <node name="endProcess">
+      <transition name="" to="end"></transition>
+   </node>
+   <fork name="fork2">
+      <transition name="" to="submitAdditionalInformation"></transition>
+      <transition name="back" to="requestAdditionalInformation"></transition>
+   </fork>
 </process-definition>
