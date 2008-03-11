@@ -2,10 +2,7 @@
 
 <process-definition
   xmlns=""  name="nestSomeProcess">
-   <start-state name="start">
-      <transition name="" to="submitNewCase"></transition>
-   </start-state>
-   <task-node name="submitNewCase">
+   <start-state name="submitNewCase">
       <task name="Submit New Case">
          <controller>
             <variable name="string:ownerFirstName" access="read,write,required"></variable>
@@ -13,9 +10,17 @@
             <variable name="string:defendantName" access="read,write,required"></variable>
             <variable name="string:ownerCaseInformation" access="read,write,required"></variable>
          </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                {taskAssignment: {roles: {role: [
+                   {roleName: "handler", accesses: {access: [read]}},
+                   {roleName: "owner", accesses: {access: [read, write]}}
+                ]} }}
+            </expression>
+         </assignment>
       </task>
       <transition name="" to="sendNewCaseArrivedMessages"></transition>
-   </task-node>
+   </start-state>
    <node name="sendNewCaseArrivedMessages">
       <transition name="tr2" to="fork1"></transition>
    </node>

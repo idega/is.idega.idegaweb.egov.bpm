@@ -3,7 +3,6 @@ package is.idega.idegaweb.egov.bpm.cases;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,9 +35,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/11 20:13:58 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 
@@ -94,18 +93,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 			
 			pi.setStart(new Date());
 			
-//			moving to 1st task node
-			pi.getRootToken().signal();
-			
-			@SuppressWarnings("unchecked")
-			Collection<TaskInstance> tis = pi.getTaskMgmtInstance().getUnfinishedTasks(pi.getRootToken());
-			
-			if(tis.size() != 1)
-				throw new RuntimeException("Fatal: simple cases process definition not correct. First task node comprehends no or more than 1 task . Total: "+tis.size());
-			
-			TaskInstance taskInstance = tis.iterator().next();
-//			pi.getTaskMgmtInstance().createStartTaskInstance()
-			
+			TaskInstance taskInstance = pi.getTaskMgmtInstance().createStartTaskInstance();
 			
 			Map<String, Object> caseData = new HashMap<String, Object>();
 			caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());

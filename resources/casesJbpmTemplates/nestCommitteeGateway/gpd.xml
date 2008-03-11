@@ -1,17 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<process-diagram name="nestSomeProcess" width="956" height="644">
-  <node name="start" x="237" y="35" width="104" height="32">
+<process-diagram name="nestSomeProcess" width="929" height="644">
+  <node name="submitNewCase" x="237" y="35" width="104" height="32">
     <transition name="">
       <label x="5" y="-10"/>
     </transition>
   </node>
-  <node name="submitNewCase" x="228" y="114" width="125" height="39">
-    <transition name="">
-      <label x="5" y="-10"/>
-    </transition>
-  </node>
-  <node name="sendNewCaseArrivedMessages" x="216" y="205" width="144" height="39">
+  <node name="sendNewCaseArrivedMessages" x="218" y="154" width="144" height="39">
     <transition name="tr2">
       <label x="5" y="-10"/>
     </transition>
