@@ -15,6 +15,7 @@ import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.taskmgmt.def.Task;
 import org.jbpm.taskmgmt.def.TaskMgmtDefinition;
 import org.jbpm.taskmgmt.exe.TaskInstance;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.form.process.XFormsView;
 import com.idega.block.process.data.CaseStatus;
@@ -25,7 +26,7 @@ import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.jbpm.IdegaJbpmContext;
-import com.idega.jbpm.data.dao.BpmBindsDAO;
+import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.def.View;
 import com.idega.jbpm.def.ViewCreator;
 import com.idega.jbpm.def.ViewToTask;
@@ -39,9 +40,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/03/07 13:25:23 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/11 12:16:07 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -49,15 +50,16 @@ public class CasesBPMViewManager implements ViewManager {
 	private ViewToTask viewToTaskBinder;
 	private VariablesHandler variablesHandler;
 	private ViewCreator viewCreator;
-	private BpmBindsDAO bpmBindsDAO;
+	private BPMDAO bpmBindsDAO;
 	private IdegaJbpmContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
 	
-	public BpmBindsDAO getBpmBindsDAO() {
+	public BPMDAO getBpmBindsDAO() {
 		return bpmBindsDAO;
 	}
 
-	public void setBpmBindsDAO(BpmBindsDAO bpmBindsDAO) {
+	@Autowired
+	public void setBpmBindsDAO(BPMDAO bpmBindsDAO) {
 		this.bpmBindsDAO = bpmBindsDAO;
 	}
 

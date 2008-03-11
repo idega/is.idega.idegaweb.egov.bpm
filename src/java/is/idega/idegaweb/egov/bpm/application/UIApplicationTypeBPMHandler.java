@@ -1,16 +1,13 @@
 package is.idega.idegaweb.egov.bpm.application;
 
-import java.util.HashMap;
-import java.util.Map;
+import is.idega.idegaweb.egov.application.business.ApplicationType.ApplicationTypeHandlerComponent;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.presentation.ApplicationCreator;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.component.UIComponent;
 import javax.faces.component.html.HtmlMessage;
 import javax.faces.context.FacesContext;
-
-import is.idega.idegaweb.egov.application.business.ApplicationType.ApplicationTypeHandlerComponent;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.application.presentation.ApplicationCreator;
 
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.Block;
@@ -23,9 +20,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/02/21 10:30:51 $ by $Author: anton $
+ * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
  *
  */
 public class UIApplicationTypeBPMHandler extends Block implements ApplicationTypeHandlerComponent {

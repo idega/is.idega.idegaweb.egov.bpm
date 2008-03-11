@@ -14,6 +14,8 @@ import java.util.List;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 
+import org.springframework.beans.factory.annotation.Autowired;
+
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -27,9 +29,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/02/12 14:37:23 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
  *
  */
 public class CasesBPMCreateProcess {
@@ -305,6 +307,7 @@ public class CasesBPMCreateProcess {
 		return casesBPMDAO;
 	}
 
+	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}

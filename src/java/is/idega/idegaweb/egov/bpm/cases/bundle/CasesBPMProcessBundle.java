@@ -14,6 +14,7 @@ import javax.faces.context.FacesContext;
 
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.taskmgmt.def.Task;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWBundle;
@@ -26,9 +27,9 @@ import com.idega.jbpm.def.ViewResource;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * 
- * Last modified: $Date: 2008/02/12 14:37:24 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
  * 
  */
 public class CasesBPMProcessBundle implements ProcessBundle {
@@ -178,6 +179,7 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 		return casesBPMDAO;
 	}
 
+	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}

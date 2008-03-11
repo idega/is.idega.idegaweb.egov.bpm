@@ -3,6 +3,10 @@ package com.idega.idegaweb.egov.bpm.data.dao.impl;
 import java.util.Collection;
 import java.util.List;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
@@ -11,10 +15,13 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/02/26 14:59:11 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/11 12:16:07 $ by $Author: civilis $
  */
+@Scope("singleton")
+@Repository("casesBPMDAO")
+@Transactional(readOnly=true)
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	public List<CaseTypesProcDefBind> getAllCaseTypesProcDefBinds() {
@@ -41,6 +48,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		.getSingleResult();
 	}
 	
+	@Transactional(readOnly = false)
 	public ProcessUserBind getProcessUserBind(long processInstanceId, int userId, boolean createIfNotFound) {
 		
 		@SuppressWarnings("unchecked")

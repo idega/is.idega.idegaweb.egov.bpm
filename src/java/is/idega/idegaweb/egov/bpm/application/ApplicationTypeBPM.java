@@ -9,11 +9,10 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.faces.application.FacesMessage;
-import javax.faces.component.UIComponent;
-import javax.faces.context.FacesContext;
 
 import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
@@ -28,7 +27,7 @@ import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.AppProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
-import com.idega.jbpm.data.dao.BpmBindsDAO;
+import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.DropdownMenu;
@@ -38,15 +37,15 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/02/21 10:30:51 $ by $Author: anton $
+ * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
 
 	private ApplicationContext ctx;
-	private BpmBindsDAO bpmBindsDAO;
+	private BPMDAO bpmBindsDAO;
 	private AppBPMDAO appBPMDAO;
 	public static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
@@ -125,11 +124,12 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		}
 	}
 	
-	public BpmBindsDAO getBpmBindsDAO() {
+	public BPMDAO getBpmBindsDAO() {
 		return bpmBindsDAO;
 	}
 
-	public void setBpmBindsDAO(BpmBindsDAO bpmBindsDAO) {
+	@Autowired
+	public void setBpmBindsDAO(BPMDAO bpmBindsDAO) {
 		this.bpmBindsDAO = bpmBindsDAO;
 	}
 	
@@ -163,6 +163,7 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		return appBPMDAO;
 	}
 
+	@Autowired
 	public void setAppBPMDAO(AppBPMDAO appBPMDAO) {
 		this.appBPMDAO = appBPMDAO;
 	}

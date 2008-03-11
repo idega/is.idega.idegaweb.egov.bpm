@@ -18,6 +18,7 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.ApplicationEvent;
@@ -42,9 +43,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/02/26 19:29:07 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
  */
 public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextAware, ApplicationListener {
 
@@ -182,6 +183,7 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 		return casesBPMDAO;
 	}
 
+	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
