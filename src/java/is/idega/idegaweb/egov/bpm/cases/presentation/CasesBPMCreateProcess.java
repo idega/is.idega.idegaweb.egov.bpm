@@ -29,9 +29,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/12 15:42:13 $ by $Author: civilis $
  *
  */
 public class CasesBPMCreateProcess {
@@ -268,7 +268,6 @@ public class CasesBPMCreateProcess {
 	
 	public void showProcessInitiationView() {
 	
-		System.out.println("xxxxxxxxxxxxxxxx");
 		setChosenProcessDefinitionId(getProcessDefinitionId());
 	}
 	

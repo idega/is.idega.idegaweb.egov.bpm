@@ -40,9 +40,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/03/11 12:16:07 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/12 15:42:13 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -67,6 +67,7 @@ public class CasesBPMViewManager implements ViewManager {
 		return variablesHandler;
 	}
 
+	@Autowired
 	public void setVariablesHandler(VariablesHandler variablesHandler) {
 		this.variablesHandler = variablesHandler;
 	}

@@ -35,9 +35,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/03/11 20:13:58 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/12 15:42:13 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 
@@ -66,6 +66,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 		return variablesHandler;
 	}
 
+	@Autowired
 	public void setVariablesHandler(VariablesHandler variablesHandler) {
 		this.variablesHandler = variablesHandler;
 	}
