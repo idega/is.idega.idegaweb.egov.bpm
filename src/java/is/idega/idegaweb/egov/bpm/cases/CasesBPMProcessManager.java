@@ -35,9 +35,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/03/12 15:42:13 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/12 20:43:44 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager implements ProcessManager {
 
@@ -105,7 +105,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
-			getVariablesHandler().submitVariables(caseData, taskInstance.getId());
+			getVariablesHandler().submitVariables(caseData, taskInstance.getId(), false);
 			submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
@@ -122,7 +122,7 @@ public class CasesBPMProcessManager implements ProcessManager {
 	
 	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables) {
 		
-		getVariablesHandler().submitVariables(variables, ti.getId());
+		getVariablesHandler().submitVariables(variables, ti.getId(), true);
     	
     	String actionTaken = (String)ti.getVariable(CasesBPMProcessConstants.actionTakenVariableName);
     	

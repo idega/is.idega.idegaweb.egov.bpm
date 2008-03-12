@@ -40,9 +40,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/03/12 15:42:13 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/12 20:43:44 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -118,31 +118,6 @@ public class CasesBPMViewManager implements ViewManager {
 		try {
 			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
 			
-			/*
-			List<ViewTaskBind> viewTaskBinds = getJbpmBindsDao().getViewTaskBindsByTaskId(taskInstance.getTask().getId());
-			
-			if(viewTaskBinds.isEmpty())
-				throw new RuntimeException("No view bind to task found for task by id: "+taskInstance.getTask().getId());
-			
-			View view = null;
-			
-			for (ViewTaskBind viewTaskBind : viewTaskBinds) {
-				
-//				we prefer xforms view here
-				if(viewTaskBind.getViewType().equals(XFormsView.VIEW_TYPE)) {
-					ViewFactory viewFactory = getViewCreator().getViewFactory(viewTaskBind.getViewType());
-					view = viewFactory.getView(viewTaskBind.getViewIdentifier(), !taskInstance.hasEnded());
-				}
-			}
-			
-//			no xforms view found, taking anything
-			if(view == null) {
-				ViewTaskBind bind = viewTaskBinds.iterator().next();
-				ViewFactory viewFactory = getViewCreator().getViewFactory(bind.getViewType());
-				view = viewFactory.getView(bind.getViewIdentifier(), !taskInstance.hasEnded());
-			}
-			*/
-			
 			List<String> preferred = new ArrayList<String>(1);
 			preferred.add(XFormsView.VIEW_TYPE);
 			View view = getBpmFactory().getView(taskInstance.getTask().getId(), true, preferred);
@@ -163,123 +138,6 @@ public class CasesBPMViewManager implements ViewManager {
 		}
 	}
 	
-	/*
-	Remove
-	 
-	public View loadProcessInstanceView(FacesContext context, Token token) {
-		
-		try {
-			@SuppressWarnings("unchecked")
-			Collection<TaskInstance> tis = token.getProcessInstance().getTaskMgmtInstance().getUnfinishedTasks(token);
-			
-			if(tis.size() == 0)
-				throw new RuntimeException("No unfinished task instances on token: "+token);
-			
-			TaskInstance taskInstance = tis.iterator().next();
-			
-			View view = getViewToTaskBinder().getView(taskInstance.getTask().getId());
-			
-			Map<String, String> parameters = new HashMap<String, String>(1);
-			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));
-			
-			view.addParameters(parameters);
-			view.populate(getVariablesHandler().populateVariables(taskInstance.getId()));
-			
-			return view;
-			
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-			
-		}
-	}
-	*/
-	
-	/*
-	public org.w3c.dom.Document loadProcessViewForm(FacesContext context, Long processInstanceId, int viewerId) {
-		
-//		roles - by view type
-//		1 - owner 2 - case handler 3 - other
-//		checking in this order. 3 - other should be resolved in the same way task view bindings are resolved.
-		
-		Session session = getHibernateResources().getGlobalSessionFactory().getCurrentSession();
-		
-		Transaction transaction = session.getTransaction();
-		boolean transactionWasActive = transaction.isActive();
-		
-		if(!transactionWasActive)
-			transaction.begin();
-		
-		JbpmContext ctx = getJbpmConfiguration().createJbpmContext();
-		ctx.setSession(session);
-		
-		try {
-			ProcessInstance pi = ctx.getProcessInstance(processInstanceId);
-			Long processDefinitionId = pi.getProcessDefinition().getId();
-			
-			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
-			
-			User viewer = getUserBusiness(iwc).getUser(viewerId);
-			
-			if(viewer == null)
-				throw new RuntimeException("userId provided not correct - no User found. userId provided: "+viewerId);
-			
-			CasesBusiness casesBusiness = getCasesBusiness(iwc);
-			
-			@SuppressWarnings("unchecked")
-			Collection<GeneralCase> genCases = casesBusiness.getCasesByCriteria(null, null, null, null, null, processInstanceId.intValue());
-			
-			if(genCases.isEmpty())
-				throw new RuntimeException("No case found by processInstanceId provided: "+processInstanceId);
-			
-			GeneralCase genCase = genCases.iterator().next();
-			
-			User owner = genCase.getOwner();
-			String formId;
-			
-			if(viewer.equals(owner)) {
-//				viewer is owner
-				ProcessViewByActor processView = ProcessViewByActor.getByViewerType(session, ProcessViewByActor.VIEWER_TYPE_OWNER, XFormsView.VIEW_TYPE, processDefinitionId);
-				formId = processView.getViewIdentifier();
-				
-			} else {
-				
-				@SuppressWarnings("unchecked")
-				Collection<User> handlers = getGroupBusiness(iwc).getUsers(genCase.getHandler());
-				
-				if(handlers.contains(viewer)) {
-//					viewer is status handler
-					ProcessViewByActor processView = ProcessViewByActor.getByViewerType(session, ProcessViewByActor.VIEWER_TYPE_CASE_HANDLERS, XFormsView.VIEW_TYPE, processDefinitionId);
-					formId = processView.getViewIdentifier();
-					
-				} else {
-//					viewer is someone from another group
-//					TODO: implement this
-					throw new IllegalStateException("User isn't case owner, and doesn't belong to case handlers group. This situation is not implemented yet");
-				}
-			}
-			
-			DocumentManager documentManager = getDocumentManagerFactory().newDocumentManager(context);
-			Document form = documentManager.openForm(formId);
-			
-			getVariablesHandler().populateFromProcess(processInstanceId, form.getSubmissionInstanceElement());
-			
-			return form.getXformsDocument();
-		
-		} catch (RuntimeException e) {
-			throw e;
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-			
-		} finally {
-			
-			ctx.close();
-			
-			if(!transactionWasActive)
-				transaction.commit();
-		}
-	}
-	*/
-
 	public DocumentManagerFactory getDocumentManagerFactory() {
 		return documentManagerFactory;
 	}
