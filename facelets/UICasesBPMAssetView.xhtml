@@ -44,7 +44,7 @@
 						</div>
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
-								Assigned to
+								Taken by
 							</div>
 							<div class="assetEntryRight">
 								#{casesBPMAssetsState.taskView.assignedTo}
@@ -52,7 +52,7 @@
 						</div>
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
-								Created date
+								Time created
 							</div>
 							<div class="assetEntryRight">
 								#{casesBPMAssetsState.taskView.createdDate}
@@ -85,13 +85,13 @@
 					</div>
 					<div class="assetContent">
 						<div class="assetEntry">
-							Start task
+						  <h:commandLink value="Start task" action="#{casesBPMAssetsState.startTask}" />
 						</div>
 						<div class="assetEntry">
-							Take task
+						  <h:commandLink value="Take task" action="#{casesBPMAssetsState.assignTask}" />
 						</div>
 						<div class="assetEntry">
-							Assign task
+						  Assign task
 						</div>
 					</div>
 				</div>
@@ -99,10 +99,7 @@
 			<div class="right">
 				<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
 			</div>
-			
 		</div>
-		
 	</ui:define>
-	
 	</ui:composition>
 </div>

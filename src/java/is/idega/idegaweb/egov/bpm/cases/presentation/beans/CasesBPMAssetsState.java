@@ -28,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/03/13 12:06:18 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/13 17:00:50 $ by $Author: civilis $
  *
  */
 public class CasesBPMAssetsState implements Serializable {
@@ -202,6 +202,29 @@ public class CasesBPMAssetsState implements Serializable {
 			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "We were unable to remove this case from your watch list due to internal error", null);
 			ctx.addMessage(null, msg);
 		}
+	}
+	
+	public void startTask() {
+		
+		if(getViewSelected() != null) {
+			
+			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
+			
+			getCasesBPMProcessView().startTask(getViewSelected(), iwc.getCurrentUserId());
+			
+		} else
+			throw new RuntimeException("No view selected");
+	}
+	
+	public void assignTask() {
+		
+		if(getViewSelected() != null) {
+			
+			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
+			getCasesBPMProcessView().assignTask(getViewSelected(), iwc.getCurrentUserId());	
+		
+		} else
+			throw new RuntimeException("No view selected");
 	}
 	
 	public boolean isWatched() {

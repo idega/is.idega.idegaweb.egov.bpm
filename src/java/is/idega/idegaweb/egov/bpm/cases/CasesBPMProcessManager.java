@@ -12,6 +12,7 @@ import javax.faces.context.FacesContext;
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
+import org.jbpm.security.AuthorizationService;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -24,8 +25,8 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.def.View;
-import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.VariablesHandler;
+import com.idega.jbpm.exe.impl.AbstractProcessManager;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.user.business.UserBusiness;
@@ -35,15 +36,16 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/03/12 20:43:44 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/13 17:00:50 $ by $Author: civilis $
  */
-public class CasesBPMProcessManager implements ProcessManager {
+public class CasesBPMProcessManager extends AbstractProcessManager {
 
 	private VariablesHandler variablesHandler;
 	private IdegaJbpmContext idegaJbpmContext;
 	private CasesBPMDAO casesBPMDAO;
+	private AuthorizationService authorizationService;
 	
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
@@ -161,5 +163,16 @@ public class CasesBPMProcessManager implements ProcessManager {
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
+	}
+
+	@Override
+	public AuthorizationService getAuthorizationService() {
+		return authorizationService;
+	}
+
+	@Override
+	@Autowired
+	public void setAuthorizationService(AuthorizationService authorizationService) {
+		this.authorizationService = authorizationService;
 	}
 }

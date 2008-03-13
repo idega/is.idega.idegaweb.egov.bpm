@@ -4,7 +4,6 @@ import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 import java.io.Serializable;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,20 +17,24 @@ import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.jbpm.IdegaJbpmContext;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessManager;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
+import com.idega.webface.WFUtil;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/03/13 12:06:18 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/13 17:00:50 $ by $Author: civilis $
  */
 public class CasesBPMProcessView {
 	
 	private IdegaJbpmContext idegaJbpmContext;
+	private static final String bpmFactoryBeanIdentifier = "bpmFactory";
 
 	public CasesBPMTaskViewBean getTaskView(long taskInstanceId) {
 
@@ -44,17 +47,31 @@ public class CasesBPMProcessView {
 				Logger.getLogger(getClass().getName()).log(Level.WARNING, "No task instance found for task instance id provided: "+taskInstanceId);
 				return new CasesBPMTaskViewBean();
 			}
+			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
+			IWTimestamp createTime = new IWTimestamp(ti.getCreate());
 			
 			CasesBPMTaskViewBean bean = new CasesBPMTaskViewBean();
 			bean.setTaskName(ti.getName());
 			bean.setTaskStatus("Unknown");
 			bean.setAssignedTo("Unknown");
-			bean.setCreatedDate(ti.getCreate());
+			bean.setCreatedDate(createTime.getLocaleTime(iwc.getLocale()));
 			return bean;
 			
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
+	}
+	
+	public void startTask(long taskInstanceId, int actorUserId) {
+		
+		ProcessManager processManager = getBPMFactory().getProcessManagerByTaskInstanceId(taskInstanceId);
+		processManager.startTask(taskInstanceId, actorUserId);
+	}
+	
+	public void assignTask(long taskInstanceId, int actorUserId) {
+		
+		ProcessManager processManager = getBPMFactory().getProcessManagerByTaskInstanceId(taskInstanceId);
+		processManager.assignTask(taskInstanceId, actorUserId);
 	}
 	
 	public CasesBPMProcessViewBean getProcessView(long processInstanceId, int caseId) {
@@ -79,7 +96,7 @@ public class CasesBPMProcessView {
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 			
 			String processStatus = pi.hasEnded() ? "Ended" : "In progress";
-			IWTimestamp time = new IWTimestamp(pi.getStart().toString());
+			IWTimestamp time = new IWTimestamp(pi.getStart());
 			String createDate = time.getLocaleDate(iwc.getLocale());
 			
 			String caseCategory;
@@ -165,7 +182,7 @@ public class CasesBPMProcessView {
 		private String taskName;
 		private String taskStatus;
 		private String assignedTo;
-		private Date createdDate;
+		private String createdDate;
 		
 		public String getTaskName() {
 			return taskName;
@@ -185,10 +202,10 @@ public class CasesBPMProcessView {
 		public void setAssignedTo(String assignedTo) {
 			this.assignedTo = assignedTo;
 		}
-		public Date getCreatedDate() {
+		public String getCreatedDate() {
 			return createdDate;
 		}
-		public void setCreatedDate(Date createdDate) {
+		public void setCreatedDate(String createdDate) {
 			this.createdDate = createdDate;
 		}
 	}
@@ -209,5 +226,10 @@ public class CasesBPMProcessView {
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
+	}
+	
+	protected BPMFactory getBPMFactory() {
+	
+		return (BPMFactory)WFUtil.getBeanInstance(bpmFactoryBeanIdentifier);
 	}
 }
