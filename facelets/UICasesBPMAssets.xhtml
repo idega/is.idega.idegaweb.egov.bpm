@@ -19,11 +19,11 @@
                 <li><a href="#documentsTab"><span>Documents</span></a></li>
             </ul>
             <div id="caseOverviewTab">
-            	<div>Case status: good</div>
-  				<div>Case creator: Mr. JavaBean</div>
-  				<div>Case create date: 2200-12-12</div>
-  				<div>Case category: xcatx</div>
-  				<div>Case type: xtypex</div>
+            	<div>Case status: #{casesBPMAssetsState.processView.processStatus}</div>
+  				<div>Case creator: #{casesBPMAssetsState.processView.processOwner}</div>
+  				<div>Case create date: #{casesBPMAssetsState.processView.processCreateDate}</div>
+  				<div>Case category: #{casesBPMAssetsState.processView.caseCategory}</div>
+  				<div>Case type: #{casesBPMAssetsState.processView.caseType}</div>
             </div>
             <div id="tasksTab">
 	            <table id="tasksTable" class="scroll" cellpadding="0" cellspacing="0"></table>

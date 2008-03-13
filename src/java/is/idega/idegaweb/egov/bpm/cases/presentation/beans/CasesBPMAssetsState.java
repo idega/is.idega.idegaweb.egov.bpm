@@ -28,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/02/26 15:46:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/13 12:06:18 $ by $Author: civilis $
  *
  */
 public class CasesBPMAssetsState implements Serializable {
@@ -116,7 +116,7 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	public CasesBPMProcessViewBean getProcessView() {
 		
-		return getCasesBPMProcessView().getProcessView(getProcessInstanceId());
+		return getCasesBPMProcessView().getProcessView(getProcessInstanceId(), getCaseId());
 	}
 	
 	public CasesBPMTaskViewBean getTaskView() {
@@ -228,7 +228,7 @@ public class CasesBPMAssetsState implements Serializable {
 		return isWatched == null ? false : isWatched;
 	}
 	
-	public CasesBusiness getCaseBusiness(IWContext iwc) {
+	protected CasesBusiness getCaseBusiness(IWContext iwc) {
 		
 		try {
 			return (CasesBusiness)IBOLookup.getServiceInstance(iwc, CasesBusiness.class);
