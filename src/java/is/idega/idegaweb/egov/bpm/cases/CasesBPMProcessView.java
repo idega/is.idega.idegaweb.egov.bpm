@@ -17,8 +17,10 @@ import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.jbpm.IdegaJbpmContext;
+import com.idega.jbpm.exe.BPMAccessControlException;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessManager;
+import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
@@ -27,9 +29,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/03/13 17:00:50 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/13 21:05:55 $ by $Author: civilis $
  */
 public class CasesBPMProcessView {
 	
@@ -72,6 +74,38 @@ public class CasesBPMProcessView {
 		
 		ProcessManager processManager = getBPMFactory().getProcessManagerByTaskInstanceId(taskInstanceId);
 		processManager.assignTask(taskInstanceId, actorUserId);
+	}
+	
+	/**
+	 * 
+	 * @param taskInstanceId
+	 * @param userId
+	 * @return null if task can be started, err message otherwise
+	 */
+	public String getCanStartTask(long taskInstanceId, int userId) {
+	
+		try {
+			RolesManager rolesManager = getBPMFactory().getRolesManager();
+			rolesManager.hasRightsToStartTask(taskInstanceId, userId);
+			
+		} catch (BPMAccessControlException e) {
+			return e.getUserFriendlyMessage();
+		}
+		
+		return null;
+	}
+	
+	public String getCanTakeTask(long taskInstanceId, int userId) {
+		
+		try {
+			RolesManager rolesManager = getBPMFactory().getRolesManager();
+			rolesManager.hasRightsToAsssignTask(taskInstanceId, userId);
+			
+		} catch (BPMAccessControlException e) {
+			return e.getUserFriendlyMessage();
+		}
+		
+		return null;
 	}
 	
 	public CasesBPMProcessViewBean getProcessView(long processInstanceId, int caseId) {

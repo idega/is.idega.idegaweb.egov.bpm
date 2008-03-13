@@ -84,9 +84,12 @@
 						Actions
 					</div>
 					<div class="assetContent">
+					
+					 h:rendered="#{casesBPMAssetsState.canStartTask}"
 						<div class="assetEntry">
 						  <h:commandLink value="Start task" action="#{casesBPMAssetsState.startTask}" />
 						</div>
+						 h:rendered="#{casesBPMAssetsState.canTakeTask}"
 						<div class="assetEntry">
 						  <h:commandLink value="Take task" action="#{casesBPMAssetsState.assignTask}" />
 						</div>

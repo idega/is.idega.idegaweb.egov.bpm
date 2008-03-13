@@ -25,6 +25,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.def.View;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.VariablesHandler;
 import com.idega.jbpm.exe.impl.AbstractProcessManager;
 import com.idega.presentation.IWContext;
@@ -36,9 +37,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/03/13 17:00:50 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/13 21:05:55 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager extends AbstractProcessManager {
 
@@ -46,33 +47,8 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 	private IdegaJbpmContext idegaJbpmContext;
 	private CasesBPMDAO casesBPMDAO;
 	private AuthorizationService authorizationService;
+	private BPMFactory bpmFactory;
 	
-	public CasesBPMDAO getCasesBPMDAO() {
-		return casesBPMDAO;
-	}
-
-	@Autowired
-	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
-		this.casesBPMDAO = casesBPMDAO;
-	}
-
-	public IdegaJbpmContext getIdegaJbpmContext() {
-		return idegaJbpmContext;
-	}
-
-	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
-		this.idegaJbpmContext = idegaJbpmContext;
-	}
-
-	public VariablesHandler getVariablesHandler() {
-		return variablesHandler;
-	}
-
-	@Autowired
-	public void setVariablesHandler(VariablesHandler variablesHandler) {
-		this.variablesHandler = variablesHandler;
-	}
-
 	public void startProcess(long processDefinitionId, View view) {
 		
 		Map<String, String> parameters = view.resolveParameters();
@@ -122,6 +98,19 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		}
 	}
 	
+	public void submitTaskInstance(long taskInstanceId, View view) {
+		
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
+	    	submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
+			
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+	}
+	
 	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables) {
 		
 		getVariablesHandler().submitVariables(variables, ti.getId(), true);
@@ -152,27 +141,50 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		}
 	}
 	
-	public void submitTaskInstance(long taskInstanceId, View view) {
-		
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-		
-		try {
-			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
-	    	submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
-			
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
-		}
-	}
-
 	@Override
 	public AuthorizationService getAuthorizationService() {
 		return authorizationService;
 	}
 
-	@Override
 	@Autowired
 	public void setAuthorizationService(AuthorizationService authorizationService) {
 		this.authorizationService = authorizationService;
+	}
+	
+	@Override
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	@Autowired
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
+	}
+	
+	public CasesBPMDAO getCasesBPMDAO() {
+		return casesBPMDAO;
+	}
+
+	@Autowired
+	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
+		this.casesBPMDAO = casesBPMDAO;
+	}
+
+	@Override
+	public IdegaJbpmContext getIdegaJbpmContext() {
+		return idegaJbpmContext;
+	}
+
+	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+		this.idegaJbpmContext = idegaJbpmContext;
+	}
+
+	public VariablesHandler getVariablesHandler() {
+		return variablesHandler;
+	}
+
+	@Autowired
+	public void setVariablesHandler(VariablesHandler variablesHandler) {
+		this.variablesHandler = variablesHandler;
 	}
 }

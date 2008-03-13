@@ -28,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/03/13 17:00:50 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/13 21:05:55 $ by $Author: civilis $
  *
  */
 public class CasesBPMAssetsState implements Serializable {
@@ -249,6 +249,46 @@ public class CasesBPMAssetsState implements Serializable {
 		}
 		
 		return isWatched == null ? false : isWatched;
+	}
+	
+	public boolean getCanStartTask() {
+		
+		if(getViewSelected() != null) {
+			
+			FacesContext ctx = FacesContext.getCurrentInstance();
+			IWContext iwc = IWContext.getIWContext(ctx);
+			int userId = iwc.getCurrentUserId();
+			
+			String errMsg = getCasesBPMProcessView().getCanStartTask(getViewSelected(), userId);
+		
+//			TODO: output message
+			if(errMsg == null)
+				return false;
+			else
+				return false;
+		}
+		
+		return false;
+	}
+	
+	public boolean getCanTakeTask() {
+		
+		if(getViewSelected() != null) {
+			
+			FacesContext ctx = FacesContext.getCurrentInstance();
+			IWContext iwc = IWContext.getIWContext(ctx);
+			int userId = iwc.getCurrentUserId();
+			
+			String errMsg = getCasesBPMProcessView().getCanTakeTask(getViewSelected(), userId);
+		
+//			TODO: output message
+			if(errMsg == null)
+				return true;
+			else
+				return false;
+		}
+		
+		return false;
 	}
 	
 	protected CasesBusiness getCaseBusiness(IWContext iwc) {
