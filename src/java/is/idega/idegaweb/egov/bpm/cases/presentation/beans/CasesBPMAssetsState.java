@@ -28,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/03/13 21:05:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/14 10:42:02 $ by $Author: civilis $
  *
  */
 public class CasesBPMAssetsState implements Serializable {
@@ -209,7 +209,6 @@ public class CasesBPMAssetsState implements Serializable {
 		if(getViewSelected() != null) {
 			
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
-			
 			getCasesBPMProcessView().startTask(getViewSelected(), iwc.getCurrentUserId());
 			
 		} else
@@ -261,9 +260,8 @@ public class CasesBPMAssetsState implements Serializable {
 			
 			String errMsg = getCasesBPMProcessView().getCanStartTask(getViewSelected(), userId);
 		
-//			TODO: output message
 			if(errMsg == null)
-				return false;
+				return true;
 			else
 				return false;
 		}
@@ -281,7 +279,6 @@ public class CasesBPMAssetsState implements Serializable {
 			
 			String errMsg = getCasesBPMProcessView().getCanTakeTask(getViewSelected(), userId);
 		
-//			TODO: output message
 			if(errMsg == null)
 				return true;
 			else

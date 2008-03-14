@@ -5,6 +5,7 @@
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:jp="http://xmlns.idega.com/org.jboss.jbpm"
 		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:t="http://myfaces.apache.org/tomahawk"
 >
 
 	
@@ -85,14 +86,16 @@
 					</div>
 					<div class="assetContent">
 					
-					 h:rendered="#{casesBPMAssetsState.canStartTask}"
+					   <t:div rendered="#{casesBPMAssetsState.canStartTask}">
 						<div class="assetEntry">
 						  <h:commandLink value="Start task" action="#{casesBPMAssetsState.startTask}" />
 						</div>
-						 h:rendered="#{casesBPMAssetsState.canTakeTask}"
+						</t:div>
+						 <t:div rendered="#{casesBPMAssetsState.canTakeTask}">
 						<div class="assetEntry">
 						  <h:commandLink value="Take task" action="#{casesBPMAssetsState.assignTask}" />
 						</div>
+						</t:div>
 						<div class="assetEntry">
 						  Assign task
 						</div>

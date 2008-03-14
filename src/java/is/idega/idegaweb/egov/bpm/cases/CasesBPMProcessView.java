@@ -22,16 +22,18 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
+import com.idega.user.business.UserBusiness;
 import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.webface.WFUtil;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/03/13 21:05:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/14 10:42:02 $ by $Author: civilis $
  */
 public class CasesBPMProcessView {
 	
@@ -51,17 +53,47 @@ public class CasesBPMProcessView {
 			}
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 			IWTimestamp createTime = new IWTimestamp(ti.getCreate());
+			String taskStatus = getTaskStatus(ti);
+			String assignedTo = getTaskAssignedTo(ti);
 			
 			CasesBPMTaskViewBean bean = new CasesBPMTaskViewBean();
 			bean.setTaskName(ti.getName());
-			bean.setTaskStatus("Unknown");
-			bean.setAssignedTo("Unknown");
-			bean.setCreatedDate(createTime.getLocaleTime(iwc.getLocale()));
+			bean.setTaskStatus(taskStatus);
+			bean.setAssignedTo(assignedTo);
+			bean.setCreatedDate(createTime.getLocaleDateAndTime(iwc.getLocale()));
 			return bean;
 			
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
+	}
+	
+	protected String getTaskStatus(TaskInstance taskInstance) {
+		
+		if(taskInstance.hasEnded())
+			return "Ended";
+		if(taskInstance.getStart() != null)
+			return "In progress";
+		
+		return "Not started";
+	}
+	
+	protected String getTaskAssignedTo(TaskInstance taskInstance) {
+		
+		String actorId = taskInstance.getActorId();
+		
+		if(actorId != null) {
+			
+			try {
+				int assignedTo = Integer.parseInt(actorId);
+				return getUserBusiness().getUser(assignedTo).getName();
+				
+			} catch (Exception e) {
+				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving assigned user name for actor id: "+actorId, e);
+			}
+		}
+		
+		return "No one";
 	}
 	
 	public void startTask(long taskInstanceId, int actorUserId) {
@@ -265,5 +297,14 @@ public class CasesBPMProcessView {
 	protected BPMFactory getBPMFactory() {
 	
 		return (BPMFactory)WFUtil.getBeanInstance(bpmFactoryBeanIdentifier);
+	}
+	
+	protected UserBusiness getUserBusiness() {
+		try {
+			return (UserBusiness) IBOLookup.getServiceInstance(CoreUtil.getIWContext(), UserBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
 	}
 }
