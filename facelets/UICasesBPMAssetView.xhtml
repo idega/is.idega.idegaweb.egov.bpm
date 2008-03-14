@@ -86,15 +86,11 @@
 					</div>
 					<div class="assetContent">
 					
-					   <t:div rendered="#{casesBPMAssetsState.canStartTask}">
-						<div class="assetEntry">
+					    <t:div rendered="#{casesBPMAssetsState.canStartTask}" styleClass="assetEntry">
 						  <h:commandLink value="Start task" action="#{casesBPMAssetsState.startTask}" />
-						</div>
 						</t:div>
-						 <t:div rendered="#{casesBPMAssetsState.canTakeTask}">
-						<div class="assetEntry">
+						<t:div rendered="#{casesBPMAssetsState.canTakeTask}" styleClass="assetEntry">
 						  <h:commandLink value="Take task" action="#{casesBPMAssetsState.assignTask}" />
-						</div>
 						</t:div>
 						<div class="assetEntry">
 						  Assign task
