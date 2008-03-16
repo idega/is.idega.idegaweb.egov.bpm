@@ -96,3 +96,11 @@
 	float: left;
 	margin-left: 2px;
 }
+
+.casesBPMAssets .disabledSelection {
+	color: grey;
+}
+
+.casesBPMAssets .bpmTasks tr, .casesBPMAssets .bpmDocuments tr {
+	cursor: pointer;
+}

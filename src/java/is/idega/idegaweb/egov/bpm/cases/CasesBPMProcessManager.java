@@ -26,6 +26,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.def.View;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessException;
 import com.idega.jbpm.exe.VariablesHandler;
 import com.idega.jbpm.exe.impl.AbstractProcessManager;
 import com.idega.presentation.IWContext;
@@ -37,9 +38,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/03/13 21:05:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/16 18:59:42 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager extends AbstractProcessManager {
 
@@ -104,7 +105,12 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		
 		try {
 			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
+			
+			if(taskInstance.hasEnded())
+				throw new ProcessException("Task instance ("+taskInstanceId+") is already submitted", "Task instance is already submitted");
+			
 	    	submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
+	    	ctx.save(taskInstance);
 			
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
@@ -121,6 +127,8 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
     		ti.end(actionTaken);
     	else
     		ti.end();
+    	
+    	ti.setActorId(null);
 	}
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {

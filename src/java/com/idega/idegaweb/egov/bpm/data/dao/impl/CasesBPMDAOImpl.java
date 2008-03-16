@@ -15,9 +15,9 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/03/11 12:16:07 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/16 18:59:41 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -43,9 +43,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	
 	public CaseProcInstBind getCaseProcInstBindByCaseId(Integer caseId) {
 		
-		return (CaseProcInstBind)getEntityManager().createNamedQuery(CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME)
-		.setParameter(CaseProcInstBind.caseIdParam, caseId)
-		.getSingleResult();
+		@SuppressWarnings("unchecked")
+		List<CaseProcInstBind> l = getEntityManager().createNamedQuery(CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME)
+		.setParameter(CaseProcInstBind.caseIdParam, caseId).getResultList();
+		
+		if(l.isEmpty())
+			return null;
+		
+		return l.iterator().next();
 	}
 	
 	@Transactional(readOnly = false)

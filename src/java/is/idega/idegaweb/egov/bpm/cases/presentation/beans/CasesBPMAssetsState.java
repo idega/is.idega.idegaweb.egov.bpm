@@ -28,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/03/14 10:42:02 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/16 18:59:41 $ by $Author: civilis $
  *
  */
 public class CasesBPMAssetsState implements Serializable {
@@ -95,7 +95,7 @@ public class CasesBPMAssetsState implements Serializable {
 				processInstanceId = bind.getProcInstId();
 				
 			} else {
-				Logger.getLogger(getClass().getName()).log(Level.WARNING, "No case process instance bind found for caseId provided: "+caseId);
+				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "No case process instance bind found for caseId provided: "+caseId);
 			}
 		}
 		

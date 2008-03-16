@@ -68,7 +68,7 @@
       <label x="5" y="-10"/>
     </transition>
   </node>
-  <node name="endProcess" x="224" y="472" width="140" height="40">
+  <node name="endCaseProcess" x="224" y="472" width="140" height="40">
     <transition name="">
       <label x="5" y="-10"/>
     </transition>

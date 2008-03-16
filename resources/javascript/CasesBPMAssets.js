@@ -42,11 +42,13 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
                 );
 	};
 	
-	params.colNames = ['Nr','Task name', 'Submitted date']; 
+	params.colNames = ['Nr','Task name', 'Date created', 'Taken by', 'Status']; 
     params.colModel = [
-    	        {name:'id',index:'id'},
+    	        {name:'id',index:'id', width:55},
                 {name:'name',index:'name'}, 
-                {name:'createdDate',index:'createdDate'}
+                {name:'createdDate',index:'createdDate'},
+                {name:'takenBy',index:'takenBy'},
+                {name:'status',index:'status'}
     ];
 	
 	params.onSelectRow = function(rowId) {
@@ -89,11 +91,12 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
 		);
 	};
 	
-	params.colNames = ['Nr','Task name', 'Submitted date']; 
+	params.colNames = ['Nr','Document name', 'Date submitted']; 
     params.colModel = [
-    	        {name:'id',index:'id'},
+                {name:'id',index:'id', width:55},
                 {name:'name',index:'name'}, 
-                {name:'createdDate',index:'createdDate'}
+                {name:'submittedDate',index:'submittedDate'}
+                //{name:'submittedBy',index:'submittedBy'}
     ];
 	
 	params.onSelectRow = function(rowId) {

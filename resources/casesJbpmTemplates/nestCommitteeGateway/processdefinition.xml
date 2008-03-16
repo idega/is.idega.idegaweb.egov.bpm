@@ -94,7 +94,7 @@
       <transition name="" to="sendRulingMessages"></transition>
    </task-node>
    <node name="sendRulingMessages">
-      <transition name="" to="endProcess"></transition>
+      <transition name="" to="endCaseProcess"></transition>
    </node>
    <end-state name="end"></end-state>
    <fork name="fork1">
@@ -111,15 +111,17 @@
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
                 {taskAssignment: {roles: {role: [
-                   {roleName: "handler", accesses: {access: [read]}}
+                   {roleName: "handler", accesses: {access: [read, write]}}
                 ]} }}
             </expression>
          </assignment>
       </task>
       <transition name="" to="inviteDefendantFork"></transition>
    </task-node>
-   <node name="endProcess">
+   <node name="endCaseProcess">
       <transition name="" to="end"></transition>
+   
+      <action class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.EndCaseProcessHandler" config-type="constructor"></action>
    </node>
    <fork name="fork2">
       <transition name="" to="submitAdditionalInformation"></transition>

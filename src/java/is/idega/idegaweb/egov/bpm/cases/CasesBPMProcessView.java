@@ -31,9 +31,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/03/14 10:42:02 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/16 18:59:42 $ by $Author: civilis $
  */
 public class CasesBPMProcessView {
 	
@@ -60,7 +60,7 @@ public class CasesBPMProcessView {
 			bean.setTaskName(ti.getName());
 			bean.setTaskStatus(taskStatus);
 			bean.setAssignedTo(assignedTo);
-			bean.setCreatedDate(createTime.getLocaleDateAndTime(iwc.getLocale()));
+			bean.setCreatedDate(createTime.getLocaleDateAndTime(iwc.getLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			return bean;
 			
 		} finally {
