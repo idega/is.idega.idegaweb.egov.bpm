@@ -40,9 +40,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/03/12 20:43:44 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/17 13:38:32 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -120,7 +120,7 @@ public class CasesBPMViewManager implements ViewManager {
 			
 			List<String> preferred = new ArrayList<String>(1);
 			preferred.add(XFormsView.VIEW_TYPE);
-			View view = getBpmFactory().getView(taskInstance.getTask().getId(), true, preferred);
+			View view = getBpmFactory().getView(taskInstance.getTask().getId(), !taskInstance.hasEnded(), preferred);
 			
 			Map<String, String> parameters = new HashMap<String, String>(1);
 			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));

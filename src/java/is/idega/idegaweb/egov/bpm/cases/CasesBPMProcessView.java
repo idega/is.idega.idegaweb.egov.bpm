@@ -12,6 +12,9 @@ import javax.faces.context.FacesContext;
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -26,19 +29,19 @@ import com.idega.user.business.UserBusiness;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
-import com.idega.webface.WFUtil;
-
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/03/16 18:59:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/17 13:38:32 $ by $Author: civilis $
  */
+@Scope("singleton")
+@Service("casesBPMProcessView")
 public class CasesBPMProcessView {
 	
 	private IdegaJbpmContext idegaJbpmContext;
-	private static final String bpmFactoryBeanIdentifier = "bpmFactory";
+	private BPMFactory BPMFactory;
 
 	public CasesBPMTaskViewBean getTaskView(long taskInstanceId) {
 
@@ -280,6 +283,7 @@ public class CasesBPMProcessView {
 		return idegaJbpmContext;
 	}
 
+	@Autowired
 	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
 	}
@@ -294,11 +298,6 @@ public class CasesBPMProcessView {
 		}
 	}
 	
-	protected BPMFactory getBPMFactory() {
-	
-		return (BPMFactory)WFUtil.getBeanInstance(bpmFactoryBeanIdentifier);
-	}
-	
 	protected UserBusiness getUserBusiness() {
 		try {
 			return (UserBusiness) IBOLookup.getServiceInstance(CoreUtil.getIWContext(), UserBusiness.class);
@@ -306,5 +305,14 @@ public class CasesBPMProcessView {
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
+	}
+
+	public BPMFactory getBPMFactory() {
+		return BPMFactory;
+	}
+
+	@Autowired
+	public void setBPMFactory(BPMFactory factory) {
+		BPMFactory = factory;
 	}
 }

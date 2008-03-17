@@ -13,6 +13,9 @@ import java.util.logging.Logger;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -28,11 +31,13 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/03/16 18:59:41 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/17 13:38:32 $ by $Author: civilis $
  *
  */
+@Scope("request")
+@Service("casesBPMAssetsState")
 public class CasesBPMAssetsState implements Serializable {
 
 	private static final long serialVersionUID = -6474883869451606583L;

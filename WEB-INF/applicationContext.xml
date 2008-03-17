@@ -43,10 +43,4 @@
     <bean id="casesPresentationHelper" class="is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesPresentationHelper" scope="singleton" />
     -->
     <bean id="casesBPMCaseHandler" class="is.idega.idegaweb.egov.bpm.cases.CasesBPMCaseHandlerImpl" scope="singleton" />
-    
-    <bean id="casesBPMAssetsState" class="is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState" scope="request" />
-    
-    <bean id="casesBPMProcessView" class="is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView" scope="singleton">
-    	<property name="idegaJbpmContext" ref="idegaJbpmContext" />
-    </bean>
 </beans>
