@@ -51,7 +51,7 @@
       <label x="5" y="-10"/>
     </transition>
   </node>
-  <node name="end" x="198" y="551" width="140" height="40"/>
+  <node name="end" x="212" y="598" width="140" height="40"/>
   <node name="fork1" x="223" y="274" width="200" height="25">
     <transition name="toRequestAdditionalInformation">
       <label x="5" y="-10"/>
@@ -78,6 +78,11 @@
       <label x="5" y="-10"/>
     </transition>
     <transition name="back">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="endProcess" x="209" y="529" width="140" height="40">
+    <transition name="">
       <label x="5" y="-10"/>
     </transition>
   </node>

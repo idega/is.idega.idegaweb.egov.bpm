@@ -96,7 +96,10 @@
    <node name="sendRulingMessages">
       <transition name="" to="endCaseProcess"></transition>
    </node>
-   <end-state name="end"></end-state>
+   <end-state name="end">
+   
+   
+   </end-state>
    <fork name="fork1">
       <transition name="toRequestAdditionalInformation" to="requestAdditionalInformation"></transition>
       <transition name="toInviteDefendant" to="inviteDefandant"></transition>
@@ -119,12 +122,23 @@
       <transition name="" to="inviteDefendantFork"></transition>
    </task-node>
    <node name="endCaseProcess">
-      <transition name="" to="end"></transition>
-   
-      <action class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.EndCaseProcessHandler" config-type="constructor"></action>
+      <event type="node-leave">
+         <action name="endCase" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.EndCaseProcessHandler" config-type="constructor"></action>
+      </event>
+      <transition name="" to="endProcess"></transition>
    </node>
    <fork name="fork2">
       <transition name="" to="submitAdditionalInformation"></transition>
       <transition name="back" to="requestAdditionalInformation"></transition>
    </fork>
+   <node name="endProcess">
+   <!--  
+      <action class="com.idega.jbpm.exe.EndProcessHandler" config-type="constructor"></action>
+      -->
+   
+      <event type="node-leave">
+         <action name="endProcess" class="com.idega.jbpm.exe.EndProcessHandler" config-type="constructor"></action>
+      </event>
+      <transition name="" to="end"></transition>
+   </node>
 </process-definition>

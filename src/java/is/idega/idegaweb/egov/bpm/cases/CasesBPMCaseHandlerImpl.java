@@ -5,6 +5,7 @@ import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
+import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.presentation.OpenCases;
 
@@ -43,9 +44,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/17 12:18:30 $ by $Author: civilis $
  */
 public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextAware, ApplicationListener {
 
@@ -121,6 +122,10 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 			if(OpenCases.TYPE.equals(casesComponentType)) {
 				
 				cases = OpenCases.getOpenCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
+			
+			} else if(ClosedCases.TYPE.equals(casesComponentType)) {
+				
+				cases = ClosedCases.getClosedCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
 				
 			} else if(MyCases.TYPE.equals(casesComponentType)) {
 				

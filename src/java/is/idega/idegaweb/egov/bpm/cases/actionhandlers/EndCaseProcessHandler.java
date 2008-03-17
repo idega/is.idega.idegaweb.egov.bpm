@@ -20,9 +20,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/03/16 18:59:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/17 12:18:21 $ by $Author: civilis $
  */
 public class EndCaseProcessHandler implements ActionHandler {
 
@@ -45,7 +45,7 @@ public class EndCaseProcessHandler implements ActionHandler {
 		CasesBusiness casesBusiness = getCasesBusiness(iwc);
 		
 		GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-		casesBusiness.changeCaseStatus(theCase, casesBusiness.getCaseStatusInactive(), iwc.getCurrentUser());
+		casesBusiness.changeCaseStatus(theCase, casesBusiness.getCaseStatusReady(), iwc.getCurrentUser());
 	}
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
