@@ -57,7 +57,7 @@
       <label x="5" y="-10"/>
     </transition>
     <transition name="toInviteDefendant">
-      <label x="5" y="-10"/>
+      <label x="24" y="-1"/>
     </transition>
     <transition name="toSubmitProcessRuling">
       <label x="5" y="-10"/>
