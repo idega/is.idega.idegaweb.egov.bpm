@@ -68,12 +68,9 @@
    </task-node>
    <end-state name="additionalInformationEnd"></end-state>
    <fork name="inviteDefendantFork">
-      <transition name="sendEmail" to="informDefendant"></transition>
       <transition name="back" to="inviteDefandant"></transition>
+      <transition name="" to="inviteParticipant"></transition>
    </fork>
-   <node name="informDefendant">
-      <transition name="" to="submitCaseAnswer"></transition>
-   </node>
    <task-node name="submitCaseAnswer">
       <transition name="" to="caseAnswerEnd"></transition>
    </task-node>
@@ -132,13 +129,15 @@
       <transition name="back" to="requestAdditionalInformation"></transition>
    </fork>
    <node name="endProcess">
-   <!--  
-      <action class="com.idega.jbpm.exe.EndProcessHandler" config-type="constructor"></action>
-      -->
-   
       <event type="node-leave">
          <action name="endProcess" class="com.idega.jbpm.exe.EndProcessHandler" config-type="constructor"></action>
       </event>
       <transition name="" to="end"></transition>
    </node>
+   <process-state name="inviteParticipant" binding="late">
+      <sub-process name="participantInvitation" />
+      <variable name="string:defendantEmail" access="read" mapped-name="string:participantEmail" />
+      <variable name="string:inviteText" access="read" mapped-name="string:message" />
+      <transition name="" to="submitCaseAnswer"></transition>
+   </process-state>
 </process-definition>

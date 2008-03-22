@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <page-templates>
-	<page name="Egov BPM" type="egov_bpm" iconfile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_egov_bpm.xml"></page>
+	<page name="Egov BPM" type="egov_bpm" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_egov_bpm.xml"></page>
+	<page name="Egov BPM Assets View" type="egov_bpm_assetsView" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_egov_bpm_assetsView.xml"></page>
 </page-templates>

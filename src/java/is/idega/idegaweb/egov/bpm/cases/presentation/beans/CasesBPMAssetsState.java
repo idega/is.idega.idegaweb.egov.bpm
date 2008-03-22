@@ -31,9 +31,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/03/17 13:38:32 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/22 10:24:15 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -74,7 +74,8 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 	
 	public boolean isAssetsRendered() {
-		return facetRendered == FacetRendered.ASSETS;
+		
+		return (getProcessInstanceId() != null || getCaseId() != null) && facetRendered == FacetRendered.ASSETS;
 	}
 	
 	public void showAssets() {
@@ -82,35 +83,78 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 	
 	public boolean isAssetViewRendered() {
-		return facetRendered == FacetRendered.ASSET_VIEW;
+		return (getProcessInstanceId() != null || getCaseId() != null) && facetRendered == FacetRendered.ASSET_VIEW;
 	}
 	
-	protected Long resolveProcessInstanceId(FacesContext context) {
-
-		Long processInstanceId = null;
+	protected Long resolveProcessInstanceId() {
 		
-		Integer caseId = getCaseId();
+		String piIdParam = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("piId");
+		Long piId;
+		
+		if(piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
+
+			piId = new Long(piIdParam);
+		} else
+			piId = null;
+		
+		return piId;
+	}
+	
+	protected CaseProcInstBind getCPIBind(Integer caseId, Long processInstanceId) {
 		
 		if(caseId != null) {
-			
+		
 			CaseProcInstBind bind = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
 			
 			if(bind != null) {
 			
-				processInstanceId = bind.getProcInstId();
+				return bind;
 				
 			} else {
 				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "No case process instance bind found for caseId provided: "+caseId);
 			}
+			
+		} else if(processInstanceId != null) {
+			
+			CaseProcInstBind bind;
+			try {
+				bind = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
+				
+			} catch (Exception e) {
+				bind = null;
+			}
+			
+			if(bind != null) {
+			
+				return bind;
+				
+			} else {
+				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "No case process instance bind found for process instanceid provided: "+processInstanceId);
+			}
 		}
 		
-		return processInstanceId;
+		return null;
 	}
 
 	public Long getProcessInstanceId() {
 		
-		if(processInstanceId == null)
-			processInstanceId = resolveProcessInstanceId(FacesContext.getCurrentInstance());
+		if(processInstanceId == null) {
+			
+			if(caseId == null) {
+				processInstanceId = resolveProcessInstanceId();
+				
+				if(processInstanceId != null) {
+				
+					CaseProcInstBind b = getCPIBind(null, processInstanceId);
+					caseId = b.getCaseId();
+				}
+				
+			} else {
+				
+				CaseProcInstBind b = getCPIBind(caseId, null);
+				processInstanceId = b.getProcInstId();
+			}
+		}
 		
 		return processInstanceId;
 	}
@@ -141,16 +185,37 @@ public class CasesBPMAssetsState implements Serializable {
 	public Integer getCaseId() {
 		
 		if(caseId == null) {
-
-			String caseIdParam = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(CasesProcessor.PARAMETER_CASE_PK);
 			
-			if(caseIdParam != null && !CoreConstants.EMPTY.equals(caseIdParam)) {
-
-				Integer caseId = new Integer(caseIdParam);
-				this.caseId = caseId;
+			if(processInstanceId == null) {
+				caseId = resolveCaseId();
+				
+				if(caseId != null) {
+				
+					CaseProcInstBind b = getCPIBind(caseId, null);
+					processInstanceId = b.getProcInstId();
+				}
+				
+			} else {
+				
+				CaseProcInstBind b = getCPIBind(null, processInstanceId);
+				caseId = b.getCaseId();
 			}
 		}
 
+		return caseId;
+	}
+	
+	protected Integer resolveCaseId() {
+		
+		String caseIdParam = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(CasesProcessor.PARAMETER_CASE_PK);
+		Integer caseId;
+		
+		if(caseIdParam != null && !CoreConstants.EMPTY.equals(caseIdParam)) {
+
+			caseId = new Integer(caseIdParam);
+		} else
+			caseId = null;
+		
 		return caseId;
 	}
 

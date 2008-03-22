@@ -22,20 +22,15 @@
     </transition>
   </node>
   <node name="additionalInformationEnd" x="10" y="525" width="140" height="40"/>
-  <node name="inviteDefendantFork" x="426" y="417" width="200" height="25">
-    <transition name="sendEmail">
-      <label x="5" y="-10"/>
-    </transition>
+  <node name="inviteDefendantFork" x="474" y="401" width="200" height="25">
     <transition name="back">
       <label x="5" y="-10"/>
     </transition>
-  </node>
-  <node name="informDefendant" x="456" y="461" width="140" height="40">
     <transition name="">
       <label x="5" y="-10"/>
     </transition>
   </node>
-  <node name="submitCaseAnswer" x="466" y="515" width="140" height="40">
+  <node name="submitCaseAnswer" x="391" y="535" width="140" height="40">
     <transition name="">
       <label x="5" y="-10"/>
     </transition>
@@ -63,7 +58,7 @@
       <label x="5" y="-10"/>
     </transition>
   </node>
-  <node name="inviteDefandant" x="465" y="356" width="140" height="40">
+  <node name="inviteDefandant" x="522" y="329" width="140" height="40">
     <transition name="">
       <label x="5" y="-10"/>
     </transition>
@@ -82,6 +77,11 @@
     </transition>
   </node>
   <node name="endProcess" x="209" y="529" width="140" height="40">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="inviteParticipant" x="420" y="459" width="140" height="40">
     <transition name="">
       <label x="5" y="-10"/>
     </transition>
