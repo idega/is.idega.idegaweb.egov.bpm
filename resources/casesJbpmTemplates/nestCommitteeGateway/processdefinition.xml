@@ -14,7 +14,7 @@
             <expression>
                 {taskAssignment: {roles: {role: [
                    {roleName: "handler", accesses: {access: [read]}},
-                   {roleName: "owner", accesses: {access: [read, write]}}
+                   {roleName: "owner", accesses: {access: [read, write]}, scope: PI, assignIdentities: {string: ["current_user"]}}
                 ]} }}
             </expression>
          </assignment>
@@ -59,7 +59,7 @@
             <expression>
                 {taskAssignment: {roles: {role: [
                    {roleName: "handler", accesses: {access: [read]}},
-                   {roleName: "owner", accesses: {access: [read, write]}} 
+                   {roleName: "owner", accesses: {access: [read, write]}, scope: PI} 
                 ]} }}
             </expression>
          </assignment>
@@ -138,6 +138,16 @@
       <sub-process name="participantInvitation" />
       <variable name="string:defendantEmail" access="read" mapped-name="string:participantEmail" />
       <variable name="string:inviteText" access="read" mapped-name="string:message" />
+      <variable name="string:defendantRoleName" access="read" mapped-name="string:participantRoleName" />
       <transition name="" to="submitCaseAnswer"></transition>
+      <event type="node-enter">
+         <script>
+            <expression>
+                System.out.println("entered invite participant process state");
+                defendantRoleName = "defendant";
+            </expression>
+            <variable name='string:defendantRoleName' access='write' mapped-name='defendantRoleName' />
+         </script>
+      </event>
    </process-state>
 </process-definition>
