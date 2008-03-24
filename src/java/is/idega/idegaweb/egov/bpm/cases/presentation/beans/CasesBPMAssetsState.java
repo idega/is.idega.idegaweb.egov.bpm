@@ -31,9 +31,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/03/22 10:24:15 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/24 17:22:10 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -44,7 +44,8 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	private static final String casesBPMDAOBeanIdentifier = "casesBPMDAO";
 	private static final String casesBPMProcessViewBeanIdentifier = "casesBPMProcessView";
-
+	
+	private transient CasesBPMProcessView casesBPMProcessView;
 	private Integer caseId;
 	private Long processInstanceId;
 	private Long viewSelected;
@@ -178,8 +179,11 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 	
 	public CasesBPMProcessView getCasesBPMProcessView() {
+		
+		if(casesBPMProcessView == null) 
+			casesBPMProcessView = (CasesBPMProcessView)WFUtil.getBeanInstance(casesBPMProcessViewBeanIdentifier);
 
-		return (CasesBPMProcessView)WFUtil.getBeanInstance(casesBPMProcessViewBeanIdentifier);
+		return casesBPMProcessView;
 	}
 
 	public Integer getCaseId() {
