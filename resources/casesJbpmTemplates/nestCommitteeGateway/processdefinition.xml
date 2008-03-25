@@ -72,6 +72,20 @@
       <transition name="" to="inviteParticipant"></transition>
    </fork>
    <task-node name="submitCaseAnswer">
+      <task name="Submit defendant case answer">
+         <controller>
+            <variable name="string:ownerCaseInformation" access="read"></variable>
+            <variable name="string:defendantCaseAnswer" access="read,write,required"></variable>
+         </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                {taskAssignment: {roles: {role: [
+                   {roleName: "handler", accesses: {access: [read]}},
+                   {roleName: "defendant", accesses: {access: [read, write]}, scope: PI}
+                ]} }}
+            </expression>
+         </assignment>
+      </task>
       <transition name="" to="caseAnswerEnd"></transition>
    </task-node>
    <end-state name="caseAnswerEnd"></end-state>
@@ -111,7 +125,8 @@
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
                 {taskAssignment: {roles: {role: [
-                   {roleName: "handler", accesses: {access: [read, write]}}
+                   {roleName: "handler", accesses: {access: [read, write]}},
+                   {roleName: "defendant", accesses: {access: [read]}, scope: PI}
                 ]} }}
             </expression>
          </assignment>
@@ -143,7 +158,6 @@
       <event type="node-enter">
          <script>
             <expression>
-                System.out.println("entered invite participant process state");
                 defendantRoleName = "defendant";
             </expression>
             <variable name='string:defendantRoleName' access='write' mapped-name='defendantRoleName' />
