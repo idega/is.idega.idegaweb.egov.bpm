@@ -31,17 +31,18 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/03/24 17:22:10 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/27 08:48:00 $ by $Author: civilis $
  *
  */
 @Scope("request")
-@Service("casesBPMAssetsState")
+@Service(CasesBPMAssetsState.beanIdentifier)
 public class CasesBPMAssetsState implements Serializable {
 
 	private static final long serialVersionUID = -6474883869451606583L;
 	
+	public static final String beanIdentifier = "casesBPMAssetsState";
 	private static final String casesBPMDAOBeanIdentifier = "casesBPMDAO";
 	private static final String casesBPMProcessViewBeanIdentifier = "casesBPMProcessView";
 	

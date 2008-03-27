@@ -20,9 +20,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/02/22 10:31:02 $ by $Author: alexis $
+ * Last modified: $Date: 2008/03/27 08:48:01 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -32,6 +32,9 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private static final String assetsFacet = "assets";
 	private static final String assetViewFacet = "assetView";
 	private static final String web2BeanIdentifier = "web2bean";
+	
+	private boolean fullView = false;
+	private boolean inCasesComponent = false;
 
 	@Override
 	@SuppressWarnings("unchecked")
@@ -116,5 +119,21 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		} else if(assetView.isRendered()) {
 			renderChild(context, assetView);
 		}
+	}
+
+	public boolean isFullView() {
+		return fullView;
+	}
+
+	public void setFullView(boolean fullView) {
+		this.fullView = fullView;
+	}
+
+	public boolean isInCasesComponent() {
+		return inCasesComponent;
+	}
+
+	public void setInCasesComponent(boolean inCasesComponent) {
+		this.inCasesComponent = inCasesComponent;
 	}
 }

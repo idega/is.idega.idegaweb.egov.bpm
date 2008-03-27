@@ -13,7 +13,7 @@
 	<fc:addResource resourcePath="/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/style/casesBPM.css" />
 
 	<h:form>
-		<t:saveState id="storeCaseHandlerState" value="#{caseHandlerState}"/>
+		<t:saveState id="storeCaseManagerState" value="#{caseManagerState}"/>
 		<t:saveState id="storeAssetsState" value="#{casesBPMAssetsState}"/>
 		<div class="title">
 			<h3>
@@ -40,13 +40,13 @@
 			</div>
 		</div>
 		<div class="actions">
-			<div>
-				<h:commandLink value="Show cases list" action="#{caseHandlerState.reset}" immediate="true" />
-			</div>
-			<div>
-				<h:commandLink value="Watch case" action="#{casesBPMAssetsState.takeWatch}" rendered="#{not casesBPMAssetsState.watched}" />
-				<h:commandLink value="Remove case from watchlist" action="#{casesBPMAssetsState.removeWatch}" rendered="#{casesBPMAssetsState.watched}" />
-			</div>
+		    <t:div rendered="#{caseManagerState.inCasesComponent}">
+                <h:commandLink value="Show cases list" action="#{caseManagerState.reset}" immediate="true" />
+		    </t:div>
+		    <t:div rendered="#{caseManagerState.fullView}">
+    		    <h:commandLink value="Watch case" action="#{casesBPMAssetsState.takeWatch}" rendered="#{not casesBPMAssetsState.watched}" />
+                <h:commandLink value="Remove case from watchlist" action="#{casesBPMAssetsState.removeWatch}" rendered="#{casesBPMAssetsState.watched}" />
+            </t:div>
 			<ui:insert name="actions" />
 		</div>
 		<div class="messages">
