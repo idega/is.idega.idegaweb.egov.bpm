@@ -4,12 +4,6 @@
   xmlns=""  name="nestSomeProcess">
    <start-state name="submitNewCase">
       <task name="Submit New Case">
-         <controller>
-            <variable name="string:ownerFirstName" access="read,write,required"></variable>
-            <variable name="string:ownerLastName" access="read,write,required"></variable>
-            <variable name="string:defendantName" access="read,write,required"></variable>
-            <variable name="string:ownerCaseInformation" access="read,write,required"></variable>
-         </controller>
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
                 {taskAssignment: {roles: {role: [
@@ -18,6 +12,13 @@
                 ]} }}
             </expression>
          </assignment>
+         <controller>
+            <variable name="string:ownerFirstName" access="read,write,required"></variable>
+            <variable name="string:ownerLastName" access="read,write,required"></variable>
+            <variable name="string:defendantName" access="read,write,required"></variable>
+            <variable name="string:ownerCaseInformation" access="read,write,required"></variable>
+            <variable name="files:ownerAttachments"></variable>
+         </controller>
       </task>
       <transition name="" to="sendNewCaseArrivedMessages"></transition>
    </start-state>
