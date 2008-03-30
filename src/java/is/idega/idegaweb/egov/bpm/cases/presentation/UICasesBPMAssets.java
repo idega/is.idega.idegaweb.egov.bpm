@@ -14,15 +14,17 @@ import org.apache.myfaces.renderkit.html.util.AddResourceFactory;
 import com.idega.block.web2.business.JQueryUIType;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.facelets.ui.FaceletComponent;
+import com.idega.jbpm.exe.AttachmentWriter;
 import com.idega.presentation.IWBaseComponent;
+import com.idega.presentation.text.DownloadLink;
 import com.idega.util.CoreConstants;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/03/27 08:48:01 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/30 11:12:33 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -43,6 +45,13 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	
 		HtmlTag div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		div.setValue(divTag);
+		
+		DownloadLink link = new DownloadLink("DL");
+		link.setId("casesBPMAttachmentDownloader");
+		link.setStyleAttribute("display: none;");
+		link.setMediaWriterClass(AttachmentWriter.class);
+		
+		div.getChildren().add(link);
 		
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssets.xhtml");

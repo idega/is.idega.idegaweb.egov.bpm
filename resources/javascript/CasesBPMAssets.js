@@ -15,9 +15,15 @@ jQuery(document).ready(function() {
 	    	CasesBPMAssets.initDocumentsTab(ui.panel);
 	    }
 	});
+	
+	CasesBPMAssets.downloader = jQuery("#casesBPMAttachmentDownloader");
+	CasesBPMAssets.downloader_link = jQuery(CasesBPMAssets.downloader).attr("href");
 });
 
 if(CasesBPMAssets == null) var CasesBPMAssets = {};
+
+CasesBPMAssets.downloader = null;
+CasesBPMAssets.downloader_link = null;
 
 CasesBPMAssets.tabIndexes = {
 
@@ -60,48 +66,7 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
       jQuery(CasesBPMAssets.exp_gotoTask)[0].click();
     };
     
-    /*
-    params.subGrid = true;
-    params.subGridRowExpanded = function(subgridId, rowId) {
     
-         var subgridTableId;
-         subgridTableId = subgridId+"_t";
-         jQuery("#"+subgridId).html("<table id='"+subgridTableId+"' class='scroll' cellpadding='0' cellspacing='0'></table>");
-         
-         var gridParams = new JQGridParams();
-   
-	    gridParams.populateFromFunction = function(params, callback) {
-	            
-	                params.piId = jQuery(CasesBPMAssets.exp_piId)[0].value;
-	                
-	                BPMProcessAssets.getProcessTasksList(params,
-	                    {
-	                        callback: function(result) {
-	                            callback(result);
-	                        }
-	                    }
-	                );
-	    };
-	    
-	    gridParams.colNames = ['Nr','Task name', 'Date created', 'Taken by', 'Status']; 
-	    gridParams.colModel = [
-	                {name:'id',index:'id', width:55},
-	                {name:'name',index:'name'}, 
-	                {name:'createdDate',index:'createdDate'},
-	                {name:'takenBy',index:'takenBy'},
-	                {name:'status',index:'status'}
-	    ];
-	    
-	    gridParams.onSelectRow = function(rowId) {
-  
-		      jQuery(CasesBPMAssets.exp_viewSelected)[0].value = rowId;
-		      jQuery(CasesBPMAssets.exp_gotoTask)[0].click();
-	    };
-	    
-        var subgrid = new JQGrid();
-        subgrid.createGrid("#"+subgridTableId, gridParams);
-    };
-    */
 
     var grid = new JQGrid();
     grid.createGrid(jQuery(tabContainer).children('table')[0], params);
@@ -152,7 +117,9 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
       jQuery(CasesBPMAssets.exp_viewSelected)[0].value = rowId;
       jQuery(CasesBPMAssets.exp_gotoDocuments)[0].click();
     };
-
+    
+    CasesBPMAssets.addFilesSubgrid(params);
+    
     var grid = new JQGrid();
     grid.createGrid(jQuery(tabContainer).children('table')[0], params);
 		
@@ -165,6 +132,49 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
 	*/
 	
 	CasesBPMAssets.initDocumentsTab.inited = true; 	
+}
+
+CasesBPMAssets.addFilesSubgrid = function(params) {
+
+    params.subGrid = true;
+    params.subGridRowExpanded = function(subgridId, rowId) {
+    
+         var subgridTableId;
+         subgridTableId = subgridId+"_t";
+         jQuery("#"+subgridId).html("<table id='"+subgridTableId+"' class='scroll' cellpadding='0' cellspacing='0'></table>");
+         
+         var subGridParams = new JQGridParams();
+   
+        subGridParams.populateFromFunction = function(params, callback) {
+                
+                    params.taskId = rowId;
+                    
+                    BPMProcessAssets.getTaskAttachments(params,
+                        {
+                            callback: function(result) {
+                                callback(result);
+                            }
+                        }
+                    );
+        };
+        
+        subGridParams.colNames = ['File name']; 
+        subGridParams.colModel = [
+                    {name:'name',index:'name'} 
+        ];
+        
+        subGridParams.onSelectRow = function(fileRowId) {
+   
+              var newLink = CasesBPMAssets.downloader_link+"&taskInstanceId="+rowId+"&varHash="+fileRowId;
+              window.location.href = newLink;
+        };
+
+        //TODO: set height automatically (?)
+        subGridParams.height = 70;
+        
+        var subgrid = new JQGrid();
+        subgrid.createGrid("#"+subgridTableId, subGridParams);
+    };
 }
 
 CasesBPMAssets.initDocumentsTab.inited = false;
