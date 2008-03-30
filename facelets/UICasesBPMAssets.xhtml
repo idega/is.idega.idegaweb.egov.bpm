@@ -9,13 +9,14 @@
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
 	<ui:define name="title">
-		the title
+		General case view
 	</ui:define>
 	<ui:define name="content">
+	<h:form>
 		<div id="example" class="flora">
             <ul>
                 <li><a href="#caseOverviewTab"><span>Case overview</span></a></li>
-                <li><a href="#tasksTab"><span>Tasks</span></a></li>
+                <li><a href="#tasksTab"><span>Forms</span></a></li>
                 <li><a href="#documentsTab"><span>Documents</span></a></li>
             </ul>
             <div id="caseOverviewTab">
@@ -39,6 +40,7 @@
 			<h:commandButton class="state_gotoDocumentsView" value="Go to documents view" action="#{casesBPMAssetsState.selectDocumentView}" />
 			<t:inputHidden id="state_viewSelected" value="#{casesBPMAssetsState.viewSelected}" forceId="true" />
 		</span>
+	</h:form>
 	</ui:define>
 	
 	</ui:composition>

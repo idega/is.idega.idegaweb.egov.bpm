@@ -8,11 +8,10 @@
 		xmlns:t="http://myfaces.apache.org/tomahawk"
 >
 
-	
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
 	<ui:define name="title">
-		Task view
+		Form view
 	</ui:define>
 	<ui:define name="actions">
 		<div>
@@ -20,8 +19,7 @@
 		</div>
 	</ui:define>
 	<ui:define name="content">
-		<div class="assetView">
-			<div class="left">
+		<div class="assetsView">
 				<div class="assetSection">
 					<div class="assetHeader">
 						Task summary
@@ -61,7 +59,6 @@
 						</div>
 					</div>
 				</div>	
-				
 				<div class="assetSection">
 					<div class="assetHeader">
 						Views
@@ -87,7 +84,6 @@
 						Actions
 					</div>
 					<div class="assetContent">
-					
 					    <t:div rendered="#{casesBPMAssetsState.canStartTask}" styleClass="assetEntry">
 						  <h:commandLink value="Start task" action="#{casesBPMAssetsState.startTask}" />
 						</t:div>
@@ -101,11 +97,12 @@
 						-->
 					</div>
 				</div>
-			</div>
-			<div class="right">
-				<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
-			</div>
 		</div>
+	</ui:define>
+	<ui:define name="chibaform">
+	   <div class="formView">
+            <jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
+            </div>
 	</ui:define>
 	</ui:composition>
 </div>

@@ -15,9 +15,14 @@
          <controller>
             <variable name="string:ownerFirstName" access="read,write,required"></variable>
             <variable name="string:ownerLastName" access="read,write,required"></variable>
-            <variable name="string:defendantName" access="read,write,required"></variable>
-            <variable name="string:ownerCaseInformation" access="read,write,required"></variable>
+            <variable name="string:ownerCaseDescription" access="read,write,required"></variable>
             <variable name="files:ownerAttachments"></variable>
+            <variable name="string:ownerKennitala" access="read,write,required"></variable>
+            <variable name="string:ownerAddress"></variable>
+            <variable name="string:ownerPostCode"></variable>
+            <variable name="string:ownerMunicipality"></variable>
+            <variable name="string:ownerPhone"></variable>
+            <variable name="string:ownerDefendantDescription" access="read,write,required"></variable>
          </controller>
       </task>
       <transition name="" to="sendNewCaseArrivedMessages"></transition>
@@ -27,9 +32,6 @@
    </node>
    <task-node name="requestAdditionalInformation">
       <task name="Request Additional Information">
-         <controller>
-            <variable name="string:additionalInformationRequestText" access="read,write,required"></variable>
-         </controller>
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
                 {taskAssignment: {roles: {role: [
@@ -47,15 +49,15 @@
             </expression>
          </assignment>
          -->
+         <controller>
+            <variable name="string:additionalInformationRequestText" access="read,write,required"></variable>
+            <variable name="files:additionalAttachments"></variable>
+         </controller>
       </task>
       <transition name="" to="fork2"></transition>
    </task-node>
    <task-node name="submitAdditionalInformation">
       <task name="Submit Additional Information">
-         <controller>
-            <variable name="string:additionalInformationRequestText" access="read"></variable>
-            <variable name="string:additionalInformation" access="read,write,required"></variable>
-         </controller>
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
                 {taskAssignment: {roles: {role: [
@@ -64,6 +66,11 @@
                 ]} }}
             </expression>
          </assignment>
+         <controller>
+            <variable name="string:additionalInformationRequestText" access="read"></variable>
+            <variable name="string:additionalInformation" access="read,write,required"></variable>
+            <variable name="files:additionalAttachments"></variable>
+         </controller>
       </task>
       <transition name="" to="additionalInformationEnd"></transition>
    </task-node>
@@ -74,10 +81,6 @@
    </fork>
    <task-node name="submitCaseAnswer">
       <task name="Submit defendant case answer">
-         <controller>
-            <variable name="string:ownerCaseInformation" access="read"></variable>
-            <variable name="string:defendantCaseAnswer" access="read,write,required"></variable>
-         </controller>
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
                 {taskAssignment: {roles: {role: [
@@ -86,6 +89,11 @@
                 ]} }}
             </expression>
          </assignment>
+         <controller>
+            <variable name="string:ownerCaseInformation" access="read"></variable>
+            <variable name="string:defendantCaseAnswer" access="read,write,required"></variable>
+            <variable name="files:defendantAttachments"></variable>
+         </controller>
       </task>
       <transition name="" to="caseAnswerEnd"></transition>
    </task-node>

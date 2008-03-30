@@ -1,4 +1,4 @@
-.casesBPMAssets .assetView {
+.casesBPMAssets .assetsView {
 	
 	border: 1px solid green;
 	float: left;
@@ -48,7 +48,8 @@
 	border-right: 1px solid black;
 }
 
-.casesBPMAssets .assetView .left {
+/*asset view*/
+.casesBPMAssets .assetsView {
 
 	border: 1px #042025 solid;
 	border-width: 0 1px 0 0;
@@ -57,7 +58,7 @@
 	margin: 5px;
 }
 
-.casesBPMAssets .assetView .assetSection .assetHeader {
+.casesBPMAssets .assetsView .assetSection .assetHeader {
 
 	background-color: #0db143;
 	border: 1px #042025 solid;
@@ -67,32 +68,32 @@
 	width: 100%;
 }
 
-.casesBPMAssets .assetView .right {
+.casesBPMAssets .formView {
 	margin: 5px;
 	margin-left: 10px;
 }
 
-.casesBPMAssets .assetView .assetContent {
+.casesBPMAssets .assetsView .assetContent {
 
 	margin: 2px;
 }
 
-.casesBPMAssets .assetView .assetSection {
+.casesBPMAssets .assetsView .assetSection {
 	margin-right: 3px;
 }
 
-.casesBPMAssets .assetView .assetSection .assetEntry, .casesBPMAssets .caseInfo .caseInfoEntry {
+.casesBPMAssets .assetsView .assetSection .assetEntry, .casesBPMAssets .caseInfo .caseInfoEntry {
 	float: left;
 	width: 100%;
 }
 
-.casesBPMAssets .assetView .assetSection .assetEntryLeft, .casesBPMAssets .caseInfo .caseInfoEntryLeft {
+.casesBPMAssets .assetsView .assetSection .assetEntryLeft, .casesBPMAssets .caseInfo .caseInfoEntryLeft {
 	background-color: #ddeff8;
 	float: left;
 	width: 90px;
 }
 
-.casesBPMAssets .assetView .assetSection .assetEntryRight, .casesBPMAssets .caseInfo .caseInfoEntryRight {
+.casesBPMAssets .assetsView .assetSection .assetEntryRight, .casesBPMAssets .caseInfo .caseInfoEntryRight {
 	float: left;
 	margin-left: 2px;
 }

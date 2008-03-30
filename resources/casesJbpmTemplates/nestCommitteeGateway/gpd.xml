@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<process-diagram name="nestSomeProcess" width="735" height="660">
+<process-diagram name="nestSomeProcess" width="735" height="668">
   <node name="submitNewCase" x="237" y="35" width="104" height="32">
     <transition name="">
       <label x="5" y="-10"/>
