@@ -1,33 +1,37 @@
 <div 
 	xmlns="http://www.w3.org/1999/xhtml"
     xmlns:h="http://java.sun.com/jsf/html"
-	xmlns:f="http://java.sun.com/jsf/core"
-	xmlns:jj="http://xmlns.idega.com/org.jboss.jbpm">
+	xmlns:f="http://java.sun.com/jsf/core">
 	
-		<div>
+		<div class="processManagement">
+		  <div class="createNew">
+		    <h3>Nest process management</h3>
 			<div style="color: red;">#{casesBPMCreateProcess.message}</div>
-			<div style="display: inline;">Process name: <h:inputText value="#{casesBPMCreateProcess.processName}" /></div>
-			<br />
-			<label for="caseCategoriesSelector">Select case category:</label>
-			<h:selectOneMenu id="caseCategoriesSelector" value="#{casesBPMCreateProcess.caseCategory}">
-				<f:selectItems value="#{casesBPMCreateProcess.casesCategories}" />
-			</h:selectOneMenu>
-			<label for="caseTypesSelector">Select case type:</label>
-			<h:selectOneMenu id="caseTypesSelector" value="#{casesBPMCreateProcess.caseType}">
-				<f:selectItems value="#{casesBPMCreateProcess.casesTypes}" />
-			</h:selectOneMenu>
-			<br />
-			<h:commandButton value="Create new process" action="#{casesBPMCreateProcess.createNewCaseProcess}" />
+			<div class="processName">
+				<label for="processName">Process name:</label>
+				<h:inputText id="processName" value="#{casesBPMCreateProcess.processName}" />
+				<h:commandButton value="Create new process" action="#{casesBPMCreateProcess.createNewCaseProcess}" />
+			</div>
+			<div class="caseCatType">
+			     <div class="caseEntry">
+				     <label for="caseCategoriesSelector">Select case category:</label>
+				     <h:selectOneMenu id="caseCategoriesSelector" value="#{casesBPMCreateProcess.caseCategory}">
+	                    <f:selectItems value="#{casesBPMCreateProcess.casesCategories}" />
+	                </h:selectOneMenu>
+                </div>
+                <div class="caseEntry">
+                    <label for="caseTypesSelector">Select case type:</label>
+		            <h:selectOneMenu id="caseTypesSelector" value="#{casesBPMCreateProcess.caseType}">
+		                <f:selectItems value="#{casesBPMCreateProcess.casesTypes}" />
+		            </h:selectOneMenu>
+                </div>
+			</div>
 		</div>
-		<div style="display: inline;">
-			<label for="createdFormsProcessesSelector">Created processes:</label>
-			<h:selectOneMenu id="createdProcessesSelector" value="#{casesBPMCreateProcess.processDefinitionId}">
-				<f:selectItems value="#{casesBPMCreateProcess.casesProcessesDefinitions}" />
-			</h:selectOneMenu>
-			
-			<h:commandButton value="Fillout form" action="#{casesBPMCreateProcess.showProcessInitiationView}" />
-		</div>
-		<div>
-			<jj:BPMTaskViewer processDefinitionId="#{casesBPMCreateProcess.chosenProcessDefinitionId}" />
-		</div>
+			<div class="createdProcesses">
+				<label for="createdFormsProcessesSelector">Created processes:</label>
+				<h:selectOneMenu id="createdProcessesSelector" value="#{casesBPMCreateProcess.processDefinitionId}">
+					<f:selectItems value="#{casesBPMCreateProcess.casesProcessesDefinitions}" />
+				</h:selectOneMenu>
+			</div>
+    </div>
 </div>

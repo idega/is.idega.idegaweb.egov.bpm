@@ -17,15 +17,17 @@ import com.idega.repository.data.Singleton;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/05 19:32:16 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/31 15:40:45 $ by $Author: civilis $
  *
  */
 public class EgovBPMViewManager implements Singleton  {
 
 	private static final String VIEW_MANAGER_KEY = "iw_egovbpmviewmanager";
-	private static final String VIEW_MANAGER_ID = "EgovBPM";
+	private static final String BPM_ID = "bpm";
+	private static final String BPM_IDENTITY_ID = "bpm_identity";
+	private static final String BPM_PROCESS_ID = "bpm_process";
 	
 	private ViewNode rootNode;
 	private IWMainApplication iwma;
@@ -66,44 +68,28 @@ public class EgovBPMViewManager implements Singleton  {
 	public ViewNode initalizeContentNode(IWBundle bundle) {
 		
 		ViewNode root = getViewManager().getWorkspaceRoot();
-		DefaultViewNode node = new ApplicationViewNode(VIEW_MANAGER_ID, root);
+		DefaultViewNode node = new ApplicationViewNode(BPM_ID, root);
+		node.setName("BPM");
 		Collection<String> roles = new ArrayList<String>();
 		roles.add(StandardRoles.ROLE_KEY_BUILDER);
 		node.setAuthorizedRoles(roles);
 		
-		node.setFaceletUri(bundle.getFaceletURI("ViewNodeCreateProcess.xhtml"));
+		node.setFaceletUri(bundle.getFaceletURI("UIEgovBPM.xhtml"));
 		rootNode = node;
 		return rootNode;
 	}
 	
 	public void initializeStandardNodes(IWBundle bundle){
-		/*ViewNode contentNode = */initalizeContentNode(bundle);
+		ViewNode contentNode = initalizeContentNode(bundle);
 		
-		/*
-		DefaultViewNode node = new DefaultViewNode(VIEW_MANAGER_ID, contentNode);
-		node.setFaceletUri(bundle.getFaceletURI("processDefUpload.xhtml"));
-		node.setName(VIEW_MANAGER_ID);
+		DefaultViewNode node = new DefaultViewNode(BPM_IDENTITY_ID, contentNode);
+		node.setFaceletUri(bundle.getFaceletURI("UIEgovBPMIdentityMgmt.xhtml"));
+		node.setName("Assignments management");
 		node.setVisibleInMenus(true);
 		
-		node = new DefaultViewNode("xforms_workflow", contentNode);
-		node.setFaceletUri("/idegaweb/bundles/com.idega.formbuilder.bundle/facelets/xformsWorkflow.xhtml");
-		node.setName("XForms Workflow");
+		node = new DefaultViewNode(BPM_PROCESS_ID, contentNode);
+		node.setFaceletUri(bundle.getFaceletURI("UIEgovBPMProcessMgmt.xhtml"));
+		node.setName("Process management");
 		node.setVisibleInMenus(true);
-		
-		node = new DefaultViewNode("processMgmntMockup", contentNode);
-		node.setFaceletUri(bundle.getFaceletURI("processMgmtMockup.xhtml"));
-		node.setName("Process Mgmnt Mockup");
-		node.setVisibleInMenus(true);
-		
-		node = new DefaultViewNode("simpleCasesProcess", contentNode);
-		node.setFaceletUri(bundle.getFaceletURI("SimpleCasesProcess.xhtml"));
-		node.setName("Simple cases process");
-		node.setVisibleInMenus(true);
-		
-		node = new DefaultViewNode("nestCasesProcess", contentNode);
-		node.setFaceletUri(bundle.getFaceletURI("NestCasesProcess.xhtml"));
-		node.setName("Nest cases process");
-		node.setVisibleInMenus(true);
-		*/
 	}
 }

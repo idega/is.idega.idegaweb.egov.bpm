@@ -6,6 +6,9 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
+import org.apache.myfaces.renderkit.html.util.AddResource;
+import org.apache.myfaces.renderkit.html.util.AddResourceFactory;
+import org.jboss.jbpm.IWBundleStarter;
 
 import com.idega.facelets.ui.FaceletComponent;
 import com.idega.presentation.IWBaseComponent;
@@ -13,9 +16,9 @@ import com.idega.presentation.IWBaseComponent;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/02/15 10:19:35 $ by $Author: civilis $
+ * Last modified: $Date: 2008/03/31 15:40:45 $ by $Author: civilis $
  *
  */
 public class UICasesBPMCreateProcess extends IWBaseComponent {
@@ -34,12 +37,7 @@ public class UICasesBPMCreateProcess extends IWBaseComponent {
 		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMCreateProcess.xhtml");
 
 		div.getChildren().add(facelet);
-		
-//		HtmlTag xx = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
-//		xx.setValue("div");
-//		div.getChildren().add(xx);
-		
-		///div.getChildren().add(form);
+
 		getFacets().put(containerFacet, div);
 	}
 	
@@ -52,13 +50,14 @@ public class UICasesBPMCreateProcess extends IWBaseComponent {
 	public void encodeChildren(FacesContext context) throws IOException {
 		super.encodeChildren(context);
 		
-		UIComponent container = getFacet(containerFacet);
-		
-		if(container != null) {
-//			Form form = new Form();
-//			form.add(container);
-			container.setRendered(true);
-			renderChild(context, container);
+		try {
+			AddResource resource = AddResourceFactory.getInstance(context);
+			resource.addStyleSheet(context, AddResource.HEADER_BEGIN, getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourcesVirtualPath()+"/style/egovBPM.css");
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		}
+		
+		UIComponent container = getFacet(containerFacet);
+		renderChild(context, container);
 	}
 }
