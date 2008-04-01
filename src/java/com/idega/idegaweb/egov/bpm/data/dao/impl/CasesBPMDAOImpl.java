@@ -1,5 +1,6 @@
 package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -15,9 +16,9 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/03/16 18:59:41 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/01 19:02:49 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -86,6 +87,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 	
 	public List<ProcessUserBind> getProcessUserBinds(int userId, Collection<Integer> casesIds) {
+		
+		if(casesIds.isEmpty())
+			return new ArrayList<ProcessUserBind>(0);
 		
 		@SuppressWarnings("unchecked")
 		List<ProcessUserBind> u = getEntityManager().createNamedQuery(ProcessUserBind.byUserIdAndCaseId)
