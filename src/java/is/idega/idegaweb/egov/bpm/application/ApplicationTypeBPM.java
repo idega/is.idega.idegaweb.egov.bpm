@@ -10,7 +10,6 @@ import java.util.List;
 
 import javax.faces.application.FacesMessage;
 
-import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -27,6 +26,7 @@ import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.AppProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.presentation.IWContext;
@@ -37,15 +37,16 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/02 19:22:55 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
 
 	private ApplicationContext ctx;
 	private BPMDAO bpmBindsDAO;
+	private CasesBPMDAO casesBPMDAO;
 	private AppBPMDAO appBPMDAO;
 	public static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
@@ -134,15 +135,12 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	}
 	
 	public void fillMenu(DropdownMenu menu) {
-
-		List<ProcessDefinition> procDefs = getBpmBindsDAO().getAllManagersTypeProcDefs();
 		
-		if(procDefs != null) {
+		List<Object[]> casesProcesses = getCasesBPMDAO().getCaseTypesProcessDefinitions();
+		
+		for (Object[] idAndName : casesProcesses) {
 			
-			for (ProcessDefinition processDefinition : procDefs) {
-				
-				menu.addMenuElement(String.valueOf(processDefinition.getId()), processDefinition.getName());
-			}
+			menu.addMenuElement(String.valueOf(idAndName[0]), (String)idAndName[1]);
 		}
 	}
 	
@@ -224,5 +222,14 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		} catch (Exception e) {
 			throw new RuntimeException("Exception while resolving icpages by subType: "+pageSubType, e);
 		}
+	}
+
+	public CasesBPMDAO getCasesBPMDAO() {
+		return casesBPMDAO;
+	}
+
+	@Autowired
+	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
+		this.casesBPMDAO = casesBPMDAO;
 	}
 }

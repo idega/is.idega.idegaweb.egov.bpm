@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.bundle;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMManagersCreator;
 
 import java.io.IOException;
@@ -10,31 +9,33 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Map.Entry;
 
-import javax.faces.context.FacesContext;
-
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.taskmgmt.def.Task;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWBundle;
-import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.def.ProcessBundle;
 import com.idega.jbpm.def.ViewResource;
+import com.idega.jbpm.def.ViewToTask;
+import com.idega.jbpm.def.ViewToTaskType;
+import com.idega.util.CoreConstants;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * 
- * Last modified: $Date: 2008/03/11 12:16:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/02 19:23:30 $ by $Author: civilis $
  * 
  */
+@Scope("prototype")
+@Service("casesBPMProcessBundle")
 public class CasesBPMProcessBundle implements ProcessBundle {
 
-	private static final String propertiesFileName = "bundle.properties";
+	//private static final String propertiesFileName = "bundle.properties";
 	private static final String processDefinitionFileName = "processdefinition.xml";
 	private static final String formsPath = "forms/";
 	private static final String dotRegExp = "\\.";
@@ -46,18 +47,26 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	private static final String XFFileNamePropertyPostfix = ".view.xforms.file_name";
 
 	private IWBundle bundle;
-	private String templateBundleLocationWithinBundle;
+	private String bundlePropertiesLocationWithinBundle;
 	private DocumentManagerFactory documentManagerFactory;
-	private CasesBPMDAO casesBPMDAO;
 	
-	private Long caseCategoryId;
-	private Long caseTypeId;
-	
+	private ViewToTask viewToTaskBinder;
+
+	public ViewToTask getViewToTaskBinder() {
+		return viewToTaskBinder;
+	}
+
+	@Autowired
+	@ViewToTaskType("xforms")
+	public void setViewToTaskBinder(ViewToTask viewToTaskBinder) {
+		this.viewToTaskBinder = viewToTaskBinder;
+	}
 
 	public DocumentManagerFactory getDocumentManagerFactory() {
 		return documentManagerFactory;
 	}
 
+	@Autowired
 	public void setDocumentManagerFactory(
 			DocumentManagerFactory documentManagerFactory) {
 		this.documentManagerFactory = documentManagerFactory;
@@ -65,7 +74,7 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 
 	public ProcessDefinition getProcessDefinition() throws IOException {
 
-		String templateBundleLocationWithinBundle = getTemplateBundleLocationWithinBundle();
+		String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
 
 		if (templateBundleLocationWithinBundle == null)
 			throw new IllegalStateException(
@@ -76,11 +85,11 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 		ProcessDefinition pd = ProcessDefinition.parseXmlInputStream(pdIs);
 		return pd;
 	}
-
+	
 	public List<ViewResource> getViewResources(String taskName)
 			throws IOException {
 
-		String templateBundleLocationWithinBundle = getTemplateBundleLocationWithinBundle();
+		String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
 
 		if (templateBundleLocationWithinBundle == null)
 			throw new IllegalStateException(
@@ -118,12 +127,6 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	}
 
 	public IWBundle getBundle() {
-		bundle = null;
-		if (bundle == null) {
-			IWMainApplication iwma = IWMainApplication
-					.getIWMainApplication(FacesContext.getCurrentInstance());
-			bundle = iwma.getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
-		}
 		return bundle;
 	}
 
@@ -131,20 +134,19 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 		this.bundle = bundle;
 	}
 
-	public String getTemplateBundleLocationWithinBundle() {
-		return templateBundleLocationWithinBundle;
+	public String getBundlePropertiesLocationWithinBundle() {
+		return bundlePropertiesLocationWithinBundle;
 	}
 
-	public void setTemplateBundleLocationWithinBundle(
-			String templateBundleLocationWithinBundle) {
-		this.templateBundleLocationWithinBundle = templateBundleLocationWithinBundle;
+	public void setBundlePropertiesLocationWithinBundle(
+			String bundlePropertiesLocationWithinBundle) {
+		this.bundlePropertiesLocationWithinBundle = bundlePropertiesLocationWithinBundle;
 	}
-	
+
 	private Properties resolveBundleProperties() throws IOException {
 		
-		InputStream propertiesIs = bundle
-		.getResourceInputStream(templateBundleLocationWithinBundle
-				+ propertiesFileName);
+		InputStream propertiesIs = getBundle()
+		.getResourceInputStream(getBundlePropertiesLocationWithinBundle());
 
 		Properties properties = new Properties();
 		properties.load(propertiesIs);
@@ -163,30 +165,6 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 		} catch (IOException e) {
 			throw new RuntimeException("IOException while accessing process bundle properties");
 		}
-
-		if(caseCategoryId != null && caseTypeId != null) {
-		
-			CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
-			bind.setCasesCategoryId(caseCategoryId);
-			bind.setCasesTypeId(caseTypeId);
-			bind.setProcDefId(pd.getId());
-			//bind.setInitTaskName(initTaskName);
-			getCasesBPMDAO().persist(bind);
-		}
-	}
-
-	public CasesBPMDAO getCasesBPMDAO() {
-		return casesBPMDAO;
-	}
-
-	@Autowired
-	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
-		this.casesBPMDAO = casesBPMDAO;
-	}
-	
-	public void setCaseMetaInf(Long caseCategoryId, Long caseTypeId) {
-		this.caseCategoryId = caseCategoryId;
-		this.caseTypeId = caseTypeId;
 	}
 	
 	public String getManagersType() {

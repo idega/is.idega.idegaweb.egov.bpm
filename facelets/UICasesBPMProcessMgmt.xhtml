@@ -1,0 +1,35 @@
+<div 
+	xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core">
+	
+		<div class="processManagement">
+		  <div class="createNew">
+		    <h3>Nest process management</h3>
+			<div style="color: red;">#{CasesBPMProcessMgmt.message}</div>
+			<div class="processName">
+				<h:commandButton value="Assign process to case categories" action="#{CasesBPMProcessMgmt.assignProcessToCaseMeta}" />
+			</div>
+			<div class="caseCatType">
+			     <div class="caseEntry">
+				     <label for="caseCategoriesSelector">Select case category:</label>
+				     <h:selectOneMenu id="caseCategoriesSelector" value="#{CasesBPMProcessMgmt.caseCategory}">
+	                    <f:selectItems value="#{CasesBPMProcessMgmt.casesCategories}" />
+	                </h:selectOneMenu>
+                </div>
+                <div class="caseEntry">
+                    <label for="caseTypesSelector">Select case type:</label>
+		            <h:selectOneMenu id="caseTypesSelector" value="#{CasesBPMProcessMgmt.caseType}">
+		                <f:selectItems value="#{CasesBPMProcessMgmt.casesTypes}" />
+		            </h:selectOneMenu>
+                </div>
+			</div>
+		</div>
+			<div class="createdProcesses">
+				<label for="createdFormsProcessesSelector">Created processes:</label>
+				<h:selectOneMenu id="createdProcessesSelector" value="#{CasesBPMProcessMgmt.processDefinitionId}">
+					<f:selectItems value="#{CasesBPMProcessMgmt.casesProcessesDefinitions}" />
+				</h:selectOneMenu>
+			</div>
+    </div>
+</div>

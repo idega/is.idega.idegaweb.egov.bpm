@@ -30,6 +30,7 @@ import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.def.View;
 import com.idega.jbpm.def.ViewCreator;
 import com.idega.jbpm.def.ViewToTask;
+import com.idega.jbpm.def.ViewToTaskType;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.VariablesHandler;
@@ -40,9 +41,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/03/17 13:38:32 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/02 19:23:56 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -77,7 +78,7 @@ public class CasesBPMViewManager implements ViewManager {
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
-//			TODO: make this generic bind
+//			TODO: if not bound, then create default case category, case type and bind to it
 			CaseTypesProcDefBind bind = getBpmBindsDAO().find(CaseTypesProcDefBind.class, processDefinitionId);
 			
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
@@ -151,6 +152,8 @@ public class CasesBPMViewManager implements ViewManager {
 		return viewToTaskBinder;
 	}
 
+	@Autowired
+	@ViewToTaskType("xforms")
 	public void setViewToTaskBinder(ViewToTask viewToTaskBinder) {
 		this.viewToTaskBinder = viewToTaskBinder;
 	}

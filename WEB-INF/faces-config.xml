@@ -33,8 +33,8 @@
 >
 <faces-config>
   <component>
-    <component-type>UICasesBPMCreateProcess</component-type>
-    <component-class>is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMCreateProcess</component-class>
+    <component-type>UICasesBPMProcessMgmt</component-type>
+    <component-class>is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMProcessMgmt</component-class>
     <component-extension>
       <idegaweb-info>
         <builder-visible>true</builder-visible>

@@ -3,7 +3,6 @@ package is.idega.idegaweb.egov.bpm.cases.bundle;
 import java.io.IOException;
 import java.io.InputStream;
 
-import javax.faces.context.FacesContext;
 import javax.xml.parsers.DocumentBuilder;
 
 import org.w3c.dom.Document;
@@ -12,6 +11,7 @@ import com.idega.block.form.process.XFormsView;
 import com.idega.documentmanager.business.DocumentManager;
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWBundle;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.def.View;
 import com.idega.jbpm.def.ViewResource;
 import com.idega.util.xml.XmlUtil;
@@ -19,9 +19,9 @@ import com.idega.util.xml.XmlUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
- * Last modified: $Date: 2008/02/04 19:05:38 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/02 19:23:30 $ by $Author: civilis $
  * 
  */
 public class CasesBPMBundledFormViewResource implements ViewResource {
@@ -32,7 +32,7 @@ public class CasesBPMBundledFormViewResource implements ViewResource {
 	private String pathWithinBundle;
 	private DocumentManagerFactory documentManagerFactory;
 
-	public View store() throws IOException {
+	public View store(IWMainApplication iwma) throws IOException {
 
 		if (view == null) {
 
@@ -44,7 +44,7 @@ public class CasesBPMBundledFormViewResource implements ViewResource {
 				InputStream is = bundle
 						.getResourceInputStream(pathWithinBundle);
 				DocumentManager documentManager = getDocumentManagerFactory()
-						.newDocumentManager(FacesContext.getCurrentInstance());
+						.newDocumentManager(iwma);
 				DocumentBuilder builder = XmlUtil.getDocumentBuilder();
 
 				Document xformXml = builder.parse(is);

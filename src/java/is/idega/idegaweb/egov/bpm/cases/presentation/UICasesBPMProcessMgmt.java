@@ -16,12 +16,12 @@ import com.idega.presentation.IWBaseComponent;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/03/31 15:40:45 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/02 19:23:56 $ by $Author: civilis $
  *
  */
-public class UICasesBPMCreateProcess extends IWBaseComponent {
+public class UICasesBPMProcessMgmt extends IWBaseComponent {
 	
 	private static final String containerFacet = "container";
 
@@ -34,7 +34,7 @@ public class UICasesBPMCreateProcess extends IWBaseComponent {
 		div.setValue("div");
 		
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
-		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMCreateProcess.xhtml");
+		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMProcessMgmt.xhtml");
 
 		div.getChildren().add(facelet);
 

@@ -1,11 +1,9 @@
-package is.idega.idegaweb.egov.bpm.cases.presentation;
+package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.cases.bundle.CasesBPMProcessBundle;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.CaseType;
 
-import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -14,14 +12,20 @@ import java.util.List;
 import javax.faces.context.FacesContext;
 import javax.faces.model.SelectItem;
 
+import org.jbpm.JbpmContext;
+import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.def.ProcessBundle;
 import com.idega.jbpm.def.ProcessBundleManager;
 import com.idega.util.CoreConstants;
@@ -29,65 +33,58 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/03/12 15:42:13 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/02 19:23:56 $ by $Author: civilis $
  *
  */
-public class CasesBPMCreateProcess {
+@Scope("request")
+@Service("CasesBPMProcessMgmt")
+public class CasesBPMProcessMgmtBean {
 	
-	private String processName;
 	private String message;
 	private String caseCategory;
 	private String caseType;
-	private String processDefinitionId;
-	//private String processInstanceId;
-	private String chosenProcessDefinitionId;
-	private String chosenProcessInstanceId;
+	private Long processDefinitionId;
 
-	private String templateBundleLocation;
 	private ProcessBundleManager processBundleManager;
 	private CasesBPMDAO casesBPMDAO;
 	private ProcessBundle processBundle;
+	private IdegaJbpmContext idegaJbpmContext;
 	
 	private List<SelectItem> casesTypes = new ArrayList<SelectItem>();
 	private List<SelectItem> casesCategories = new ArrayList<SelectItem>();
-	private List<SelectItem> casesProcessesDefinitions = new ArrayList<SelectItem>();
+	private List<SelectItem> processesDefinitions = new ArrayList<SelectItem>();
 
-	public String createNewCaseProcess() {
+	public String assignProcessToCaseMeta() {
 		
-		if(getProcessName() == null || getProcessName().equals(CoreConstants.EMPTY)) {
-		
-			setMessage("Form name not set");
+		if(getProcessDefinitionId() == null) {
+			setMessage("Process definition not chosen");
 			return null;
 		}
 		
-		if(getCaseCategory() == null || "".equals(getCaseCategory())) {
-			setMessage("Case category not provided");
+		if(getCaseCategory() == null || CoreConstants.EMPTY.equals(getCaseCategory())) {
+			setMessage("Case category not chosen");
 			return null;
 		}
 		
-		if(getCaseType() == null || "".equals(getCaseType())) {
-			setMessage("Case type not provided");
+		if(getCaseType() == null || CoreConstants.EMPTY.equals(getCaseType())) {
+			setMessage("Case type not chosen");
 			return null;
 		}
 			
 		try {
 			Long caseCategoryId = new Long(getCaseCategory());
 			Long caseTypeId = new Long(getCaseType());
+			Long pdId = null;
+
+//			TODO: find existing, and update
+			CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
+			bind.setCasesCategoryId(caseCategoryId);
+			bind.setCasesTypeId(caseTypeId);
+			bind.setProcDefId(pdId);
+			getCasesBPMDAO().persist(bind);
 			
-			if(!(getProcessBundle() instanceof CasesBPMProcessBundle))
-				throw new IllegalArgumentException(getClass().getName()+" supports only CasesBPMProcessBundle instance as process bundle argument.");
-			
-			CasesBPMProcessBundle bundle = (CasesBPMProcessBundle)getProcessBundle();
-			bundle.setTemplateBundleLocationWithinBundle(getTemplateBundleLocation());
-			bundle.setCaseMetaInf(caseCategoryId, caseTypeId);
-			
-			getProcessBundleManager().createBundle(bundle, getProcessName());
-			
-		} catch (IOException e) {
-			setMessage("IO Exception occured");
-			e.printStackTrace();
 		} catch (Exception e) {
 			setMessage("Exception occured");
 			e.printStackTrace();
@@ -195,7 +192,7 @@ public class CasesBPMCreateProcess {
 		
 		SelectItem item = new SelectItem();
 		
-		item.setValue(CoreConstants.EMPTY);
+		item.setValue(new Long(0));
 		item.setLabel("No selection");
 		
 		selectItems.add(item);
@@ -203,93 +200,41 @@ public class CasesBPMCreateProcess {
 	
 	public List<SelectItem> getCasesProcessesDefinitions() {
 
-		casesProcessesDefinitions.clear();
-		addDefaultSelectItem(casesProcessesDefinitions);
+		processesDefinitions.clear();
+		addDefaultSelectItem(processesDefinitions);
+		
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
-			List<Object[]> casesProcesses = getCasesBPMDAO().getCaseTypesProcessDefinitions();
+			@SuppressWarnings("unchecked")
+			List<ProcessDefinition> pds = ctx.getGraphSession().findLatestProcessDefinitions();
 			
-			if(casesProcesses == null)
-				return casesProcessesDefinitions;
-			
-			for (Object[] idAndName : casesProcesses) {
+			for (ProcessDefinition processDefinition : pds) {
 				
 				SelectItem item = new SelectItem();
 				
-				item.setValue(String.valueOf(idAndName[0]));
-				item.setLabel((String)idAndName[1]);
-				casesProcessesDefinitions.add(item);
+				item.setValue(processDefinition.getId());
+				item.setLabel(processDefinition.getName());
+				processesDefinitions.add(item);
 			}
-			
-			return casesProcessesDefinitions;
 			
 		} catch (Exception e) {
 			setMessage("Exception occured");
 			e.printStackTrace();
-			casesProcessesDefinitions.clear();
-			return casesProcessesDefinitions;
+			processesDefinitions.clear();
 			
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
-	}
-
-	public String getProcessDefinitionId() {
-		return processDefinitionId;
-	}
-
-	public void setProcessDefinitionId(String processDefinitionId) {
-		this.processDefinitionId = processDefinitionId;
-	}
-
-	/*
-	public String getProcessInstanceId() {
-		return processInstanceId;
-	}
-
-	public void setProcessInstanceId(String processInstanceId) {
-		this.processInstanceId = processInstanceId;
-	}
-	*/
-
-	public String getChosenProcessDefinitionId() {
-		return chosenProcessDefinitionId;
-	}
-
-	public void setChosenProcessDefinitionId(String chosenProcessDefinitionId) {
-		this.chosenProcessDefinitionId = chosenProcessDefinitionId;
-	}
-
-	public String getChosenProcessInstanceId() {
-		return chosenProcessInstanceId;
-	}
-
-	public void setChosenProcessInstanceId(String chosenProcessInstanceId) {
-		this.chosenProcessInstanceId = chosenProcessInstanceId;
-	}
-	
-	public void showProcessInitiationView() {
-	
-		setChosenProcessDefinitionId(getProcessDefinitionId());
-	}
-	
-	/*
-	public void showProcessProgressForm() {
 		
-		setChosenProcessInstanceId(getProcessInstanceId());
-	}
-	 */
-	
-	public String getTemplateBundleLocation() {
-		return templateBundleLocation;
-	}
-
-	public void setTemplateBundleLocation(String templateBundleLocation) {
-		this.templateBundleLocation = templateBundleLocation;
+		return processesDefinitions;
 	}
 
 	public ProcessBundleManager getProcessBundleManager() {
 		return processBundleManager;
 	}
 
+	@Autowired
 	public void setProcessBundleManager(ProcessBundleManager processBundleManager) {
 		this.processBundleManager = processBundleManager;
 	}
@@ -298,6 +243,7 @@ public class CasesBPMCreateProcess {
 		return processBundle;
 	}
 
+	@Autowired
 	public void setProcessBundle(ProcessBundle processBundle) {
 		this.processBundle = processBundle;
 	}
@@ -311,11 +257,20 @@ public class CasesBPMCreateProcess {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
-	public String getProcessName() {
-		return processName;
+	public Long getProcessDefinitionId() {
+		return processDefinitionId;
 	}
 
-	public void setProcessName(String processName) {
-		this.processName = processName;
+	public void setProcessDefinitionId(Long processDefinitionId) {
+		this.processDefinitionId = processDefinitionId;
+	}
+
+	public IdegaJbpmContext getIdegaJbpmContext() {
+		return idegaJbpmContext;
+	}
+
+	@Autowired
+	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+		this.idegaJbpmContext = idegaJbpmContext;
 	}
 }

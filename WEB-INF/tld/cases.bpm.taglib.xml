@@ -8,9 +8,9 @@
 	<namespace>http://xmlns.idega.com/is.idega.idegaweb.egov.cases.bpm</namespace>
 	
     <tag>
-        <tag-name>CasesBPMCreateProcess</tag-name>
+        <tag-name>CasesBPMProcessMgmt</tag-name>
         <component>
-            <component-type>UICasesBPMCreateProcess</component-type>
+            <component-type>UICasesBPMProcessMgmt</component-type>
         </component>
     </tag>
     <tag>
