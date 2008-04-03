@@ -33,9 +33,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/04/02 19:23:56 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/03 14:25:30 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -76,7 +76,7 @@ public class CasesBPMProcessMgmtBean {
 		try {
 			Long caseCategoryId = new Long(getCaseCategory());
 			Long caseTypeId = new Long(getCaseType());
-			Long pdId = null;
+			Long pdId = getProcessDefinitionId();
 
 //			TODO: find existing, and update
 			CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
