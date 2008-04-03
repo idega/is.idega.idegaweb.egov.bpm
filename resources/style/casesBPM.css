@@ -1,107 +1,118 @@
 .casesBPMAssets .assetsView {
-	
-	border: 1px solid green;
-	float: left;
-	width: 100%;
+    border: 1px solid green;
+    float: left;
+    width: 100%;
 }
 
 .casesBPMAssets .title {
-	border: 1px solid #0db143;
-	border-width: 1px 0 1px 0;
-	margin: 5px;
-	padding-left: 20px;
+    border: 1px solid #a0a0a0;
+    padding: 0 12px;
+    margin-bottom: 12px;
+    background: #cdcdcd;
+}
+
+.casesBPMAssets .title h3 {
+    margin: 0;
+    line-height: 28px;
 }
 
 .casesBPMAssets .actions  {
-	background: #efefef;
-	border-top: 1px solid #042025;
-	padding: 5px;
-	float: left;
-	width: 100%;
+    background: #efefef;
+    border-top: 1px solid #a0a0a0;
+    padding: 5px;
+    clear: both;
+    margin-bottom: 12px;
 }
 
 .casesBPMAssets .messages {
-	float: left;
-	width: 100%;
+    float: left;
+    width: 100%;
 }
 
 .casesBPMAssets .messages .infoMessage {
-	background-color: #f3ef83;
-	margin: 5px;
+    background-color: #f3ef83;
+    margin: 5px;
 }
 
 .casesBPMAssets .messages .errorMessage {
-	background-color: #f95353;
-	margin: 5px;
+    background-color: #f95353;
+    margin: 5px;
 }
 
 .casesBPMAssets .actions a {
-	color: #042025;
-	text-decoration: none;
-	margin: 3px;
+    color: #042025;
+    text-decoration: none;
+    margin: 3px;
 }
 
 .casesBPMAssets .actions div {
-	
-	
-	display: inline;
-	border-right: 1px solid black;
+    display: inline;
 }
 
 /*asset view*/
 .casesBPMAssets .assetsView {
-
-	border: 1px #042025 solid;
-	border-width: 0 1px 0 0;
-	width: 250px;
-	float: left;
-	margin: 5px;
+    border: 1px #042025 solid;
+    border-width: 0 1px 0 0;
+    width: 250px;
+    float: left;
+    margin: 5px;
 }
 
 .casesBPMAssets .assetsView .assetSection .assetHeader {
-
-	background-color: #0db143;
-	border: 1px #042025 solid;
-	color: #ddeff8;
-	text-align: center;
-	float: left;
-	width: 100%;
+    background-color: #0db143;
+    border: 1px #042025 solid;
+    color: #ddeff8;
+    text-align: center;
+    float: left;
+    width: 100%;
 }
 
 .casesBPMAssets .formView {
-	margin: 5px;
-	margin-left: 10px;
+    margin: 5px;
+    margin-left: 10px;
 }
 
 .casesBPMAssets .assetsView .assetContent {
-
-	margin: 2px;
+    margin: 2px;
 }
 
 .casesBPMAssets .assetsView .assetSection {
-	margin-right: 3px;
+    margin-right: 3px;
 }
 
 .casesBPMAssets .assetsView .assetSection .assetEntry, .casesBPMAssets .caseInfo .caseInfoEntry {
-	float: left;
-	width: 100%;
+    float: left;
+    margin: 0 15px;
+    margin-bottom: 8px;
+    clear: both;
 }
 
 .casesBPMAssets .assetsView .assetSection .assetEntryLeft, .casesBPMAssets .caseInfo .caseInfoEntryLeft {
-	background-color: #ddeff8;
-	float: left;
-	width: 90px;
+    float: left;
+    width: 140px;
+    font-size: 12px;
+    font-weight: bold;
 }
 
 .casesBPMAssets .assetsView .assetSection .assetEntryRight, .casesBPMAssets .caseInfo .caseInfoEntryRight {
-	float: left;
-	margin-left: 2px;
+    float: left;
+    margin-left: 2px;
+    font-size: 12px;
 }
 
 .casesBPMAssets .disabledSelection {
-	color: grey;
+    color: grey;
 }
 
 .casesBPMAssets .bpmTasks tr, .casesBPMAssets .bpmDocuments tr {
-	cursor: pointer;
+    cursor: pointer;
+}
+
+.ui-tabs-nav, .ui-tabs-panel {
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.ui-tabs-panel {
+    border: 1px #a0a0a0 solid;
+    padding: 15px;
 }
