@@ -11,6 +11,7 @@ import org.apache.myfaces.custom.htmlTag.HtmlTag;
 import org.apache.myfaces.renderkit.html.util.AddResource;
 import org.apache.myfaces.renderkit.html.util.AddResourceFactory;
 
+import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.JQueryUIType;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.facelets.ui.FaceletComponent;
@@ -18,13 +19,14 @@ import com.idega.jbpm.exe.AttachmentWriter;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.text.DownloadLink;
 import com.idega.util.CoreConstants;
+import com.idega.webface.WFUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/03/30 11:12:33 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/03 13:37:23 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -135,6 +137,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	}
 
 	public void setFullView(boolean fullView) {
+		CaseManagerState caseHandlerState = (CaseManagerState)WFUtil.getBeanInstance(CaseManagerState.beanIdentifier);
+		caseHandlerState.setFullView(fullView);
 		this.fullView = fullView;
 	}
 

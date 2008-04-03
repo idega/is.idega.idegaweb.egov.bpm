@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xml>
-  <page type="egov_bpm_assetsView">
+  <page type="bpm_assets_view">
   	<region id="content" label="content">
   		<module id="" class="com.idega.content.themes.presentation.ApplicationPropertyViewer">
       		<property>

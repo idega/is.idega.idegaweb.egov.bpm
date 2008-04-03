@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <page-templates>
-	<page name="Egov BPM" type="egov_bpm" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_egov_bpm.xml"></page>
-	<page name="Egov BPM Assets View" type="egov_bpm_assetsView" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_egov_bpm_assetsView.xml"></page>
+	<page name="BPM Application Starter" type="bpm_app_starter" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_bpm_app_starter.xml"></page>
+	<page name="BPM Assets View" type="bpm_assets_view" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_bpm_assets_view.xml"></page>
+	<page name="BPM Handler Assets View" type="bpm_handler_assets" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_bpm_handler_assets.xml"></page>
+	<page name="BPM User Assets View" type="bpm_user_assets" iconfile="idegaweb/bundles/org.jboss.jbpm.bundle/resources/images/pageIcons/orbz-machine-16x16.png" templatefile="idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/pages/idega_theme_bpm_user_assets.xml"></page>
 </page-templates>

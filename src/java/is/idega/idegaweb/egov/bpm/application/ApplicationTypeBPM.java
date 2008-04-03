@@ -37,9 +37,9 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/04/02 19:22:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/03 13:37:22 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -50,7 +50,7 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	private AppBPMDAO appBPMDAO;
 	public static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
-	private static final String egovBPMPageType = "egov_bpm";
+	private static final String egovBPMPageType = "bpm_app_starter";
 	
 	public ApplicationTypeHandlerComponent getHandlerComponent() {		
 		UIApplicationTypeBPMHandler h = new UIApplicationTypeBPMHandler();
