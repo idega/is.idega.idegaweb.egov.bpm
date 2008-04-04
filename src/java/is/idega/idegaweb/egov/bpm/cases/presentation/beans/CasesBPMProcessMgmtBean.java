@@ -10,6 +10,8 @@ import java.util.Collection;
 import java.util.List;
 
 import javax.faces.context.FacesContext;
+import javax.faces.event.PhaseId;
+import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
 import org.jbpm.JbpmContext;
@@ -33,9 +35,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/04/03 14:25:30 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/04 21:48:26 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -77,13 +79,23 @@ public class CasesBPMProcessMgmtBean {
 			Long caseCategoryId = new Long(getCaseCategory());
 			Long caseTypeId = new Long(getCaseType());
 			Long pdId = getProcessDefinitionId();
-
-//			TODO: find existing, and update
-			CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
-			bind.setCasesCategoryId(caseCategoryId);
-			bind.setCasesTypeId(caseTypeId);
-			bind.setProcDefId(pdId);
-			getCasesBPMDAO().persist(bind);
+			
+			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBind(pdId);
+			
+			if(ctpd != null) {
+				
+				ctpd.setCasesCategoryId(caseCategoryId);
+				ctpd.setCasesTypeId(caseTypeId);
+				getCasesBPMDAO().updateCaseTypesProcDefBind(ctpd);
+				
+			} else {
+			
+				CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
+				bind.setCasesCategoryId(caseCategoryId);
+				bind.setCasesTypeId(caseTypeId);
+				bind.setProcDefId(pdId);
+				getCasesBPMDAO().persist(bind);
+			}
 			
 		} catch (Exception e) {
 			setMessage("Exception occured");
@@ -173,6 +185,17 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	public String getCaseCategory() {
+		
+		if(caseCategory == null && getProcessDefinitionId() != null) {
+			
+			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBind(getProcessDefinitionId());
+			
+			if(ctpd != null) {
+				
+				setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
+				setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+			}
+		}
 		return caseCategory;
 	}
 
@@ -181,6 +204,17 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	public String getCaseType() {
+		
+		if(caseType == null && getProcessDefinitionId() != null) {
+			
+			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBind(getProcessDefinitionId());
+			
+			if(ctpd != null) {
+				
+				setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
+				setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+			}
+		}
 		return caseType;
 	}
 
@@ -188,20 +222,9 @@ public class CasesBPMProcessMgmtBean {
 		this.caseType = caseType;
 	}
 	
-	private void addDefaultSelectItem(List<SelectItem> selectItems) {
-		
-		SelectItem item = new SelectItem();
-		
-		item.setValue(new Long(0));
-		item.setLabel("No selection");
-		
-		selectItems.add(item);
-	}
-	
 	public List<SelectItem> getCasesProcessesDefinitions() {
 
 		processesDefinitions.clear();
-		addDefaultSelectItem(processesDefinitions);
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
@@ -272,5 +295,25 @@ public class CasesBPMProcessMgmtBean {
 	@Autowired
 	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
+	}
+	
+	public void selectedProcessChanged(ValueChangeEvent event) {
+		
+		PhaseId phaseId = event.getPhaseId();
+		
+		if (phaseId.equals(PhaseId.ANY_PHASE)) {
+			
+			event.setPhaseId(PhaseId.UPDATE_MODEL_VALUES);
+			event.queue();
+			
+		} else if (phaseId.equals(PhaseId.UPDATE_MODEL_VALUES)) {
+			
+			if(event.getNewValue() != null && event.getOldValue() != null && !event.getNewValue().equals(event.getOldValue())) {
+				caseCategory = null;
+				caseType = null;
+			}
+			
+			processDefinitionId = (Long)event.getNewValue();
+		}
 	}
 }

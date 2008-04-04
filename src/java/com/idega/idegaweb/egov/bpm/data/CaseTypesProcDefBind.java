@@ -12,16 +12,17 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/02/26 14:59:12 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/04 21:48:26 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_CASETYPES_PROCDEF")
 @NamedQueries(
 		{
 			@NamedQuery(name=CaseTypesProcDefBind.CASES_PROCESSES_DEFINITIONS_QUERY_NAME, query="select pd.id, pd.name from org.jbpm.graph.def.ProcessDefinition pd, CaseTypesProcDefBind ctpdb where pd.id = ctpdb.procDefId"),
-			@NamedQuery(name=CaseTypesProcDefBind.CASES_PROCESSES_GET_ALL_QUERY_NAME, query="from CaseTypesProcDefBind")
+			@NamedQuery(name=CaseTypesProcDefBind.CASES_PROCESSES_GET_ALL_QUERY_NAME, query="from CaseTypesProcDefBind"),
+			@NamedQuery(name=CaseTypesProcDefBind.CASES_PROCESSES_GET_BY_PD, query="from CaseTypesProcDefBind ctpd where ctpd."+CaseTypesProcDefBind.procDefIdPropName+" = :"+CaseTypesProcDefBind.procDefIdPropName)
 		}
 )
 public class CaseTypesProcDefBind implements Serializable {
@@ -30,8 +31,9 @@ public class CaseTypesProcDefBind implements Serializable {
 	
 	public static final String CASES_PROCESSES_DEFINITIONS_QUERY_NAME = "CaseTypesProcDefBind.simpleCasesProcessesDefinitionsQuery";
 	public static final String CASES_PROCESSES_GET_ALL_QUERY_NAME = "CaseTypesProcDefBind.getAllQuery";
+	public static final String CASES_PROCESSES_GET_BY_PD = "CaseTypesProcDefBind.getByPD";
 
-//	TODO: try to use ProcessDefinition entity here instead of just Long id, check if it will work correctly without resolving it from jbpmContext
+	public static final String procDefIdPropName = "procDefId";
 	@Id
 	@Column(name="process_definition_id", nullable=false)
     private Long procDefId;

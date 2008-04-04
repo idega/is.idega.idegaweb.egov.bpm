@@ -16,9 +16,9 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/04/01 19:02:49 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/04 21:48:26 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -98,5 +98,24 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		.getResultList();
 		
 		return u;
+	}
+	
+	public CaseTypesProcDefBind getCaseTypesProcDefBind(long processDefinitionId) {
+		
+		@SuppressWarnings("unchecked")
+		List<CaseTypesProcDefBind> u = getEntityManager().createNamedQuery(CaseTypesProcDefBind.CASES_PROCESSES_GET_BY_PD)
+		.setParameter(CaseTypesProcDefBind.procDefIdPropName, processDefinitionId)
+		.getResultList();
+		
+		if(!u.isEmpty())
+			return u.iterator().next();
+		
+		return null;
+	}
+	
+	@Transactional(readOnly = false)
+	public void updateCaseTypesProcDefBind(CaseTypesProcDefBind bind) {
+
+		getEntityManager().merge(bind);
 	}
 }
