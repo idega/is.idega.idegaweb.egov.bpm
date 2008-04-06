@@ -7,9 +7,13 @@ import is.idega.idegaweb.egov.application.data.Application;
 import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 
+import org.jbpm.JbpmContext;
+import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
@@ -27,6 +31,7 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.AppProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.presentation.IWContext;
@@ -37,9 +42,9 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/04/03 13:37:22 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/06 17:53:12 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -48,6 +53,7 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	private BPMDAO bpmBindsDAO;
 	private CasesBPMDAO casesBPMDAO;
 	private AppBPMDAO appBPMDAO;
+	private IdegaJbpmContext idegaJbpmContext;
 	public static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
 	private static final String egovBPMPageType = "bpm_app_starter";
@@ -197,16 +203,27 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		
 		Integer appId = getAppId(app.getPrimaryKey());
 		
-		AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
+		ProcessDefinition procDef = getAppBPMDAO().getProcessDefinitionByAppId(appId);
 		
-		if(bind == null)
-			throw new RuntimeException("No application bpm bind found for app requested. App id: "+app.getPrimaryKey());
+		if(procDef == null) {
+			
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "No process definition found for app requested. App id: "+app.getPrimaryKey());
+			return null;
+		}
 		
-		URIUtil uriUtil = new URIUtil(uri);
-		uriUtil.setParameter(BPMTaskViewer.PROCESS_DEFINITION_PROPERTY, String.valueOf(bind.getProcDefId()));
-		uri = uriUtil.getUri();
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
-		return iwac.getIWMainApplication().getTranslatedURIWithContext(uri);
+		try {
+			procDef = ctx.getGraphSession().findLatestProcessDefinition(procDef.getName());
+			
+			URIUtil uriUtil = new URIUtil(uri);
+			uriUtil.setParameter(BPMTaskViewer.PROCESS_DEFINITION_PROPERTY, String.valueOf(procDef.getId()));
+			uri = uriUtil.getUri();
+			return iwac.getIWMainApplication().getTranslatedURIWithContext(uri);
+			
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
+		}
 	}
 	
 	public Collection<ICPage> getPages(String pageSubType) {
@@ -231,5 +248,14 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
+	}
+
+	public IdegaJbpmContext getIdegaJbpmContext() {
+		return idegaJbpmContext;
+	}
+
+	@Autowired
+	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+		this.idegaJbpmContext = idegaJbpmContext;
 	}
 }
