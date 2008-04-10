@@ -19,9 +19,9 @@ import com.idega.util.xml.XmlUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  * 
- * Last modified: $Date: 2008/04/10 01:18:38 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/10 14:05:31 $ by $Author: civilis $
  * 
  */
 public class CasesBPMBundledFormViewResource implements ViewResource {
@@ -50,6 +50,8 @@ public class CasesBPMBundledFormViewResource implements ViewResource {
 				Document xformXml = builder.parse(is);
 				com.idega.documentmanager.business.Document form = documentManager
 					.openForm(xformXml);
+				
+				form.setFormType(XFormsView.FORM_TYPE);
 				form.save();
 				
 				XFormsView view = new XFormsView();
