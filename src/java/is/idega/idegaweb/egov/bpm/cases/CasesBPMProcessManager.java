@@ -10,8 +10,6 @@ import java.util.Map;
 import javax.faces.context.FacesContext;
 
 import org.jbpm.JbpmContext;
-import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.security.AuthorizationService;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,9 +36,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/03/16 18:59:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/11 01:27:40 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager extends AbstractProcessManager {
 
@@ -50,7 +48,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 	private AuthorizationService authorizationService;
 	private BPMFactory bpmFactory;
 	
-	public void startProcess(long processDefinitionId, View view) {
+	public void startProcess(long startTaskInstanceId, View view) {
 		
 		Map<String, String> parameters = view.resolveParameters();
 		
@@ -61,19 +59,15 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
-			
-			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
-			ProcessInstance pi = new ProcessInstance(pd);
+			TaskInstance ti = ctx.getTaskInstance(startTaskInstanceId);
 			
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 			User user = getUserBusiness(iwc).getUser(userId);
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
 			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", "type", CasesBPMCaseHandlerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)));
-			
-			pi.setStart(new Date());
-			
-			TaskInstance taskInstance = pi.getTaskMgmtInstance().createStartTaskInstance();
+
+			ti.getProcessInstance().setStart(new Date());
 			
 			Map<String, Object> caseData = new HashMap<String, Object>();
 			caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
@@ -84,12 +78,12 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
-			getVariablesHandler().submitVariables(caseData, taskInstance.getId(), false);
-			submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
+			getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
+			submitVariablesAndProceedProcess(ti, view.resolveVariables());
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
-			bind.setProcInstId(pi.getId());
+			bind.setProcInstId(ti.getProcessInstance().getId());
 			getCasesBPMDAO().persist(bind);
 			
 		} catch (Exception e) {

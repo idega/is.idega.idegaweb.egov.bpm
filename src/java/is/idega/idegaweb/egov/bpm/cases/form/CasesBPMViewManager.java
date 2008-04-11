@@ -12,8 +12,7 @@ import javax.faces.context.FacesContext;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.taskmgmt.def.Task;
-import org.jbpm.taskmgmt.def.TaskMgmtDefinition;
+import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -28,7 +27,6 @@ import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.def.View;
-import com.idega.jbpm.def.ViewCreator;
 import com.idega.jbpm.def.ViewToTask;
 import com.idega.jbpm.def.ViewToTaskType;
 import com.idega.jbpm.exe.BPMFactory;
@@ -41,16 +39,15 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/04/02 19:23:56 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/11 01:27:40 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
 	private DocumentManagerFactory documentManagerFactory;
 	private ViewToTask viewToTaskBinder;
 	private VariablesHandler variablesHandler;
-	private ViewCreator viewCreator;
 	private BPMDAO bpmBindsDAO;
 	private IdegaJbpmContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
@@ -82,16 +79,18 @@ public class CasesBPMViewManager implements ViewManager {
 			CaseTypesProcDefBind bind = getBpmBindsDAO().find(CaseTypesProcDefBind.class, processDefinitionId);
 			
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
+			ProcessInstance pi = new ProcessInstance(pd);
+			TaskInstance taskInstance = pi.getTaskMgmtInstance().createStartTaskInstance();
 			
-			TaskMgmtDefinition mgdef = pd.getTaskMgmtDefinition();
-			Task initTask = mgdef.getStartTask();
-			
-			View view = getBpmFactory().getView(initTask.getId(), true);
+			List<String> preferred = new ArrayList<String>(1);
+			preferred.add(XFormsView.VIEW_TYPE);
+			View view = getBpmFactory().takeView(taskInstance.getId(), true, preferred);
 			
 //			move this to protected method setupInitView(view:View):void
-			Map<String, String> parameters = new HashMap<String, String>(4);
+			Map<String, String> parameters = new HashMap<String, String>(5);
 			
-			parameters.put(ProcessConstants.PROCESS_DEFINITION_ID, String.valueOf(processDefinitionId));
+			parameters.put(ProcessConstants.START_PROCESS, ProcessConstants.START_PROCESS);
+			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));
 			parameters.put(CasesBPMProcessConstants.userIdActionVariableName, String.valueOf(initiatorId));
 			parameters.put(CasesBPMProcessConstants.caseCategoryIdActionVariableName, String.valueOf(bind.getCasesCategoryId()));
 			parameters.put(CasesBPMProcessConstants.caseTypeActionVariableName, String.valueOf(bind.getCasesTypeId()));
@@ -121,7 +120,17 @@ public class CasesBPMViewManager implements ViewManager {
 			
 			List<String> preferred = new ArrayList<String>(1);
 			preferred.add(XFormsView.VIEW_TYPE);
-			View view = getBpmFactory().getView(taskInstance.getTask().getId(), !taskInstance.hasEnded(), preferred);
+			
+			View view;
+			
+			if(taskInstance.hasEnded()) {
+				
+				view = getBpmFactory().getViewByTaskInstance(taskInstanceId, false, preferred);
+				
+			} else {
+				
+				view = getBpmFactory().takeView(taskInstanceId, true, preferred);
+			}
 			
 			Map<String, String> parameters = new HashMap<String, String>(1);
 			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));
@@ -183,14 +192,6 @@ public class CasesBPMViewManager implements ViewManager {
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
-	}
-
-	public ViewCreator getViewCreator() {
-		return viewCreator;
-	}
-
-	public void setViewCreator(ViewCreator viewCreator) {
-		this.viewCreator = viewCreator;
 	}
 	
 	protected CaseStatus getInitCaseStatus(IWApplicationContext iwac) {

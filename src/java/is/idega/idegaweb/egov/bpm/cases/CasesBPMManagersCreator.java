@@ -6,11 +6,11 @@ import com.idega.jbpm.exe.ViewManager;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/02/04 19:05:38 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/11 01:27:40 $ by $Author: civilis $
  */
-public class CasesBPMManagersCreator extends BPMManagersFactory {
+public class CasesBPMManagersCreator implements BPMManagersFactory {
 	
 	public static final String MANAGERS_TYPE = "cases";
 	private static final String BEAN_IDENTIFIER = "casesBPMManagersCreator";
