@@ -10,15 +10,13 @@ import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/04/04 21:48:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
  */
 public interface CasesBPMDAO extends GenericDao {
 
-	public abstract List<CaseTypesProcDefBind> getAllCaseTypesProcDefBinds();
-	
-	public abstract List<Object[]> getCaseTypesProcessDefinitions();
+	public abstract List<CaseTypesProcDefBind> getAllCaseTypes();
 	
 	public abstract CaseProcInstBind getCaseProcInstBindByCaseId(Integer caseId);
 	
@@ -26,7 +24,7 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<ProcessUserBind> getProcessUserBinds(int userId, Collection<Integer> casesIds);
 	
-	public abstract CaseTypesProcDefBind getCaseTypesProcDefBind(long processDefinitionId);
+	public abstract CaseTypesProcDefBind getCaseTypesProcDefBindByPDName(String processDefinitionName);
 	
 	public abstract void updateCaseTypesProcDefBind(CaseTypesProcDefBind bind);
 }

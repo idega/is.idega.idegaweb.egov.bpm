@@ -6,46 +6,28 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
-import javax.persistence.NamedQueries;
-import javax.persistence.NamedQuery;
 import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/04/06 17:53:12 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
  */
 @Entity
-@Table(name="BPM_APP_PROCDEF")
-@NamedQueries(
-		{
-			@NamedQuery(name=AppProcDefBind.findProcessDefByAppId, query="select pd from org.jbpm.graph.def.ProcessDefinition pd, AppProcDefBind apd where apd."+AppProcDefBind.applicationIdProp+" = :"+AppProcDefBind.applicationIdProp+" and apd."+AppProcDefBind.procDefIdProp+" = pd.id")
-		}
-)
+@Table(name="BPM_APPL_PROCDEF")
 public class AppProcDefBind implements Serializable {
 	
-	private static final long serialVersionUID = -3413662786833844673L;
-	public static final String findProcessDefByAppId = "AppProcDefBind.findProcessDefByAppId";
+	private static final long serialVersionUID = -817229691946827690L;
 
-	public static final String procDefIdProp = "procDefId";
-	@Column(name="process_definition_id", nullable=false)
-    private Long procDefId;
+	@Column(name="process_definition_name", nullable=false)
+    private String processDefinitionName;
 	
-	public static final String applicationIdProp = "applicationId";
 	@Id
 	@Column(name="application_id", nullable=false)
 	private Integer applicationId;
 	
 	public AppProcDefBind() { }
-
-	public Long getProcDefId() {
-		return procDefId;
-	}
-
-	public void setProcDefId(Long procDefId) {
-		this.procDefId = procDefId;
-	}
 
 	public Integer getApplicationId() {
 		return applicationId;
@@ -53,5 +35,13 @@ public class AppProcDefBind implements Serializable {
 
 	public void setApplicationId(Integer applicationId) {
 		this.applicationId = applicationId;
+	}
+
+	public String getProcessDefinitionName() {
+		return processDefinitionName;
+	}
+
+	public void setProcessDefinitionName(String processDefinitionName) {
+		this.processDefinitionName = processDefinitionName;
 	}
 }

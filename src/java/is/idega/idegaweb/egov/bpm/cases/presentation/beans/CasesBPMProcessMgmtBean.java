@@ -35,9 +35,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/04/04 21:48:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -74,13 +74,16 @@ public class CasesBPMProcessMgmtBean {
 			setMessage("Case type not chosen");
 			return null;
 		}
+		
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 			
 		try {
 			Long caseCategoryId = new Long(getCaseCategory());
 			Long caseTypeId = new Long(getCaseType());
 			Long pdId = getProcessDefinitionId();
 			
-			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBind(pdId);
+			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(pdId);
+			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
 			
 			if(ctpd != null) {
 				
@@ -93,13 +96,15 @@ public class CasesBPMProcessMgmtBean {
 				CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
 				bind.setCasesCategoryId(caseCategoryId);
 				bind.setCasesTypeId(caseTypeId);
-				bind.setProcDefId(pdId);
+				bind.setProcessDefinitionName(pd.getName());
 				getCasesBPMDAO().persist(bind);
 			}
 			
 		} catch (Exception e) {
 			setMessage("Exception occured");
 			e.printStackTrace();
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 		
 		return null;
@@ -188,12 +193,20 @@ public class CasesBPMProcessMgmtBean {
 		
 		if(caseCategory == null && getProcessDefinitionId() != null) {
 			
-			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBind(getProcessDefinitionId());
+			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 			
-			if(ctpd != null) {
+			try {
+				ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+				CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
 				
-				setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
-				setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+				if(ctpd != null) {
+					
+					setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
+					setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+				}
+				
+			} finally {
+				getIdegaJbpmContext().closeAndCommit(ctx);
 			}
 		}
 		return caseCategory;
@@ -207,12 +220,19 @@ public class CasesBPMProcessMgmtBean {
 		
 		if(caseType == null && getProcessDefinitionId() != null) {
 			
-			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBind(getProcessDefinitionId());
+			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 			
-			if(ctpd != null) {
+			try {
+				ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+				CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
 				
-				setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
-				setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+				if(ctpd != null) {
+					
+					setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
+					setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+				}
+			} finally {
+				getIdegaJbpmContext().closeAndCommit(ctx);
 			}
 		}
 		return caseType;
@@ -222,6 +242,7 @@ public class CasesBPMProcessMgmtBean {
 		this.caseType = caseType;
 	}
 	
+//	rename to getLatestProcessDefinitions
 	public List<SelectItem> getCasesProcessesDefinitions() {
 
 		processesDefinitions.clear();

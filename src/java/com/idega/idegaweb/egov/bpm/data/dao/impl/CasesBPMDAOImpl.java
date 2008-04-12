@@ -16,27 +16,19 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/04/04 21:48:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
 @Transactional(readOnly=true)
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
-	public List<CaseTypesProcDefBind> getAllCaseTypesProcDefBinds() {
-
-		@SuppressWarnings("unchecked")
-		List<CaseTypesProcDefBind> binds = getEntityManager().createNamedQuery(CaseTypesProcDefBind.CASES_PROCESSES_GET_ALL_QUERY_NAME).getResultList();
-
-		return binds;
-	}
-	
-	public List<Object[]> getCaseTypesProcessDefinitions() {
+	public List<CaseTypesProcDefBind> getAllCaseTypes() {
 		
 		@SuppressWarnings("unchecked")
-		List<Object[]> casesProcesses = getEntityManager().createNamedQuery(CaseTypesProcDefBind.CASES_PROCESSES_DEFINITIONS_QUERY_NAME)
+		List<CaseTypesProcDefBind> casesProcesses = getEntityManager().createNamedQuery(CaseTypesProcDefBind.CASES_PROCESSES_GET_ALL)
 		.getResultList();
 		
 		return casesProcesses;
@@ -100,11 +92,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return u;
 	}
 	
-	public CaseTypesProcDefBind getCaseTypesProcDefBind(long processDefinitionId) {
+	public CaseTypesProcDefBind getCaseTypesProcDefBindByPDName(String pdName) {
 		
 		@SuppressWarnings("unchecked")
-		List<CaseTypesProcDefBind> u = getEntityManager().createNamedQuery(CaseTypesProcDefBind.CASES_PROCESSES_GET_BY_PD)
-		.setParameter(CaseTypesProcDefBind.procDefIdPropName, processDefinitionId)
+		List<CaseTypesProcDefBind> u = getEntityManager().createNamedQuery(CaseTypesProcDefBind.CASES_PROCESSES_GET_BY_PDNAME)
+		.setParameter(CaseTypesProcDefBind.procDefNamePropName, pdName)
 		.getResultList();
 		
 		if(!u.isEmpty())

@@ -39,9 +39,9 @@ import com.idega.user.business.UserBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/04/11 01:27:40 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -75,10 +75,11 @@ public class CasesBPMViewManager implements ViewManager {
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
-//			TODO: if not bound, then create default case category, case type and bind to it
-			CaseTypesProcDefBind bind = getBpmBindsDAO().find(CaseTypesProcDefBind.class, processDefinitionId);
-			
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
+
+//			TODO: if not bound, then create default case category, case type and bind to it
+			CaseTypesProcDefBind bind = getBpmBindsDAO().find(CaseTypesProcDefBind.class, pd.getName());
+			
 			ProcessInstance pi = new ProcessInstance(pd);
 			TaskInstance taskInstance = pi.getTaskMgmtInstance().createStartTaskInstance();
 			
