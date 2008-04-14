@@ -2,6 +2,6 @@
 
 <processes>
 
-    <processBundle bundle="is.idega.idegaweb.egov.bpm" propsUriWithinBundle="resources/processes/nestCommitteeGateway/bundle.properties" autoload="true" version="6" />
+    <processBundle bundle="is.idega.idegaweb.egov.bpm" propsUriWithinBundle="resources/processes/nestCommitteeGateway/bundle.properties" autoload="true" version="10" />
 
 </processes>
