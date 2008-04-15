@@ -2,6 +2,7 @@ package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.context.annotation.Scope;
@@ -16,9 +17,9 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/15 23:12:49 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -109,5 +110,23 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	public void updateCaseTypesProcDefBind(CaseTypesProcDefBind bind) {
 
 		getEntityManager().merge(bind);
+	}
+	
+	public CaseProcInstBind getCaseTypesProcDefBindLatestByDateQN(Date date) {
+		
+		CaseProcInstBind b = null;
+		
+		if(date != null) {
+		
+			@SuppressWarnings("unchecked")
+			List<CaseProcInstBind> u = getEntityManager().createNamedQuery(CaseProcInstBind.getLatestByDateQN)
+			.setParameter(CaseProcInstBind.dateCreatedProp, date)
+			.getResultList();
+			
+			if(!u.isEmpty())
+				b = u.iterator().next();
+		}
+		
+		return b;
 	}
 }

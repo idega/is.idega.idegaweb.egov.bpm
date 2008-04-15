@@ -4,6 +4,7 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,9 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.def.View;
@@ -35,13 +38,15 @@ import com.idega.jbpm.exe.VariablesHandler;
 import com.idega.jbpm.exe.ViewManager;
 import com.idega.user.business.GroupBusiness;
 import com.idega.user.business.UserBusiness;
+import com.idega.util.CoreConstants;
+import com.idega.util.IWTimestamp;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/15 23:12:49 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 
@@ -49,6 +54,7 @@ public class CasesBPMViewManager implements ViewManager {
 	private ViewToTask viewToTaskBinder;
 	private VariablesHandler variablesHandler;
 	private BPMDAO bpmBindsDAO;
+	private CasesBPMDAO casesBPMDAO;
 	private IdegaJbpmContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
 	
@@ -87,16 +93,27 @@ public class CasesBPMViewManager implements ViewManager {
 			preferred.add(XFormsView.VIEW_TYPE);
 			View view = getBpmFactory().takeView(taskInstance.getId(), true, preferred);
 			
+			Object[] identifiers = generateNewCaseIdentifier();
+			Integer identifierNumber = (Integer)identifiers[0];
+			String identifier = (String)identifiers[1];
+			
 //			move this to protected method setupInitView(view:View):void
-			Map<String, String> parameters = new HashMap<String, String>(5);
+			Map<String, String> parameters = new HashMap<String, String>(6);
 			
 			parameters.put(ProcessConstants.START_PROCESS, ProcessConstants.START_PROCESS);
 			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));
 			parameters.put(CasesBPMProcessConstants.userIdActionVariableName, String.valueOf(initiatorId));
 			parameters.put(CasesBPMProcessConstants.caseCategoryIdActionVariableName, String.valueOf(bind.getCasesCategoryId()));
 			parameters.put(CasesBPMProcessConstants.caseTypeActionVariableName, String.valueOf(bind.getCasesTypeId()));
+			parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam, String.valueOf(identifierNumber));
 			
 			view.populateParameters(parameters);
+			
+			HashMap<String, Object> vars = new HashMap<String, Object>(1);
+			vars.put(CasesBPMProcessConstants.caseIdentifier, identifier);
+			
+			view.populateVariables(vars);
+			
 //			--
 			
 			return view;
@@ -110,6 +127,58 @@ public class CasesBPMViewManager implements ViewManager {
 			
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
+	}
+	
+	class CaseIdentifier {
+		
+		IWTimestamp time;
+		Integer number;
+		
+		String generate() {
+			
+			String nr = String.valueOf(++number);
+			
+			while(nr.length() < 4)
+				nr = "0"+nr;
+			
+			return new StringBuffer("IWBPM-")
+			.append(time.getYear())
+			.append(CoreConstants.MINUS)
+			.append(time.getMonth() < 10 ? "0"+time.getMonth() : time.getMonth())
+			.append(CoreConstants.MINUS)
+			.append(time.getDay() < 10 ? "0"+time.getDay() : time.getDay())
+			.append(CoreConstants.MINUS)
+			.append(nr)
+			.toString();
+		}
+	}
+	
+	private CaseIdentifier lastCaseIdentifierNumber;
+	
+	protected synchronized Object[] generateNewCaseIdentifier() {
+		
+		IWTimestamp currentTime = new IWTimestamp();
+		
+		if(lastCaseIdentifierNumber == null || !currentTime.equals(lastCaseIdentifierNumber.time)) {
+
+			lastCaseIdentifierNumber = new CaseIdentifier();
+			
+			CaseProcInstBind b = getCasesBPMDAO().getCaseTypesProcDefBindLatestByDateQN(new Date());
+			
+			if(b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
+				
+				lastCaseIdentifierNumber.time = new IWTimestamp(b.getDateCreated());
+				lastCaseIdentifierNumber.number = b.getCaseIdentierID();
+			} else {
+			
+				lastCaseIdentifierNumber.time = currentTime;
+				lastCaseIdentifierNumber.number = 0;
+			}
+		}
+		
+		String generated = lastCaseIdentifierNumber.generate();
+		
+		return new Object[] {lastCaseIdentifierNumber.number, generated};
 	}
 	
 	public View loadTaskInstanceView(long taskInstanceId, FacesContext context) {
@@ -219,5 +288,14 @@ public class CasesBPMViewManager implements ViewManager {
 
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
+	}
+
+	public CasesBPMDAO getCasesBPMDAO() {
+		return casesBPMDAO;
+	}
+
+	@Autowired
+	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
+		this.casesBPMDAO = casesBPMDAO;
 	}
 }

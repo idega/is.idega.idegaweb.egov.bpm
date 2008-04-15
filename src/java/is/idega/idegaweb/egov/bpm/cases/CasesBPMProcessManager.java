@@ -36,9 +36,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/04/11 01:27:40 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/15 23:12:49 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager extends AbstractProcessManager {
 
@@ -55,6 +55,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		int userId = Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName));
 		Long caseCatId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseCategoryIdActionVariableName));
 		Long caseTypeId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseTypeActionVariableName));
+		Integer identifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
@@ -84,6 +85,8 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
 			bind.setProcInstId(ti.getProcessInstance().getId());
+			bind.setCaseIdentierID(identifierNumber);
+			bind.setDateCreated(created.getDate());
 			getCasesBPMDAO().persist(bind);
 			
 		} catch (Exception e) {
