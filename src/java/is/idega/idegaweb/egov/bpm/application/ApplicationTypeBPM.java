@@ -26,9 +26,7 @@ import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
-import com.idega.idegaweb.egov.bpm.data.AppProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.idegaweb.egov.bpm.data.dao.AppBPMDAO;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.data.dao.BPMDAO;
@@ -41,9 +39,9 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/15 00:30:30 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -51,7 +49,6 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	private ApplicationContext ctx;
 	private BPMDAO bpmBindsDAO;
 	private CasesBPMDAO casesBPMDAO;
-	private AppBPMDAO appBPMDAO;
 	private IdegaJbpmContext idegaJbpmContext;
 	public static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
@@ -72,11 +69,6 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 
 	public void beforeStore(IWContext iwc, Application app) {
 		
-		app.setElectronic(true);
-	}
-	
-	public boolean afterStore(IWContext iwc, Application app) {
-		
 		String procDef = iwc.getParameter(UIApplicationTypeBPMHandler.MENU_PARAM);
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
@@ -84,43 +76,23 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		try {
 			Long pdId = new Long(procDef);
 	
-			Integer appId = getAppId(app.getPrimaryKey());
-			AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
-			
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(pdId);
-			
-			if(bind == null) {
-				bind = new AppProcDefBind();
-				bind.setApplicationId(appId);
-				bind.setProcessDefinitionName(pd.getName());
-				getAppBPMDAO().persist(bind);
-				
-			} else {
-				
-				if(!bind.getProcessDefinitionName().equals(pd.getName())) {
-					
-					bind.setProcessDefinitionName(pd.getName());
-					getAppBPMDAO().flush();
-				}
-			}
+			app.setUrl(pd.getName());
+
 		} catch(Exception exp) {
 			iwc.addMessage(null, new FacesMessage("Exception:" + exp.getMessage()));
-			return false;
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 		
-		return true;
+		app.setElectronic(true);
 	}
 	
-	private Integer getAppId(Object pk) {
+	public boolean afterStore(IWContext iwc, Application app) {
 		
-		if(pk instanceof Integer)
-			return (Integer)pk;
-		else
-			return new Integer(pk.toString());
+		return false;
 	}
-
+	
 	public void setApplicationContext(ApplicationContext applicationcontext)
 			throws BeansException {
 		ctx = applicationcontext;		
@@ -165,15 +137,14 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	
 	public String getSelectedElement(Application app) {
 		
-		Integer appId = getAppId(app.getPrimaryKey());
-		AppProcDefBind bind = getAppBPMDAO().find(AppProcDefBind.class, appId);
+		String pdName = app.getUrl();
 		
-		if(bind != null) {
+		if(pdName != null) {
 			
 			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 			
 			try {
-				ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(bind.getProcessDefinitionName());
+				ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(pdName);
 				return String.valueOf(pd.getId());
 				
 			} finally {
@@ -182,15 +153,6 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		}
 		
 		return "-1";
-	}
-
-	public AppBPMDAO getAppBPMDAO() {
-		return appBPMDAO;
-	}
-
-	@Autowired
-	public void setAppBPMDAO(AppBPMDAO appBPMDAO) {
-		this.appBPMDAO = appBPMDAO;
 	}
 	
 	protected BuilderService getBuilderService(IWApplicationContext iwac) {
@@ -203,6 +165,11 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	}
 
 	public String getUrl(IWApplicationContext iwac, Application app) {
+		
+		String pdName = app.getUrl();
+		
+		if(pdName == null)
+			return "#";
 		
 		Collection<ICPage> icpages = getPages(egovBPMPageType);
 		
@@ -222,13 +189,10 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		if(!uri.startsWith("/pages"))
 			uri = "/pages"+uri;
 		
-		Integer appId = getAppId(app.getPrimaryKey());
-		AppProcDefBind appProcDefBind = getAppBPMDAO().find(AppProcDefBind.class, appId);
-		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
-			ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(appProcDefBind.getProcessDefinitionName());
+			ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(pdName);
 			
 			URIUtil uriUtil = new URIUtil(uri);
 			uriUtil.setParameter(BPMTaskViewer.PROCESS_DEFINITION_PROPERTY, String.valueOf(pd.getId()));

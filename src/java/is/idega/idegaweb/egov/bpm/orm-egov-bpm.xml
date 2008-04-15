@@ -4,7 +4,6 @@
     xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd"
     version="1.0">
 
-    <entity class="com.idega.idegaweb.egov.bpm.data.AppProcDefBind" />
     <entity class="com.idega.idegaweb.egov.bpm.data.CaseProcInstBind" />
     <entity class="com.idega.idegaweb.egov.bpm.data.ProcessUserBind" />
     <entity class="com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind" />
