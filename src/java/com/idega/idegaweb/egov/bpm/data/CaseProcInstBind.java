@@ -15,9 +15,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/04/17 01:09:29 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 01:51:43 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_CASE_PROCINST")
@@ -41,7 +41,7 @@ public class CaseProcInstBind implements Serializable {
 
 	public static final String procInstIdProp = "procInstId";
 	@Id
-	@Column(name=procInstIdColumnName, nullable=false)
+	@Column(name=procInstIdColumnName)
     private Long procInstId;
 	
 	@Column(name="case_id", nullable=false, unique=true)

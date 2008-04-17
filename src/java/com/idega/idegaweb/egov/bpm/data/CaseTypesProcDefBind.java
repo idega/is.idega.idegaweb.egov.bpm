@@ -12,9 +12,9 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 01:51:43 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_CASETYPES_PROCDEFS")
@@ -33,7 +33,7 @@ public class CaseTypesProcDefBind implements Serializable {
 
 	public static final String procDefNamePropName = "processDefinitionName";
 	@Id
-	@Column(name="process_definition_name", nullable=false)
+	@Column(name="process_definition_name")
     private String processDefinitionName;
 	
 	@Column(name="cases_category_id", nullable=false)

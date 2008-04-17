@@ -19,9 +19,9 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/02/26 15:46:49 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 01:51:43 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_PROCESS_USER")
@@ -47,7 +47,7 @@ public class ProcessUserBind implements Serializable {
 	public static final String pidParam = "pidParam";
 
 	@Id @GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(name="ID")
+	@Column(name="ID_")
     private Long id;
 	
 	@Column(name="user_id", nullable=false)
