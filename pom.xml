@@ -53,6 +53,10 @@
     </dependency>
     <dependency>
       <groupId>com.idega.block.addon</groupId>
+      <artifactId>com.idega.block.email</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>com.idega.block.addon</groupId>
   	  <artifactId>com.idega.documentmanager</artifactId>
     </dependency>
     <dependency>

@@ -44,11 +44,13 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2008/04/15 23:12:49 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 01:09:29 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
+	
+	public static final String IDENTIFIER_PREFIX = "IWBPM";
 
 	private DocumentManagerFactory documentManagerFactory;
 	private ViewToTask viewToTaskBinder;
@@ -141,7 +143,8 @@ public class CasesBPMViewManager implements ViewManager {
 			while(nr.length() < 4)
 				nr = "0"+nr;
 			
-			return new StringBuffer("IWBPM-")
+			return new StringBuffer(IDENTIFIER_PREFIX)
+			.append(CoreConstants.MINUS)
 			.append(time.getYear())
 			.append(CoreConstants.MINUS)
 			.append(time.getMonth() < 10 ? "0"+time.getMonth() : time.getMonth())
@@ -163,7 +166,7 @@ public class CasesBPMViewManager implements ViewManager {
 
 			lastCaseIdentifierNumber = new CaseIdentifier();
 			
-			CaseProcInstBind b = getCasesBPMDAO().getCaseTypesProcDefBindLatestByDateQN(new Date());
+			CaseProcInstBind b = getCasesBPMDAO().getCaseProcInstBindLatestByDateQN(new Date());
 			
 			if(b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
 				

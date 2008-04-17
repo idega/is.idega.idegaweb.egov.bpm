@@ -17,9 +17,9 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/04/15 23:12:49 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 01:09:29 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -112,7 +112,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		getEntityManager().merge(bind);
 	}
 	
-	public CaseProcInstBind getCaseTypesProcDefBindLatestByDateQN(Date date) {
+	public CaseProcInstBind getCaseProcInstBindLatestByDateQN(Date date) {
 		
 		CaseProcInstBind b = null;
 		
@@ -128,5 +128,24 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		
 		return b;
+	}
+	
+	public List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs) {
+		
+		List<Object[]> cps = null;
+		
+		if(dates != null && !dates.isEmpty() && identifierIDs != null && !identifierIDs.isEmpty()) {
+		
+			@SuppressWarnings("unchecked")
+			List<Object[]> u = getEntityManager().createNamedQuery(CaseProcInstBind.getByDateCreatedAndCaseIdentifierId)
+			.setParameter(CaseProcInstBind.dateCreatedProp, dates)
+			.setParameter(CaseProcInstBind.caseIdentierIDProp, identifierIDs)
+			.getResultList();
+			
+			cps = u;
+		} else
+			cps = new ArrayList<Object[]>(0);
+		
+		return cps;
 	}
 }

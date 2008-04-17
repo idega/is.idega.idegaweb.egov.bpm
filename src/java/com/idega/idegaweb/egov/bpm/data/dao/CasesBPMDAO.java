@@ -11,9 +11,9 @@ import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/04/15 23:12:49 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 01:09:30 $ by $Author: civilis $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -29,5 +29,7 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract void updateCaseTypesProcDefBind(CaseTypesProcDefBind bind);
 	
-	public abstract CaseProcInstBind getCaseTypesProcDefBindLatestByDateQN(Date date);
+	public abstract CaseProcInstBind getCaseProcInstBindLatestByDateQN(Date date);
+	
+	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs);
 }

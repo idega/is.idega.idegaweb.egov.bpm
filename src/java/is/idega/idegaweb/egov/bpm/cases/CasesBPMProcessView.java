@@ -32,9 +32,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/03/17 13:38:32 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 01:09:31 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service("casesBPMProcessView")
@@ -134,7 +134,7 @@ public class CasesBPMProcessView {
 		
 		try {
 			RolesManager rolesManager = getBPMFactory().getRolesManager();
-			rolesManager.hasRightsToAsssignTask(taskInstanceId, userId);
+			rolesManager.hasRightsToAssignTask(taskInstanceId, userId);
 			
 		} catch (BPMAccessControlException e) {
 			return e.getUserFriendlyMessage();
