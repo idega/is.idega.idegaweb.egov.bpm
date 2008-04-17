@@ -44,13 +44,13 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/04/17 01:09:29 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 23:57:39 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 	
-	public static final String IDENTIFIER_PREFIX = "IWBPM";
+	public static final String IDENTIFIER_PREFIX = "P";
 
 	private DocumentManagerFactory documentManagerFactory;
 	private ViewToTask viewToTaskBinder;

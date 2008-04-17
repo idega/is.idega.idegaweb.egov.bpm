@@ -30,9 +30,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/04/17 01:09:31 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/17 23:57:41 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -101,6 +101,8 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	protected void attachEmailMsg(Message msg, ProcessInstance pi) {
 	
 		try {
+			
+			
 			System.out.println("attaching: "+msg.getSubject());
 			System.out.println("piid: "+pi.getId());
 			
@@ -166,25 +168,6 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 			return hashCode;
 		}
-	}
-	
-	public static void main(String[] args) {
-		
-		IWTimestamp iwt = new IWTimestamp(2008, 4, 15);
-		
-//		iwt.setYear(2008);
-//		iwt.setMonth(04);
-//		iwt.setDay(15);
-		
-		IWTimestamp iwt2 = new IWTimestamp(2008, 4, 15);
-		
-//		iwt2.setYear(2008);
-//		iwt2.setMonth(04);
-//		iwt2.setDay(15);
-		
-		System.out.println("iwt.g_"+iwt.getDate().equals(iwt2.getDate()));
-		
-		PISFORMSG xx = (new EmailMessagesAttacher()). new PISFORMSG(null, null, null);
 	}
 
 	public CasesBPMDAO getCasesBPMDAO() {
