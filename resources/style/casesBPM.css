@@ -1,9 +1,3 @@
-.casesBPMAssets .assetsView {
-    border: 1px solid green;
-    float: left;
-    width: 100%;
-}
-
 .casesBPMAssets .title {
     border: 1px solid #a0a0a0;
     padding: 0 12px;
@@ -14,6 +8,11 @@
 .casesBPMAssets .title h3 {
     margin: 0;
     line-height: 28px;
+}
+
+.casesBPMAssets .caseInfo {
+   overflow: hidden;
+    margin-bottom: 10px;
 }
 
 .casesBPMAssets .actions  {
@@ -50,38 +49,28 @@
 }
 
 /*asset view*/
-.casesBPMAssets .assetsView {
-    border: 1px #042025 solid;
-    border-width: 0 1px 0 0;
-    width: 250px;
-    float: left;
-    margin: 5px;
-}
-
 .casesBPMAssets .assetsView .assetSection .assetHeader {
-    background-color: #0db143;
-    border: 1px #042025 solid;
-    color: #ddeff8;
-    text-align: center;
-    float: left;
-    width: 100%;
+    background-color: #cdcdcd;
+    border: 1px #a0a0a0 solid;
+    color: #1f1f1f;
+    text-align: left;
+    padding: 0 12px;
+    line-height: 20px;
 }
 
 .casesBPMAssets .formView {
-    margin: 5px;
-    margin-left: 10px;
+   margin-top: 16px;
+   padding-top: 10px;
+   border-top: 1px #a0a0a0 solid;
 }
 
 .casesBPMAssets .assetsView .assetContent {
-    margin: 2px;
-}
+   margin: 6px;
+   overflow: hidden;
 
-.casesBPMAssets .assetsView .assetSection {
-    margin-right: 3px;
 }
 
 .casesBPMAssets .assetsView .assetSection .assetEntry, .casesBPMAssets .caseInfo .caseInfoEntry {
-    float: left;
     margin: 0 15px;
     margin-bottom: 8px;
     clear: both;
@@ -104,7 +93,7 @@
     color: grey;
 }
 
-.casesBPMAssets .bpmTasks tr, .casesBPMAssets .bpmDocuments tr, .casesBPMAssets .bpmEmails tr {
+.casesBPMAssets .bpmTasks tr, .casesBPMAssets .bpmDocuments tr {
     cursor: pointer;
 }
 
