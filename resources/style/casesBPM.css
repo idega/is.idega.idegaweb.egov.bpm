@@ -104,7 +104,7 @@
     color: grey;
 }
 
-.casesBPMAssets .bpmTasks tr, .casesBPMAssets .bpmDocuments tr {
+.casesBPMAssets .bpmTasks tr, .casesBPMAssets .bpmDocuments tr, .casesBPMAssets .bpmEmails tr {
     cursor: pointer;
 }
 

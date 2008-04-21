@@ -12,7 +12,9 @@ jQuery(document).ready(function() {
 	    	CasesBPMAssets.initTaskTab(ui.panel);
 	    	
 	    } else if(CasesBPMAssets.tabIndexes.documents == ui.panel.id) {
-	    	CasesBPMAssets.initDocumentsTab(ui.panel);
+	    
+	    	CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, ['Document name', 'Date submitted']);
+	    	CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, ['Subject', 'Receive date']);
 	    }
 	});
 	
@@ -51,9 +53,10 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
                 );
     };
     
-    params.colNames = ['Nr','Task name', 'Date created', 'Taken by', 'Status']; 
+    //params.colNames = ['Nr','Task name', 'Date created', 'Taken by', 'Status']; 
+    params.colNames = ['Task name', 'Date created', 'Taken by', 'Status'];
     params.colModel = [
-                {name:'id',index:'id', width:55},
+                //{name:'id',index:'id', width:55},
                 {name:'name',index:'name'}, 
                 {name:'createdDate',index:'createdDate'},
                 {name:'takenBy',index:'takenBy'},
@@ -84,10 +87,10 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
 
 CasesBPMAssets.initTaskTab.inited = false;
 
-CasesBPMAssets.initDocumentsTab = function(tabContainer) {
+CasesBPMAssets.initDocumentsTab = function(tblId, retrievalFunction, colNames) {
 
-	if(CasesBPMAssets.initDocumentsTab.inited)
-		return;
+	//if(CasesBPMAssets.initDocumentsTab.inited)
+//		return;
 		
     var params = new JQGridParams();
     
@@ -95,7 +98,7 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
             
         params.piId = jQuery(CasesBPMAssets.exp_piId)[0].value;
                                 
-        BPMProcessAssets.getProcessDocumentsList(params,
+        retrievalFunction(params,
             {
                 callback: function(result) {
                     callback(result);
@@ -104,10 +107,11 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
         );
     };
     
-    params.colNames = ['Nr','Document name', 'Date submitted']; 
+    //params.colNames = ['Nr','Document name', 'Date submitted']; 
+    params.colNames = colNames;
     params.colModel = [
-                {name:'id',index:'id', width:55},
-                {name:'name',index:'name'}, 
+                //{name:'id',index:'id', width:55},
+                {name:'name',index:'name'},
                 {name:'submittedDate',index:'submittedDate'}
                 //{name:'submittedBy',index:'submittedBy'}
     ];
@@ -121,7 +125,7 @@ CasesBPMAssets.initDocumentsTab = function(tabContainer) {
     CasesBPMAssets.addFilesSubgrid(params);
     
     var grid = new JQGrid();
-    grid.createGrid(jQuery(tabContainer).children('table')[0], params);
+    grid.createGrid(jQuery(tblId), params);
 		
 		/*
 	jQuery(jQuery(tabContainer).children('div')).each(

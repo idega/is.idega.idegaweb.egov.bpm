@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-definition
+  xmlns=""  name="fetchEmails">
+   <start-state name="start">
+      <transition name="" to="hangon"></transition>
+   </start-state>
+   <task-node name="email">
+      <task name="Email">
+         <controller>
+            <variable name="string:subject"></variable>
+            <variable name="string:text"></variable>
+            <variable name="files:attachments"></variable>
+         </controller>
+         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
+            <expression>
+                variable(string:emailReadAssignmentExpression)
+            </expression>
+         </assignment>
+      </task>
+   </task-node>
+   <state name="hangon"></state>
+</process-definition>

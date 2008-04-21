@@ -9,8 +9,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.faces.context.FacesContext;
-
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
@@ -44,9 +42,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  *
- * Last modified: $Date: 2008/04/17 23:57:39 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
  */
 public class CasesBPMViewManager implements ViewManager {
 	
@@ -78,7 +76,7 @@ public class CasesBPMViewManager implements ViewManager {
 		this.variablesHandler = variablesHandler;
 	}
 	
-	public View loadInitView(long processDefinitionId, int initiatorId, FacesContext context) {
+	public View loadInitView(long processDefinitionId, int initiatorId) {
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
@@ -184,7 +182,7 @@ public class CasesBPMViewManager implements ViewManager {
 		return new Object[] {lastCaseIdentifierNumber.number, generated};
 	}
 	
-	public View loadTaskInstanceView(long taskInstanceId, FacesContext context) {
+	public View loadTaskInstanceView(long taskInstanceId) {
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		

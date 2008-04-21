@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.jbpm.graph.exe.Token;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,9 +18,9 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/04/17 01:09:29 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -147,5 +148,20 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			cps = new ArrayList<Object[]>(0);
 		
 		return cps;
+	}
+	
+	public List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId) {
+		
+		if(processInstanceId != null) {
+		
+			@SuppressWarnings("unchecked")
+			List<Token> u = getEntityManager().createNamedQuery(CaseProcInstBind.getSubprocessTokensByPI)
+			.setParameter(CaseProcInstBind.procInstIdProp, processInstanceId)
+			.getResultList();
+			
+			return u;
+			
+		} else
+			return new ArrayList<Token>(0);
 	}
 }

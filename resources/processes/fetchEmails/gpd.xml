@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-diagram name="fetchEmails" width="843" height="583">
+  <node name="start" x="90" y="56" width="79" height="34">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="email" x="216" y="89" width="140" height="40"/>
+  <node name="hangon" x="53" y="172" width="140" height="40"/>
+</process-diagram>

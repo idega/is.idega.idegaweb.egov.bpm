@@ -26,9 +26,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  * 
- * Last modified: $Date: 2008/04/02 19:23:30 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
  * 
  */
 @Scope("prototype")
@@ -143,7 +143,7 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 		this.bundlePropertiesLocationWithinBundle = bundlePropertiesLocationWithinBundle;
 	}
 
-	private Properties resolveBundleProperties() throws IOException {
+	protected Properties resolveBundleProperties() throws IOException {
 		
 		InputStream propertiesIs = getBundle()
 		.getResourceInputStream(getBundlePropertiesLocationWithinBundle());

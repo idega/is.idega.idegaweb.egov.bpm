@@ -18,16 +18,12 @@ import java.util.List;
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
-import org.springframework.beans.BeansException;
+import org.jbpm.JbpmContext;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseManager;
-import com.idega.block.process.business.CaseManagerPluggedInEvent;
 import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -38,9 +34,11 @@ import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
@@ -48,37 +46,26 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/04/03 13:37:22 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
  */
-public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextAware, ApplicationListener {
+@Scope("singleton")
+@Service(CasesBPMCaseHandlerImpl.beanIdentifier)
+public class CasesBPMCaseHandlerImpl implements CaseManager {
 
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
 	
-	private ApplicationContext ctx;
 	private CasesBPMDAO casesBPMDAO;
-	private static final String beanIdentifier = "casesBPMCaseHandler";
+	private IdegaJbpmContext idegaJbpmContext;
+	
+	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
 	
 	private static final String user_assets_page_type = "bpm_user_assets";
 	private static final String handler_assets_page_type = "bpm_handler_assets";
 	private static final String PARAMETER_ACTION = "cbcAct";
 	private static final String ACTION_OPEN_PROCESS = "cbcActOP";
-	
-	public void setApplicationContext(ApplicationContext applicationcontext)
-			throws BeansException {
-		ctx = applicationcontext;
-	}
-
-	public void onApplicationEvent(ApplicationEvent applicationevent) {
-		
-		if(applicationevent instanceof ContextRefreshedEvent) {
-			
-			//publish xforms factory registration
-			ctx.publishEvent(new CaseManagerPluggedInEvent(this));
-		}
-	}
 
 	public String getBeanIdentifier() {
 		return beanIdentifier;
@@ -86,6 +73,30 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 
 	public String getType() {
 		return caseHandlerType;
+	}
+	
+	public String getProcessIdentifier(Case theCase) {
+		
+		Integer caseId = theCase.getPrimaryKey() instanceof Integer ? (Integer)theCase.getPrimaryKey() : new Integer(theCase.getPrimaryKey().toString());
+		
+		CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
+		
+		if(cpi != null) {
+		
+			Long piId = cpi.getProcInstId();
+			
+			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+			
+			try {
+				String identifier = (String)ctx.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+				return identifier;
+				
+			} finally {
+				getIdegaJbpmContext().closeAndCommit(ctx);
+			}
+		}
+		
+		return null;
 	}
 
 	public List<Link> getCaseLinks(Case theCase, String casesComponentType) {
@@ -127,8 +138,6 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 
 		return links;
 	}
-	
-	
 
 	public UIComponent getView(IWContext iwc, Case theCase) {
 		
@@ -276,7 +285,6 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 	protected Collection<ICPage> getPages(String pageSubType) {
 		
 		try {
-		
 			ICPageHome home = (ICPageHome) IDOLookup.getHome(ICPage.class);
 			@SuppressWarnings("unchecked")
 			Collection<ICPage> icpages = home.findBySubType(pageSubType, false);
@@ -286,5 +294,14 @@ public class CasesBPMCaseHandlerImpl implements CaseManager, ApplicationContextA
 		} catch (Exception e) {
 			throw new RuntimeException("Exception while resolving icpages by subType: "+pageSubType, e);
 		}
+	}
+
+	public IdegaJbpmContext getIdegaJbpmContext() {
+		return idegaJbpmContext;
+	}
+
+	@Autowired
+	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+		this.idegaJbpmContext = idegaJbpmContext;
 	}
 }

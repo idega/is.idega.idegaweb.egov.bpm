@@ -36,9 +36,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/04/15 23:12:49 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager extends AbstractProcessManager {
 
@@ -80,7 +80,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
 			getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
-			submitVariablesAndProceedProcess(ti, view.resolveVariables());
+			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
@@ -96,7 +96,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		}
 	}
 	
-	public void submitTaskInstance(long taskInstanceId, View view) {
+	public void submitTaskInstance(long taskInstanceId, View view, boolean proceedProcess) {
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
@@ -106,7 +106,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 			if(taskInstance.hasEnded())
 				throw new ProcessException("Task instance ("+taskInstanceId+") is already submitted", "Task instance is already submitted");
 			
-	    	submitVariablesAndProceedProcess(taskInstance, view.resolveVariables());
+	    	submitVariablesAndProceedProcess(taskInstance, view.resolveVariables(), proceedProcess);
 	    	ctx.save(taskInstance);
 			
 		} finally {
@@ -114,16 +114,26 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		}
 	}
 	
-	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables) {
+	public void submitTaskInstance(long taskInstanceId, View view) {
+		
+		submitTaskInstance(taskInstanceId, view, true);
+	}
+	
+	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
 		
 		getVariablesHandler().submitVariables(variables, ti.getId(), true);
-    	
-    	String actionTaken = (String)ti.getVariable(CasesBPMProcessConstants.actionTakenVariableName);
-    	
-    	if(actionTaken != null && !CoreConstants.EMPTY.equals(actionTaken) && false)
-    		ti.end(actionTaken);
-    	else
-    		ti.end();
+		
+		if(proceed) {
+		
+			String actionTaken = (String)ti.getVariable(CasesBPMProcessConstants.actionTakenVariableName);
+	    	
+	    	if(actionTaken != null && !CoreConstants.EMPTY.equals(actionTaken) && false)
+	    		ti.end(actionTaken);
+	    	else
+	    		ti.end();
+		} else {
+			ti.setEnd(new Date());
+		}
     	
     	ti.setActorId(null);
 	}

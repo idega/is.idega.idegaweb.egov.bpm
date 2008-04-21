@@ -21,5 +21,4 @@
     </bean>
     
     <bean id="appTypeBPM" class="is.idega.idegaweb.egov.bpm.application.ApplicationTypeBPM" scope="singleton" />
-    <bean id="casesBPMCaseHandler" class="is.idega.idegaweb.egov.bpm.cases.CasesBPMCaseHandlerImpl" scope="singleton" />
 </beans>
