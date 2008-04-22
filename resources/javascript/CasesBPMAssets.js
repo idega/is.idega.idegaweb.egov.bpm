@@ -1,20 +1,25 @@
 jQuery(document).ready(function() {
 
+    var val = jQuery("#selectedTabState").val();
+    CasesBPMAssets.selectedTab = parseInt(val);
+
     var jQGridInclude = new JQGridInclude();
     jQGridInclude.SUBGRID = true;
     jqGridInclude(jQGridInclude);
 
-    jQuery("#example > ul").tabs({ selected: 0 });
+    jQuery("#example > ul").tabs({ selected: CasesBPMAssets.selectedTab});
     
     jQuery('.ui-tabs-nav').bind('select.ui-tabs', function(event, ui) {
     
-	    if(CasesBPMAssets.tabIndexes.tasks == ui.panel.id) {
-	    	CasesBPMAssets.initTaskTab(ui.panel);
+        if(CasesBPMAssets.tabIndexes.tasks == ui.panel.id) {
+	    
+	       CasesBPMAssets.initTab(CasesBPMAssets.selectedTabIndexes.tasks);
+	       jQuery("#selectedTabState").val(CasesBPMAssets.selectedTabIndexes.tasks);
 	    	
 	    } else if(CasesBPMAssets.tabIndexes.documents == ui.panel.id) {
 	    
-	    	CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, ['Document name', 'Date submitted']);
-	    	CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, ['Subject', 'Receive date']);
+	    	CasesBPMAssets.initTab(CasesBPMAssets.selectedTabIndexes.documents);
+	    	jQuery("#selectedTabState").val(CasesBPMAssets.selectedTabIndexes.documents);
 	    }
 	});
 	
@@ -22,18 +27,41 @@ jQuery(document).ready(function() {
 	CasesBPMAssets.downloader_link = jQuery(CasesBPMAssets.downloader).attr("href");
 });
 
+jQuery(window).load(function () {
+
+    CasesBPMAssets.initTab(CasesBPMAssets.selectedTab);
+});
+
 if(CasesBPMAssets == null) var CasesBPMAssets = {};
 
 CasesBPMAssets.downloader = null;
 CasesBPMAssets.downloader_link = null;
 
-CasesBPMAssets.tabIndexes = {
+CasesBPMAssets.initTab = function(tabIndex) {
 
+    if(tabIndex == CasesBPMAssets.selectedTabIndexes.tasks)
+        CasesBPMAssets.initTaskTab(".tasksTable");
+    else if(tabIndex == CasesBPMAssets.selectedTabIndexes.documents) {
+    
+        CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, ['Document name', 'Date submitted']);
+        CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, ['Subject', 'Receive date']);
+    }
+};
+
+CasesBPMAssets.tabIndexes = {
+ 
 	tasks: 'tasksTab',
 	documents: 'documentsTab'
 };
 
-CasesBPMAssets.initTaskTab = function(tabContainer) {
+CasesBPMAssets.selectedTabIndexes = {
+    tasks: 0,
+    documents: 1
+};
+
+CasesBPMAssets.selectedTab = CasesBPMAssets.selectedTabIndexes.tasks;
+
+CasesBPMAssets.initTaskTab = function(tblId) {
 
 	if(CasesBPMAssets.initTaskTab.inited)
 		return;
@@ -53,6 +81,8 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
                 );
     };
     
+    params.subGridRowExpanded = null;
+    
     //params.colNames = ['Nr','Task name', 'Date created', 'Taken by', 'Status']; 
     params.colNames = ['Task name', 'Date created', 'Taken by', 'Status'];
     params.colModel = [
@@ -68,11 +98,10 @@ CasesBPMAssets.initTaskTab = function(tabContainer) {
       jQuery(CasesBPMAssets.exp_viewSelected)[0].value = rowId;
       jQuery(CasesBPMAssets.exp_gotoTask)[0].click();
     };
-    
-    
 
     var grid = new JQGrid();
-    grid.createGrid(jQuery(tabContainer).children('table')[0], params);
+    var xxa = jQuery(tblId);
+    grid.createGrid(tblId, params);
 		
 		/*
 	jQuery(jQuery(tabContainer).children('div')).each(

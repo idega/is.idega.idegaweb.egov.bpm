@@ -32,9 +32,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/04/17 01:09:31 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/22 04:35:36 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service("casesBPMProcessView")
@@ -168,6 +168,8 @@ public class CasesBPMProcessView {
 			IWTimestamp time = new IWTimestamp(pi.getStart());
 			String createDate = time.getLocaleDate(iwc.getLocale());
 			
+			String caseIdentifier = (String)pi.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+			
 			String caseCategory;
 			String caseType;
 			
@@ -188,6 +190,8 @@ public class CasesBPMProcessView {
 			bean.setProcessCreateDate(createDate);
 			bean.setCaseCategory(caseCategory);
 			bean.setCaseType(caseType);
+			bean.setCaseIdentifier(caseIdentifier);
+			
 			return bean;
 			
 		} finally {
@@ -205,6 +209,7 @@ public class CasesBPMProcessView {
 		private String processCreateDate;
 		private String caseCategory;
 		private String caseType;
+		private String caseIdentifier;
 		
 		public String getProcessOwner() {
 			return processOwner;
@@ -241,6 +246,12 @@ public class CasesBPMProcessView {
 		}
 		public void setCaseType(String caseType) {
 			this.caseType = caseType;
+		}
+		public String getCaseIdentifier() {
+			return caseIdentifier;
+		}
+		public void setCaseIdentifier(String caseIdentifier) {
+			this.caseIdentifier = caseIdentifier;
 		}
 	}
 	

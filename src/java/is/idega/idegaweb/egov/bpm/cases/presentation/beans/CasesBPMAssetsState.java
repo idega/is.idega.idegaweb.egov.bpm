@@ -31,9 +31,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/03/27 08:48:00 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/22 04:35:36 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -51,6 +51,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Long processInstanceId;
 	private Long viewSelected;
 	private Boolean isWatched;
+	private Integer tabSelected;
 	private FacetRendered facetRendered = FacetRendered.ASSETS;
 	
 	private enum FacetRendered {
@@ -371,5 +372,13 @@ public class CasesBPMAssetsState implements Serializable {
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
+	}
+
+	public Integer getTabSelected() {
+		return tabSelected == null ? 0 : tabSelected;
+	}
+
+	public void setTabSelected(Integer tabSelected) {
+		this.tabSelected = tabSelected;
 	}
 }

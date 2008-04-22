@@ -12,23 +12,25 @@
 		General case view
 	</ui:define>
 	<ui:define name="content">
+	   <div class="caseOverview">
+                <div>Case status: #{casesBPMAssetsState.processView.processStatus}</div>
+                <t:div rendered="#{caseManagerState.fullView}">
+                   Case creator: #{casesBPMAssetsState.processView.processOwner}
+                </t:div>
+                <div>Case create date: #{casesBPMAssetsState.processView.processCreateDate}</div>
+                <div>Case category: #{casesBPMAssetsState.processView.caseCategory}</div>
+                <div>Case type: #{casesBPMAssetsState.processView.caseType}</div>
+                <div>Case identifier: #{casesBPMAssetsState.processView.caseIdentifier}</div>
+                
+        </div>
+        <t:inputHidden id="selectedTabState" value="#{casesBPMAssetsState.tabSelected}" forceId="true" />
 		<div id="example" class="flora">
             <ul>
-                <li><a href="#caseOverviewTab"><span>Case overview</span></a></li>
                 <li><a href="#tasksTab"><span>Forms</span></a></li>
                 <li><a href="#documentsTab"><span>Documents</span></a></li>
             </ul>
-            <div id="caseOverviewTab">
-            	<div>Case status: #{casesBPMAssetsState.processView.processStatus}</div>
-            	<t:div rendered="#{caseManagerState.fullView}">
-            	   Case creator: #{casesBPMAssetsState.processView.processOwner}
-            	</t:div>
-  				<div>Case create date: #{casesBPMAssetsState.processView.processCreateDate}</div>
-  				<div>Case category: #{casesBPMAssetsState.processView.caseCategory}</div>
-  				<div>Case type: #{casesBPMAssetsState.processView.caseType}</div>
-            </div>
             <div id="tasksTab">
-	            <table id="tasksTable" class="scroll bpmTasks" cellpadding="0" cellspacing="0"></table>
+	            <table id="tasksTable" class="scroll bpmTasks tasksTable" cellpadding="0" cellspacing="0"></table>
             </div>
             <div id="documentsTab">
                 <div class="documentsGrid">
