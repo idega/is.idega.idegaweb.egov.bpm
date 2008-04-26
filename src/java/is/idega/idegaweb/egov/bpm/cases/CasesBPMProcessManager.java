@@ -36,9 +36,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/26 02:32:11 $ by $Author: civilis $
  */
 public class CasesBPMProcessManager extends AbstractProcessManager {
 
@@ -66,7 +66,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 			User user = getUserBusiness(iwc).getUser(userId);
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
-			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", "type", CasesBPMCaseHandlerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)));
+			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", "type", CasesBPMCaseHandlerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
 
 			ti.getProcessInstance().setStart(new Date());
 			
