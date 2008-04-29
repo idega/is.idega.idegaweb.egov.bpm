@@ -4,6 +4,7 @@ import is.idega.idegaweb.egov.bpm.cases.form.CasesBPMViewManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -16,6 +17,8 @@ import java.util.logging.Logger;
 
 import javax.mail.Message;
 import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.Part;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.exe.ProcessInstance;
@@ -29,6 +32,8 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.form.process.IXFormViewFactory;
+import com.idega.chiba.web.xml.xforms.connector.webdav.FileUploadManager;
+import com.idega.chiba.web.xml.xforms.connector.webdav.FileUploads;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
@@ -38,11 +43,12 @@ import com.idega.jbpm.exe.impl.ProcessArtifactsProviderImpl;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
 
+
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/04/29 09:49:22 $ by $Author: arunas $
  */
 @Scope("singleton")
 @Service
@@ -52,6 +58,8 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	private IdegaJbpmContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
 	private IXFormViewFactory xfvFact;
+	private static final String TEXT_PLAIN_TYPE = "text/plain";
+	private static final String MULTIPART_MIXED_TYPE = "multipart/Mixed";
 
 	public void onApplicationEvent(ApplicationEvent ae) {
 		
@@ -183,18 +191,47 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		Object[] msgAndAttachments = new Object[2];
 		
 		try {
-			String contentType = msg.getContentType();
+			Object content = msg.getContent();
 			
-			if(contentType.contains("TEXT/PLAIN") || contentType.contains("text/plain")) {
+			if (msg.isMimeType(TEXT_PLAIN_TYPE)){
 				
-				Object content = msg.getContent();
-				
-				if(content instanceof String)
+				if (content instanceof String)
 					msgAndAttachments[0] = content;
-			}
-			
-//			MimeMultipart mm = null;
-//			mm.get
+				
+			}else 	
+			    if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
+				
+				FileUploadManager fileUpload = new FileUploads();
+				
+				Multipart messageMultiPart = (Multipart) content;
+				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
+				String msgText = "";
+				
+				for (int i = 0; i < messageMultiPart.getCount(); i++) {
+				    
+				    Part messagePart = messageMultiPart.getBodyPart(i);
+							    
+				    if (messagePart.getContent() instanceof String)
+					msgText = msgText + messagePart.getContent();
+				    
+				    String disposition = messagePart.getDisposition();
+				
+				    if ((disposition != null) && ((disposition.equals(Part.ATTACHMENT) || disposition.equals(Part.INLINE)))){
+					
+					InputStream input =  messagePart.getInputStream();
+					
+					String fileName = messagePart.getFileName();
+					
+					fileUpload.upload(input, fileName, filesfolder);
+				
+				    }
+					
+				}//for end
+			    
+				msgAndAttachments[0] = msgText;
+				msgAndAttachments[1] = fileUpload.getFiles(filesfolder);
+				
+			    }// else if end
 			
 		} catch (MessagingException e) {
 			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
