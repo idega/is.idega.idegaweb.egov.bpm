@@ -32,8 +32,9 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.form.process.IXFormViewFactory;
-import com.idega.chiba.web.xml.xforms.connector.webdav.FileUploadManager;
-import com.idega.chiba.web.xml.xforms.connector.webdav.FileUploads;
+import com.idega.core.file.tmp.TmpFilesManager;
+import com.idega.core.file.tmp.TmpFileResolverType;
+import com.idega.core.file.tmp.TmpFileResolver;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
@@ -46,9 +47,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/04/29 09:49:22 $ by $Author: arunas $
+ * Last modified: $Date: 2008/05/01 15:38:43 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -58,6 +59,9 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	private IdegaJbpmContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
 	private IXFormViewFactory xfvFact;
+	private TmpFilesManager fileUploadManager;
+	private TmpFileResolver uploadedResourceResolver;
+	
 	private static final String TEXT_PLAIN_TYPE = "text/plain";
 	private static final String MULTIPART_MIXED_TYPE = "multipart/Mixed";
 
@@ -164,7 +168,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    	List<File> files = (List<File>)msgAndAttachments[1];
 				    	
 				    	if(files != null)
-				    		vars.put("files:attachments", text);
+				    		vars.put("files:attachments", files);
 				    	
 						BPMFactory bpmFactory = getBpmFactory();
 						
@@ -201,8 +205,6 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			}else 	
 			    if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
 				
-				FileUploadManager fileUpload = new FileUploads();
-				
 				Multipart messageMultiPart = (Multipart) content;
 				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
 				String msgText = "";
@@ -218,18 +220,17 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				
 				    if ((disposition != null) && ((disposition.equals(Part.ATTACHMENT) || disposition.equals(Part.INLINE)))){
 					
-					InputStream input =  messagePart.getInputStream();
-					
-					String fileName = messagePart.getFileName();
-					
-					fileUpload.upload(input, fileName, filesfolder);
-				
+						InputStream input =  messagePart.getInputStream();
+						
+						String fileName = messagePart.getFileName();
+						
+						getFileUploadManager().uploadToTmpDir(filesfolder, fileName, input, getUploadedResourceResolver());
 				    }
 					
 				}//for end
 			    
 				msgAndAttachments[0] = msgText;
-				msgAndAttachments[1] = fileUpload.getFiles(filesfolder);
+				msgAndAttachments[1] = getFileUploadManager().getFiles(filesfolder, null, getUploadedResourceResolver());
 				
 			    }// else if end
 			
@@ -334,5 +335,24 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	@Autowired
 	public void setXfvFact(IXFormViewFactory xfvFact) {
 		this.xfvFact = xfvFact;
+	}
+
+	public TmpFilesManager getFileUploadManager() {
+		return fileUploadManager;
+	}
+
+	@Autowired
+	public void setFileUploadManager(TmpFilesManager fileUploadManager) {
+		this.fileUploadManager = fileUploadManager;
+	}
+
+	public TmpFileResolver getUploadedResourceResolver() {
+		return uploadedResourceResolver;
+	}
+
+	@Autowired
+	public void setUploadedResourceResolver(@TmpFileResolverType("defaultResolver")
+			TmpFileResolver uploadedResourceResolver) {
+		this.uploadedResourceResolver = uploadedResourceResolver;
 	}
 }
