@@ -13,17 +13,4 @@
             <component-type>UICasesBPMProcessMgmt</component-type>
         </component>
     </tag>
-    <tag>
-		<tag-name>CasesListViewer</tag-name>
-		<component>
-            <component-type>CasesListViewer</component-type>
-        </component>
-	</tag>
-	<tag>
-		<tag-name>CasesTypesSelector</tag-name>
-		<component>
-            <component-type>CasesTypesSelector</component-type>
-        </component>
-	</tag>
-	
 </facelet-taglib>
