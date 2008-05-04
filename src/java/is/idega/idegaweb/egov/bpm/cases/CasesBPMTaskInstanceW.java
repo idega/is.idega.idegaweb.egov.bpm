@@ -1,0 +1,191 @@
+package is.idega.idegaweb.egov.bpm.cases;
+
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.jbpm.JbpmContext;
+import org.jbpm.taskmgmt.exe.TaskInstance;
+
+import com.idega.block.form.process.XFormsView;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
+import com.idega.idegaweb.IWApplicationContext;
+import com.idega.jbpm.def.View;
+import com.idega.jbpm.exe.BPMAccessControlException;
+import com.idega.jbpm.exe.ProcessConstants;
+import com.idega.jbpm.exe.ProcessException;
+import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.identity.RolesManager;
+import com.idega.user.business.UserBusiness;
+import com.idega.util.CoreConstants;
+
+/**
+ * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
+ * @version $Revision: 1.1 $
+ *
+ * Last modified: $Date: 2008/05/04 18:11:47 $ by $Author: civilis $
+ */
+public class CasesBPMTaskInstanceW implements TaskInstanceW {
+	
+	private final long taskInstanceId;
+	private final CasesBPMResources bpmResources;
+	
+	public CasesBPMTaskInstanceW(long taskInstanceId, CasesBPMResources bpmResources) {
+		this.taskInstanceId = taskInstanceId;
+		this.bpmResources = bpmResources;
+	}
+	
+	public void assign(int userId) {
+		JbpmContext ctx = getBpmResources().getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			Long taskInstanceId = getTaskInstanceId();
+			RolesManager rolesManager = getBpmResources().getBpmFactory().getRolesManager();
+			rolesManager.hasRightsToAssignTask(taskInstanceId, userId);
+			
+			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
+			taskInstance.setActorId(String.valueOf(userId));
+			ctx.save(taskInstance);
+		
+		} catch (BPMAccessControlException e) {
+			throw new ProcessException(e, e.getUserFriendlyMessage());
+			
+		} finally {
+			getBpmResources().getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+	}
+
+	public void start(int userId) {
+		JbpmContext ctx = getBpmResources().getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			Long taskInstanceId = getTaskInstanceId();
+			RolesManager rolesManager = getBpmResources().getBpmFactory().getRolesManager();
+			rolesManager.hasRightsToStartTask(taskInstanceId, userId);
+			
+			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
+			taskInstance.start();
+			
+			ctx.save(taskInstance);
+		
+		} catch (BPMAccessControlException e) {
+			throw new ProcessException(e, e.getUserFriendlyMessage());
+			
+		} finally {
+			getBpmResources().getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+	}
+
+	public void submit(View view) {
+		submit(view, true);
+	}
+
+	public void submit(View view, boolean proceedProcess) {
+		
+		JbpmContext ctx = getBpmResources().getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			Long taskInstanceId = getTaskInstanceId();
+			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
+			
+			if(taskInstance.hasEnded())
+				throw new ProcessException("Task instance ("+taskInstanceId+") is already submitted", "Task instance is already submitted");
+			
+	    	submitVariablesAndProceedProcess(taskInstance, view.resolveVariables(), proceedProcess);
+	    	ctx.save(taskInstance);
+			
+		} finally {
+			getBpmResources().getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+	}
+	
+	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
+		
+		getBpmResources().getVariablesHandler().submitVariables(variables, ti.getId(), true);
+		
+		if(proceed) {
+		
+			String actionTaken = (String)ti.getVariable(CasesBPMProcessConstants.actionTakenVariableName);
+	    	
+	    	if(actionTaken != null && !CoreConstants.EMPTY.equals(actionTaken) && false)
+	    		ti.end(actionTaken);
+	    	else
+	    		ti.end();
+		} else {
+			ti.setEnd(new Date());
+		}
+    	
+    	ti.setActorId(null);
+	}
+	
+	public View loadView() {
+		
+		CasesBPMResources bpmRes = getBpmResources();
+		Long taskInstanceId = getTaskInstanceId();
+		JbpmContext ctx = bpmRes.getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
+			
+			List<String> preferred = new ArrayList<String>(1);
+			preferred.add(XFormsView.VIEW_TYPE);
+			
+			View view;
+			
+			if(taskInstance.hasEnded()) {
+				
+				view = bpmRes.getBpmFactory().getViewByTaskInstance(taskInstanceId, false, preferred);
+				
+			} else {
+				
+				view = bpmRes.getBpmFactory().takeView(taskInstanceId, true, preferred);
+			}
+			
+			Map<String, String> parameters = new HashMap<String, String>(1);
+			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));
+			view.populateParameters(parameters);
+			view.populateVariables(bpmRes.getVariablesHandler().populateVariables(taskInstance.getId()));
+			
+			return view;
+		
+		} catch(RuntimeException e) {
+			throw e;
+		} catch(Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			bpmRes.getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+	}
+	
+	public Long getTaskInstanceId() {
+		return taskInstanceId;
+	}
+
+	protected CasesBPMResources getBpmResources() {
+		return bpmResources;
+	}
+	
+	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
+		try {
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+	
+	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
+		try {
+			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+}

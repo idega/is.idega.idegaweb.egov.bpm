@@ -32,9 +32,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/04/22 04:35:36 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/04 18:11:48 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service("casesBPMProcessView")
@@ -102,13 +102,13 @@ public class CasesBPMProcessView {
 	public void startTask(long taskInstanceId, int actorUserId) {
 		
 		ProcessManager processManager = getBPMFactory().getProcessManagerByTaskInstanceId(taskInstanceId);
-		processManager.startTask(taskInstanceId, actorUserId);
+		processManager.getTaskInstance(taskInstanceId).start(actorUserId);
 	}
 	
 	public void assignTask(long taskInstanceId, int actorUserId) {
 		
 		ProcessManager processManager = getBPMFactory().getProcessManagerByTaskInstanceId(taskInstanceId);
-		processManager.assignTask(taskInstanceId, actorUserId);
+		processManager.getTaskInstance(taskInstanceId).assign(actorUserId);
 	}
 	
 	/**

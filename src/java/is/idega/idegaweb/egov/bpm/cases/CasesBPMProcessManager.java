@@ -1,53 +1,32 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.faces.context.FacesContext;
-
-import org.jbpm.JbpmContext;
-import org.jbpm.security.AuthorizationService;
-import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
-import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
-import com.idega.business.IBORuntimeException;
-import com.idega.idegaweb.IWApplicationContext;
-import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.IdegaJbpmContext;
-import com.idega.jbpm.def.View;
-import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.exe.ProcessException;
-import com.idega.jbpm.exe.VariablesHandler;
-import com.idega.jbpm.exe.impl.AbstractProcessManager;
-import com.idega.presentation.IWContext;
-import com.idega.presentation.PresentationObject;
-import com.idega.user.business.UserBusiness;
-import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
-import com.idega.util.IWTimestamp;
+import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.exe.ProcessManager;
+import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/04/26 02:32:11 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/04 18:11:49 $ by $Author: civilis $
  */
-public class CasesBPMProcessManager extends AbstractProcessManager {
+@Scope("singleton")
+@Service("casesBpmProcessManager")
+public class CasesBPMProcessManager implements ProcessManager {
 
-	private VariablesHandler variablesHandler;
-	private IdegaJbpmContext idegaJbpmContext;
-	private CasesBPMDAO casesBPMDAO;
-	private AuthorizationService authorizationService;
-	private BPMFactory bpmFactory;
-	
+	private CasesBPMResources casesBPMResources;
+//	private VariablesHandler variablesHandler;
+//	private IdegaJbpmContext idegaJbpmContext;
+//	private CasesBPMDAO casesBPMDAO;
+//	private AuthorizationService authorizationService;
+//	private BPMFactory bpmFactory;
+
+	/*
 	public void startProcess(long startTaskInstanceId, View view) {
 		
 		Map<String, String> parameters = view.resolveParameters();
@@ -66,7 +45,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 			User user = getUserBusiness(iwc).getUser(userId);
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
-			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", "type", CasesBPMCaseHandlerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
+			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, null, "This is simple cases-jbpm-formbuilder integration example.", "type", CasesBPMCaseHandlerImpl.caseHandlerType, false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
 
 			ti.getProcessInstance().setStart(new Date());
 			
@@ -156,6 +135,7 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 		}
 	}
 	
+	
 	@Override
 	public AuthorizationService getAuthorizationService() {
 		return authorizationService;
@@ -201,5 +181,30 @@ public class CasesBPMProcessManager extends AbstractProcessManager {
 	@Autowired
 	public void setVariablesHandler(VariablesHandler variablesHandler) {
 		this.variablesHandler = variablesHandler;
+	}
+	*/
+
+	public ProcessDefinitionW getProcessDefinition(long pdId) {
+		
+		return getCasesBPMResources().createProcessDefinition(pdId);
+	}
+
+	public ProcessInstanceW getProcessInstance(long piId) {
+		
+		return getCasesBPMResources().createProcessInstance(piId);
+	}
+	
+	public TaskInstanceW getTaskInstance(long tiId) {
+		
+		return getCasesBPMResources().createTaskInstance(tiId);
+	}
+
+	public CasesBPMResources getCasesBPMResources() {
+		return casesBPMResources;
+	}
+
+	@Autowired
+	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
+		this.casesBPMResources = casesBPMResources;
 	}
 }

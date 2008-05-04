@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
-import is.idega.idegaweb.egov.bpm.cases.form.CasesBPMViewManager;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,9 +30,9 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.form.process.IXFormViewFactory;
-import com.idega.core.file.tmp.TmpFilesManager;
-import com.idega.core.file.tmp.TmpFileResolverType;
 import com.idega.core.file.tmp.TmpFileResolver;
+import com.idega.core.file.tmp.TmpFileResolverType;
+import com.idega.core.file.tmp.TmpFilesManager;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
@@ -47,9 +45,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/05/01 15:38:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/04 18:11:48 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -77,7 +75,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 			for (Entry<String, Message> entry : msgs.entrySet()) {
 				
-				if(entry.getKey().startsWith(CasesBPMViewManager.IDENTIFIER_PREFIX)) {
+				if(entry.getKey().startsWith(CasesBPMResources.IDENTIFIER_PREFIX)) {
 					
 					try {
 						String[] keyParts = entry.getKey().split(CoreConstants.MINUS);
@@ -173,10 +171,11 @@ public class EmailMessagesAttacher implements ApplicationListener {
 						BPMFactory bpmFactory = getBpmFactory();
 						
 						long pdId = ti.getProcessInstance().getProcessDefinition().getId();
-						View emailView = bpmFactory.getViewManager(pdId).loadTaskInstanceView(ti.getId());
+						View emailView = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId()).loadView();
+						emailView.setTaskInstanceId(ti.getId());
 						emailView.populateVariables(vars);
 						
-						bpmFactory.getProcessManager(pdId).submitTaskInstance(ti.getId(), emailView, false);
+						bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId()).submit(emailView, false);
 						
 						return;
 						
