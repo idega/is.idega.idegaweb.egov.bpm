@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.mail.Address;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
@@ -45,9 +46,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/05/04 18:11:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/05 14:04:10 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -159,6 +160,10 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    	
 				    	HashMap<String, Object> vars = new HashMap<String, Object>(2);
 				    	
+				    	Address[] froms = msg.getFrom();
+
+				    	System.out.println("forms: "+froms[0]);
+				    	
 				    	vars.put("string:subject", subject);
 				    	vars.put("string:text", text);
 
@@ -195,6 +200,8 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		
 		try {
 			Object content = msg.getContent();
+			
+			System.out.println("parsing...........");
 			
 			if (msg.isMimeType(TEXT_PLAIN_TYPE)){
 				
