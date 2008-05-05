@@ -11,4 +11,10 @@
     </bean>
     
     <bean id="appTypeBPM" class="is.idega.idegaweb.egov.bpm.application.ApplicationTypeBPM" scope="singleton" />
+    
+    <bean id="casesBPMResources" class="is.idega.idegaweb.egov.bpm.cases.CasesBPMResources" scope="singleton">
+        <lookup-method name="createPDW" bean="casesPDW" />
+        <lookup-method name="createPIW" bean="casesPIW" />
+        <lookup-method name="createTIW" bean="casesTIW" />
+    </bean>
 </beans>

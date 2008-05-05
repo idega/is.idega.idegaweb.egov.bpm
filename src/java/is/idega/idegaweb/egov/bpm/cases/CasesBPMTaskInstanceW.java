@@ -10,6 +10,9 @@ import java.util.Map;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.taskmgmt.exe.TaskInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.block.form.process.XFormsView;
 import com.idega.business.IBOLookup;
@@ -27,19 +30,16 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/05/04 18:11:47 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/05 12:17:42 $ by $Author: civilis $
  */
+@Scope("prototype")
+@Service("casesTIW")
 public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
-	private final long taskInstanceId;
-	private final CasesBPMResources bpmResources;
-	
-	public CasesBPMTaskInstanceW(long taskInstanceId, CasesBPMResources bpmResources) {
-		this.taskInstanceId = taskInstanceId;
-		this.bpmResources = bpmResources;
-	}
+	private Long taskInstanceId;
+	private CasesBPMResources bpmResources;
 	
 	public void assign(int userId) {
 		JbpmContext ctx = getBpmResources().getIdegaJbpmContext().createJbpmContext();
@@ -187,5 +187,14 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
+	}
+
+	public void setTaskInstanceId(Long taskInstanceId) {
+		this.taskInstanceId = taskInstanceId;
+	}
+
+	@Autowired
+	public void setBpmResources(CasesBPMResources bpmResources) {
+		this.bpmResources = bpmResources;
 	}
 }

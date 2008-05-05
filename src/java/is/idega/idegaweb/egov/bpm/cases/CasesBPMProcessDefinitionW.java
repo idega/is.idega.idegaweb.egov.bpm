@@ -15,6 +15,9 @@ import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.block.form.process.XFormsView;
 import com.idega.business.IBOLookup;
@@ -36,19 +39,16 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/05/04 18:11:47 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/05 12:17:42 $ by $Author: civilis $
  */
+@Scope("prototype")
+@Service("casesPDW")
 public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
-	private final long processDefinitionId;
-	private final CasesBPMResources bpmResources;
-	
-	public CasesBPMProcessDefinitionW(long processDefinitionId, CasesBPMResources bpmResources) {
-		this.processDefinitionId = processDefinitionId;
-		this.bpmResources = bpmResources;
-	}
+	private Long processDefinitionId;
+	private CasesBPMResources bpmResources;
 	
 	public void startProcess(View view) {
 		
@@ -182,7 +182,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
     	ti.setActorId(null);
 	}
 	
-	public long getProcessDefinitionId() {
+	public Long getProcessDefinitionId() {
 		return processDefinitionId;
 	}
 
@@ -206,5 +206,14 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
+	}
+
+	public void setProcessDefinitionId(Long processDefinitionId) {
+		this.processDefinitionId = processDefinitionId;
+	}
+
+	@Autowired
+	public void setBpmResources(CasesBPMResources bpmResources) {
+		this.bpmResources = bpmResources;
 	}
 }

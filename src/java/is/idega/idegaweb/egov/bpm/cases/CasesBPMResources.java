@@ -3,8 +3,6 @@ package is.idega.idegaweb.egov.bpm.cases;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -21,13 +19,11 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/05/04 18:11:47 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/05 12:17:42 $ by $Author: civilis $
  */
-@Scope("singleton")
-@Service
-public class CasesBPMResources {
+public abstract class CasesBPMResources {
 	
 	public static final String IDENTIFIER_PREFIX = "P";
 	
@@ -37,19 +33,34 @@ public class CasesBPMResources {
 	private BPMFactory bpmFactory;
 	private BPMDAO bpmBindsDAO;
 	
+	protected abstract ProcessDefinitionW createPDW();
+	
 	public ProcessDefinitionW createProcessDefinition(long pdId) {
 		
-		return new CasesBPMProcessDefinitionW(pdId, this);
+		ProcessDefinitionW pdw = createPDW();
+		pdw.setProcessDefinitionId(pdId);
+		
+		return pdw;
 	}
 
+	protected abstract ProcessInstanceW createPIW();
+	
 	public ProcessInstanceW createProcessInstance(long piId) {
 		
-		return new CasesBPMProcessInstanceW(piId, this);
+		ProcessInstanceW piw = createPIW();
+		piw.setProcessInstanceId(piId);
+		
+		return piw;
 	}
+	
+	protected abstract TaskInstanceW createTIW();
 	
 	public TaskInstanceW createTaskInstance(long tiId) {
 		
-		return new CasesBPMTaskInstanceW(tiId, this);
+		TaskInstanceW tiw = createTIW();
+		tiw.setTaskInstanceId(tiId);
+		
+		return tiw;
 	}
 
 	public BPMDAO getBpmBindsDAO() {
