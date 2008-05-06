@@ -43,8 +43,8 @@ CasesBPMAssets.initTab = function(tabIndex) {
         CasesBPMAssets.initTaskTab(".tasksTable");
     else if(tabIndex == CasesBPMAssets.selectedTabIndexes.documents) {
     
-        CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, ['Document name', 'Date submitted']);
-        CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, ['Subject', 'Receive date']);
+        CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, ['Document name', 'Date submitted'], [{name:'name',index:'name'}, {name:'submittedDate',index:'submittedDate'}]);
+        CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, ['Subject', 'From', 'Receive date'], [{name:'subject',index:'subject'}, {name:'from',index:'from'}, {name:'submittedDate',index:'submittedDate'}]);
     }
 };
 
@@ -116,7 +116,7 @@ CasesBPMAssets.initTaskTab = function(tblId) {
 
 CasesBPMAssets.initTaskTab.inited = false;
 
-CasesBPMAssets.initDocumentsTab = function(tblId, retrievalFunction, colNames) {
+CasesBPMAssets.initDocumentsTab = function(tblId, retrievalFunction, colNames, colModel) {
 
 	//if(CasesBPMAssets.initDocumentsTab.inited)
 //		return;
@@ -138,12 +138,7 @@ CasesBPMAssets.initDocumentsTab = function(tblId, retrievalFunction, colNames) {
     
     //params.colNames = ['Nr','Document name', 'Date submitted']; 
     params.colNames = colNames;
-    params.colModel = [
-                //{name:'id',index:'id', width:55},
-                {name:'name',index:'name'},
-                {name:'submittedDate',index:'submittedDate'}
-                //{name:'submittedBy',index:'submittedBy'}
-    ];
+    params.colModel = colModel;
     
     params.onSelectRow = function(rowId) {
   

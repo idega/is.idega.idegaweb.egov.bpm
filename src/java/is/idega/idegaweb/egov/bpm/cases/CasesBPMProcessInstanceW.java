@@ -9,28 +9,19 @@ import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/05/05 12:17:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
 public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	
 	private Long processInstanceId;
-	private CasesBPMResources bpmResources;
+	private CasesBPMResources casesBPMResources;
 	
 	public TaskInstanceW getTaskInstance(long tiId) {
-		return getBpmResources().createTaskInstance(tiId);
-	}
-
-	protected CasesBPMResources getBpmResources() {
-		return bpmResources;
-	}
-
-	@Autowired
-	public void setBpmResources(CasesBPMResources bpmResources) {
-		this.bpmResources = bpmResources;
+		return getCasesBPMResources().createTaskInstance(tiId);
 	}
 
 	public Long getProcessInstanceId() {
@@ -39,5 +30,14 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 
 	public void setProcessInstanceId(Long processInstanceId) {
 		this.processInstanceId = processInstanceId;
+	}
+	
+	public CasesBPMResources getCasesBPMResources() {
+		return casesBPMResources;
+	}
+
+	@Autowired(required=true)
+	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
+		this.casesBPMResources = casesBPMResources;
 	}
 }

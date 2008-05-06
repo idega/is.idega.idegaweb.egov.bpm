@@ -18,6 +18,7 @@ import javax.mail.Message;
 import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
+import javax.mail.internet.InternetAddress;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.exe.ProcessInstance;
@@ -46,9 +47,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/05/05 14:04:10 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -161,11 +162,25 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    	HashMap<String, Object> vars = new HashMap<String, Object>(2);
 				    	
 				    	Address[] froms = msg.getFrom();
-
-				    	System.out.println("forms: "+froms[0]);
+				    	
+				    	String fromPersonal = null;
+				    	String fromAddress = null;
+				    	
+				    	for (Address address : froms) {
+							
+				    		if(address instanceof InternetAddress) {
+				    			
+				    			InternetAddress iaddr = (InternetAddress)address;
+				    			fromAddress = iaddr.getAddress();
+				    			fromPersonal = iaddr.getPersonal();
+				    			break;
+				    		}
+						}
 				    	
 				    	vars.put("string:subject", subject);
 				    	vars.put("string:text", text);
+				    	vars.put("string:fromPersonal", fromPersonal);
+				    	vars.put("string:fromAddress", fromAddress);
 
 				    	@SuppressWarnings("unchecked")
 				    	List<File> files = (List<File>)msgAndAttachments[1];
@@ -201,8 +216,6 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		try {
 			Object content = msg.getContent();
 			
-			System.out.println("parsing...........");
-			
 			if (msg.isMimeType(TEXT_PLAIN_TYPE)){
 				
 				if (content instanceof String)
@@ -213,14 +226,14 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				
 				Multipart messageMultiPart = (Multipart) content;
 				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
-				String msgText = "";
+				String msgText = CoreConstants.EMPTY;
 				
 				for (int i = 0; i < messageMultiPart.getCount(); i++) {
 				    
 				    Part messagePart = messageMultiPart.getBodyPart(i);
 							    
 				    if (messagePart.getContent() instanceof String)
-					msgText = msgText + messagePart.getContent();
+				    	msgText = msgText + messagePart.getContent();
 				    
 				    String disposition = messagePart.getDisposition();
 				

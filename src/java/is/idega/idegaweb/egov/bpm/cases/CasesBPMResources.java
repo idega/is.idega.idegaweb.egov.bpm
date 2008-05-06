@@ -19,9 +19,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/05/05 12:17:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
  */
 public abstract class CasesBPMResources {
 	
@@ -36,6 +36,7 @@ public abstract class CasesBPMResources {
 	protected abstract ProcessDefinitionW createPDW();
 	
 	public ProcessDefinitionW createProcessDefinition(long pdId) {
+		
 		
 		ProcessDefinitionW pdw = createPDW();
 		pdw.setProcessDefinitionId(pdId);

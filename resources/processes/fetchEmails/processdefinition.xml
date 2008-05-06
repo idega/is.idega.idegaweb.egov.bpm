@@ -8,9 +8,11 @@
    <task-node name="email">
       <task name="Email">
          <controller>
-            <variable name="string:subject"></variable>
-            <variable name="string:text"></variable>
-            <variable name="files:attachments"></variable>
+            <variable name="string:subject" access="read,write"></variable>
+            <variable name="string:text" access="read,write"></variable>
+            <variable name="files:attachments" access="read,write"></variable>
+				<variable access="read,write" name="string:fromPersonal"></variable>
+				<variable access="read,write" name="string:fromAddress"></variable>
          </controller>
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>

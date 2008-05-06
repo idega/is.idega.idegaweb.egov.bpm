@@ -30,23 +30,23 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/05/05 12:17:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
 public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	private Long taskInstanceId;
-	private CasesBPMResources bpmResources;
+	private CasesBPMResources casesBPMResources;
 	
 	public void assign(int userId) {
-		JbpmContext ctx = getBpmResources().getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			Long taskInstanceId = getTaskInstanceId();
-			RolesManager rolesManager = getBpmResources().getBpmFactory().getRolesManager();
+			RolesManager rolesManager = getCasesBPMResources().getBpmFactory().getRolesManager();
 			rolesManager.hasRightsToAssignTask(taskInstanceId, userId);
 			
 			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
@@ -57,16 +57,16 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			throw new ProcessException(e, e.getUserFriendlyMessage());
 			
 		} finally {
-			getBpmResources().getIdegaJbpmContext().closeAndCommit(ctx);
+			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 
 	public void start(int userId) {
-		JbpmContext ctx = getBpmResources().getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			Long taskInstanceId = getTaskInstanceId();
-			RolesManager rolesManager = getBpmResources().getBpmFactory().getRolesManager();
+			RolesManager rolesManager = getCasesBPMResources().getBpmFactory().getRolesManager();
 			rolesManager.hasRightsToStartTask(taskInstanceId, userId);
 			
 			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
@@ -78,7 +78,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			throw new ProcessException(e, e.getUserFriendlyMessage());
 			
 		} finally {
-			getBpmResources().getIdegaJbpmContext().closeAndCommit(ctx);
+			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 
@@ -88,7 +88,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 
 	public void submit(View view, boolean proceedProcess) {
 		
-		JbpmContext ctx = getBpmResources().getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			Long taskInstanceId = getTaskInstanceId();
@@ -101,13 +101,13 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	    	ctx.save(taskInstance);
 			
 		} finally {
-			getBpmResources().getIdegaJbpmContext().closeAndCommit(ctx);
+			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 	
 	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
 		
-		getBpmResources().getVariablesHandler().submitVariables(variables, ti.getId(), true);
+		getCasesBPMResources().getVariablesHandler().submitVariables(variables, ti.getId(), true);
 		
 		if(proceed) {
 		
@@ -126,7 +126,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	public View loadView() {
 		
-		CasesBPMResources bpmRes = getBpmResources();
+		CasesBPMResources bpmRes = getCasesBPMResources();
 		Long taskInstanceId = getTaskInstanceId();
 		JbpmContext ctx = bpmRes.getIdegaJbpmContext().createJbpmContext();
 		
@@ -167,10 +167,15 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		return taskInstanceId;
 	}
 
-	protected CasesBPMResources getBpmResources() {
-		return bpmResources;
+	public CasesBPMResources getCasesBPMResources() {
+		return casesBPMResources;
 	}
-	
+
+	@Autowired(required=true)
+	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
+		this.casesBPMResources = casesBPMResources;
+	}
+
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
@@ -191,10 +196,5 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 
 	public void setTaskInstanceId(Long taskInstanceId) {
 		this.taskInstanceId = taskInstanceId;
-	}
-
-	@Autowired
-	public void setBpmResources(CasesBPMResources bpmResources) {
-		this.bpmResources = bpmResources;
 	}
 }

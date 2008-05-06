@@ -39,16 +39,16 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/05/05 12:17:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
 public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
 	private Long processDefinitionId;
-	private CasesBPMResources bpmResources;
+	private CasesBPMResources casesBPMResources;
 	
 	public void startProcess(View view) {
 		
@@ -64,7 +64,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		Long caseTypeId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseTypeActionVariableName));
 		Integer identifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		
-		CasesBPMResources bpmRes = getBpmResources();
+		CasesBPMResources bpmRes = getCasesBPMResources();
 		
 		JbpmContext ctx = bpmRes.getIdegaJbpmContext().createJbpmContext();
 		
@@ -109,7 +109,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
 	public View loadInitView(int initiatorId) {
 		
-		CasesBPMResources bpmRes = getBpmResources();
+		CasesBPMResources bpmRes = getCasesBPMResources();
 		
 		JbpmContext ctx = bpmRes.getIdegaJbpmContext().createJbpmContext();
 		
@@ -165,7 +165,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
 	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
 		
-		getBpmResources().getVariablesHandler().submitVariables(variables, ti.getId(), true);
+		getCasesBPMResources().getVariablesHandler().submitVariables(variables, ti.getId(), true);
 		
 		if(proceed) {
 		
@@ -186,10 +186,6 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		return processDefinitionId;
 	}
 
-	protected CasesBPMResources getBpmResources() {
-		return bpmResources;
-	}
-	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
@@ -211,9 +207,13 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	public void setProcessDefinitionId(Long processDefinitionId) {
 		this.processDefinitionId = processDefinitionId;
 	}
+	
+	public CasesBPMResources getCasesBPMResources() {
+		return casesBPMResources;
+	}
 
-	@Autowired
-	public void setBpmResources(CasesBPMResources bpmResources) {
-		this.bpmResources = bpmResources;
+	@Autowired(required=true)
+	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
+		this.casesBPMResources = casesBPMResources;
 	}
 }
