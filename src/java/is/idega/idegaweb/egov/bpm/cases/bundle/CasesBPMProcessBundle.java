@@ -43,9 +43,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * 
- * Last modified: $Date: 2008/04/26 02:32:11 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/10 18:11:12 $ by $Author: civilis $
  * 
  */
 @Scope("prototype")
@@ -71,6 +71,7 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	private CasesBPMDAO casesBPMDAO;
 	private String bundlePropertiesLocationWithinBundle;
 	private DocumentManagerFactory documentManagerFactory;
+	private ProcessDefinition pd;
 	
 	private ViewToTask viewToTaskBinder;
 
@@ -96,15 +97,20 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 
 	public ProcessDefinition getProcessDefinition() throws IOException {
 
-		String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
+		if(pd == null) {
+		
+			String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
 
-		if (templateBundleLocationWithinBundle == null)
-			throw new IllegalStateException(
-					"No templateBundleLocationWithinBundle set");
+			if (templateBundleLocationWithinBundle == null)
+				throw new IllegalStateException(
+						"No templateBundleLocationWithinBundle set");
 
-		InputStream pdIs = getBundle().getResourceInputStream(
-				templateBundleLocationWithinBundle + processDefinitionFileName);
-		ProcessDefinition pd = ProcessDefinition.parseXmlInputStream(pdIs);
+			InputStream pdIs = getBundle().getResourceInputStream(
+					templateBundleLocationWithinBundle + processDefinitionFileName);
+			ProcessDefinition pd = ProcessDefinition.parseXmlInputStream(pdIs);
+			this.pd = pd;
+		}
+		
 		return pd;
 	}
 	
