@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.HashSet;
 
 import org.jbpm.graph.exe.ProcessInstance;
+import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +19,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 18:17:08 $ by $Author: civilis $
  */
 @Service(SendCaseMessagesHandlerBean.beanIdentifier)
 public class SendCaseMessagesHandlerBean {
@@ -30,9 +31,9 @@ public class SendCaseMessagesHandlerBean {
 	private MessageValueHandler messageValueHandler;
 	
 	
-	public String getFormattedMessage(String unformattedMessage, String messageValues, Long tokenId, MessageValueContext mvCtx) {
+	public String getFormattedMessage(String unformattedMessage, String messageValues, Token tkn, MessageValueContext mvCtx) {
 		
-		return getMessageValueHandler().getFormattedMessage(unformattedMessage, messageValues, tokenId, mvCtx);
+		return getMessageValueHandler().getFormattedMessage(unformattedMessage, messageValues, tkn, mvCtx);
 	}
 	
 	public Collection<User> getUsersToSendMessageTo(IWContext iwc, String rolesNamesAggr, ProcessInstance pi) {

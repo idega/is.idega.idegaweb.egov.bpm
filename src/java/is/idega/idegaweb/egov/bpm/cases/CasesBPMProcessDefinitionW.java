@@ -8,6 +8,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.faces.context.FacesContext;
 
@@ -39,9 +41,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 18:17:07 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -49,6 +51,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
 	private Long processDefinitionId;
 	private CasesBPMResources casesBPMResources;
+	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
 	
 	public void startProcess(View view) {
 		
@@ -121,6 +124,9 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			CaseTypesProcDefBind bind = bpmRes.getBpmBindsDAO().find(CaseTypesProcDefBind.class, pd.getName());
 			
 			ProcessInstance pi = new ProcessInstance(pd);
+			
+			logger.log(Level.INFO, "New process instance created for the process "+pd.getName());
+			
 			TaskInstance taskInstance = pi.getTaskMgmtInstance().createStartTaskInstance();
 			
 			List<String> preferred = new ArrayList<String>(1);

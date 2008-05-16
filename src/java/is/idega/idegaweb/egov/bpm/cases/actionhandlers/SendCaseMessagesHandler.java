@@ -18,6 +18,7 @@ import javax.faces.context.FacesContext;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
+import org.jbpm.graph.exe.Token;
 
 import com.idega.block.process.message.data.Message;
 import com.idega.business.IBOLookup;
@@ -34,9 +35,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 18:17:07 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
@@ -76,7 +77,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 
 		final String subjectValuesExp = getSubjectValues();
 		final String messageValuesExp = getMessageValues();
-		final Long tokenId = ctx.getToken().getId();
+		final Token tkn = ctx.getToken();
 		String bundleIdentifier = getMessagesBundle();
 		
 		if(bundleIdentifier == null)
@@ -135,12 +136,12 @@ public class SendCaseMessagesHandler implements ActionHandler {
 						if(unformattedMsg == null)
 							formattedMsg = unformattedMsg;
 						else
-							formattedMsg = bean.getFormattedMessage(unformattedMsg, messageValuesExp, tokenId, mvCtx);
+							formattedMsg = bean.getFormattedMessage(unformattedMsg, messageValuesExp, tkn, mvCtx);
 						
 						if(unformattedSubject == null)
 							formattedSubject = unformattedSubject;
 						else
-							formattedSubject = bean.getFormattedMessage(unformattedSubject, subjectValuesExp, tokenId, mvCtx);
+							formattedSubject = bean.getFormattedMessage(unformattedSubject, subjectValuesExp, tkn, mvCtx);
 						
 						Message message = messageBusiness.createUserMessage(theCase, user, null, null, formattedSubject, formattedMsg, formattedMsg, null, false, null, false, true);
 						message.store();

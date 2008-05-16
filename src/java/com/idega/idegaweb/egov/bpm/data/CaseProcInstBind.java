@@ -19,12 +19,12 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 18:17:08 $ by $Author: civilis $
  */
 @Entity
-@Table(name="BPM_CASE_PROCINST")
+@Table(name=CaseProcInstBind.TABLE_NAME)
 @NamedQueries(
 		{
 			@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
@@ -63,24 +63,24 @@ import javax.persistence.TemporalType;
 		{
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded, resultSetMapping="caseId",
 							query=
-				"select cp.case_id as caseId from BPM_CASE_PROCINST as cp " +
+				"select cp.case_id as caseId from "+CaseProcInstBind.TABLE_NAME+" as cp " +
 						"inner join JBPM_PROCESSINSTANCE as pi " +
 						"on cp."+CaseProcInstBind.procInstIdColumnName+" = pi.id_ " +
 						"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pi.end_ is not null"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded, resultSetMapping="caseId",
 					query=
-				"select cp.case_id as caseId from BPM_CASE_PROCINST as cp " +
+				"select cp.case_id as caseId from "+CaseProcInstBind.TABLE_NAME+" as cp " +
 				"inner join JBPM_PROCESSINSTANCE as pi " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pi.id_ " +
 				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pi.end_ is null"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus, resultSetMapping="caseId", 
 					query=
-				"select cp.case_id as caseId from BPM_CASE_PROCINST as cp " +
-				"inner join BPM_PROCESS_USER pu " +
+				"select cp.case_id as caseId from "+CaseProcInstBind.TABLE_NAME+" as cp " +
+				"inner join "+ProcessUserBind.TABLE_NAME+" pu " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu.process_instance_id " +
-				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.status = :"+ProcessUserBind.statusProp
+				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :"+ProcessUserBind.statusProp
 			)
 		}
 )
@@ -97,6 +97,8 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByProcessInstanceIdsAndProcessUserStatus = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus";
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
+	
+	public static final String TABLE_NAME = "BPM_CASES_PROCESSINSTANCES";
 	
 	public static final String procInstIdColumnName = "process_instance_id";
 

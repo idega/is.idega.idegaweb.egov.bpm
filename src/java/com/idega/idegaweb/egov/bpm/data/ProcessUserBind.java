@@ -19,12 +19,12 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 18:17:08 $ by $Author: civilis $
  */
 @Entity
-@Table(name="BPM_PROCESS_USER")
+@Table(name=ProcessUserBind.TABLE_NAME)
 @NamedQueries(
 		{
 			@NamedQuery(name=ProcessUserBind.byUserIdNPID, query="from ProcessUserBind pub where pub.userId = :"+ProcessUserBind.userIdParam+ " and pub.caseProcessBind.procInstId = :"+ProcessUserBind.pidParam),
@@ -40,6 +40,8 @@ public class ProcessUserBind implements Serializable {
 		PROCESS_WATCHED,
 		NO_STATUS
 	}
+	
+	public static final String TABLE_NAME = "BPM_PROCESSES_USERS";
 	
 	public static final String byUserIdNPID = "ProcessUserBind.byUserIdNPID";
 	public static final String byUserIdAndCaseId = "ProcessUserBind.byUserIdNCaseId";
