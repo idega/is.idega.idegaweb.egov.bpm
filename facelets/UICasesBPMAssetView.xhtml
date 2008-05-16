@@ -11,23 +11,23 @@
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
 	<ui:define name="title">
-		Form view
+		#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.title.form_view']}
 	</ui:define>
 	<ui:define name="actions">
 		<div>
-			<h:commandLink value="Back to case overview" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+			<h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
 		</div>
 	</ui:define>
 	<ui:define name="content">
 		<div class="assetsView">
 				<div class="assetSection">
 					<div class="assetHeader">
-						Task summary
+						#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.task_summary']}
 					</div>
 					<div class="assetContent">
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
-								Name
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.task_name']}
 							</div>
 							<div class="assetEntryRight">
 								#{casesBPMAssetsState.taskView.taskName}
@@ -35,7 +35,7 @@
 						</div>
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
-								Status
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.task_status']}
 							</div>
 							<div class="assetEntryRight">
 								#{casesBPMAssetsState.taskView.taskStatus}
@@ -43,7 +43,7 @@
 						</div>
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
-								Taken by
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.assigned_to']}
 							</div>
 							<div class="assetEntryRight">
 								#{casesBPMAssetsState.taskView.assignedTo}
@@ -51,7 +51,7 @@
 						</div>
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
-								Time created
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.time_created']}
 							</div>
 							<div class="assetEntryRight">
 								#{casesBPMAssetsState.taskView.createdDate}
@@ -61,13 +61,13 @@
 				</div>	
 				<div class="assetSection">
 					<div class="assetHeader">
-						Views
+						#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.views']}
 					</div>
 					<div class="assetContent">
 						<div class="assetEntry">
 							<span class="selected">
 								<b>
-								Task form
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.task_form']}
 								</b>
 							</span>
 						</div>
@@ -81,7 +81,7 @@
 				
 				<div class="assetSection">
 					<div class="assetHeader">
-						Actions
+						#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.actions']}
 					</div>
 					<div class="assetContent">
 					    <t:div rendered="#{casesBPMAssetsState.canStartTask}" styleClass="assetEntry">

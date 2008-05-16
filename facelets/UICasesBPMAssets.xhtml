@@ -9,41 +9,41 @@
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
 	<ui:define name="title">
-		General case view
+		#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.title.general_case_view']} 
 	</ui:define>
 	<ui:define name="content">
 	   <div class="caseOverview">
-                <div>Case status: #{casesBPMAssetsState.processView.processStatus}</div>
+                <div>#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.case_status']}: #{casesBPMAssetsState.processView.processStatus}</div>
                 <t:div rendered="#{caseManagerState.fullView}">
-                   Case creator: #{casesBPMAssetsState.processView.processOwner}
+                   #{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.case_creator']}: #{casesBPMAssetsState.processView.processOwner}
                 </t:div>
-                <div>Case create date: #{casesBPMAssetsState.processView.processCreateDate}</div>
-                <div>Case identifier: #{casesBPMAssetsState.processView.caseIdentifier}</div>
+                <div>#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.case_create_date']}: #{casesBPMAssetsState.processView.processCreateDate}</div>
+                <div>#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.case_identifier']}: #{casesBPMAssetsState.processView.caseIdentifier}</div>
                 
         </div>
         <t:inputHidden id="selectedTabState" value="#{casesBPMAssetsState.tabSelected}" forceId="true" />
 		<div id="example" class="flora">
             <ul>
-                <li><a href="#tasksTab"><span>Forms</span></a></li>
-                <li><a href="#documentsTab"><span>Documents</span></a></li>
+                <li><a href="#tasksTab"><span>#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.forms']}Forms</span></a></li>
+                <li><a href="#documentsTab"><span>#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.documents']}Documents</span></a></li>
             </ul>
             <div id="tasksTab">
 	            <table id="tasksTable" class="scroll bpmTasks tasksTable" cellpadding="0" cellspacing="0"></table>
             </div>
             <div id="documentsTab">
                 <div class="documentsGrid">
-                    <div class="header">Process documents</div>
+                    <div class="header">#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.process_documents']}</div>
                     <table id="documentsTable" class="scroll bpmDocuments" cellpadding="0" cellspacing="0"></table>
                 </div>
                 <div class="emailsGrid">
-                    <div class="header">Process emails</div>
+                    <div class="header">#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.process_emails']}</div>
                     <table id="emailsTable" class="scroll bpmEmails" cellpadding="0" cellspacing="0"></table>
                 </div>
             </div>
         </div>
         <span class="assetsState" style="display: none;">
-			<h:commandButton class="state_gotoTaskView" value="Go to task view" action="#{casesBPMAssetsState.selectTaskView}" />
-			<h:commandButton class="state_gotoDocumentsView" value="Go to documents view" action="#{casesBPMAssetsState.selectDocumentView}" />
+			<h:commandButton class="state_gotoTaskView" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.task_view']}" action="#{casesBPMAssetsState.selectTaskView}" />
+			<h:commandButton class="state_gotoDocumentsView" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.button.documents_view']}" action="#{casesBPMAssetsState.selectDocumentView}" />
 			<t:inputHidden id="state_viewSelected" value="#{casesBPMAssetsState.viewSelected}" forceId="true" />
 		</span>
 	</ui:define>
