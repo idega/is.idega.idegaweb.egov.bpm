@@ -1,5 +1,7 @@
 cases_bpm.newCaseArrived.subject=New case has been created
 cases_bpm.newCaseArrived.message=Hello, {0}. New case has been created.
+cases_bpm.thankOwnerForNewCase.subject=Case created successfully!
+cases_bpm.thankOwnerForNewCase.message=Hello, {0}. You have successfully created case {1}. You can access case related information in your cases list at {2}. We are hopeful that your case will be handled soon. Good luck!
 cases_bpm.processRulingSubmitted.subject=Process ruling has been submitted
 cases_bpm.processRulingSubmitted.message=Hello, {0}. Process ruling has been submitted, process has ended.
 cases_bpm.additionalInfoForOwner.subject=Additional information needed

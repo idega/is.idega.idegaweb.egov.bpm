@@ -31,9 +31,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/04/22 04:35:36 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -265,7 +265,9 @@ public class CasesBPMAssetsState implements Serializable {
 			User performer = iwc.getCurrentUser();
 			
 			ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
-			caseUser.setStatus(null);
+			
+			if(caseUser.getStatus() != null && caseUser.getStatus() == Status.PROCESS_WATCHED)
+				caseUser.setStatus(Status.NO_STATUS);
 			
 			dao.merge(caseUser);
 			isWatched = null;

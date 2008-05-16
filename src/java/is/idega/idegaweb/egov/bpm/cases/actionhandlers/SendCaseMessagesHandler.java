@@ -7,8 +7,9 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
 
 import java.rmi.RemoteException;
-import java.text.MessageFormat;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -24,6 +25,8 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
+import com.idega.idegaweb.IWResourceBundle;
+import com.idega.jbpm.process.business.messages.MessageValueContext;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -31,16 +34,21 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/04/14 23:03:46 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
 	private static final long serialVersionUID = 1212382470685233437L;
 	
+	private static final String beanUserIdentifier = "bean:user";
+	
 	private String subjectKey;
+	private String subjectValues;
 	private String messageKey;
+	private String messageValues;
+	private String messagesBundle;
 	private String sendToRoles;
 	
 	public String getSendToRoles() {
@@ -65,33 +73,81 @@ public class SendCaseMessagesHandler implements ActionHandler {
 		
 		final String subjectKey = getSubjectKey();
 		final String msgKey = getMessageKey();
+
+		final String subjectValuesExp = getSubjectValues();
+		final String messageValuesExp = getMessageValues();
+		final Long tokenId = ctx.getToken().getId();
+		String bundleIdentifier = getMessagesBundle();
+		
+		if(bundleIdentifier == null)
+			bundleIdentifier = IWBundleStarter.IW_BUNDLE_IDENTIFIER;
+		
+		final IWBundle iwb = iwc.getIWMainApplication().getBundle(bundleIdentifier);
 		
 		new Thread(new Runnable() {
 
 			public void run() {
 				
-				SendCaseMessagesHandlerBean bean = (SendCaseMessagesHandlerBean)WFUtil.getBeanInstance(iwc, SendCaseMessagesHandlerBean.beanIdentifier);
-				Collection<User> users = bean.getUsersToSendMessageTo(iwc, sendToRoles, pi);
-				
-				IWBundle bndl = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
-				
-				final String subject = bndl.getResourceBundle(iwc).getLocalizedString(subjectKey, CoreConstants.EMPTY);
-				final String msg = bndl.getResourceBundle(iwc).getLocalizedString(msgKey, CoreConstants.EMPTY);
-				
-				if(subject != null && msg != null) {
-				
-					try {
-						for (User user : users) {
+				try {
+					SendCaseMessagesHandlerBean bean = (SendCaseMessagesHandlerBean)WFUtil.getBeanInstance(iwc, SendCaseMessagesHandlerBean.beanIdentifier);
+					Collection<User> users = bean.getUsersToSendMessageTo(iwc, sendToRoles, pi);
+					
+					HashMap<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
+					MessageValueContext mvCtx = new MessageValueContext(5);
+					
+					for (User user : users) {
+						
+						String preferredLocaleStr = user.getPreferredLocale();
+						Locale preferredLocale;
+						
+						if(preferredLocaleStr == null || CoreConstants.EMPTY.equals(preferredLocaleStr)) {
+
+							preferredLocale = new Locale("is");
 							
-							String mzg = MessageFormat.format(msg, new Object[] {user.getName()});
-							
-							Message message = messageBusiness.createUserMessage(theCase, user, null, null, subject, mzg, mzg, null, false, null, false, true);
-							message.store();
+						} else {
+							preferredLocale = new Locale(preferredLocaleStr); 
 						}
 						
-					} catch (RemoteException e) {
-						Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
+						String unformattedSubject;
+						String unformattedMsg;
+						
+						if(!unformattedForLocales.containsKey(preferredLocale)) {
+						
+							IWResourceBundle iwrb = iwb.getResourceBundle(preferredLocale);
+						
+							unformattedSubject = iwrb.getLocalizedString(subjectKey, CoreConstants.EMPTY);
+							unformattedMsg = iwrb.getLocalizedString(msgKey, CoreConstants.EMPTY);
+							
+							unformattedForLocales.put(preferredLocale, new String[] {unformattedSubject, unformattedMsg});
+						} else {
+							
+							String[] unf = unformattedForLocales.get(preferredLocale);
+							
+							unformattedSubject = unf[0];
+							unformattedMsg = unf[1];
+						}
+						
+						String formattedMsg;
+						String formattedSubject;
+						
+						mvCtx.put(beanUserIdentifier, user);
+						
+						if(unformattedMsg == null)
+							formattedMsg = unformattedMsg;
+						else
+							formattedMsg = bean.getFormattedMessage(unformattedMsg, messageValuesExp, tokenId, mvCtx);
+						
+						if(unformattedSubject == null)
+							formattedSubject = unformattedSubject;
+						else
+							formattedSubject = bean.getFormattedMessage(unformattedSubject, subjectValuesExp, tokenId, mvCtx);
+						
+						Message message = messageBusiness.createUserMessage(theCase, user, null, null, formattedSubject, formattedMsg, formattedMsg, null, false, null, false, true);
+						message.store();
 					}
+					
+				} catch (RemoteException e) {
+					Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
 				}
 			}
 			
@@ -129,5 +185,29 @@ public class SendCaseMessagesHandler implements ActionHandler {
 
 	public void setMessageKey(String messageKey) {
 		this.messageKey = messageKey;
+	}
+
+	public String getSubjectValues() {
+		return subjectValues;
+	}
+
+	public void setSubjectValues(String subjectValues) {
+		this.subjectValues = subjectValues;
+	}
+
+	public String getMessageValues() {
+		return messageValues;
+	}
+
+	public void setMessageValues(String messageValues) {
+		this.messageValues = messageValues;
+	}
+
+	public String getMessagesBundle() {
+		return messagesBundle;
+	}
+
+	public void setMessagesBundle(String messagesBundle) {
+		this.messagesBundle = messagesBundle;
 	}
 }

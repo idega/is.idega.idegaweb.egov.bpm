@@ -19,9 +19,9 @@ import javax.persistence.Table;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/04/17 01:51:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_PROCESS_USER")
@@ -37,7 +37,8 @@ public class ProcessUserBind implements Serializable {
 	
 	public enum Status {
 		
-		PROCESS_WATCHED
+		PROCESS_WATCHED,
+		NO_STATUS
 	}
 	
 	public static final String byUserIdNPID = "ProcessUserBind.byUserIdNPID";
@@ -53,10 +54,12 @@ public class ProcessUserBind implements Serializable {
 	@Column(name="user_id", nullable=false)
     private Integer userId;
 	
-	@Column(name="status")
+	public static final String statusProp = "status";
+	@Column(name="user_status")
 	@Enumerated(EnumType.STRING)
 	private Status status;
 
+	public static final String caseProcessBindProp = "caseProcessBind";
 	@ManyToOne(cascade = CascadeType.ALL)
 	@JoinColumn(name = "process_instance_id", referencedColumnName = CaseProcInstBind.procInstIdColumnName, nullable=false)
 	private CaseProcInstBind caseProcessBind;

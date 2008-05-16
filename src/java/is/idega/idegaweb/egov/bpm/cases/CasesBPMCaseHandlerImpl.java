@@ -9,7 +9,6 @@ import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.presentation.OpenCases;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -30,15 +29,17 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
+import com.idega.core.persistence.Param;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
-import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
@@ -46,9 +47,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseHandlerImpl.beanIdentifier)
@@ -58,6 +59,7 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 	
 	private CasesBPMDAO casesBPMDAO;
 	private IdegaJbpmContext idegaJbpmContext;
+	private BPMFactory bpmFactory;
 	
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
@@ -151,54 +153,86 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 		
 		IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 		
-		try {
-			CasesBusiness casesBusiness = getCasesBusiness(iwc);
-			UserBusiness userBusiness = getUserBusiness(iwc);
-			Collection<GeneralCase> cases;
+		RolesManager rolesManager = getBpmFactory().getRolesManager();
+		List<Long> processInstancesIds = rolesManager.getProcessInstancesIdsForCurrentUser();
+		
+		System.out.println("pids: "+processInstancesIds);
+		
+		Collection<GeneralCase> cases;
+		
+		if(processInstancesIds != null && !processInstancesIds.isEmpty()) {
 			
-			if(OpenCases.TYPE.equals(casesComponentType)) {
+			try {
+				List<Integer> casesIds;
 				
-				cases = OpenCases.getOpenCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
-			
-			} else if(ClosedCases.TYPE.equals(casesComponentType)) {
+//				CasesBusiness casesBusiness = getCasesBusiness(iwc);
+//				UserBusiness userBusiness = getUserBusiness(iwc);
 				
-				cases = ClosedCases.getClosedCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
-				
-			} else if(MyCases.TYPE.equals(casesComponentType)) {
-				
-				cases = OpenCases.getOpenCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
-				
-				HashMap<Integer, GeneralCase> casesNPKs = new HashMap<Integer, GeneralCase>(cases.size());
-				
-				for (GeneralCase caze : cases) {
+				if(OpenCases.TYPE.equals(casesComponentType)) {
 					
-					casesNPKs.put(new Integer(caze.getPrimaryKey().toString()), caze);
-				}
+					//cases = OpenCases.getOpenCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
+					
+ 					casesIds = getCasesBPMDAO().getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded, Integer.class,
+							new Param(CaseProcInstBind.procInstIdProp, processInstancesIds)
+					);
 				
-				List<ProcessUserBind> binds = getCasesBPMDAO().getProcessUserBinds(new Integer(user.getPrimaryKey().toString()), casesNPKs.keySet());
-				List<GeneralCase> casesToReturn = new ArrayList<GeneralCase>(binds.size());
-				
-				for (ProcessUserBind processUserBind : binds) {
-
-					if(Status.PROCESS_WATCHED == processUserBind.getStatus()) {
+				} else if(ClosedCases.TYPE.equals(casesComponentType)) {
+					
+					//cases = ClosedCases.getClosedCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
+					casesIds = getCasesBPMDAO().getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded, Integer.class,
+							new Param(CaseProcInstBind.procInstIdProp, processInstancesIds)
+					);
+					
+				} else if(MyCases.TYPE.equals(casesComponentType)) {
+					
+					casesIds = getCasesBPMDAO().getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus, Integer.class,
+							new Param(CaseProcInstBind.procInstIdProp, processInstancesIds),
+							new Param(ProcessUserBind.statusProp, ProcessUserBind.Status.PROCESS_WATCHED)
+					);
+					
+					/*cases = OpenCases.getOpenCases(user, iwc.getIWMainApplication(), iwc, userBusiness, casesBusiness, new String[] {getType()});
+					
+					HashMap<Integer, GeneralCase> casesNPKs = new HashMap<Integer, GeneralCase>(cases.size());
+					
+					for (GeneralCase caze : cases) {
 						
-						if(casesNPKs.containsKey(processUserBind.getCaseProcessBind().getCaseId())) {
+						casesNPKs.put(new Integer(caze.getPrimaryKey().toString()), caze);
+					}
+					
+					List<ProcessUserBind> binds = getCasesBPMDAO().getProcessUserBinds(new Integer(user.getPrimaryKey().toString()), casesNPKs.keySet());
+					List<GeneralCase> casesToReturn = new ArrayList<GeneralCase>(binds.size());
+					
+					for (ProcessUserBind processUserBind : binds) {
+
+						if(Status.PROCESS_WATCHED == processUserBind.getStatus()) {
 							
-							casesToReturn.add(casesNPKs.get(processUserBind.getCaseProcessBind().getCaseId()));
+							if(casesNPKs.containsKey(processUserBind.getCaseProcessBind().getCaseId())) {
+								
+								casesToReturn.add(casesNPKs.get(processUserBind.getCaseProcessBind().getCaseId()));
+							}
 						}
 					}
-				}
+					
+					cases = casesToReturn;
+					*/
+				} else
+					casesIds = null;
 				
-				cases = casesToReturn;
+				if(casesIds != null && !casesIds.isEmpty()) {
 				
-			} else
-				cases = null;
+					cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesIds);
+					
+				} else
+					cases = null;
+				
+			} catch (Exception e) {
+				throw new RuntimeException(e);
+			}
 			
-			return cases;
-			
-		} catch (RemoteException e) {
-			throw new RuntimeException(e);
-		}
+		} else
+			cases = null;
+		
+		return cases == null ? new ArrayList<GeneralCase>(0) : cases;
 	}
 	
 	public CasesBusiness getCasesBusiness(IWContext iwc) {
@@ -303,5 +337,14 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 	@Autowired
 	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
+	}
+
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	@Autowired
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
 	}
 }

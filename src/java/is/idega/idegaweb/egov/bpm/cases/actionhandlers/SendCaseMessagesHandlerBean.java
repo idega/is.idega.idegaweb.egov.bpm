@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.idega.jbpm.identity.RolesManager;
+import com.idega.jbpm.process.business.messages.MessageValueContext;
+import com.idega.jbpm.process.business.messages.MessageValueHandler;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -16,15 +18,22 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/04/26 02:32:11 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
  */
 @Service(SendCaseMessagesHandlerBean.beanIdentifier)
 public class SendCaseMessagesHandlerBean {
 
 	public static final String beanIdentifier = "egovBPM_SendCaseMessagesHandlerBean";
 	private RolesManager rolesManager;
+	private MessageValueHandler messageValueHandler;
+	
+	
+	public String getFormattedMessage(String unformattedMessage, String messageValues, Long tokenId, MessageValueContext mvCtx) {
+		
+		return getMessageValueHandler().getFormattedMessage(unformattedMessage, messageValues, tokenId, mvCtx);
+	}
 	
 	public Collection<User> getUsersToSendMessageTo(IWContext iwc, String rolesNamesAggr, ProcessInstance pi) {
 		
@@ -44,46 +53,7 @@ public class SendCaseMessagesHandlerBean {
 			allUsers = new ArrayList<User>(0);
 		
 		return allUsers;
-			
-//			try {
-//				UserBusiness userBusiness = getUserBusiness(iwc);
-//				
-//				for (List<NativeIdentityBind> binds : identities.values()) {
-//					
-//					for (NativeIdentityBind identity : binds) {
-//						
-//						if(identity.getIdentityType() == IdentityType.USER) {
-//							
-//							User user = userBusiness.getUser(new Integer(identity.getIdentityId()));
-//							users.put(user.getPrimaryKey().toString(), user);
-//							
-//						} else if(identity.getIdentityType() == IdentityType.GROUP) {
-//							
-//							@SuppressWarnings("unchecked")
-//							Collection<User> groupUsers = userBusiness.getUsersInGroup(new Integer(identity.getIdentityId()));
-//							
-//							for (User user : groupUsers)
-//								users.put(user.getPrimaryKey().toString(), user);
-//						}
-//					}
-//				}
-//				
-//			} catch (RemoteException e) {
-//				throw new IBORuntimeException(e);
-//			}
-//		}
-//		
-//		return users.values();
 	}
-	
-//	protected UserBusiness getUserBusiness(IWContext iwc) {
-//		try {
-//			return (UserBusiness) IBOLookup.getServiceInstance(iwc, UserBusiness.class);
-//		}
-//		catch (IBOLookupException ile) {
-//			throw new IBORuntimeException(ile);
-//		}
-//	}
 
 	public RolesManager getRolesManager() {
 		return rolesManager;
@@ -92,5 +62,14 @@ public class SendCaseMessagesHandlerBean {
 	@Autowired
 	public void setRolesManager(RolesManager rolesManager) {
 		this.rolesManager = rolesManager;
+	}
+	
+	public MessageValueHandler getMessageValueHandler() {
+		return messageValueHandler;
+	}
+
+	@Autowired
+	public void setMessageValueHandler(MessageValueHandler messageValueHandler) {
+		this.messageValueHandler = messageValueHandler;
 	}
 }
