@@ -19,9 +19,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/05/16 18:17:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 19:38:58 $ by $Author: civilis $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -63,21 +63,21 @@ import javax.persistence.TemporalType;
 		{
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded, resultSetMapping="caseId",
 							query=
-				"select cp.case_id as caseId from "+CaseProcInstBind.TABLE_NAME+" as cp " +
-						"inner join JBPM_PROCESSINSTANCE as pi " +
+				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
+						"inner join JBPM_PROCESSINSTANCE pi " +
 						"on cp."+CaseProcInstBind.procInstIdColumnName+" = pi.id_ " +
 						"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pi.end_ is not null"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded, resultSetMapping="caseId",
 					query=
-				"select cp.case_id as caseId from "+CaseProcInstBind.TABLE_NAME+" as cp " +
-				"inner join JBPM_PROCESSINSTANCE as pi " +
+				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
+				"inner join JBPM_PROCESSINSTANCE pi " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pi.id_ " +
 				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pi.end_ is null"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus, resultSetMapping="caseId", 
 					query=
-				"select cp.case_id as caseId from "+CaseProcInstBind.TABLE_NAME+" as cp " +
+				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
 				"inner join "+ProcessUserBind.TABLE_NAME+" pu " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu.process_instance_id " +
 				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :"+ProcessUserBind.statusProp
