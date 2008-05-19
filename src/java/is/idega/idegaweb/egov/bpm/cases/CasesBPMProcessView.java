@@ -20,9 +20,9 @@ import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.jbpm.IdegaJbpmContext;
-import com.idega.jbpm.exe.BPMAccessControlException;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessManager;
+import com.idega.jbpm.identity.BPMAccessControlException;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
@@ -32,9 +32,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/05/04 18:11:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service("casesBPMProcessView")

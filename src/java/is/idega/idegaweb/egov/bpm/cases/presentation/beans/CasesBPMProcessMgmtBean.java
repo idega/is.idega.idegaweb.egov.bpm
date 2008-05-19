@@ -28,16 +28,16 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
-import com.idega.jbpm.def.ProcessBundle;
-import com.idega.jbpm.def.ProcessBundleManager;
+import com.idega.jbpm.bundle.ProcessBundle;
+import com.idega.jbpm.bundle.ProcessBundleManager;
 import com.idega.util.CoreConstants;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/04/12 01:53:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
  *
  */
 @Scope("request")

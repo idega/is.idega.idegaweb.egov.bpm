@@ -29,9 +29,9 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.jbpm.def.View;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.view.View;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.user.business.UserBusiness;
@@ -41,9 +41,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/05/16 18:17:07 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")

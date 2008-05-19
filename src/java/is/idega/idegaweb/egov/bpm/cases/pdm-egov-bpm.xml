@@ -2,6 +2,6 @@
 
 <processes>
 
-    <processBundle bundle="is.idega.idegaweb.egov.bpm" propsUriWithinBundle="resources/processes/fetchEmails/bundle.properties" autoload="true" version="13" />
+    <processBundle bundle="is.idega.idegaweb.egov.bpm" propsUriWithinBundle="resources/processes/fetchEmails/bundle.properties" autoload="true" version="14" />
 
 </processes>

@@ -32,10 +32,10 @@ import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.def.ProcessBundle;
-import com.idega.jbpm.def.ViewResource;
-import com.idega.jbpm.def.ViewToTask;
-import com.idega.jbpm.def.ViewToTaskType;
+import com.idega.jbpm.bundle.ProcessBundle;
+import com.idega.jbpm.view.ViewResource;
+import com.idega.jbpm.view.ViewToTask;
+import com.idega.jbpm.view.ViewToTaskType;
 import com.idega.user.business.GroupBusiness;
 import com.idega.user.data.Group;
 import com.idega.util.CoreConstants;
@@ -43,9 +43,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  * 
- * Last modified: $Date: 2008/05/10 18:11:12 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
  * 
  */
 @Scope("prototype")

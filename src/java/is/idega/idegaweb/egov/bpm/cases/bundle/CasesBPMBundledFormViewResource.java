@@ -12,16 +12,16 @@ import com.idega.documentmanager.business.DocumentManager;
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.jbpm.def.View;
-import com.idega.jbpm.def.ViewResource;
+import com.idega.jbpm.view.View;
+import com.idega.jbpm.view.ViewResource;
 import com.idega.util.xml.XmlUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * 
- * Last modified: $Date: 2008/04/10 14:05:31 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
  * 
  */
 public class CasesBPMBundledFormViewResource implements ViewResource {

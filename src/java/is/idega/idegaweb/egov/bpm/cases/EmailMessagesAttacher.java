@@ -38,18 +38,18 @@ import com.idega.core.file.tmp.TmpFilesManager;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
-import com.idega.jbpm.def.View;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.impl.ProcessArtifactsProviderImpl;
+import com.idega.jbpm.view.View;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service

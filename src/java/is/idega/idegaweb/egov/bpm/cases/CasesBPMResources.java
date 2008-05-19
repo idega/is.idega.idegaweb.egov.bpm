@@ -12,16 +12,16 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
-import com.idega.jbpm.exe.VariablesHandler;
+import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
  */
 public abstract class CasesBPMResources {
 	
