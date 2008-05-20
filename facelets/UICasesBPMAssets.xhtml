@@ -9,7 +9,7 @@
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
 	<ui:define name="title">
-		#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.title.general_case_view']} 
+		#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.title.general_case_view']} 
 	</ui:define>
 	<ui:define name="content">
 	   <div class="caseOverview">
@@ -24,8 +24,8 @@
         <t:inputHidden id="selectedTabState" value="#{casesBPMAssetsState.tabSelected}" forceId="true" />
 		<div id="example" class="flora">
             <ul>
-                <li><a href="#tasksTab"><span>#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.forms']}Forms</span></a></li>
-                <li><a href="#documentsTab"><span>#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.documents']}Documents</span></a></li>
+                <li><a href="#tasksTab"><span>Forms</span></a></li>
+                <li><a href="#documentsTab"><span>Documents</span></a></li>
             </ul>
             <div id="tasksTab">
 	            <table id="tasksTable" class="scroll bpmTasks tasksTable" cellpadding="0" cellspacing="0"></table>
