@@ -4,27 +4,27 @@
 	xmlns:f="http://java.sun.com/jsf/core">
 	
 		<div class="processManagement">
-		  <h3>#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.heading.process_management']}</h3>
+		  <h3>#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.heading.process_management']}</h3>
             <div style="color: red;">#{CasesBPMProcessMgmt.message}</div>
             
             <div class="createdProcesses">
-                <label for="createdFormsProcessesSelector">#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.created_processes']}:</label>
+                <label for="createdFormsProcessesSelector">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.created_processes']}:</label>
                 <h:selectOneListbox id="createdProcessesSelector" value="#{CasesBPMProcessMgmt.processDefinitionId}" size="5" onchange="this.form.submit();" valueChangeListener="#{CasesBPMProcessMgmt.selectedProcessChanged}">
                     <f:selectItems value="#{CasesBPMProcessMgmt.casesProcessesDefinitions}" />
                 </h:selectOneListbox>
             </div>
             <div class="assignButtons">
-                <h:commandButton value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.actions']}Assign process to case categories" action="#{CasesBPMProcessMgmt.assignProcessToCaseMeta}" />
+                <h:commandButton value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.actions']}Assign process to case categories" action="#{CasesBPMProcessMgmt.assignProcessToCaseMeta}" />
             </div>
             <div class="caseCatType">
                  <div class="caseEntry">
-                     <label for="caseCategoriesSelector">#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.select_case_category']}:</label>
+                     <label for="caseCategoriesSelector">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.select_case_category']}:</label>
                      <h:selectOneListbox id="caseCategoriesSelector" value="#{CasesBPMProcessMgmt.caseCategory}" size="5">
                         <f:selectItems value="#{CasesBPMProcessMgmt.casesCategories}" />
                     </h:selectOneListbox>
                 </div>
                 <div class="caseEntry">
-                    <label for="caseTypesSelector">#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.select_case_type']}:</label>
+                    <label for="caseTypesSelector">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.select_case_type']}:</label>
                     <h:selectOneListbox id="caseTypesSelector" value="#{CasesBPMProcessMgmt.caseType}" size="5">
                         <f:selectItems value="#{CasesBPMProcessMgmt.casesTypes}" />
                     </h:selectOneListbox>

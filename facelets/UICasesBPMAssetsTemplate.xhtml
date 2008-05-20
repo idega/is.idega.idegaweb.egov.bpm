@@ -17,14 +17,14 @@
 		<t:saveState id="storeAssetsState" value="#{casesBPMAssetsState}"/>
 		<div class="title">
 			<h3>
-				<ui:insert name="title">#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.title.no_title']}</ui:insert>
+				<ui:insert name="title">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.title.no_title']}</ui:insert>
 			</h3>
 			<t:inputHidden id="state_processInstanceId" value="#{casesBPMAssetsState.processInstanceId}" forceId="true" />
 		</div>
 		<div class="caseInfo">
 			<div class="caseInfoEntry">
 				<div class="caseInfoEntryLeft">
-					#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.case_name']}
+					#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_name']}
 				</div>
 				<div class="caseInfoEntryRight">
 					#{casesBPMAssetsState.processView.processName}
@@ -32,7 +32,7 @@
 			</div>
 			<div class="caseInfoEntry">
 				<div class="caseInfoEntryLeft">
-					#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.case_status']}
+					#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_status']}
 				</div>
 				<div class="caseInfoEntryRight">
 					#{casesBPMAssetsState.processView.processStatus}
@@ -41,11 +41,11 @@
 		</div>
 		<div class="actions">
 		    <t:div rendered="#{caseManagerState.inCasesComponent}">
-                <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.show_cases_list']}" action="#{caseManagerState.reset}" immediate="true" />
+                <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.show_cases_list']}" action="#{caseManagerState.reset}" immediate="true" />
 		    </t:div>
 		    <t:div rendered="#{caseManagerState.fullView}">
-    		    <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.watch_case']}" action="#{casesBPMAssetsState.takeWatch}" rendered="#{not casesBPMAssetsState.watched}" />
-                <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.remove_case']}" action="#{casesBPMAssetsState.removeWatch}" rendered="#{casesBPMAssetsState.watched}" />
+    		    <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.watch_case']}" action="#{casesBPMAssetsState.takeWatch}" rendered="#{not casesBPMAssetsState.watched}" />
+                <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.remove_case']}" action="#{casesBPMAssetsState.removeWatch}" rendered="#{casesBPMAssetsState.watched}" />
             </t:div>
 			<ui:insert name="actions" />
 		</div>
@@ -53,7 +53,7 @@
 			<h:messages layout="table" errorClass="errorMessage" infoClass="infoMessage" />
 		</div>
 		<div class="content">
-			<ui:insert name="content">#{localizedStrings['is.idega.idegaweb.egov.bpm']['case_bpm.title.no_content']}</ui:insert>
+			<ui:insert name="content">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.title.no_content']}</ui:insert>
 		</div>
 		</h:form>
 		<ui:insert name="chibaform" />
