@@ -1,16 +1,3 @@
-if(Localization == null) var Localization = {};
-
-Localization.DOCUMENT_NAME 			    = 'Document name';
-Localization.DATE_SUBMITTED 			= 'Date submitted';
-Localization.DATE_CREATED				= 'Date created';
-Localization.SUBJECT					= 'Subject';
-Localization.FROM						= 'From';
-Localization.RECIEVE_DATE				= 'Receive date';
-Localization.FILE_NAME					= 'File name';
-Localization.TASK_NAME					= 'Task name';
-Localization.TAKEN_BY					= 'Taken by';
-Localization.STATUS						= 'Status';
-
 jQuery(document).ready(function() {
 
     var val = jQuery("#selectedTabState").val();
@@ -209,7 +196,7 @@ CasesBPMAssets.addFilesSubgrid = function(params) {
               var newLink = CasesBPMAssets.downloader_link+"&taskInstanceId="+rowId+"&varHash="+fileRowId;
               window.location.href = newLink;
         };
-
+s 
         //TODO: set height automatically (?)
         subGridParams.height = 70;
         

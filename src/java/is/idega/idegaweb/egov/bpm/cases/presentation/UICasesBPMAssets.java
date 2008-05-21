@@ -15,8 +15,11 @@ import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.JQueryUIType;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.facelets.ui.FaceletComponent;
+import com.idega.idegaweb.IWBundle;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.presentation.IWBaseComponent;
+import com.idega.presentation.IWContext;
 import com.idega.presentation.text.DownloadLink;
 import com.idega.util.CoreConstants;
 import com.idega.webface.WFUtil;
@@ -24,9 +27,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/05/20 08:11:31 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/21 14:22:15 $ by $Author: anton $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -36,6 +39,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private static final String assetsFacet = "assets";
 	private static final String assetViewFacet = "assetView";
 	private static final String web2BeanIdentifier = "web2bean";
+	
+	private static final String BPM_ASSETS_JS_SRC = "javascript/CaseBPMAssets.js";
 	
 	private boolean fullView = false;
 	private boolean inCasesComponent = false;
@@ -93,7 +98,26 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			resource.addJavaScriptAtPosition(context, AddResource.HEADER_BEGIN, "/dwr/util.js");
 			resource.addJavaScriptAtPosition(context, AddResource.HEADER_BEGIN, "/dwr/interface/BPMProcessAssets.js");
 			
+			IWBundle bundle = getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
+			IWResourceBundle iwrb = bundle.getResourceBundle(IWContext.getIWContext(context));
 			
+			resource.addJavaScriptAtPosition(context, AddResource.HEADER_BEGIN, bundle.getVirtualPathWithFileNameString(BPM_ASSETS_JS_SRC));
+			
+			resource.addInlineScriptAtPosition(context, AddResource.HEADER_BEGIN, 
+					new StringBuilder("if(Localization == null) var Localization = {};\n")
+					.append("Localization.DOCUMENT_NAME = '")	.append(iwrb.getLocalizedString("cases_bpm.document_name", "Document name")).append("';\n")
+					.append("Localization.DATE_SUBMITTED = '")	.append(iwrb.getLocalizedString("cases_bpm.date_submitted", "Date submitted")).append("';\n")
+					.append("Localization.DATE_CREATED = '")	.append(iwrb.getLocalizedString("cases_bpm.date_created", "Date created")).append("';\n")
+					.append("Localization.SUBJECT = '")			.append(iwrb.getLocalizedString("cases_bpm.subject", "Subject")).append("';\n")
+					.append("Localization.FROM = '")			.append(iwrb.getLocalizedString("cases_bpm.from", "From")).append("';\n")
+					.append("Localization.RECIEVE_DATE = '")	.append(iwrb.getLocalizedString("cases_bpm.recieve_date", "Recieve date")).append("';\n")
+					.append("Localization.FILE_NAME = '")		.append(iwrb.getLocalizedString("cases_bpm.file_name", "File name")).append("';\n")
+					.append("Localization.TASK_NAME = '")		.append(iwrb.getLocalizedString("cases_bpm.task_name", "Task name")).append("';\n")
+					.append("Localization.TAKEN_BY = '")		.append(iwrb.getLocalizedString("cases_bpm.taken_by", "Taken by")).append("';\n")
+					.append("Localization.STATUS = '")			.append(iwrb.getLocalizedString("cases_bpm.status", "Status")).append("';\n")
+					.toString()
+			);
+		
 			resource.addStyleSheet(context, AddResource.HEADER_BEGIN, web2Business.getBundleURIToJQueryUILib(JQueryUIType.UI_TABS_CSS));
 			resource.addStyleSheet(context, AddResource.HEADER_BEGIN, web2Business.getBundleURIToJQGridStyles());
 
