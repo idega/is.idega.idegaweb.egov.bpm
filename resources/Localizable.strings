@@ -51,3 +51,5 @@ cases_bpm.file_name = File name
 cases_bpm.task_name = Task name
 cases_bpm.taken_by=Taken by
 cases_bpm.status=Status
+cases_bpm.documents=Documents
+cases_bpm.forms=Forms
