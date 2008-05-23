@@ -196,7 +196,7 @@ CasesBPMAssets.addFilesSubgrid = function(params) {
               var newLink = CasesBPMAssets.downloader_link+"&taskInstanceId="+rowId+"&varHash="+fileRowId;
               window.location.href = newLink;
         };
-s 
+ 
         //TODO: set height automatically (?)
         subGridParams.height = 70;
         
