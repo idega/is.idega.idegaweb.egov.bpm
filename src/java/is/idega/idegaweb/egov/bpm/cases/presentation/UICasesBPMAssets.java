@@ -27,9 +27,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/05/21 14:22:15 $ by $Author: anton $
+ * Last modified: $Date: 2008/05/24 16:23:43 $ by $Author: eiki $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -40,7 +40,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private static final String assetViewFacet = "assetView";
 	private static final String web2BeanIdentifier = "web2bean";
 	
-	private static final String BPM_ASSETS_JS_SRC = "javascript/CaseBPMAssets.js";
+	private static final String BPM_ASSETS_JS_SRC = "javascript/CasesBPMAssets.js";
 	
 	private boolean fullView = false;
 	private boolean inCasesComponent = false;
