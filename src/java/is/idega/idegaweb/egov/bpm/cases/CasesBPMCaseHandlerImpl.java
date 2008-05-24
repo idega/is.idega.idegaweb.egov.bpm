@@ -1,7 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
+import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesListAsset;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import javax.faces.component.UIComponent;
+import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 
 import org.jbpm.JbpmContext;
@@ -47,9 +48,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/05/24 10:22:09 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/24 14:18:15 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseHandlerImpl.beanIdentifier)
@@ -144,11 +145,25 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 	}
 
 	public UIComponent getView(IWContext iwc, Case theCase) {
+		UICasesListAsset casesList = (UICasesListAsset)iwc.getApplication().createComponent(UICasesListAsset.COMPONENT_TYPE);
+		UIViewRoot viewRoot = iwc.getViewRoot();
+		if (viewRoot != null) {
+			casesList.setId(viewRoot.createUniqueId());
+		}
 		
-		FacesContext context = FacesContext.getCurrentInstance();
-		UICasesBPMAssets assets = (UICasesBPMAssets)context.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
-		assets.setId(context.getViewRoot().createUniqueId());
-		return assets;
+		if (theCase != null) {
+			Integer caseId = null;
+			try {
+				caseId = Integer.valueOf(theCase.getPrimaryKey().toString());
+			} catch(NumberFormatException e) {
+				e.printStackTrace();
+			}
+			if (caseId != null) {
+				casesList.setCaseId(caseId);
+			}
+		}
+		
+		return casesList;
 	}
 
 	public Collection<? extends Case> getCases(User user, String casesComponentType) {

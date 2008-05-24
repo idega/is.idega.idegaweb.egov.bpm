@@ -52,4 +52,24 @@
       </idegaweb-info>
     </component-extension>
   </component>
+  <component>
+  	<component-type>com.idega.UICasesListAsset</component-type>
+  	<component-class>is.idega.idegaweb.egov.bpm.cases.presentation.UICasesListAsset</component-class>
+	<property>
+		<display-name>Case ID</display-name>
+		<property-name>caseId</property-name>
+		<property-class>java.lang.Integer</property-class>
+	</property>
+	<property>
+		<display-name>Allow download document as PDF file</display-name>
+		<property-name>downloadDocument</property-name>
+		<property-class>boolean</property-class>
+	</property>
+  	<component-extension>
+  		<idegaweb-info>
+			<builder-visible>true</builder-visible>
+			<object-type>jsf.uicomponent</object-type>
+  		</idegaweb-info>
+  	</component-extension>
+  </component>
 </faces-config>

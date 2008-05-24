@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<div
+		xmlns="http://www.w3.org/1999/xhtml"
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:t="http://myfaces.apache.org/tomahawk"
+>
+
+
+		<t:div styleClass="caseGrids">
+			<t:div styleClass="caseTasksPart">
+				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/></t:div>
+				<table class="caseTasks" />
+			</t:div>
+			<t:div styleClass="caseFromsPart">
+				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['forms']}"/></t:div>
+				<table class="caseForms" />
+			</t:div>
+			<t:div styleClass="caseEmailsPart">
+				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['emails']}"/></t:div>
+				<table class="caseEmails" />
+			</t:div>
+			<t:div	styleClass="caseInvolvedContactsPart">
+				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['contacts']}"/></t:div>
+				<table class="caseContacts" />
+			</t:div>
+		</t:div>
+</div>

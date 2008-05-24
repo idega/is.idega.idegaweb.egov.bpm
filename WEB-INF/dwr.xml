@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dwr PUBLIC "-//GetAhead Limited//DTD Direct Web Remoting 2.0//EN" "http://www.getahead.ltd.uk/dwr//dwr20.dtd">
+
+<dwr>
+	<allow>
+		<create creator="jsf" javascript="CasesEngine">
+	    	<param name="managedBeanName" value="casesEngineDWR" />
+	    	<param name="class" value="is.idega.idegaweb.egov.bpm.cases.CasesEngine" />
+	    	<include method="getInfoForCase"/>
+	    	<include method="getLocalizedStrings"/>
+	    	<include method="getProcessInstanceId"/>
+    	</create>
+	</allow>
+	<signatures>
+		<![CDATA[
+		]]>
+	</signatures>
+</dwr>
