@@ -23,6 +23,8 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.identity.BPMUser;
+import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -31,9 +33,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2008/05/16 09:38:34 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/24 10:22:09 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -332,16 +334,15 @@ public class CasesBPMAssetsState implements Serializable {
 		
 		if(getViewSelected() != null) {
 			
-			FacesContext ctx = FacesContext.getCurrentInstance();
-			IWContext iwc = IWContext.getIWContext(ctx);
-			int userId = iwc.getCurrentUserId();
+			Integer userId = getCurrentBPMUser().getIdToUse();
 			
-			String errMsg = getCasesBPMProcessView().getCanStartTask(getViewSelected(), userId);
-		
-			if(errMsg == null)
-				return true;
-			else
-				return false;
+			if(userId != null) {
+				
+				String errMsg = getCasesBPMProcessView().getCanStartTask(getViewSelected(), userId);
+				
+				if(errMsg == null)
+					return true;
+			}
 		}
 		
 		return false;
@@ -351,16 +352,15 @@ public class CasesBPMAssetsState implements Serializable {
 		
 		if(getViewSelected() != null) {
 			
-			FacesContext ctx = FacesContext.getCurrentInstance();
-			IWContext iwc = IWContext.getIWContext(ctx);
-			int userId = iwc.getCurrentUserId();
+			Integer userId = getCurrentBPMUser().getIdToUse();
 			
-			String errMsg = getCasesBPMProcessView().getCanTakeTask(getViewSelected(), userId);
-		
-			if(errMsg == null)
-				return true;
-			else
-				return false;
+			if(userId != null) {
+				
+				String errMsg = getCasesBPMProcessView().getCanTakeTask(getViewSelected(), userId);
+				
+				if(errMsg == null)
+					return true;
+			}
 		}
 		
 		return false;
@@ -382,5 +382,16 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setTabSelected(Integer tabSelected) {
 		this.tabSelected = tabSelected;
+	}
+	
+	public BPMUser getCurrentBPMUser() {
+		
+		FacesContext fctx = FacesContext.getCurrentInstance();
+		
+		String bpmUsrIdStr = (String)fctx.getExternalContext().getRequestParameterMap().get(BPMUserImpl.bpmUsrParam);
+		Integer bpmUsrId = bpmUsrIdStr != null && !CoreConstants.EMPTY.equals(bpmUsrIdStr) ? new Integer(bpmUsrIdStr) : null;
+		
+		BPMUser bpmUsr = getCasesBPMProcessView().getBPMUser(bpmUsrId, null);
+		return bpmUsr;
 	}
 }

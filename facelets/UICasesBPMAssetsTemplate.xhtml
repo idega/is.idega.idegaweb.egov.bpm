@@ -47,6 +47,9 @@
     		    <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.watch_case']}" action="#{casesBPMAssetsState.takeWatch}" rendered="#{not casesBPMAssetsState.watched}" />
                 <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.remove_case']}" action="#{casesBPMAssetsState.removeWatch}" rendered="#{casesBPMAssetsState.watched}" />
             </t:div>
+            <t:div rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}">
+                is associated
+            </t:div>
 			<ui:insert name="actions" />
 		</div>
 		<div class="messages">

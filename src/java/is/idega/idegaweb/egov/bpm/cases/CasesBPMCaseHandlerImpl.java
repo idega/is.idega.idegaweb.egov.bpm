@@ -47,9 +47,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/05/16 18:17:07 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/24 10:22:09 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseHandlerImpl.beanIdentifier)
@@ -66,8 +66,8 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 	
 	private static final String user_assets_page_type = "bpm_user_assets";
 	private static final String handler_assets_page_type = "bpm_handler_assets";
-	private static final String PARAMETER_ACTION = "cbcAct";
-	private static final String ACTION_OPEN_PROCESS = "cbcActOP";
+//	private static final String PARAMETER_ACTION = "cbcAct";
+//	private static final String ACTION_OPEN_PROCESS = "cbcActOP";
 
 	public String getBeanIdentifier() {
 		return beanIdentifier;
@@ -126,6 +126,7 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 		
 		links.add(link2);
 		
+		/*
 		if(true)
 			return links;
 		
@@ -133,10 +134,11 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 		
 		link.addParameter(PARAMETER_PROCESS_INSTANCE_PK, String.valueOf(theCase.getCaseManagerType()));
 		link.addParameter(CasesProcessor.PARAMETER_CASE_PK, theCase.getPrimaryKey().toString());
-		link.addParameter(CasesProcessor.PARAMETER_ACTION, CasesProcessor.SHOW_CASE_HANDLER);
+		//link.addParameter(CasesProcessor.PARAMETER_ACTION, CasesProcessor.SHOW_CASE_HANDLER);
 		link.addParameter(PARAMETER_ACTION, ACTION_OPEN_PROCESS);
 		
 		links.add(link);
+		*/
 
 		return links;
 	}

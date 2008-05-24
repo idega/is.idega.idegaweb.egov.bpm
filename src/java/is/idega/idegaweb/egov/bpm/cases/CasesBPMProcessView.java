@@ -23,18 +23,20 @@ import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.identity.BPMAccessControlException;
+import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/24 10:22:09 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service("casesBPMProcessView")
@@ -197,6 +199,12 @@ public class CasesBPMProcessView {
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
+	}
+	
+	public BPMUser getBPMUser(Integer bpmUserPK, User usr) {
+		
+		BPMUser bpmUsr = getBPMFactory().getBpmUserFactory().getBPMUser(bpmUserPK, usr);
+		return bpmUsr;
 	}
 	
 	public class CasesBPMProcessViewBean implements Serializable {

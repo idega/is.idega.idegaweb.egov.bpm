@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-diagram name="participantInvitation" width="755" height="576">
+  <node name="start" x="90" y="56" width="79" height="34">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="sendInvitation" x="182" y="125" width="131" height="30">
+    <transition name="">
+      <label x="5" y="-10"/>
+    </transition>
+  </node>
+  <node name="end1" x="154" y="293" width="140" height="40"/>
+</process-diagram>
