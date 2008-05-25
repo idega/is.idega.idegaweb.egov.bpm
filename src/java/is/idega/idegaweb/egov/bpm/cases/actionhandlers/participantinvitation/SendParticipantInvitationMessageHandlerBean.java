@@ -37,15 +37,16 @@ import com.idega.util.URIUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/05/24 10:22:09 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/25 14:56:40 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(SendParticipantInvitationMessageHandlerBean.beanIdentifier)
 public class SendParticipantInvitationMessageHandlerBean {
 
 	public static final String beanIdentifier = "jbpm_SendParticipantInvitationMessageHandlerBean";
+	public static final String participantNameVarName = "string:participantName";
 	public static final String participantEmailVarName = "string:participantEmail";
 	public static final String messageVarName = "string:message";
 	public static final String subjectVarName = "string:subject";
@@ -59,13 +60,25 @@ public class SendParticipantInvitationMessageHandlerBean {
 	
 	public void send(ExecutionContext ctx) {
 		
+		String roleName = (String)ctx.getVariable(participantRoleNameVarName);
+		
+		if(roleName == null) {
+			throw new IllegalArgumentException("Role name not found in process variable: "+participantRoleNameVarName);
+		}
+		
+		String recepientEmail = (String)ctx.getVariable(participantEmailVarName);
+		String userName = (String)ctx.getVariable(participantNameVarName);
+		
+		if(userName == null || CoreConstants.EMPTY.equals(userName))
+			userName = recepientEmail;
+		
 		long parentPID = ctx.getProcessInstance().getSuperProcessToken().getProcessInstance().getId();
-		BPMUser bpmUser = createAndAssignBPMIdentity(ctx);
+		BPMUser bpmUser = createAndAssignBPMIdentity(userName, roleName, ctx);
 		
 		final IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 		IWResourceBundle iwrb = getResourceBundle(iwc);
 		
-		String recepientEmail = (String)ctx.getVariable(participantEmailVarName);
+		
 		
 		if(recepientEmail == null || !EmailValidator.getInstance().isValid(recepientEmail)) {
 			
@@ -114,13 +127,7 @@ public class SendParticipantInvitationMessageHandlerBean {
 		}
 	}
 	
-	protected BPMUser createAndAssignBPMIdentity(ExecutionContext ctx) {
-		
-		String roleName = (String)ctx.getVariable(participantRoleNameVarName);
-		
-		if(roleName == null) {
-			throw new IllegalArgumentException("Role name not found in process variable: "+participantRoleNameVarName);
-		}
+	protected BPMUser createAndAssignBPMIdentity(String userName, String roleName, ExecutionContext ctx) {
 		
 		Role role = new Role();
 		role.setRoleName(roleName);
@@ -132,7 +139,7 @@ public class SendParticipantInvitationMessageHandlerBean {
 		ProcessInstance parentPI = ctx.getProcessInstance().getSuperProcessToken().getProcessInstance();
 		long parentProcessInstanceId = parentPI.getId();
 		
-		BPMUser bpmUser = getBpmFactory().getBpmUserFactory().createBPMUser(roleName, parentProcessInstanceId);
+		BPMUser bpmUser = getBpmFactory().getBpmUserFactory().createBPMUser(userName, roleName, parentProcessInstanceId);
 		
 		getRolesManager().createProcessRoles(parentPI.getProcessDefinition().getName(), rolz, parentProcessInstanceId);
 		//getRolesManager().createTaskRolesPermissionsPIScope(task, rolz, parentProcessInstanceId);

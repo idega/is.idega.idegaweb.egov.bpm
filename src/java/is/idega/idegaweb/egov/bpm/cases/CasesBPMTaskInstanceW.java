@@ -19,6 +19,7 @@ import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessException;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -30,9 +31,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/25 14:56:40 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -40,6 +41,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	private Long taskInstanceId;
 	private CasesBPMResources casesBPMResources;
+	private BPMFactory bpmFactory;
 	
 	public void assign(int userId) {
 		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
@@ -121,7 +123,8 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			ti.setEnd(new Date());
 		}
     	
-    	ti.setActorId(null);
+		Integer usrId = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getIdToUse();
+    	ti.setActorId(usrId.toString());
 	}
 	
 	public View loadView() {
@@ -196,5 +199,14 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 
 	public void setTaskInstanceId(Long taskInstanceId) {
 		this.taskInstanceId = taskInstanceId;
+	}
+	
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	@Autowired
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
 	}
 }

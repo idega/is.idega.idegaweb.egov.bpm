@@ -29,6 +29,7 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.view.View;
@@ -41,9 +42,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/25 14:56:40 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -51,6 +52,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
 	private Long processDefinitionId;
 	private CasesBPMResources casesBPMResources;
+	private BPMFactory bpmFactory;
 	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
 	
 	public void startProcess(View view) {
@@ -185,7 +187,8 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			ti.setEnd(new Date());
 		}
     	
-    	ti.setActorId(null);
+		Integer usrId = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getIdToUse();
+    	ti.setActorId(usrId.toString());
 	}
 	
 	public Long getProcessDefinitionId() {
@@ -221,5 +224,14 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	@Autowired(required=true)
 	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
 		this.casesBPMResources = casesBPMResources;
+	}
+
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	@Autowired
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
 	}
 }

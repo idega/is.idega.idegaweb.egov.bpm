@@ -43,7 +43,7 @@ CasesBPMAssets.initTab = function(tabIndex) {
         CasesBPMAssets.initTaskTab(".tasksTable");
     else if(tabIndex == CasesBPMAssets.selectedTabIndexes.documents) {
     
-        CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, [Localization.DOCUMENT_NAME, Localization.DATE_SUBMITTED], [{name:'name',index:'name'}, {name:'submittedDate',index:'submittedDate'}]);
+        CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, [Localization.DOCUMENT_NAME, "Submitted by", Localization.DATE_SUBMITTED], [{name:'name',index:'name'}, {name:'submittedByName',index:'submittedByName'}, {name:'submittedDate',index:'submittedDate'}]);
         CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, [Localization.SUBJECT, Localization.FROM, Localization.RECIEVE_DATE], [{name:'subject',index:'subject'}, {name:'from',index:'from'}, {name:'submittedDate',index:'submittedDate'}]);
     }
 };
