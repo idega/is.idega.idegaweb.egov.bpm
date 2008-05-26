@@ -16,9 +16,7 @@ import com.idega.facelets.ui.FaceletComponent;
 import com.idega.idegaweb.IWBundle;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.presentation.IWBaseComponent;
-import com.idega.presentation.IWContext;
 import com.idega.presentation.text.DownloadLink;
-import com.idega.presentation.text.Link;
 
 public class UICasesListAsset extends IWBaseComponent {
 	
@@ -40,13 +38,6 @@ public class UICasesListAsset extends IWBaseComponent {
 			CasesBPMAssetsState stateBean = (CasesBPMAssetsState) getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 			stateBean.setCaseId(caseId);
 		}
-		
-		IWContext iwc = IWContext.getIWContext(context);
-		Link link = new Link();
-		link.setURL("/pages/");	//	TODO
-		link.setStyleAttribute("display: none;");
-		link.setStyleClass("processResourceViewerStyleClass");
-		div.getChildren().add(link);
 		
 		DownloadLink attachmentLink = new DownloadLink();
 		attachmentLink.setStyleClass(CasesEngine.FILE_DOWNLOAD_LINK_STYLE_CLASS);
