@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.cases.presentation.beans.GeneralCaseProcessorViewBuilder;
 
 import java.io.IOException;
 
@@ -27,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/05/24 16:26:46 $ by $Author: eiki $
+ * Last modified: $Date: 2008/05/26 07:53:46 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -67,14 +68,16 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetsRendered}"));
 		getFacets().put(assetsFacet, div);
 		
-		div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
+		/*div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		div.setValue(divTag);
 		
 		facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetView.xhtml");
 
 		div.getChildren().add(facelet);
-		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetViewRendered}"));
+		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetViewRendered}"));*/
+		GeneralCaseProcessorViewBuilder assetView = (GeneralCaseProcessorViewBuilder) getBeanInstance(GeneralCaseProcessorViewBuilder.SPRING_BEAN_IDENTIFIER);
+		div = assetView.getCaseAssetView(IWContext.getIWContext(context));
 		getFacets().put(assetViewFacet, div);
 	}
 	

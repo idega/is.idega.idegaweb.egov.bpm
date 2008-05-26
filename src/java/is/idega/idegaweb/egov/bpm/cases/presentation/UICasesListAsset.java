@@ -43,7 +43,7 @@ public class UICasesListAsset extends IWBaseComponent {
 		
 		IWContext iwc = IWContext.getIWContext(context);
 		Link link = new Link();
-		link.setURL("/pages/");
+		link.setURL("/pages/");	//	TODO
 		link.setStyleAttribute("display: none;");
 		link.setStyleClass("processResourceViewerStyleClass");
 		div.getChildren().add(link);

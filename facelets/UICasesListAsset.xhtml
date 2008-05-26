@@ -6,24 +6,25 @@
 		xmlns:h="http://java.sun.com/jsf/html"
 		xmlns:t="http://myfaces.apache.org/tomahawk"
 >
-
-
-		<t:div styleClass="caseGrids">
-			<t:div styleClass="caseTasksPart">
-				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/></t:div>
-				<table class="caseTasks" />
-			</t:div>
-			<t:div styleClass="caseFromsPart">
-				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['forms']}"/></t:div>
-				<table class="caseForms" />
-			</t:div>
-			<t:div styleClass="caseEmailsPart">
-				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['emails']}"/></t:div>
-				<table class="caseEmails" />
-			</t:div>
-			<t:div	styleClass="caseInvolvedContactsPart">
-				<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['contacts']}"/></t:div>
-				<table class="caseContacts" />
-			</t:div>
+	<t:div styleClass="caseGrids">
+		<t:div styleClass="caseTasksPart">
+			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/></t:div>
+			<table class="caseTasks" />
 		</t:div>
+		<t:div styleClass="caseFromsPart">
+			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['forms']}"/></t:div>
+			<table class="caseForms" />
+		</t:div>
+		<t:div styleClass="caseEmailsPart">
+			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['emails']}"/></t:div>
+			<table class="caseEmails" />
+		</t:div>
+		<t:div styleClass="caseInvolvedContactsPart">
+			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['contacts']}"/></t:div>
+			<table class="caseContacts" />
+		</t:div>
+		<div style="display: none;">
+			<t:inputHidden id="state_viewSelected" value="#{casesBPMAssetsState.viewSelected}" forceId="true" />
+		</div>
+	</t:div>		
 </div>

@@ -42,8 +42,8 @@
             </div>
         </div>
         <span class="assetsState" style="display: none;">
-			<h:commandButton class="state_gotoTaskView" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_view']}" action="#{casesBPMAssetsState.selectTaskView}" />
-			<h:commandButton class="state_gotoDocumentsView" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.button.documents_view']}" action="#{casesBPMAssetsState.selectDocumentView}" />
+			<h:commandButton class="state_gotoTaskView" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_view']}" action="#{casesBPMAssetsState.selectView}" />
+			<h:commandButton class="state_gotoDocumentsView" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.button.documents_view']}" action="#{casesBPMAssetsState.selectView}" />
 			<t:inputHidden id="state_viewSelected" value="#{casesBPMAssetsState.viewSelected}" forceId="true" />
 		</span>
 	</ui:define>
