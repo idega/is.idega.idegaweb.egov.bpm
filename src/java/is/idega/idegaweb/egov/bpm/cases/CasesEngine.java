@@ -61,10 +61,11 @@ public class CasesEngine {
 		localizations.add(iwrb.getLocalizedString("cases_bpm.document_name", "Document name"));					//	11
 		localizations.add(iwrb.getLocalizedString("cases_bpm.get_document_as_pdf", "Download document"));		//	12
 		localizations.add(iwrb.getLocalizedString("cases_bpm.file_size", "File size"));							//	13
+		localizations.add(iwrb.getLocalizedString("cases_bpm.submitted_by", "Submitted by"));					//	14
 		
 		//	Other info
-		localizations.add(FILE_DOWNLOAD_LINK_STYLE_CLASS);								//	14
-		localizations.add(PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);					//	15
+		localizations.add(FILE_DOWNLOAD_LINK_STYLE_CLASS);								//	15
+		localizations.add(PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);					//	16
 		
 		return localizations;
 	}

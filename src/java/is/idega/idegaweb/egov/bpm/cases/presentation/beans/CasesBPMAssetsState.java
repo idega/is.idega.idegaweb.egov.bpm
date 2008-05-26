@@ -33,9 +33,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/05/24 10:22:09 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/26 07:53:02 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -70,11 +70,7 @@ public class CasesBPMAssetsState implements Serializable {
 		this.viewSelected = viewSelected;
 	}
 
-	public void selectTaskView() {
-		facetRendered = FacetRendered.ASSET_VIEW;
-	}
-	
-	public void selectDocumentView() {
+	public void selectView() {
 		facetRendered = FacetRendered.ASSET_VIEW;
 	}
 	
