@@ -33,9 +33,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  *
- * Last modified: $Date: 2008/05/26 07:53:02 $ by $Author: valdas $
+ * Last modified: $Date: 2008/05/27 11:47:19 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -55,6 +55,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean isWatched;
 	private Integer tabSelected;
 	private FacetRendered facetRendered = FacetRendered.ASSETS;
+	private String displayPropertyForStyleAttribute = "block";
 	
 	private enum FacetRendered {
 		
@@ -389,5 +390,13 @@ public class CasesBPMAssetsState implements Serializable {
 		
 		BPMUser bpmUsr = getCasesBPMProcessView().getBPMUser(bpmUsrId, null);
 		return bpmUsr;
+	}
+
+	public String getDisplayPropertyForStyleAttribute() {
+		return new StringBuilder("display: ").append(displayPropertyForStyleAttribute).append(CoreConstants.SEMICOLON).toString();
+	}
+
+	protected void setDisplayPropertyForStyleAttribute(boolean displayPropertyForStyleAttribute) {
+		this.displayPropertyForStyleAttribute = displayPropertyForStyleAttribute ? "block" : "none";
 	}
 }

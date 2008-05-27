@@ -39,6 +39,14 @@
 						</div>
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_identifier']}
+							</div>
+							<div class="assetEntryRight">
+								#{casesBPMAssetsState.processView.caseIdentifier}
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
 								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_status']}
 							</div>
 							<div class="assetEntryRight">
@@ -62,8 +70,9 @@
 							</div>
 						</div>
 					</div>
-				</div>	
-				<div class="assetSection">
+				</div>
+				
+				<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="assetSection">
 					<div class="assetHeader">
 						#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.views']}
 					</div>
@@ -75,15 +84,10 @@
 								</b>
 							</span>
 						</div>
-						<!--  
-						<div class="assetEntry">
-							Comments
-						</div>
-						-->
 					</div>
-				</div>			
+				</t:div>			
 				
-				<div class="assetSection">
+				<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="assetSection">
 					<div class="assetHeader">
 						#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.actions']}
 					</div>
@@ -94,19 +98,14 @@
 						<t:div rendered="#{casesBPMAssetsState.canTakeTask}" styleClass="assetEntry">
 						  <h:commandLink value="Take task" action="#{casesBPMAssetsState.assignTask}" />
 						</t:div>
-						<!--  
-						<div class="assetEntry">
-						  Assign task
-						</div>
-						-->
 					</div>
-				</div>
+				</t:div>
 		</div>
 	</ui:define>
 	<ui:define name="chibaform">
-	   <div class="formView">
-            <jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
-            </div>
+		<t:div styleClass="formView">
+			<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
+		</t:div>
 	</ui:define>
 	</ui:composition>
 </div>

@@ -15,13 +15,14 @@
 	<h:form>
 		<t:saveState id="storeCaseManagerState" value="#{caseManagerState}"/>
 		<t:saveState id="storeAssetsState" value="#{casesBPMAssetsState}"/>
-		<div class="title">
+		<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="title">
 			<h3>
 				<ui:insert name="title">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.title.no_title']}</ui:insert>
 			</h3>
-			<t:inputHidden id="state_processInstanceId" value="#{casesBPMAssetsState.processInstanceId}" forceId="true" />
-		</div>
-		<div class="caseInfo">
+		</t:div>
+		<t:inputHidden id="state_processInstanceId" value="#{casesBPMAssetsState.processInstanceId}" forceId="true" />
+		
+		<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="caseInfo">
 			<div class="caseInfoEntry">
 				<div class="caseInfoEntryLeft">
 					#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_name']}
@@ -38,7 +39,7 @@
 					#{casesBPMAssetsState.processView.processStatus}
 				</div>
 			</div>
-		</div>
+		</t:div>
 		<div class="actions">
 		    <t:div rendered="#{caseManagerState.inCasesComponent}">
                 <h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.show_cases_list']}" action="#{caseManagerState.reset}" immediate="true" />

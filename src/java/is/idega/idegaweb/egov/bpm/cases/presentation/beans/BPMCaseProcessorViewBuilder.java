@@ -46,6 +46,7 @@ public class BPMCaseProcessorViewBuilder implements GeneralCaseProcessorViewBuil
 		stateBean.setCaseId(caseID);
 		stateBean.setViewSelected(taskInstanceId);
 		stateBean.selectView();
+		stateBean.setDisplayPropertyForStyleAttribute(false);
 		
 		UICasesBPMAssets assets = (UICasesBPMAssets) iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
 		return assets;
