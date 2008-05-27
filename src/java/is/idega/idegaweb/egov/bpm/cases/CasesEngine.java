@@ -66,6 +66,7 @@ public class CasesEngine {
 		//	Other info
 		localizations.add(FILE_DOWNLOAD_LINK_STYLE_CLASS);								//	15
 		localizations.add(PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);					//	16
+		localizations.add(iwrb.getLocalizedString("cases_bpm.file_description", "Descriptive name")); //  17
 		
 		return localizations;
 	}

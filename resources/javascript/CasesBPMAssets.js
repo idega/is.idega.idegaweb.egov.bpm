@@ -43,8 +43,8 @@ CasesBPMAssets.initTab = function(tabIndex) {
         CasesBPMAssets.initTaskTab(".tasksTable");
     else if(tabIndex == CasesBPMAssets.selectedTabIndexes.documents) {
     
-        CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, [Localization.DOCUMENT_NAME, "Submitted by", Localization.DATE_SUBMITTED], [{name:'name',index:'name'}, {name:'submittedByName',index:'submittedByName'}, {name:'submittedDate',index:'submittedDate'}]);
-        CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, [Localization.SUBJECT, Localization.FROM, Localization.RECIEVE_DATE], [{name:'subject',index:'subject'}, {name:'from',index:'from'}, {name:'submittedDate',index:'submittedDate'}]);
+        CasesBPMAssets.initDocumentsTab("#documentsTable", BPMProcessAssets.getProcessDocumentsList, [Localization.DOCUMENT_NAME, Localization.SUBMITTED_BY, Localization.DATE_SUBMITTED], [{name:'name',index:'name'}, {name:'submittedByName',index:'submittedByName'}, {name:'submittedDate',index:'submittedDate'}]);
+        CasesBPMAssets.initDocumentsTab("#emailsTable", BPMProcessAssets.getProcessEmailsList, [Localization.SUBJECT, Localization.FROM, Localization.RECEIVE_DATE], [{name:'subject',index:'subject'}, {name:'from',index:'from'}, {name:'submittedDate',index:'submittedDate'}]);
     }
 };
 
@@ -126,6 +126,7 @@ CasesBPMAssets.initDocumentsTab = function(tblId, retrievalFunction, colNames, c
     params.populateFromFunction = function(params, callback) {
             
         params.piId = jQuery(CasesBPMAssets.exp_piId)[0].value;
+        params.downloadDocument = false;
                                 
         retrievalFunction(params,
             {
@@ -186,9 +187,11 @@ CasesBPMAssets.addFilesSubgrid = function(params) {
                     );
         };
         
-        subGridParams.colNames = [Localization.FILE_NAME]; 
+        subGridParams.colNames = [Localization.FILE_DESCRIPTION, Localization.FILE_NAME, Localization.FILE_SIZE]; 
         subGridParams.colModel = [
-                    {name:'name',index:'name'} 
+                    {name:'description',index:'description'},
+                    {name:'name',index:'name'},
+                    {name:'fileSize',index:'fileSize'}
         ];
         
         subGridParams.onSelectRow = function(fileRowId) {
