@@ -19,7 +19,7 @@
                 </t:div>
                 <div>#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_create_date']}: #{casesBPMAssetsState.processView.processCreateDate}</div>
                 <div>#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_identifier']}: #{casesBPMAssetsState.processView.caseIdentifier}</div>
-                
+                <t:div rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}" /> 
         </div>
         <t:inputHidden id="selectedTabState" value="#{casesBPMAssetsState.tabSelected}" forceId="true" />
 		<div id="example" class="flora">
