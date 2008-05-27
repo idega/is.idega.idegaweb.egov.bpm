@@ -24,22 +24,22 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.jbpm.identity.Role;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.identity.permission.RoleScope;
 import com.idega.jbpm.process.business.AssignAccountToParticipantHandler;
 import com.idega.presentation.IWContext;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.SendMail;
 import com.idega.util.URIUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/05/25 14:56:40 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/27 14:49:18 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(SendParticipantInvitationMessageHandlerBean.beanIdentifier)
@@ -73,7 +73,7 @@ public class SendParticipantInvitationMessageHandlerBean {
 			userName = recepientEmail;
 		
 		long parentPID = ctx.getProcessInstance().getSuperProcessToken().getProcessInstance().getId();
-		BPMUser bpmUser = createAndAssignBPMIdentity(userName, roleName, ctx);
+		User bpmUser = createAndAssignBPMIdentity(userName, roleName, ctx);
 		
 		final IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 		IWResourceBundle iwrb = getResourceBundle(iwc);
@@ -113,7 +113,7 @@ public class SendParticipantInvitationMessageHandlerBean {
 		
 		uriUtil.setParameter("piId", String.valueOf(parentPID));
 		//uriUtil.setParameter(tokenParam, String.valueOf(tokenId));
-		uriUtil.setParameter(BPMUserImpl.bpmUsrParam, String.valueOf(bpmUser.getBpmUser().getPrimaryKey().toString()));
+		uriUtil.setParameter(BPMUserImpl.bpmUsrParam, String.valueOf(bpmUser.getPrimaryKey().toString()));
 		fullUrl = uriUtil.getUri();
 		
 //		String fullUrl = composeFullUrl(iwc, ctx.getToken());
@@ -127,7 +127,7 @@ public class SendParticipantInvitationMessageHandlerBean {
 		}
 	}
 	
-	protected BPMUser createAndAssignBPMIdentity(String userName, String roleName, ExecutionContext ctx) {
+	protected User createAndAssignBPMIdentity(String userName, String roleName, ExecutionContext ctx) {
 		
 		Role role = new Role();
 		role.setRoleName(roleName);
@@ -139,11 +139,11 @@ public class SendParticipantInvitationMessageHandlerBean {
 		ProcessInstance parentPI = ctx.getProcessInstance().getSuperProcessToken().getProcessInstance();
 		long parentProcessInstanceId = parentPI.getId();
 		
-		BPMUser bpmUser = getBpmFactory().getBpmUserFactory().createBPMUser(userName, roleName, parentProcessInstanceId);
+		User bpmUser = getBpmFactory().getBpmUserFactory().createBPMUser(userName, roleName, parentProcessInstanceId);
 		
 		getRolesManager().createProcessRoles(parentPI.getProcessDefinition().getName(), rolz, parentProcessInstanceId);
 		//getRolesManager().createTaskRolesPermissionsPIScope(task, rolz, parentProcessInstanceId);
-		getRolesManager().createIdentitiesForRoles(rolz, String.valueOf(bpmUser.getBpmUser().getPrimaryKey()), IdentityType.USER, parentProcessInstanceId);
+		getRolesManager().createIdentitiesForRoles(rolz, String.valueOf(bpmUser.getPrimaryKey()), IdentityType.USER, parentProcessInstanceId);
 		
 		return bpmUser;
 	}
