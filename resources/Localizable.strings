@@ -45,6 +45,7 @@ cases_bpm.subject=Subject
 cases_bpm.from=From
 cases_bpm.receive_date=Receive date
 cases_bpm.file_name=File name
+cases_bpm.file_description=Descriptive name
 cases_bpm.file_size=File size
 cases_bpm.task_name=Task name
 cases_bpm.taken_by=Taken by
