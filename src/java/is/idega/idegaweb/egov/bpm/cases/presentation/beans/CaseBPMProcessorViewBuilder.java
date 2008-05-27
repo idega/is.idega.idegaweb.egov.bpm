@@ -16,7 +16,7 @@ import com.idega.presentation.IWContext;
 
 @Scope("request")
 @Service(GeneralCaseProcessorViewBuilder.SPRING_BEAN_IDENTIFIER)
-public class BPMCaseProcessorViewBuilder implements GeneralCaseProcessorViewBuilder {
+public class CaseBPMProcessorViewBuilder implements GeneralCaseProcessorViewBuilder {
 
 	public UIComponent getCaseProcessorView(IWContext iwc) throws RemoteException {
 		Integer caseID = null;

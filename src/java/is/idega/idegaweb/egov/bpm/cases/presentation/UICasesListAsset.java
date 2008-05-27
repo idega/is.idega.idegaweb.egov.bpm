@@ -39,19 +39,20 @@ public class UICasesListAsset extends IWBaseComponent {
 			stateBean.setCaseId(caseId);
 		}
 		
+		HtmlTag linksContainer = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
+		linksContainer.setValue(divTag);
+		linksContainer.setStyle("display: none");
+		div.getChildren().add(linksContainer);
+		
 		DownloadLink attachmentLink = new DownloadLink();
 		attachmentLink.setStyleClass(CasesEngine.FILE_DOWNLOAD_LINK_STYLE_CLASS);
-		attachmentLink.setStyleAttribute("display: none;");
 		attachmentLink.setMediaWriterClass(AttachmentWriter.class);
-		div.getChildren().add(attachmentLink);
+		linksContainer.getChildren().add(attachmentLink);
 		
-		if (/*isDownloadDocument()*/1==1) {	//	TODO
-			DownloadLink pdfLink = new DownloadLink();
-			pdfLink.setStyleClass(CasesEngine.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
-			pdfLink.setStyleAttribute("display: none;");
-			pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
-			div.getChildren().add(pdfLink);
-		}
+		DownloadLink pdfLink = new DownloadLink();
+		pdfLink.setStyleClass(CasesEngine.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
+		pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
+		linksContainer.getChildren().add(pdfLink);
 		
 		IWBundle bundle = getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
