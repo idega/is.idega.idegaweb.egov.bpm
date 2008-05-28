@@ -36,9 +36,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/05/28 10:54:49 $ by $Author: eiki $
+ * Last modified: $Date: 2008/05/28 10:57:12 $ by $Author: eiki $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
@@ -157,7 +157,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 		}
 	}
 	
-	protected UserBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
+	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
 			return (UserBusiness)IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
