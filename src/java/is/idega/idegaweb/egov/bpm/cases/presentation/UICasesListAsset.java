@@ -41,7 +41,7 @@ public class UICasesListAsset extends IWBaseComponent {
 		
 		HtmlTag linksContainer = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		linksContainer.setValue(divTag);
-		linksContainer.setStyle("display: none");
+		linksContainer.setStyleClass("hiddenLinksForCasesContainerStyle");
 		div.getChildren().add(linksContainer);
 		
 		DownloadLink attachmentLink = new DownloadLink();

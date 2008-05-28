@@ -2,7 +2,6 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
-import is.idega.idegaweb.egov.cases.presentation.beans.GeneralCaseProcessorViewBuilder;
 
 import java.rmi.RemoteException;
 
@@ -11,6 +10,7 @@ import javax.faces.component.UIComponent;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.presentation.beans.GeneralCaseProcessorViewBuilder;
 import com.idega.business.SpringBeanLookup;
 import com.idega.presentation.IWContext;
 
