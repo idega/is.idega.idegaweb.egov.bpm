@@ -30,14 +30,15 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.user.business.UserBusiness;
 import com.idega.util.CoreConstants;
 import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/05/16 18:17:07 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/28 10:54:49 $ by $Author: eiki $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
@@ -71,6 +72,8 @@ public class SendCaseMessagesHandler implements ActionHandler {
 		String caseIdStr = (String)ctx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
 		final GeneralCase theCase = casesBusiness.getGeneralCase(new Integer(caseIdStr));
 		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
+		final UserBusiness userBusiness  = getUserBusiness(iwc);
+		
 		
 		final String subjectKey = getSubjectKey();
 		final String msgKey = getMessageKey();
@@ -98,16 +101,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 					
 					for (User user : users) {
 						
-						String preferredLocaleStr = user.getPreferredLocale();
-						Locale preferredLocale;
-						
-						if(preferredLocaleStr == null || CoreConstants.EMPTY.equals(preferredLocaleStr)) {
-
-							preferredLocale = new Locale("is");
-							
-						} else {
-							preferredLocale = new Locale(preferredLocaleStr); 
-						}
+						Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
 						
 						String unformattedSubject;
 						String unformattedMsg;
@@ -116,8 +110,8 @@ public class SendCaseMessagesHandler implements ActionHandler {
 						
 							IWResourceBundle iwrb = iwb.getResourceBundle(preferredLocale);
 						
-							unformattedSubject = iwrb.getLocalizedString(subjectKey, CoreConstants.EMPTY);
-							unformattedMsg = iwrb.getLocalizedString(msgKey, CoreConstants.EMPTY);
+							unformattedSubject = iwrb.getLocalizedString(subjectKey, subjectKey);
+							unformattedMsg = iwrb.getLocalizedString(msgKey, msgKey);
 							
 							unformattedForLocales.put(preferredLocale, new String[] {unformattedSubject, unformattedMsg});
 						} else {
@@ -158,6 +152,14 @@ public class SendCaseMessagesHandler implements ActionHandler {
 	protected CommuneMessageBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
 		try {
 			return (CommuneMessageBusiness)IBOLookup.getServiceInstance(iwac, CommuneMessageBusiness.class);
+		} catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+	
+	protected UserBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
+		try {
+			return (UserBusiness)IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
