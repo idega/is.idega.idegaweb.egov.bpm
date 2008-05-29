@@ -8,15 +8,21 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 
 import org.jdom.Document;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.data.Case;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
 import com.idega.business.SpringBeanLookup;
 import com.idega.core.builder.business.BuilderService;
 import com.idega.core.builder.business.BuilderServiceFactory;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
@@ -64,9 +70,11 @@ public class CasesEngine {
 		localizations.add(iwrb.getLocalizedString("cases_bpm.submitted_by", "Submitted by"));					//	14
 		
 		//	Other info
-		localizations.add(FILE_DOWNLOAD_LINK_STYLE_CLASS);								//	15
-		localizations.add(PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);					//	16
-		localizations.add(iwrb.getLocalizedString("cases_bpm.file_description", "Descriptive name")); //  17
+		localizations.add(FILE_DOWNLOAD_LINK_STYLE_CLASS);														//	15
+		localizations.add(PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);											//	16
+		
+		localizations.add(iwrb.getLocalizedString("cases_bpm.file_description", "Descriptive name"));			//  17
+		localizations.add(iwrb.getLocalizedString("click_to_edit", "Click to edit..."));						//	18
 		
 		return localizations;
 	}
@@ -140,6 +148,39 @@ public class CasesEngine {
 			return null;
 		}
 		return service.getRenderedComponent(iwc, caseInfo, true);
+	}
+	
+	public boolean setCaseSubject(String caseId, String subject) {
+		if (caseId == null || subject == null) {
+			return false;
+		}
+	
+		CaseBusiness caseBusiness = null;
+		try {
+			caseBusiness = (CaseBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
+		} catch (IBOLookupException e) {
+			e.printStackTrace();
+		}
+		if (caseBusiness == null) {
+			return false;
+		}
+		
+		Case theCase = null;
+		try {
+			theCase = caseBusiness.getCase(caseId);
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		} catch (FinderException e) {
+			e.printStackTrace();
+		}
+		if (theCase == null) {
+			return false;
+		}
+		
+		theCase.setSubject(subject);
+		theCase.store();
+		
+		return true;
 	}
 	
 }

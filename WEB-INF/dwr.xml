@@ -9,6 +9,7 @@
 	    	<include method="getInfoForCase"/>
 	    	<include method="getLocalizedStrings"/>
 	    	<include method="getProcessInstanceId"/>
+	    	<include method="setCaseSubject"/>
     	</create>
 	</allow>
 	<signatures>
