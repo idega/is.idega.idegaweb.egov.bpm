@@ -12,6 +12,7 @@ import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 
 import org.jdom.Document;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -20,17 +21,24 @@ import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.SpringBeanLookup;
+import com.idega.core.accesscontrol.business.NotLoggedOnException;
 import com.idega.core.builder.business.BuilderService;
 import com.idega.core.builder.business.BuilderServiceFactory;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessManager;
+import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.presentation.IWContext;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 
 @Service("casesEngineDWR")
 @Scope("singleton")
 public class CasesEngine {
+	
+	private BPMFactory bpmFactory;
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
@@ -181,6 +189,55 @@ public class CasesEngine {
 		theCase.store();
 		
 		return true;
+	}
+	
+	public String takeBPMProcessTask(Long taskInstanceId, boolean reAssign) {
+		if (taskInstanceId == null) {
+			return null;
+		}
+		
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null) {
+			return null;
+		}
+		
+		User currentUser = null;
+		try {
+			currentUser = iwc.getCurrentUser();
+		} catch(NotLoggedOnException e) {
+			e.printStackTrace();
+		}
+		if (currentUser == null) {
+			return null;
+		}
+		
+		try {
+			ProcessManager processManager = getBpmFactory().getProcessManagerByTaskInstanceId(taskInstanceId);
+			TaskInstanceW taskInstance = processManager.getTaskInstance(taskInstanceId);
+			
+			User assignedTo = taskInstance.getAssignedTo();
+			if (assignedTo != null && !reAssign) {
+				return assignedTo.getName();
+			}
+			else {
+				taskInstance.assign(currentUser);
+			}
+			
+			return currentUser.getName(); 
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	@Autowired
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
 	}
 	
 }

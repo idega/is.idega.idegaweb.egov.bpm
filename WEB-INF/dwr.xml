@@ -10,6 +10,7 @@
 	    	<include method="getLocalizedStrings"/>
 	    	<include method="getProcessInstanceId"/>
 	    	<include method="setCaseSubject"/>
+	    	<include method="takeBPMProcessTask"/>
     	</create>
 	</allow>
 	<signatures>
