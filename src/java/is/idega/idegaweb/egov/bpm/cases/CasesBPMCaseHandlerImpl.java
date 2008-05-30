@@ -1,10 +1,8 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesListAsset;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.presentation.OpenCases;
@@ -33,8 +31,6 @@ import com.idega.core.builder.data.ICPageHome;
 import com.idega.core.persistence.Param;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
-import com.idega.idegaweb.IWBundle;
-import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -48,9 +44,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/05/24 14:18:15 $ by $Author: valdas $
+ * Last modified: $Date: 2008/05/30 16:25:02 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseHandlerImpl.beanIdentifier)
@@ -65,8 +61,8 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
 	
-	private static final String user_assets_page_type = "bpm_user_assets";
-	private static final String handler_assets_page_type = "bpm_handler_assets";
+//	private static final String user_assets_page_type = "bpm_user_assets";
+//	private static final String handler_assets_page_type = "bpm_handler_assets";
 //	private static final String PARAMETER_ACTION = "cbcAct";
 //	private static final String ACTION_OPEN_PROCESS = "cbcActOP";
 
@@ -104,6 +100,9 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 
 	public List<Link> getCaseLinks(Case theCase, String casesComponentType) {
 		
+		throw new UnsupportedOperationException("Implement with correct pages if needed");
+		
+		/*
 		FacesContext ctx = FacesContext.getCurrentInstance();
 		IWContext iwc = IWContext.getIWContext(ctx);
 		IWMainApplication iwma = IWMainApplication.getIWMainApplication(ctx);
@@ -126,6 +125,7 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 		link2.addParameter(CasesProcessor.PARAMETER_CASE_PK, theCase.getPrimaryKey().toString());
 		
 		links.add(link2);
+		*/
 		
 		/*
 		if(true)
@@ -141,7 +141,7 @@ public class CasesBPMCaseHandlerImpl implements CaseManager {
 		links.add(link);
 		*/
 
-		return links;
+//		return links;
 	}
 
 	public UIComponent getView(IWContext iwc, Case theCase) {
