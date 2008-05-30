@@ -7,6 +7,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.taskmgmt.exe.TaskInstance;
@@ -28,13 +30,15 @@ import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.view.View;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/05/27 18:03:57 $ by $Author: civilis $
+ * Last modified: $Date: 2008/05/30 11:12:44 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -44,7 +48,21 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	private CasesBPMResources casesBPMResources;
 	private BPMFactory bpmFactory;
 	
+	public void assign(User usr) {
+		
+		Object pk = usr.getPrimaryKey();
+		Integer userId;
+		
+		if(pk instanceof Integer)
+			userId = (Integer)pk;
+		else
+			userId = new Integer(pk.toString());
+		
+		assign(userId);
+	}
+	
 	public void assign(int userId) {
+		
 		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
 		
 		try {
@@ -55,6 +73,42 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
 			taskInstance.setActorId(String.valueOf(userId));
 			ctx.save(taskInstance);
+		
+		} catch (BPMAccessControlException e) {
+			throw new ProcessException(e, e.getUserFriendlyMessage());
+			
+		} finally {
+			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+	}
+	
+	public User getAssignedTo() {
+		
+		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			Long taskInstanceId = getTaskInstanceId();
+			
+			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
+			
+			String actorId = taskInstance.getActorId();
+
+			User usr;
+			
+			if(actorId != null) {
+				
+				try {
+					int assignedTo = Integer.parseInt(actorId);
+					usr = getUserBusiness().getUser(assignedTo);
+					
+				} catch (Exception e) {
+					Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving assigned user name for actor id: "+actorId, e);
+					usr = null;
+				}
+			} else
+				usr = null;
+			
+			return usr;
 		
 		} catch (BPMAccessControlException e) {
 			throw new ProcessException(e, e.getUserFriendlyMessage());
@@ -214,5 +268,14 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	@Autowired
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
+	}
+	
+	protected UserBusiness getUserBusiness() {
+		try {
+			return (UserBusiness) IBOLookup.getServiceInstance(CoreUtil.getIWContext(), UserBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
 	}
 }
