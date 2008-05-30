@@ -36,9 +36,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/05/28 10:57:12 $ by $Author: eiki $
+ * Last modified: $Date: 2008/05/30 15:04:19 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
@@ -87,6 +87,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 			bundleIdentifier = IWBundleStarter.IW_BUNDLE_IDENTIFIER;
 		
 		final IWBundle iwb = iwc.getIWMainApplication().getBundle(bundleIdentifier);
+		final Locale defaultLocale = iwc.getCurrentLocale();
 		
 		new Thread(new Runnable() {
 
@@ -102,6 +103,9 @@ public class SendCaseMessagesHandler implements ActionHandler {
 					for (User user : users) {
 						
 						Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
+						
+						if(preferredLocale == null)
+							preferredLocale = defaultLocale;
 						
 						String unformattedSubject;
 						String unformattedMsg;
