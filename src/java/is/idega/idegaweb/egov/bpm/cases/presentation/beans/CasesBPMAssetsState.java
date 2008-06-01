@@ -19,7 +19,6 @@ import org.springframework.stereotype.Service;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -33,9 +32,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2008/05/27 11:47:19 $ by $Author: valdas $
+ * Last modified: $Date: 2008/06/01 17:04:34 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -45,7 +44,6 @@ public class CasesBPMAssetsState implements Serializable {
 	private static final long serialVersionUID = -6474883869451606583L;
 	
 	public static final String beanIdentifier = "casesBPMAssetsState";
-	private static final String casesBPMDAOBeanIdentifier = "casesBPMDAO";
 	private static final String casesBPMProcessViewBeanIdentifier = "casesBPMProcessView";
 	
 	private transient CasesBPMProcessView casesBPMProcessView;
@@ -102,41 +100,7 @@ public class CasesBPMAssetsState implements Serializable {
 		return piId;
 	}
 	
-	protected CaseProcInstBind getCPIBind(Integer caseId, Long processInstanceId) {
-		
-		if(caseId != null) {
-		
-			CaseProcInstBind bind = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
-			
-			if(bind != null) {
-			
-				return bind;
-				
-			} else {
-				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "No case process instance bind found for caseId provided: "+caseId);
-			}
-			
-		} else if(processInstanceId != null) {
-			
-			CaseProcInstBind bind;
-			try {
-				bind = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
-				
-			} catch (Exception e) {
-				bind = null;
-			}
-			
-			if(bind != null) {
-			
-				return bind;
-				
-			} else {
-				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "No case process instance bind found for process instanceid provided: "+processInstanceId);
-			}
-		}
-		
-		return null;
-	}
+	
 
 	public Long getProcessInstanceId() {
 		
@@ -147,14 +111,12 @@ public class CasesBPMAssetsState implements Serializable {
 				
 				if(processInstanceId != null) {
 				
-					CaseProcInstBind b = getCPIBind(null, processInstanceId);
-					caseId = b.getCaseId();
+					caseId = getCasesBPMProcessView().getCaseId(processInstanceId);
 				}
 				
 			} else {
 				
-				CaseProcInstBind b = getCPIBind(caseId, null);
-				processInstanceId = b.getProcInstId();
+				processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
 			}
 		}
 		
@@ -175,10 +137,6 @@ public class CasesBPMAssetsState implements Serializable {
 		return getCasesBPMProcessView().getTaskView(getViewSelected());
 	}
 
-	public CasesBPMDAO getCasesBPMDAO() {
-		return (CasesBPMDAO)WFUtil.getBeanInstance(casesBPMDAOBeanIdentifier);
-	}
-	
 	public CasesBPMProcessView getCasesBPMProcessView() {
 		
 		if(casesBPMProcessView == null) 
@@ -196,14 +154,12 @@ public class CasesBPMAssetsState implements Serializable {
 				
 				if(caseId != null) {
 				
-					CaseProcInstBind b = getCPIBind(caseId, null);
-					processInstanceId = b.getProcInstId();
+					processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
 				}
 				
 			} else {
-				
-				CaseProcInstBind b = getCPIBind(null, processInstanceId);
-				caseId = b.getCaseId();
+
+				caseId = getCasesBPMProcessView().getCaseId(processInstanceId);
 			}
 		}
 
@@ -234,7 +190,7 @@ public class CasesBPMAssetsState implements Serializable {
 		IWContext iwc = IWContext.getIWContext(ctx);
 		
 		try {
-			CasesBPMDAO dao = getCasesBPMDAO();
+			CasesBPMDAO dao = getCasesBPMProcessView().getCasesBPMDAO();
 			User performer = iwc.getCurrentUser();
 			
 			ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
@@ -260,7 +216,7 @@ public class CasesBPMAssetsState implements Serializable {
 		IWContext iwc = IWContext.getIWContext(ctx);
 		
 		try {
-			CasesBPMDAO dao = getCasesBPMDAO();
+			CasesBPMDAO dao = getCasesBPMProcessView().getCasesBPMDAO();
 			User performer = iwc.getCurrentUser();
 			
 			ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
@@ -311,7 +267,7 @@ public class CasesBPMAssetsState implements Serializable {
 			IWContext iwc = IWContext.getIWContext(ctx);
 			
 			try {
-				CasesBPMDAO dao = getCasesBPMDAO();
+				CasesBPMDAO dao = getCasesBPMProcessView().getCasesBPMDAO();
 				User performer = iwc.getCurrentUser();
 				
 				ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
