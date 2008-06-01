@@ -3,10 +3,13 @@ package is.idega.idegaweb.egov.bpm.cases;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
@@ -17,13 +20,17 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
 import com.idega.business.SpringBeanLookup;
 import com.idega.core.accesscontrol.business.NotLoggedOnException;
 import com.idega.core.builder.business.BuilderService;
 import com.idega.core.builder.business.BuilderServiceFactory;
+import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.exe.BPMFactory;
@@ -39,6 +46,7 @@ import com.idega.util.CoreUtil;
 public class CasesEngine {
 	
 	private BPMFactory bpmFactory;
+	private CaseManagersProvider caseManagersProvider;
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
@@ -117,15 +125,48 @@ public class CasesEngine {
 	}
 
 	public Document getInfoForCase(String caseId) {
-		if (caseId == null || CoreConstants.EMPTY.equals(caseId)) {
+		
+		IWContext iwc = IWContext.getInstance();
+		
+		if (caseId == null || CoreConstants.EMPTY.equals(caseId) || iwc == null) {
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Either not provided:\n caseId="+caseId+", iwc="+iwc);
 			return null;
 		}
 		
-		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null) {
-			return null;
+		try {
+			Case theCase = getCasesBusiness(iwc).getCase(caseId);
+			
+			CaseManager caseManager;
+			
+			if(theCase.getCaseManagerType() != null)
+				caseManager = getCaseManagersProvider().getCaseHandler(theCase.getCaseManagerType());
+			else 
+				caseManager = null;
+			
+			if(caseManager != null) {
+			
+				UIComponent caseAssets = caseManager.getView(iwc, theCase);
+				
+				if(caseAssets != null) {
+					
+					BuilderService service = BuilderServiceFactory.getBuilderService(iwc);
+					
+					Document rendered = service.getRenderedComponent(iwc, caseAssets, true);
+					return rendered;
+				} else 
+					Logger.getLogger(getClass().getName()).log(Level.WARNING, "No case assets component resolved from case manager: "+caseManager.getType()+" by case pk: "+theCase.getPrimaryKey().toString());
+			} else
+				Logger.getLogger(getClass().getName()).log(Level.WARNING, "No case manager resolved by type="+theCase.getCaseManagerType());
+			
+		} catch (Exception e) {
+			
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving rendered component for case assets view", e);			
 		}
 		
+		return null;
+		
+//		FIXME: holy cow ???? :(
+		/*
 		CasesBPMCaseHandlerImpl casesHandler = null;
 		try {
 			casesHandler = (CasesBPMCaseHandlerImpl) SpringBeanLookup.getInstance().getSpringBean(iwc.getServletContext(), CasesBPMCaseHandlerImpl.beanIdentifier);
@@ -135,27 +176,7 @@ public class CasesEngine {
 		if (casesHandler == null) {
 			return null;
 		}
-		
-		UIComponent caseInfo = null;
-		try {
-			caseInfo = casesHandler.getView(iwc, casesHandler.getCasesBusiness(iwc).getCase(caseId));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		if (caseInfo == null) {
-			return null;
-		}
-		
-		BuilderService service = null;
-		try {
-			service = BuilderServiceFactory.getBuilderService(iwc);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
-		if (service == null) {
-			return null;
-		}
-		return service.getRenderedComponent(iwc, caseInfo, true);
+		*/
 	}
 	
 	public boolean setCaseSubject(String caseId, String subject) {
@@ -239,5 +260,22 @@ public class CasesEngine {
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
-	
+
+	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
+		try {
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+
+	public CaseManagersProvider getCaseManagersProvider() {
+		return caseManagersProvider;
+	}
+
+	@Autowired
+	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
+		this.caseManagersProvider = caseManagersProvider;
+	}
 }
