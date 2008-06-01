@@ -5,7 +5,7 @@
 	<allow>
 		<create creator="jsf" javascript="CasesEngine">
 	    	<param name="managedBeanName" value="casesEngineDWR" />
-	    	<param name="class" value="is.idega.idegaweb.egov.bpm.cases.CasesEngine" />
+	    	<param name="class" value="is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine" />
 	    	<include method="getInfoForCase"/>
 	    	<include method="getLocalizedStrings"/>
 	    	<include method="getProcessInstanceId"/>
