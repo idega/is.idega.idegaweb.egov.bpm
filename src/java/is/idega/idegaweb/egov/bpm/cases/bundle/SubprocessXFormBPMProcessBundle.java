@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.bundle;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMManagersCreator;
+import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMManagersCreator;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
- * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:19 $ by $Author: civilis $
  * 
  */
 @Scope("prototype")
