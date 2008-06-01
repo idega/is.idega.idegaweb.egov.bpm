@@ -7,6 +7,7 @@ import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
 import org.jbpm.JbpmContext;
@@ -16,9 +17,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.business.CaseManagersProvider;
+import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessManager;
@@ -34,9 +41,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/05/24 10:22:09 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:01:50 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service("casesBPMProcessView")
@@ -44,6 +51,8 @@ public class CasesBPMProcessView {
 	
 	private IdegaJbpmContext idegaJbpmContext;
 	private BPMFactory BPMFactory;
+	private CasesBPMDAO casesBPMDAO;
+	private CaseManagersProvider caseManagersProvider;
 
 	public CasesBPMTaskViewBean getTaskView(long taskInstanceId) {
 
@@ -207,6 +216,117 @@ public class CasesBPMProcessView {
 		return bpmUsr;
 	}
 	
+	public Long getProcessInstanceId(Object casePK) {
+		
+		if(casePK != null) {
+			
+			Integer caseId;
+			
+			if(casePK instanceof Integer)
+				caseId = (Integer)casePK;
+			else
+				caseId = new Integer(String.valueOf(casePK));
+			
+			CaseProcInstBind cpi = getCPIBind(caseId, null);
+			
+			if(cpi != null)
+				return cpi.getProcInstId();
+		}
+		
+		return null;
+	}
+	
+	public Integer getCaseId(Long processInstanceId) {
+		
+		CaseProcInstBind cpi = getCPIBind(null, processInstanceId);
+		
+		if(cpi != null)
+			return cpi.getCaseId();
+		
+		return null;
+	}
+	
+	/**
+	 * either of parameters should be not null
+	 * 
+	 * @param processInstanceId
+	 * @param caseId
+	 * @return
+	 */
+	public UIComponent getCaseManagerView(IWContext iwc, Long processInstanceId, Integer caseId) {
+		
+		if(iwc == null)
+			iwc = IWContext.getInstance();
+		
+		if(processInstanceId == null && caseId == null)
+			throw new IllegalArgumentException("Neither processInstanceId, nor caseId provided");
+		
+		caseId = caseId != null ? caseId : getCaseId(processInstanceId);
+		
+		try {
+			Case theCase = getCasesBusiness(iwc).getCase(caseId);
+			
+			CaseManager caseManager;
+			
+			if(theCase.getCaseManagerType() != null)
+				caseManager = getCaseManagersProvider().getCaseManager(theCase.getCaseManagerType());
+			else 
+				caseManager = null;
+			
+			if(caseManager != null) {
+				
+				UIComponent caseAssets = caseManager.getView(iwc, theCase);
+				
+				if(caseAssets != null)
+					return caseAssets;
+				else
+					Logger.getLogger(getClass().getName()).log(Level.WARNING, "No case assets component resolved from case manager: "+caseManager.getType()+" by case pk: "+theCase.getPrimaryKey().toString());
+			} else
+				Logger.getLogger(getClass().getName()).log(Level.WARNING, "No case manager resolved by type="+theCase.getCaseManagerType());
+			
+		} catch (Exception e) {
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving case manager view", e);
+		}
+		
+		return null;
+	}
+	
+	protected CaseProcInstBind getCPIBind(Integer caseId, Long processInstanceId) {
+		
+		if(caseId != null) {
+		
+			CaseProcInstBind bind = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
+			
+			if(bind != null) {
+			
+				return bind;
+				
+			} else {
+				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "No case process instance bind found for caseId provided: "+caseId);
+			}
+			
+		} else if(processInstanceId != null) {
+			
+			CaseProcInstBind bind;
+			try {
+				bind = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
+				
+			} catch (Exception e) {
+				bind = null;
+			}
+			
+			if(bind != null) {
+			
+				return bind;
+				
+			} else {
+				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "No case process instance bind found for process instanceid provided: "+processInstanceId);
+			}
+		}
+		
+		return null;
+	}
+	
 	public class CasesBPMProcessViewBean implements Serializable {
 		
 		private static final long serialVersionUID = -1209671586005809408L;
@@ -333,5 +453,32 @@ public class CasesBPMProcessView {
 	@Autowired
 	public void setBPMFactory(BPMFactory factory) {
 		BPMFactory = factory;
+	}
+	
+	public CasesBPMDAO getCasesBPMDAO() {
+		return casesBPMDAO;
+	}
+
+	@Autowired
+	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
+		this.casesBPMDAO = casesBPMDAO;
+	}
+	
+	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
+		try {
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+	
+	public CaseManagersProvider getCaseManagersProvider() {
+		return caseManagersProvider;
+	}
+
+	@Autowired
+	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
+		this.caseManagersProvider = caseManagersProvider;
 	}
 }
