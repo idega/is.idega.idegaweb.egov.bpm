@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.presentation.beans.GeneralCaseProcessorViewBuilder;
 import com.idega.business.SpringBeanLookup;
+import com.idega.facelets.ui.FaceletComponent;
 import com.idega.presentation.IWContext;
 
 @Scope("request")
@@ -48,8 +49,10 @@ public class CaseBPMProcessorViewBuilder implements GeneralCaseProcessorViewBuil
 		stateBean.selectView();
 		stateBean.setDisplayPropertyForStyleAttribute(false);
 		
-		UICasesBPMAssets assets = (UICasesBPMAssets) iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
-		return assets;
+		//UICasesBPMAssets assets = (UICasesBPMAssets) iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
+		FaceletComponent facelet = (FaceletComponent)iwc.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
+		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetView.xhtml");
+		return facelet;
 	}
 
 }
