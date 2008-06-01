@@ -1,20 +1,33 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
+import javax.faces.el.ValueBinding;
 
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
 import org.apache.myfaces.renderkit.html.util.AddResource;
 import org.apache.myfaces.renderkit.html.util.AddResourceFactory;
+import org.jdom.Document;
 
+import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.JQueryUIType;
 import com.idega.block.web2.business.Web2Business;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
+import com.idega.core.builder.business.BuilderService;
+import com.idega.core.builder.business.BuilderServiceFactory;
 import com.idega.facelets.ui.FaceletComponent;
+import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
@@ -27,9 +40,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/05/27 12:30:56 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:05:10 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -49,7 +62,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	@SuppressWarnings("unchecked")
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
-	
+
+		/*
 		HtmlTag div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		div.setValue(divTag);
 		
@@ -76,6 +90,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		div.getChildren().add(facelet);
 		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetViewRendered}"));
 		getFacets().put(assetViewFacet, div);
+		*/
 	}
 	
 	@Override
@@ -177,4 +192,43 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	public void setInCasesComponent(boolean inCasesComponent) {
 		this.inCasesComponent = inCasesComponent;
 	}
+	
+	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
+		try {
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+	
+	/*
+	public Long getCaseId(FacesContext context) {
+
+		Long taskInstanceId = getTaskInstanceId();
+		
+		if(taskInstanceId == null) {
+			
+			ValueBinding binding = getValueBinding(TASK_INSTANCE_PROPERTY);
+			
+			
+			if(binding != null && binding.getValue(context) != null)
+				taskInstanceId = (Long)binding.getValue(context);
+			
+			else if(context.getExternalContext().getRequestParameterMap().containsKey(TASK_INSTANCE_PROPERTY)) {
+				
+				Object val = context.getExternalContext().getRequestParameterMap().get(TASK_INSTANCE_PROPERTY);
+				
+				if(val instanceof Long)
+					taskInstanceId = (Long)val;
+				else if((val instanceof String) && !CoreConstants.EMPTY.equals(val))
+					taskInstanceId = new Long((String)val);
+			}
+			
+			setTaskInstanceId(taskInstanceId);
+		}
+
+		return taskInstanceId;
+	}
+	*/
 }
