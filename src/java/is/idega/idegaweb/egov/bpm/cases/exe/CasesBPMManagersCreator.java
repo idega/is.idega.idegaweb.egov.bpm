@@ -1,13 +1,13 @@
-package is.idega.idegaweb.egov.bpm.cases;
+package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import com.idega.jbpm.exe.BPMManagersFactory;
 import com.idega.jbpm.exe.ProcessManager;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/05/04 18:11:48 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
  */
 public class CasesBPMManagersCreator implements BPMManagersFactory {
 	

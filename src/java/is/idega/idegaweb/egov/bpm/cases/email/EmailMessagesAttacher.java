@@ -1,4 +1,6 @@
-package is.idega.idegaweb.egov.bpm.cases;
+package is.idega.idegaweb.egov.bpm.cases.email;
+
+import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMResources;
 
 import java.io.File;
 import java.io.IOException;
@@ -47,9 +49,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/05/30 16:24:13 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service

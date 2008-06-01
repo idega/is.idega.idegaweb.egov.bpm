@@ -1,5 +1,7 @@
-package is.idega.idegaweb.egov.bpm.cases;
+package is.idega.idegaweb.egov.bpm.cases.exe;
 
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.manager.CasesBPMCaseManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
@@ -42,9 +44,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/05/27 16:05:20 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -82,7 +84,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			User user = getUserBusiness(iwc).getUser(userId);
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
-			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseHandlerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
+			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseManagerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
 
 			ti.getProcessInstance().setStart(new Date());
 			

@@ -1,5 +1,6 @@
-package is.idega.idegaweb.egov.bpm.cases;
+package is.idega.idegaweb.egov.bpm.cases.exe;
 
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.ArrayList;
@@ -36,9 +37,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/05/30 11:12:44 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")

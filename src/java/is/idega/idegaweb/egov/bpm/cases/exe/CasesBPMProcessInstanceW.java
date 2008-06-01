@@ -1,4 +1,5 @@
-package is.idega.idegaweb.egov.bpm.cases;
+package is.idega.idegaweb.egov.bpm.cases.exe;
+
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -9,9 +10,9 @@ import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/05/06 21:43:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")

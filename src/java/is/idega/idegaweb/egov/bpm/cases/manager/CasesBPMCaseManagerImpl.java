@@ -1,5 +1,6 @@
-package is.idega.idegaweb.egov.bpm.cases;
+package is.idega.idegaweb.egov.bpm.cases.manager;
 
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesListAsset;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
@@ -44,13 +45,13 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/05/30 16:25:02 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:51 $ by $Author: civilis $
  */
 @Scope("singleton")
-@Service(CasesBPMCaseHandlerImpl.beanIdentifier)
-public class CasesBPMCaseHandlerImpl implements CaseManager {
+@Service(CasesBPMCaseManagerImpl.beanIdentifier)
+public class CasesBPMCaseManagerImpl implements CaseManager {
 
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
 	

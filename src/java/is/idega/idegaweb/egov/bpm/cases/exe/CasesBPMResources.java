@@ -1,4 +1,4 @@
-package is.idega.idegaweb.egov.bpm.cases;
+package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import java.util.Date;
 
@@ -19,9 +19,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
  */
 public abstract class CasesBPMResources {
 	
