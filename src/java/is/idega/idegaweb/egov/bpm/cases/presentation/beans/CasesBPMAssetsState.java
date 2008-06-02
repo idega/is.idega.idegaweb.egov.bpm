@@ -3,7 +3,6 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMProcessViewBean;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
 import java.io.Serializable;
@@ -16,9 +15,6 @@ import javax.faces.context.FacesContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
-import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -32,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  *
- * Last modified: $Date: 2008/06/01 17:04:34 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/02 19:12:05 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -44,46 +40,65 @@ public class CasesBPMAssetsState implements Serializable {
 	private static final long serialVersionUID = -6474883869451606583L;
 	
 	public static final String beanIdentifier = "casesBPMAssetsState";
-	private static final String casesBPMProcessViewBeanIdentifier = "casesBPMProcessView";
 	
 	private transient CasesBPMProcessView casesBPMProcessView;
 	private Integer caseId;
 	private Long processInstanceId;
 	private Long viewSelected;
 	private Boolean isWatched;
-	private Integer tabSelected;
-	private FacetRendered facetRendered = FacetRendered.ASSETS;
+	//private Integer tabSelected;
+	//private FacetRendered facetRendered = FacetRendered.ASSETS_GRID;
 	private String displayPropertyForStyleAttribute = "block";
 	
-	private enum FacetRendered {
-		
-		ASSETS,
-		ASSET_VIEW
-	}
+//	private enum FacetRendered {
+//		
+//		ASSETS_GRID,
+//		ASSET_VIEW
+//	}
 	
 	public Long getViewSelected() {
+		
+		if(viewSelected == null) {
+			
+			viewSelected = resolveTaskInstanceId();
+		}
+		
 		return viewSelected;
+	}
+	
+	protected Long resolveTaskInstanceId() {
+		
+		String tiIdParam = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("tiId");
+		Long tiId;
+		
+		if(tiIdParam != null && !CoreConstants.EMPTY.equals(tiIdParam)) {
+
+			tiId = new Long(tiIdParam);
+		} else
+			tiId = null;
+		
+		return tiId;
 	}
 
 	public void setViewSelected(Long viewSelected) {
 		this.viewSelected = viewSelected;
 	}
 
-	public void selectView() {
-		facetRendered = FacetRendered.ASSET_VIEW;
-	}
+//	public void selectView() {
+//		facetRendered = FacetRendered.ASSET_VIEW;
+//	}
 	
 	public boolean isAssetsRendered() {
 		
-		return (getProcessInstanceId() != null || getCaseId() != null) && facetRendered == FacetRendered.ASSETS;
-	}
-	
-	public void showAssets() {
-		facetRendered = FacetRendered.ASSETS;
+		return (getViewSelected() == null && (getProcessInstanceId() != null || getCaseId() != null)) /* && facetRendered == FacetRendered.ASSETS_GRID*/;
 	}
 	
 	public boolean isAssetViewRendered() {
-		return (getProcessInstanceId() != null || getCaseId() != null) && facetRendered == FacetRendered.ASSET_VIEW;
+		return (getProcessInstanceId() != null || getCaseId() != null) && getViewSelected() != null/* && facetRendered == FacetRendered.ASSET_VIEW*/;
+	}
+	
+	public void showAssets() {
+		setViewSelected(null);
 	}
 	
 	protected Long resolveProcessInstanceId() {
@@ -100,8 +115,6 @@ public class CasesBPMAssetsState implements Serializable {
 		return piId;
 	}
 	
-	
-
 	public Long getProcessInstanceId() {
 		
 		if(processInstanceId == null) {
@@ -140,7 +153,7 @@ public class CasesBPMAssetsState implements Serializable {
 	public CasesBPMProcessView getCasesBPMProcessView() {
 		
 		if(casesBPMProcessView == null) 
-			casesBPMProcessView = (CasesBPMProcessView)WFUtil.getBeanInstance(casesBPMProcessViewBeanIdentifier);
+			casesBPMProcessView = (CasesBPMProcessView)WFUtil.getBeanInstance(CasesBPMProcessView.BEAN_IDENTIFIER);
 
 		return casesBPMProcessView;
 	}
@@ -319,23 +332,23 @@ public class CasesBPMAssetsState implements Serializable {
 		return false;
 	}
 	
-	protected CasesBusiness getCaseBusiness(IWContext iwc) {
-		
-		try {
-			return (CasesBusiness)IBOLookup.getServiceInstance(iwc, CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
-			throw new IBORuntimeException(ile);
-		}
-	}
+//	protected CasesBusiness getCaseBusiness(IWContext iwc) {
+//		
+//		try {
+//			return (CasesBusiness)IBOLookup.getServiceInstance(iwc, CasesBusiness.class);
+//		}
+//		catch (IBOLookupException ile) {
+//			throw new IBORuntimeException(ile);
+//		}
+//	}
 
-	public Integer getTabSelected() {
-		return tabSelected == null ? 0 : tabSelected;
-	}
-
-	public void setTabSelected(Integer tabSelected) {
-		this.tabSelected = tabSelected;
-	}
+//	public Integer getTabSelected() {
+//		return tabSelected == null ? 0 : tabSelected;
+//	}
+//
+//	public void setTabSelected(Integer tabSelected) {
+//		this.tabSelected = tabSelected;
+//	}
 	
 	public BPMUser getCurrentBPMUser() {
 		
