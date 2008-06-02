@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
 import java.rmi.RemoteException;
@@ -46,7 +45,7 @@ public class CaseBPMProcessorViewBuilder implements GeneralCaseProcessorViewBuil
 		CasesBPMAssetsState stateBean = (CasesBPMAssetsState) SpringBeanLookup.getInstance().getSpringBean(iwc.getServletContext(), CasesBPMAssetsState.beanIdentifier);
 		stateBean.setCaseId(caseID);
 		stateBean.setViewSelected(taskInstanceId);
-		stateBean.selectView();
+		//stateBean.selectView();
 		stateBean.setDisplayPropertyForStyleAttribute(false);
 		
 		//UICasesBPMAssets assets = (UICasesBPMAssets) iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
