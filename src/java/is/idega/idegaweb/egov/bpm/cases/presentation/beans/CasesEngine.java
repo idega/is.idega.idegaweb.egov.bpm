@@ -14,6 +14,8 @@ import java.util.logging.Logger;
 import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 
+import org.chiba.xml.dom.DOMUtil;
+import org.directwebremoting.util.DomUtil;
 import org.jdom.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -105,7 +107,7 @@ public class CasesEngine {
 		return null;
 	}
 	
-	public Document getInfoForCase(String caseIdStr) {
+	public Document getCaseManagerView(String caseIdStr) {
 		
 		IWContext iwc = IWContext.getInstance();
 		
