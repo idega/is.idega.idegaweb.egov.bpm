@@ -41,13 +41,15 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/06/01 17:01:50 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/02 19:09:45 $ by $Author: civilis $
  */
 @Scope("singleton")
-@Service("casesBPMProcessView")
+@Service(CasesBPMProcessView.BEAN_IDENTIFIER)
 public class CasesBPMProcessView {
+	
+	public static final String BEAN_IDENTIFIER = "casesBPMProcessView";
 	
 	private IdegaJbpmContext idegaJbpmContext;
 	private BPMFactory BPMFactory;
@@ -65,7 +67,7 @@ public class CasesBPMProcessView {
 				Logger.getLogger(getClass().getName()).log(Level.WARNING, "No task instance found for task instance id provided: "+taskInstanceId);
 				return new CasesBPMTaskViewBean();
 			}
-			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
+			IWContext iwc = IWContext.getInstance();
 			IWTimestamp createTime = new IWTimestamp(ti.getCreate());
 			String taskStatus = getTaskStatus(ti);
 			String assignedTo = getTaskAssignedTo(ti);
