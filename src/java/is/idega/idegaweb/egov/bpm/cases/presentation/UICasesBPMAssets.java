@@ -5,19 +5,16 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
-import is.idega.idegaweb.egov.cases.util.CaseConstants;
 
 import java.io.IOException;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
-import org.apache.myfaces.custom.div.Div;
-import org.apache.myfaces.custom.div.DivTag;
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
 import org.apache.myfaces.renderkit.html.util.AddResource;
 import org.apache.myfaces.renderkit.html.util.AddResourceFactory;
@@ -36,7 +33,6 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.IWContext;
-import com.idega.presentation.Layer;
 import com.idega.presentation.text.DownloadLink;
 import com.idega.presentation.text.Text;
 import com.idega.util.CoreConstants;
@@ -47,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/06/02 19:10:57 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/03 14:27:48 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -91,7 +87,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 //		<assets grid component>
 		HtmlTag div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
-		String clientId = context.getViewRoot().createUniqueId();
+		String clientId = null;
+		if (CoreUtil.isSingleComponentRenderingProcess(context)) {
+			Random numberGenerator = new Random();
+			clientId = new StringBuilder(CoreConstants.UNDER).append(numberGenerator.nextInt(Integer.MAX_VALUE)).toString();
+		}
+		else {
+			clientId = context.getViewRoot().createUniqueId();
+		}
 		div.setId(clientId);
 		div.setStyleClass(clientId);
 		div.setValue(divTag);
@@ -376,7 +379,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			Long processInstanceId = stateBean.getProcessInstanceId();
 			Integer caseId = stateBean.getCaseId();
 			
-			String action = "jQuery.getScript('"+casesBPMAssetsScript+"', function() { CasesBPMAssets.initGrid(jQuery('."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
+			String action = "jQuery.getScript('"+casesBPMAssetsScript+"', function() { CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
 					"});";
 			container.getChildren().add(new Text(PresentationUtil.getJavaScriptAction(action)));
 			
