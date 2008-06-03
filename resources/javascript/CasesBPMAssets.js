@@ -23,6 +23,8 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
 
 CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 
+CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
+CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS = 'casesBPMPDFGeneratorAndDownloader';
 
 jQuery(document).ready(function() {
 });
@@ -332,7 +334,7 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
     
     subGridParams.onSelectRow = function(fileRowId) {
         var uri = '&taskInstanceId=' + rowId + '&varHash=' + fileRowId;
-        CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CASE_ATTACHEMENT_LINK_STYLE_CLASS);
+        CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS);
     };
 
     var subgrid = new JQGrid();
@@ -434,7 +436,7 @@ CasesBPMAssets.setCurrentWindowToDownloadCaseResource = function(uri, styleClass
 
 CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
 	var uri = '&taskInstanceId=' + taskId;
-	CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS);
+	CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS);
 	
 	if (event) {
 		if (event.stopPropagation) {
