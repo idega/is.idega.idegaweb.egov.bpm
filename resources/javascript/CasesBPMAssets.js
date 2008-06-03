@@ -454,7 +454,7 @@ CasesBPMAssets.takeCurrentProcessTask = function(event, taskInstanceId, id, allo
 		event.cancelBubble = true;
 	}
 	
-	CasesEngine.takeBPMProcessTask(taskInstanceId, allowReAssign, {
+	BPMProcessAssets.takeBPMProcessTask(taskInstanceId, allowReAssign, {
 		callback: function(takenByValue) {
 			if (takenByValue == null) {
 				return false;
