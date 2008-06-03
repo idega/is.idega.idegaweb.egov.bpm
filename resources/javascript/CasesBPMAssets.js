@@ -1,4 +1,25 @@
 if(CasesBPMAssets == null) var CasesBPMAssets = {};
+if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
+	
+	inited: false,
+	
+    CASE_GRID_STRING_CONTACT_NAME: 'Name',
+    CASE_GRID_STRING_TASK_NAME: 'Task name',
+    CASE_GRID_STRING_FORM_NAME: 'Document name',
+    CASE_GRID_STRING_SENDER: 'Sender',
+    CASE_GRID_STRING_DATE: 'Date',
+    CASE_GRID_STRING_TAKEN_BY: 'Taken by',
+    CASE_GRID_STRING_EMAIL_ADDRESS: 'E-mail address',
+    CASE_GRID_STRING_PHONE_NUMBER: 'Phone number',
+    CASE_GRID_STRING_ADDRESS: 'Address',
+    CASE_GRID_STRING_SUBJECT: 'Subject',
+    CASE_GRID_STRING_FILE_DESCRIPTION: 'Descriptive name',
+    CASE_GRID_STRING_FILE_NAME: 'File name',
+    CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS: 'Change access rights',
+    CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF: 'Download document',
+    CASE_GRID_STRING_FILE_SIZE: 'File size',
+    CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by'
+};
 
 jQuery(document).ready(function() {
 });
@@ -40,11 +61,11 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     };
     
     var namesForColumns = new Array();
-    namesForColumns.push(CASE_GRID_STRING_TASK_NAME);
-    namesForColumns.push(CASE_GRID_STRING_DATE);
-    namesForColumns.push(CASE_GRID_STRING_TAKEN_BY);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TASK_NAME);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY);
     if (hasRightChangeRights) {
-        namesForColumns.push(CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
     }
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
@@ -83,12 +104,12 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     };
     
     var namesForColumns = new Array();
-    namesForColumns.push(CASE_GRID_STRING_FORM_NAME);
-    namesForColumns.push(CASE_GRID_STRING_SUBMITTED_BY);
-    namesForColumns.push(CASE_GRID_STRING_DATE);
-    namesForColumns.push(CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF);    //  TODO: check if need to download document in PDF
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FORM_NAME);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_SUBMITTED_BY);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF);    //  TODO: check if need to download document in PDF
     if (hasRightChangeRights) {
-        namesForColumns.push(CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
     }
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
@@ -128,11 +149,11 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     };
     
     var namesForColumns = new Array();
-    namesForColumns.push(CASE_GRID_STRING_SUBJECT);
-    namesForColumns.push(CASE_GRID_STRING_SENDER);
-    namesForColumns.push(CASE_GRID_STRING_DATE);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_SUBJECT);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_SENDER);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
     if (hasRightChangeRights) {
-        namesForColumns.push(CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
     }
     var modelForColumns = new Array();
     modelForColumns.push({name:'subject',index:'subject'});
@@ -165,10 +186,10 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
     };
     
     var namesForColumns = new Array();
-    namesForColumns.push(CASE_GRID_STRING_CONTACT_NAME);
-    namesForColumns.push(CASE_GRID_STRING_EMAIL_ADDRESS);
-    namesForColumns.push(CASE_GRID_STRING_PHONE_NUMBER);
-    namesForColumns.push(CASE_GRID_STRING_ADDRESS);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CONTACT_NAME);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_EMAIL_ADDRESS);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_PHONE_NUMBER);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_ADDRESS);
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'emailAddress',index:'emailAddress'});
@@ -281,11 +302,11 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
     };
 
     var namesForColumns = new Array();
-    namesForColumns.push(CASE_GRID_STRING_FILE_DESCRIPTION);
-    namesForColumns.push(CASE_GRID_STRING_FILE_NAME);
-    namesForColumns.push(CASE_GRID_STRING_FILE_SIZE);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_DESCRIPTION);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_NAME);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_SIZE);
     if (subGridParams.rightsChanger) {
-        namesForColumns.push(CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
     }
     subGridParams.colNames = namesForColumns;
     
