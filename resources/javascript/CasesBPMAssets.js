@@ -21,6 +21,9 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
     CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by'
 };
 
+CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
+
+
 jQuery(document).ready(function() {
 });
 
@@ -92,7 +95,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
             callback: function(result) {
                 callback(result);
                 
-                CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + GRID_WITH_SUBGRID_ID_PREFIX + piId));
+                CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX + piId));
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
             }
@@ -137,7 +140,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
             callback: function(result) {
                 callback(result);
 
-                CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + GRID_WITH_SUBGRID_ID_PREFIX + piId));
+                CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX + piId));
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
             }
@@ -227,7 +230,7 @@ CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, popul
         params.subGridRowExpanded = null;
     }
     else {
-        jQuery(table).attr('id', params.identifier + GRID_WITH_SUBGRID_ID_PREFIX + piId);
+        jQuery(table).attr('id', params.identifier + CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX + piId);
         params.subGrid = true;
         params.subGridRowExpanded = subGridForThisGrid;
     }
