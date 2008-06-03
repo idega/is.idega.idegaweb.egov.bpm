@@ -28,9 +28,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  *
- * Last modified: $Date: 2008/06/02 19:12:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/03 09:59:14 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -365,7 +365,7 @@ public class CasesBPMAssetsState implements Serializable {
 		return new StringBuilder("display: ").append(displayPropertyForStyleAttribute).append(CoreConstants.SEMICOLON).toString();
 	}
 
-	protected void setDisplayPropertyForStyleAttribute(boolean displayPropertyForStyleAttribute) {
+	public void setDisplayPropertyForStyleAttribute(boolean displayPropertyForStyleAttribute) {
 		this.displayPropertyForStyleAttribute = displayPropertyForStyleAttribute ? "block" : "none";
 	}
 }

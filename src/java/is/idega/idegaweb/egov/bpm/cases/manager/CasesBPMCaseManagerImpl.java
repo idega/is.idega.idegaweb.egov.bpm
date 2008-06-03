@@ -2,7 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.manager;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesListAsset;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
@@ -43,12 +43,13 @@ import com.idega.presentation.IWContext;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/06/02 19:10:24 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/03 09:59:15 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -147,6 +148,8 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	}
 
 	public UIComponent getView(IWContext iwc, Case theCase) {
+		CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
+		stateBean.setDisplayPropertyForStyleAttribute(false);	//	TODO:	is it always not visible?
 		
 		UICasesBPMAssets casesAssets = (UICasesBPMAssets)iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
 		UIViewRoot viewRoot = iwc.getViewRoot();

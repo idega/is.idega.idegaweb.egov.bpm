@@ -44,11 +44,6 @@ public class CaseBPMManagerViewBuilder implements GeneralCaseManagerViewBuilder 
 		if (taskInstanceId == null) {
 			throw new RemoteException("Unknown ID for task instance");
 		}
-		
-		CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
-		stateBean.setCaseId(caseId);
-		stateBean.setViewSelected(taskInstanceId);
-		stateBean.setDisplayPropertyForStyleAttribute(false);
 
 		GeneralCasesListBuilder listBuilder = WFUtil.getBeanInstance(iwc, GeneralCasesListBuilder.SPRING_BEAN_IDENTIFIER);
 		UIComponent view = listBuilder.getCaseManagerView(iwc, caseId);
