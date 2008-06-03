@@ -7,7 +7,6 @@
 	    	<param name="managedBeanName" value="casesEngineDWR" />
 	    	<param name="class" value="is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine" />
 	    	<include method="getCaseManagerView" />
-	    	<include method="getLocalizedStrings" />
 	    	<include method="getProcessInstanceId" />
 	    	<include method="setCaseSubject" />
 	    	<include method="takeBPMProcessTask" />

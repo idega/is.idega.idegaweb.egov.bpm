@@ -249,7 +249,8 @@ CasesBPMAssets.getProcessRersourceView = function(caseId, taskInstanceId) {
 
 CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, hasRightChangeRights, identifier) {
     var subgridTableId = subgridId + '_t';
-    jQuery('#' + subgridId).html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\'></table>');
+    var subGridContainer = jQuery('#' + subgridId);
+	subGridContainer.html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\'></table>');
 
     var subGridParams = new JQGridParams();
     subGridParams.rightsChanger = hasRightChangeRights;
@@ -263,6 +264,13 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
                 var subGridTable = jQuery('#' + subgridTableId);
                 if (subGridTable == null || subGridTable.length == 0) {
                     return false;
+                }
+                
+                var tableHeadersContainers = jQuery('div.gridHeadersTableContainer', subGridContainer);
+                if (tableHeadersContainers != null && tableHeadersContainers.length > 0) {
+                	for (var i = 0; i < tableHeadersContainers.length; i++) {
+                		jQuery(tableHeadersContainers[i]).css('display', 'none');
+                	}
                 }
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(subGridTable.parent().parent());

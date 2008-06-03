@@ -65,5 +65,4 @@ tasks=Tasks
 forms=Documents
 emails=E-mails
 contacts=Contacts
-click_to_edit=Click to edit...
 cases_list.can_not_get_case_view=Sorry, error occurred - can not generate case manager view.
