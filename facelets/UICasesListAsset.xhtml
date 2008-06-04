@@ -6,8 +6,16 @@
 		xmlns:t="http://myfaces.apache.org/tomahawk"
 >
 	<t:div styleClass="caseGrids">
-		<t:div styleClass="caseTasksPart">
-			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/></t:div>
+		<t:div styleClass="caseTasksPart" style="#{casesBPMAssetsState.tasksVisibilityProperty}">
+			<t:div styleClass="header">
+				<t:div style="float: left">
+					<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/>
+				</t:div>
+				<t:div style="float: right">
+					<t:outputText styleClass="watchUnwatchCase" value="#{casesBPMAssetsState.watchCaseStatusLabel}"></t:outputText>
+				</t:div>
+				<div class="spacer" />
+			</t:div>
 			<table class="caseTasks" />
 		</t:div>
 		<t:div styleClass="caseFormsPart">

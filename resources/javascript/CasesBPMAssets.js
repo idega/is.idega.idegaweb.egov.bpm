@@ -37,6 +37,18 @@ CasesBPMAssets.initGrid = function(container, piId, caseId) {
     
     if (piId != null) {
     	
+    	var caseWatcherSpan = jQuery('span.watchUnwatchCase', container);
+    	if (caseWatcherSpan != null && caseWatcherSpan.length > 0) {
+    		var attributeName = 'processinstanceid';
+    		caseWatcherSpan.attr(attributeName, piId);
+    		caseWatcherSpan.click(function() {
+    			var watcher = jQuery(this);
+    			var processInstanceId = watcher.attr(attributeName);
+    			
+    			CasesBPMAssets.setWatchOrUnwatchTask(watcher, processInstanceId);
+    		});
+    	}
+    	
         BPMProcessAssets.hasUserRolesEditorRights(piId, {
 	        callback: function(hasRightChangeRights) {
 	        	
@@ -72,6 +84,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     if (hasRightChangeRights) {
         namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
     }
+    
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'createdDate',index:'createdDate'});
@@ -537,4 +550,19 @@ CasesBPMAssets.closeAccessRightsSetterBox = function() {
 	}
 	
 	rightsBox.hide('fast');
+}
+
+CasesBPMAssets.setWatchOrUnwatchTask = function(element, processInstanceId) {
+	showLoadingMessage('');
+	BPMProcessAssets.watchOrUnwatchBPMProcessTask(processInstanceId, {
+		callback: function(message) {
+			closeAllLoadingMessages();
+			
+			if (message == null) {
+				return false;
+			}
+			
+			jQuery(element).text(message);
+		}
+	});
 }

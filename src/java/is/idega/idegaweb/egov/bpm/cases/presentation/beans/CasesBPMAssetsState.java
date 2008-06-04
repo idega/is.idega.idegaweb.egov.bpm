@@ -6,8 +6,6 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
 import java.io.Serializable;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -15,22 +13,19 @@ import javax.faces.context.FacesContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
-import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.artifacts.presentation.bean.BPMProcessWatcher;
 import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.presentation.IWContext;
-import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.webface.WFUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  *
- * Last modified: $Date: 2008/06/03 09:59:14 $ by $Author: valdas $
+ * Last modified: $Date: 2008/06/04 12:59:18 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -42,6 +37,8 @@ public class CasesBPMAssetsState implements Serializable {
 	public static final String beanIdentifier = "casesBPMAssetsState";
 	
 	private transient CasesBPMProcessView casesBPMProcessView;
+	private transient BPMProcessWatcher processWatcher;
+	
 	private Integer caseId;
 	private Long processInstanceId;
 	private Long viewSelected;
@@ -198,56 +195,34 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 	
 	public void takeWatch() {
+		boolean result = getProcessWathcer().takeWatch(getProcessInstanceId());
+		isWatched = null;
 		
-		FacesContext ctx = FacesContext.getCurrentInstance();
-		IWContext iwc = IWContext.getIWContext(ctx);
-		
-		try {
-			CasesBPMDAO dao = getCasesBPMProcessView().getCasesBPMDAO();
-			User performer = iwc.getCurrentUser();
-			
-			ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
-			
-			caseUser.setStatus(Status.PROCESS_WATCHED);
-			
-			dao.merge(caseUser);
-			isWatched = null;
-			
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Case added to your cases list (My Cases)", null);
-			ctx.addMessage(null, msg);
-			
-		} catch (Exception e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while updating CaseUser status", e);
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "We were unable to add this case to your watch list due to internal error", null);
-			ctx.addMessage(null, msg);
-		}
+		String message = result ? "Case added to your cases list (My Cases)" : "We were unable to add this case to your watch list due to internal error";
+		FacesMessage msg = new FacesMessage(result ? FacesMessage.SEVERITY_INFO : FacesMessage.SEVERITY_ERROR, message, null);
+		FacesContext.getCurrentInstance().addMessage(null, msg);
 	}
 	
 	public void removeWatch() {
+		boolean result = getProcessWathcer().removeWatch(getProcessInstanceId());
+		isWatched = null;
 		
-		FacesContext ctx = FacesContext.getCurrentInstance();
-		IWContext iwc = IWContext.getIWContext(ctx);
-		
-		try {
-			CasesBPMDAO dao = getCasesBPMProcessView().getCasesBPMDAO();
-			User performer = iwc.getCurrentUser();
-			
-			ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
-			
-			if(caseUser.getStatus() != null && caseUser.getStatus() == Status.PROCESS_WATCHED)
-				caseUser.setStatus(Status.NO_STATUS);
-			
-			dao.merge(caseUser);
-			isWatched = null;
-			
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_INFO, "Case removed from your cases list (My Cases)", null);
-			ctx.addMessage(null, msg);
-			
-		} catch (Exception e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while updating CaseUser status", e);
-			FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "We were unable to remove this case from your watch list due to internal error", null);
-			ctx.addMessage(null, msg);
+		String message = result ? "Case removed from your cases list (My Cases)" : "We were unable to remove this case from your watch list due to internal error";
+		FacesMessage msg = new FacesMessage(result ? FacesMessage.SEVERITY_INFO : FacesMessage.SEVERITY_ERROR, message, null);
+		FacesContext.getCurrentInstance().addMessage(null, msg);
+	}
+	
+	public String getWatchCaseStatusLabel() {
+		return getProcessWathcer().getWatchCaseStatusLabel(isWatched());
+	}
+	
+	public String getTasksVisibilityProperty() {
+		Boolean processHasEnded = getProcessView().getEnded();
+		if (processHasEnded != null && processHasEnded) {
+			return "display: none";
 		}
+		
+		return "display: block";
 	}
 	
 	public void startTask() {
@@ -275,22 +250,7 @@ public class CasesBPMAssetsState implements Serializable {
 	public boolean isWatched() {
 		
 		if(isWatched == null) {
-			
-			FacesContext ctx = FacesContext.getCurrentInstance();
-			IWContext iwc = IWContext.getIWContext(ctx);
-			
-			try {
-				CasesBPMDAO dao = getCasesBPMProcessView().getCasesBPMDAO();
-				User performer = iwc.getCurrentUser();
-				
-				ProcessUserBind caseUser = dao.getProcessUserBind(getProcessInstanceId(), new Integer(performer.getPrimaryKey().toString()), true);
-				isWatched = Status.PROCESS_WATCHED == caseUser.getStatus();
-				
-			} catch (Exception e) {
-				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while checking CaseUser status", e);
-				FacesMessage msg = new FacesMessage(FacesMessage.SEVERITY_ERROR, "We were unable to fulfill your request, try again later", null);
-				ctx.addMessage(null, msg);
-			}
+			isWatched = getProcessWathcer().isWatching(getProcessInstanceId());
 		}
 		
 		return isWatched == null ? false : isWatched;
@@ -368,4 +328,13 @@ public class CasesBPMAssetsState implements Serializable {
 	public void setDisplayPropertyForStyleAttribute(boolean displayPropertyForStyleAttribute) {
 		this.displayPropertyForStyleAttribute = displayPropertyForStyleAttribute ? "block" : "none";
 	}
+
+	private BPMProcessWatcher getProcessWathcer() {
+		if (processWatcher == null) {
+			processWatcher = (BPMProcessWatcher) WFUtil.getBeanInstance(BPMProcessWatcher.SPRING_BEAN_IDENTIFIER);
+		}
+	
+		return processWatcher;
+	}
+	
 }

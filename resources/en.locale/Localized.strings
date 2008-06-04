@@ -60,3 +60,5 @@ email_address=E-mail address
 phone_number=Phone number
 address=Address
 cases_bpm.get_document_as_pdf=Download document
+cases_bpm.process_is_being_watched=Current case was added to your watch list
+cases_bpm.process_was_removed_from_watch_list=Current case was removed from your watch list
