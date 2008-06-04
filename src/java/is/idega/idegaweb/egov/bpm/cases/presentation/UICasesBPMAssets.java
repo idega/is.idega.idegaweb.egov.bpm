@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2008/06/03 15:01:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/04 10:53:16 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -382,27 +382,51 @@ public class UICasesBPMAssets extends IWBaseComponent {
 //	    CASE_GRID_STRING_FILE_SIZE: 'File size',
 //	    CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by'
 		
-		String gridLocalization = new StringBuilder(
-				"if(CasesBPMAssets.Loc == null || !CasesBPMAssets.Loc.inited) { if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = { inited: false; };\n")
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.human_name", "Name"));								//	0
+//		localizations.add(iwrb.getLocalizedString("sender", "Sender"));											//	1
+//		localizations.add(iwrb.getLocalizedString("date", "Date"));												//	2
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.assigned_to", "Taken by"));						//	3
+//		localizations.add(iwrb.getLocalizedString("email_address", "E-mail address"));							//	4
+//		localizations.add(iwrb.getLocalizedString("phone_number", "Phone number"));								//	5
+//		localizations.add(iwrb.getLocalizedString("address", "Address"));										//	6
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.subject", "Subject"));								//	7
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.file_name", "File name"));							//	8
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.change_access_rights", "Change access rights"));	//	9
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.task_name", "Task name"));							//	10
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.document_name", "Document name"));					//	11
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.get_document_as_pdf", "Download document"));		//	12
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.file_size", "File size"));							//	13
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.submitted_by", "Submitted by"));					//	14
+//		
+//		//	Other info
+//		localizations.add(FILE_DOWNLOAD_LINK_STYLE_CLASS);														//	15
+//		localizations.add(PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);											//	16
+//		
+//		localizations.add(iwrb.getLocalizedString("cases_bpm.file_description", "Descriptive name"));			//  17
+//		localizations.add(iwrb.getLocalizedString("click_to_edit", "Click to edit..."));						//	18
 		
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_CONTACT_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.document_name", "Document name")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_TASK_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.date_submitted", "Date submitted")).append("';\n")
+		String gridLocalization = new StringBuilder(
+				"if(CasesBPMAssets.Loc == null || !CasesBPMAssets.Loc.inited) { \nif(CasesBPMAssets.Loc == null) { CasesBPMAssets.Loc = { inited: false }; }\n")
+		
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_CONTACT_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.human_name", "Name")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_TASK_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.task_name", "Task name")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FORM_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.date_created", "Date created")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SENDER = '")					.append(iwrb.getLocalizedString("cases_bpm.submitted_by", "Submitted by")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_DATE = '")						.append(iwrb.getLocalizedString("cases_bpm.get_document_as_pdf", "Download document")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY = '")					.append(iwrb.getLocalizedString("cases_bpm.subject", "Subject")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_EMAIL_ADDRESS = '")			.append(iwrb.getLocalizedString("cases_bpm.from", "From")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_PHONE_NUMBER = '")				.append(iwrb.getLocalizedString("cases_bpm.receive_date", "Receive date")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_ADDRESS = '")					.append(iwrb.getLocalizedString("cases_bpm.file_name", "File name")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SUBJECT = '")					.append(iwrb.getLocalizedString("cases_bpm.file_description", "File description")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_DESCRIPTION = '")			.append(iwrb.getLocalizedString("cases_bpm.file_size", "File size")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.task_name", "Task name")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS = '")		.append(iwrb.getLocalizedString("cases_bpm.taken_by", "Taken by")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF = '")	.append(iwrb.getLocalizedString("cases_bpm.status", "Status")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_SIZE = '")				.append(iwrb.getLocalizedString("cases_bpm.status", "Status")).append("';\n")
-			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SUBMITTED_BY = '")				.append(iwrb.getLocalizedString("cases_bpm.status", "Status")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SENDER = '")					.append(iwrb.getLocalizedString("sender", "Sender")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_DATE = '")						.append(iwrb.getLocalizedString("date", "Date")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY = '")					.append(iwrb.getLocalizedString("cases_bpm.assigned_to", "Taken by")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_EMAIL_ADDRESS = '")			.append(iwrb.getLocalizedString("email_address", "E-mail address")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_PHONE_NUMBER = '")				.append(iwrb.getLocalizedString("phone_number", "Phone number")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_ADDRESS = '")					.append(iwrb.getLocalizedString("address", "Address")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SUBJECT = '")					.append(iwrb.getLocalizedString("cases_bpm.subject", "Subject")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_DESCRIPTION = '")			.append(iwrb.getLocalizedString("cases_bpm.file_description", "Descriptive name")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.file_name", "File name")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS = '")		.append(iwrb.getLocalizedString("cases_bpm.change_access_rights", "Change access rights")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF = '")	.append(iwrb.getLocalizedString("cases_bpm.get_document_as_pdf", "Download document")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_SIZE = '")				.append(iwrb.getLocalizedString("cases_bpm.file_size", "File size")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SUBMITTED_BY = '")				.append(iwrb.getLocalizedString("cases_bpm.submitted_by", "Submitted by")).append("';\n")
 			
-			.append("CasesBPMAssets.Loc.inited = true;")
+//			"cases_bpm.document_name", "Document name"
+			.append("CasesBPMAssets.Loc.inited = true; }")
 			
 			.toString();
 		/*
@@ -446,7 +470,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			Long processInstanceId = stateBean.getProcessInstanceId();
 			Integer caseId = stateBean.getCaseId();
 			
-			String action = "jQuery.getScript('"+casesBPMAssetsScript+"', function() { CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
+			String action = "jQuery.getScript('"+casesBPMAssetsScript+"', function() { "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
 					"});";
 			container.getChildren().add(new Text(PresentationUtil.getJavaScriptAction(action)));
 			
