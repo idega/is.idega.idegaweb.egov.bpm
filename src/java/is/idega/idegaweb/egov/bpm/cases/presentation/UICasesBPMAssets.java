@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  *
- * Last modified: $Date: 2008/06/04 12:59:18 $ by $Author: valdas $
+ * Last modified: $Date: 2008/06/04 13:18:12 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -332,33 +332,13 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
-		scripts.add(web2Business.getBundleURIToJQGrid()); //
-		scripts.add(web2Business.getBundleURIToJQueryUILib(JQueryUIType.UI_EDITABLE)); //
-		//scripts.add(bundle.getVirtualPathWithFileNameString("javascript/CasesListHelper.js")); // shouldn't be needed
+		scripts.add(web2Business.getBundleURIToJQGrid());
+		scripts.add(web2Business.getBundleURIToJQueryUILib(JQueryUIType.UI_EDITABLE));
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
-		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
-		//scripts.add("/dwr/interface/CasesEngine.js");
-		scripts.add("/dwr/interface/BPMProcessAssets.js"); //
+		scripts.add("/dwr/interface/BPMProcessAssets.js");
 		
-		//scripts.add(getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js");
-//		resource.addJavaScriptAtPosition(context, AddResource.HEADER_BEGIN, getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js");
-	
 		List<String> css = new ArrayList<String>();
 		css.add(web2Business.getBundleURIToJQGridStyles());
-		
-//		if (caseId == null || CoreConstants.EMPTY.equals(caseId)) {
-//			caseId = iwc.getParameter(CasesProcessor.PARAMETER_CASE_PK + "_id");
-//		}
-		/*
-		StringBuilder action = new StringBuilder("initializeCasesList(");
-		if (caseId == null || CoreConstants.EMPTY.equals(action)) {
-			action.append("null");
-		}
-		else {
-			action.append("'").append(caseId).append("'");
-		}
-		action.append(");");
-		*/
 		
 		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
