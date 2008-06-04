@@ -41,9 +41,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/06/02 19:09:45 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/04 11:41:02 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
@@ -199,6 +199,7 @@ public class CasesBPMProcessView {
 			CasesBPMProcessViewBean bean = new CasesBPMProcessViewBean();
 			bean.setProcessName(pi.getProcessDefinition().getName());
 			bean.setProcessStatus(processStatus);
+			bean.setEnded(pi.hasEnded());
 			bean.setProcessOwner(ownerName);
 			bean.setProcessCreateDate(createDate);
 			bean.setCaseCategory(caseCategory);
@@ -333,6 +334,7 @@ public class CasesBPMProcessView {
 		
 		private static final long serialVersionUID = -1209671586005809408L;
 		
+		private Boolean ended;
 		private String processName;
 		private String processStatus;
 		private String processOwner;
@@ -382,6 +384,12 @@ public class CasesBPMProcessView {
 		}
 		public void setCaseIdentifier(String caseIdentifier) {
 			this.caseIdentifier = caseIdentifier;
+		}
+		public Boolean getEnded() {
+			return ended == null ? false : ended;
+		}
+		public void setEnded(Boolean ended) {
+			this.ended = ended;
 		}
 	}
 	
