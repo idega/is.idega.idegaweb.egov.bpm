@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  *
- * Last modified: $Date: 2008/06/05 09:02:23 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/05 16:23:16 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -134,20 +134,6 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetViewRendered}"));
 		getFacets().put(assetViewFacet, div);
 //		</asset view>
-		
-//		DownloadLink link = new DownloadLink("DL");
-//		link.setId("casesBPMAttachmentDownloader");
-//		link.setStyleAttribute("display: none;");
-//		link.setMediaWriterClass(AttachmentWriter.class);
-//		
-//		div.getChildren().add(link);
-		
-//		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
-//		facelet.setFaceletURI("/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssets.xhtml");
-//		
-//		div.getChildren().add(facelet);
-//		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetsRendered}"));
-//		getFacets().put(assetsFacet, div);
 	}
 	
 	@Override
@@ -324,11 +310,15 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private void addClientResources(IWContext iwc, UIComponent container) {
 		
 		Web2Business web2Business = getBeanInstance("web2bean");
+		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		
 		List<String> scripts = new ArrayList<String>();
 		
-//		added only if standalone
-		//scripts.add(web2Business.getBundleURIToJQueryLib());
+		boolean isSingle = CoreUtil.isSingleComponentRenderingProcess(iwc);
+		
+		if(!isSingle)
+//			TODO: do the same with single when iw_core will be able to include js+callback without jquery
+			scripts.add(web2Business.getBundleURIToJQueryLib());
 		
 //		include always
 		scripts.add(web2Business.getBundleURIToJQGrid());
@@ -336,11 +326,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
 		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
+		scripts.add(bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js");
 		
 		List<String> css = new ArrayList<String>();
 		css.add(web2Business.getBundleURIToJQGridStyles());
 		
-		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
 		
 		String gridLocalization = new StringBuilder(
@@ -375,53 +365,46 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			clientId = container.getClientId(iwc);
 		}
 		
-		String casesBPMAssetsScript = bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js";
-		
 		CasesBPMAssetsState stateBean = getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 		Long processInstanceId = stateBean.getProcessInstanceId();
 		Integer caseId = stateBean.getCaseId();
 		
-//		String action = "jQuery.getScript('"+casesBPMAssetsScript+"', function() { console.log('got scr'); "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
-//				"});";
-		
-		scripts.add(casesBPMAssetsScript);
-		StringBuilder scriptsPathes = new StringBuilder("[");
-		
-		for (Iterator<String> iterator = scripts.iterator(); iterator.hasNext();) {
-			String script = iterator.next();
+		if (isSingle) {
 			
-			scriptsPathes.append("'")
-			.append(script);
+			StringBuilder scriptsPathes = new StringBuilder("[");
 			
-			if(iterator.hasNext())
-				scriptsPathes.append("', ");
-			else
-				scriptsPathes.append("']");
-		}
-		
-		String callback = "function() { "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");}";
-		
-		String action = 
-			"IWCORE.includeScriptsBatch(" +
-			scriptsPathes + ", "+callback+
-			");";
-		
-//			"jQuery.getScript('"+casesBPMAssetsScript+"', function() { console.log('got scr'); "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
-//		"});";
-		
-		container.getChildren().add(new Text(PresentationUtil.getJavaScriptAction(action)));
-		
-		if (CoreUtil.isSingleComponentRenderingProcess(iwc)) {
-			//container.getChildren().add(new Text(PresentationUtil.getJavaScriptSourceLinesIncludeOnce(scripts)));
-			container.getChildren().add(new Text(PresentationUtil.getStyleSheetsSourceLines(css)));
-			//container.add(PresentationUtil.getJavaScriptAction(action.toString()));
+			for (Iterator<String> iterator = scripts.iterator(); iterator.hasNext();) {
+				String script = iterator.next();
+				
+				scriptsPathes.append("'")
+				.append(script);
+				
+				if(iterator.hasNext())
+					scriptsPathes.append("', ");
+				else
+					scriptsPathes.append("']");
+			}
 			
+			String callback = "function() { "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");}";
 			
+			String action = 
+				"IWCORE.includeScriptsBatch(" +
+				scriptsPathes + ", "+callback+
+				");";
+			
+			@SuppressWarnings("unchecked")
+			List<UIComponent> containerChildren = container.getChildren();
+			containerChildren.add(new Text(PresentationUtil.getJavaScriptAction(action)));
+			containerChildren.add(new Text(PresentationUtil.getStyleSheetsSourceLinesIncludeOnce(css)));
 			
 		} else {
+			
+			String action = 
+				"CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");";
+			
 			PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, scripts);
 			PresentationUtil.addStyleSheetsToHeader(iwc, css);
-			//PresentationUtil.addJavaScriptActionToBody(iwc, "jQuery(document).ready(function() {"+action.toString()+"});");
+			PresentationUtil.addJavaScriptActionToBody(iwc, "jQuery(document).ready(function() {"+action.toString()+"});");
 		}
 	}
 }
