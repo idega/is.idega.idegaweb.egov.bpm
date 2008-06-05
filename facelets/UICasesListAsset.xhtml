@@ -11,10 +11,11 @@
 				<t:div style="float: left">
 					<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/>
 				</t:div>
-				<t:div style="float: right">
+				<t:div rendered="#{loginSession.loggedIn}" style="float: right">
 					<t:outputText styleClass="watchUnwatchCase" value="#{casesBPMAssetsState.watchCaseStatusLabel}"></t:outputText>
 				</t:div>
 				<div class="spacer" />
+				<t:div style="display: none;" rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}" />
 			</t:div>
 			<table class="caseTasks" />
 		</t:div>
