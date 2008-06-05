@@ -23,7 +23,7 @@ public class UICasesListAsset extends IWBaseComponent {
 	public static final String COMPONENT_TYPE = "com.idega.UICasesListAsset";
 	private static final String CASES_LIST_COMPONENT =  "casesListFaceletBasedComponent";
 	
-	private Integer caseId = null;
+	private Integer caseId;
 	private boolean downloadDocument = false;
 	
 	@SuppressWarnings("unchecked")

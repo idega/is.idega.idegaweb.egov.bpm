@@ -7,8 +7,8 @@ import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  *
- * Last modified: $Date: 2008/06/04 13:18:12 $ by $Author: valdas $
+ * Last modified: $Date: 2008/06/05 09:02:23 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -327,14 +327,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		List<String> scripts = new ArrayList<String>();
 		
-		try {
-			scripts.add(web2Business.getBundleURIToJQueryLib());
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		}
+//		added only if standalone
+		//scripts.add(web2Business.getBundleURIToJQueryLib());
+		
+//		include always
 		scripts.add(web2Business.getBundleURIToJQGrid());
 		scripts.add(web2Business.getBundleURIToJQueryUILib(JQueryUIType.UI_EDITABLE));
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
+		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
 		
 		List<String> css = new ArrayList<String>();
@@ -367,28 +367,56 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			
 			.toString();
 		
+		String clientId = container.getClientId(iwc);
+		
+		if(clientId == null) {
+			
+			container.setId(iwc.getViewRoot().createUniqueId());
+			clientId = container.getClientId(iwc);
+		}
+		
+		String casesBPMAssetsScript = bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js";
+		
+		CasesBPMAssetsState stateBean = getBeanInstance(CasesBPMAssetsState.beanIdentifier);
+		Long processInstanceId = stateBean.getProcessInstanceId();
+		Integer caseId = stateBean.getCaseId();
+		
+//		String action = "jQuery.getScript('"+casesBPMAssetsScript+"', function() { console.log('got scr'); "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
+//				"});";
+		
+		scripts.add(casesBPMAssetsScript);
+		StringBuilder scriptsPathes = new StringBuilder("[");
+		
+		for (Iterator<String> iterator = scripts.iterator(); iterator.hasNext();) {
+			String script = iterator.next();
+			
+			scriptsPathes.append("'")
+			.append(script);
+			
+			if(iterator.hasNext())
+				scriptsPathes.append("', ");
+			else
+				scriptsPathes.append("']");
+		}
+		
+		String callback = "function() { "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");}";
+		
+		String action = 
+			"IWCORE.includeScriptsBatch(" +
+			scriptsPathes + ", "+callback+
+			");";
+		
+//			"jQuery.getScript('"+casesBPMAssetsScript+"', function() { console.log('got scr'); "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
+//		"});";
+		
+		container.getChildren().add(new Text(PresentationUtil.getJavaScriptAction(action)));
+		
 		if (CoreUtil.isSingleComponentRenderingProcess(iwc)) {
-			container.getChildren().add(new Text(PresentationUtil.getJavaScriptSourceLinesIncludeOnce(scripts)));
+			//container.getChildren().add(new Text(PresentationUtil.getJavaScriptSourceLinesIncludeOnce(scripts)));
 			container.getChildren().add(new Text(PresentationUtil.getStyleSheetsSourceLines(css)));
 			//container.add(PresentationUtil.getJavaScriptAction(action.toString()));
 			
-			String clientId = container.getClientId(iwc);
 			
-			if(clientId == null) {
-				
-				container.setId(iwc.getViewRoot().createUniqueId());
-				clientId = container.getClientId(iwc);
-			}
-			
-			String casesBPMAssetsScript = bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js";
-			
-			CasesBPMAssetsState stateBean = getBeanInstance(CasesBPMAssetsState.beanIdentifier);
-			Long processInstanceId = stateBean.getProcessInstanceId();
-			Integer caseId = stateBean.getCaseId();
-			
-			String action = "jQuery.getScript('"+casesBPMAssetsScript+"', function() { "+gridLocalization+" CasesBPMAssets.initGrid(jQuery('div."+clientId+"')[0], "+processInstanceId.toString()+", "+caseId.toString()+");" +
-					"});";
-			container.getChildren().add(new Text(PresentationUtil.getJavaScriptAction(action)));
 			
 		} else {
 			PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, scripts);
