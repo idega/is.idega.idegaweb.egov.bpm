@@ -19,12 +19,14 @@ import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
 
 import org.jbpm.JbpmContext;
+import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -34,6 +36,7 @@ import com.idega.core.persistence.Param;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.IdegaJbpmContext;
@@ -47,9 +50,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/06/03 09:59:15 $ by $Author: valdas $
+ * Last modified: $Date: 2008/06/06 14:22:15 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -358,5 +361,27 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	@Autowired
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
+	}
+
+	public List<AdvancedProperty> getAllCaseProcesses() {
+		
+		List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
+		
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			ArrayList<AdvancedProperty> props = new ArrayList<AdvancedProperty>(casesProcesses.size());
+			
+			for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
+				
+				ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
+				props.add(new AdvancedProperty(String.valueOf(pd.getId()), pd.getName()));
+			}
+			
+			return props;
+			
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
+		}
 	}
 }
