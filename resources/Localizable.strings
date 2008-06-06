@@ -1,11 +1,3 @@
-_cases_bpm.newCaseArrived.subject=New case has been created
-_cases_bpm.newCaseArrived.message=Hello, {0}. New case has been created.
-_cases_bpm.thankOwnerForNewCase.subject=Case created successfully!
-_cases_bpm.thankOwnerForNewCase.message=Hello, {0}. You have successfully created case {1}. You can access case related information in your cases list at {2}. We are hopeful that your case will be handled soon. Good luck!
-_cases_bpm.processRulingSubmitted.subject=Process ruling has been submitted
-_cases_bpm.processRulingSubmitted.message=Hello, {0}. Process ruling has been submitted, process has ended.
-_cases_bpm.additionalInfoForOwner.subject=Additional information needed
-_cases_bpm.additionalInfoForOwner.message=Hello, {0}. Please, fill out the new form in your forms list, for supplying additional information.
 cases_bpm.case_status=Case status
 _cases_bpm.case_creator=Case creator
 _cases_bpm.case_create_date=Case create date

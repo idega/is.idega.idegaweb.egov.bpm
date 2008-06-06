@@ -1,11 +1,3 @@
-_cases_bpm.newCaseArrived.subject=N\u00FDtt m\u00E1l stofna\u00F0
-_cases_bpm.newCaseArrived.message=S\u00E6l/ll, {0}. N\u00FDtt m\u00E1l hefur veri\u00F0 stofna\u00F0 \u00ED \u00FE\u00EDnu nafni.
-_cases_bpm.thankOwnerForNewCase.subject=\u00DEakka \u00FE\u00E9r fyrir, n\u00FDtt m\u00E1l hefur veri\u00F0 stofna\u00F0 og ver\u00F0ur afgreitt eins flj\u00F3tt og au\u00F0i\u00F0 er.
-_cases_bpm.thankOwnerForNewCase.message=S\u00E6l/ll, {0}. \u00DE\u00FA hefur stofna\u00F0 m\u00E1li\u00F0 {1}. \u00DE\u00FA getur fylgst me\u00F0 st\u00F6\u00F0u m\u00E1lsins \u00ED m\u00E1laskr\u00E1 \u00FEinni \u00E1 netinu ({2}). M\u00E1l \u00FEitt ver\u00F0ur afgreitt eins flj\u00F3tt og au\u00F0i\u00F0 er.
-_cases_bpm.processRulingSubmitted.subject=Ni\u00F0ursta\u00F0a \u00ED erindi til k\u00E6runefndar
-_cases_bpm.processRulingSubmitted.message=S\u00E6l/ll, {0}. Ni\u00F0ursta\u00F0a er komin \u00ED m\u00E1li \u00FE\u00EDnu hj\u00E1 k\u00E6runefndinni.
-_cases_bpm.additionalInfoForOwner.subject=Meiri uppl\u00FDsingar er \u00FE\u00F6rf.
-_cases_bpm.additionalInfoForOwner.message=S\u00E6l/ll, {0}. Vinsamlegast skr\u00E1\u00F0u \u00FEig inn og opna\u00F0u m\u00E1li\u00F0 \u00FEitt \u00ED erindalistanum. \u00DE\u00FA \u00E6ttir a\u00F0 s\u00E1 n\u00FDja a\u00F0ger\u00F0 undir m\u00E1linu til a\u00F0 senda inn meiri g\u00F6gn.E\u00F0a \u00FE\u00FA getur sent m\u00E1linu t\u00F6lvup\u00F3st.
 cases_bpm.case_status=Sta\u00F0a
 c_ases_bpm.case_creator=Stofnandi
 c_ases_bpm.case_create_date=Stofna\u00F0
