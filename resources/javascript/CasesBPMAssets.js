@@ -26,39 +26,43 @@ CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
 CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS = 'casesBPMPDFGeneratorAndDownloader';
 
-jQuery(document).ready(function() {
-});
-
 CasesBPMAssets.initGrid = function(container, piId, caseId) {
+	if (container == null) {
+		return false;
+	}
+	
+	if ('true' == jQuery(container).attr('inited')) {
+		return false;
+	}
+	
+	jQuery(container).attr('inited', 'true');
 	
 	var jQGridInclude = new JQGridInclude();
     jQGridInclude.SUBGRID = true;
-    jqGridInclude(jQGridInclude);
-    
-    if (piId != null) {
-    	
-    	var caseWatcherSpan = jQuery('span.watchUnwatchCase', container);
-    	if (caseWatcherSpan != null && caseWatcherSpan.length > 0) {
-    		var attributeName = 'processinstanceid';
-    		caseWatcherSpan.attr(attributeName, piId);
-    		caseWatcherSpan.click(function() {
-    			var watcher = jQuery(this);
-    			var processInstanceId = watcher.attr(attributeName);
-    			
-    			CasesBPMAssets.setWatchOrUnwatchTask(watcher, processInstanceId);
-    		});
-    	}
-    	
-        BPMProcessAssets.hasUserRolesEditorRights(piId, {
-	        callback: function(hasRightChangeRights) {
-	        	
-	            CasesBPMAssets.initTasksGrid(caseId, piId, container, false);
-	            CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights);
-	            CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights);
-	            CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights);
-	        }
-        });    
-    }
+    jqGridInclude(jQGridInclude, function() {
+    	if (piId != null) {
+	    	var caseWatcherSpan = jQuery('span.watchUnwatchCase', container);
+	    	if (caseWatcherSpan != null && caseWatcherSpan.length > 0) {
+	    		var attributeName = 'processinstanceid';
+	    		caseWatcherSpan.attr(attributeName, piId);
+	    		caseWatcherSpan.click(function() {
+	    			var watcher = jQuery(this);
+	    			var processInstanceId = watcher.attr(attributeName);
+	    			
+	    			CasesBPMAssets.setWatchOrUnwatchTask(watcher, processInstanceId);
+	    		});
+	    	}
+	    	
+	        BPMProcessAssets.hasUserRolesEditorRights(piId, {
+		        callback: function(hasRightChangeRights) {
+		            CasesBPMAssets.initTasksGrid(caseId, piId, container, false);
+		            CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights);
+		            CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights);
+		            CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights);
+		        }
+	        });    
+	    }
+    });
 };
 
 CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights) {
