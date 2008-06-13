@@ -17,9 +17,9 @@ import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/06/13 08:08:02 $ by $Author: anton $
+ * Last modified: $Date: 2008/06/13 11:55:50 $ by $Author: anton $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -55,7 +55,6 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 		
 		for(TaskInstance instance : taskInstances) {
 			TaskInstanceW taskW = getTaskInstance(instance.getId());
-			taskW.setTaskInstance(instance);
 			instances.add(taskW);
 		}
 		

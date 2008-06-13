@@ -23,10 +23,8 @@ import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.cache.IWCacheManager2;
-import com.idega.documentmanager.component.beans.ComponentDataBean;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.IWMainApplicationContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessException;
@@ -35,7 +33,6 @@ import com.idega.jbpm.identity.BPMAccessControlException;
 import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.view.View;
-import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -43,9 +40,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/06/13 11:12:17 $ by $Author: anton $
+ * Last modified: $Date: 2008/06/13 11:55:50 $ by $Author: anton $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -60,11 +57,11 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	private static final String CASHED_TASK_NAMES = "cash_taskinstance_names";
 	
 	public TaskInstance getTaskInstance() {
+		if(taskInstance == null) {
+			JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
+			taskInstance = ctx.getTaskInstance(taskInstanceId);
+		}
 		return taskInstance;
-	}
-
-	public void setTaskInstance(TaskInstance taskInstance) {
-		this.taskInstance = taskInstance;
 	}
 
 	public void assign(User usr) {
@@ -89,7 +86,6 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			RolesManager rolesManager = getCasesBPMResources().getBpmFactory().getRolesManager();
 			rolesManager.hasRightsToAssignTask(taskInstanceId, userId);
 			
-			setTaskInstance(ctx.getTaskInstance(taskInstanceId));
 			getTaskInstance().setActorId(String.valueOf(userId));
 			ctx.save(getTaskInstance());
 		
