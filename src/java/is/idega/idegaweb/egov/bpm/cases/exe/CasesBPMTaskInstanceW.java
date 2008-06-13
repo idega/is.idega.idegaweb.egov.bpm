@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -21,7 +22,11 @@ import com.idega.block.form.process.XFormsView;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.cache.IWCacheManager2;
+import com.idega.documentmanager.component.beans.ComponentDataBean;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessException;
@@ -30,6 +35,7 @@ import com.idega.jbpm.identity.BPMAccessControlException;
 import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.view.View;
+import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -37,9 +43,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/13 08:08:02 $ by $Author: anton $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -48,7 +54,19 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	private Long taskInstanceId;
 	private CasesBPMResources casesBPMResources;
 	private BPMFactory bpmFactory;
+	private TaskInstance taskInstance;
+	private Map<Long, Map<Locale, String>> cashTaskNames;
 	
+	private static final String CASHED_TASK_NAMES = "cash_taskinstance_names";
+	
+	public TaskInstance getTaskInstance() {
+		return taskInstance;
+	}
+
+	public void setTaskInstance(TaskInstance taskInstance) {
+		this.taskInstance = taskInstance;
+	}
+
 	public void assign(User usr) {
 		
 		Object pk = usr.getPrimaryKey();
@@ -71,9 +89,9 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			RolesManager rolesManager = getCasesBPMResources().getBpmFactory().getRolesManager();
 			rolesManager.hasRightsToAssignTask(taskInstanceId, userId);
 			
-			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
-			taskInstance.setActorId(String.valueOf(userId));
-			ctx.save(taskInstance);
+			setTaskInstance(ctx.getTaskInstance(taskInstanceId));
+			getTaskInstance().setActorId(String.valueOf(userId));
+			ctx.save(getTaskInstance());
 		
 		} catch (BPMAccessControlException e) {
 			throw new ProcessException(e, e.getUserFriendlyMessage());
@@ -277,6 +295,37 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		}
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
+		}
+	}
+
+	public String getLabelOutput() {
+		
+		return null;
+	}
+	
+	public String getName(Locale locale) {
+		IWApplicationContext iwc = IWMainApplication.getDefaultIWApplicationContext();
+		cashTaskNames = IWCacheManager2.getInstance(iwc.getIWMainApplication()).getCache(CASHED_TASK_NAMES);
+		
+		Map<Locale, String> names = cashTaskNames.get(getTaskInstanceId());
+		
+		try {
+			String name = cashTaskNames.get(getTaskInstanceId()).get(locale);
+			if(name == null) {
+				View taskInstanceView = loadView();
+				String notCashedName = taskInstanceView.getDisplayName(locale);
+				cashTaskNames.get(getTaskInstanceId()).put(locale, notCashedName);
+				return notCashedName;
+			} else {
+				return name;
+			}
+		} catch(NullPointerException e) {
+			View taskInstanceView = loadView();
+			String name = taskInstanceView.getDisplayName(locale);
+			Map<Locale, String> newNames = new HashMap<Locale, String>(5);
+			newNames.put(locale, name);
+			cashTaskNames.put(getTaskInstanceId(), newNames);
+			return name;
 		}
 	}
 }

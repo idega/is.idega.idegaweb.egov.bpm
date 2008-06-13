@@ -1,6 +1,13 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
 
+import java.util.ArrayList;
+import java.util.Collection;
+
+import org.jbpm.JbpmContext;
+import org.jbpm.graph.exe.ProcessInstance;
+import org.jbpm.graph.exe.Token;
+import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -10,9 +17,9 @@ import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/13 08:08:02 $ by $Author: anton $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -23,6 +30,36 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	
 	public TaskInstanceW getTaskInstance(long tiId) {
 		return getCasesBPMResources().createTaskInstance(tiId);
+	}
+	
+	public Collection<TaskInstanceW> getTaskInstances(long processInstanceId, JbpmContext ctx) {
+		ProcessInstance processInstance = ctx.getProcessInstance(processInstanceId);
+		
+		@SuppressWarnings("unchecked")
+		Collection<TaskInstance> taskInstances = processInstance.getTaskMgmtInstance().getTaskInstances();
+		
+		return encapsulateInstances(taskInstances);
+	}
+	
+	public Collection<TaskInstanceW> getUnfinishedTasks(long processInstanceId, Token rootToken, JbpmContext ctx) {
+		ProcessInstance processInstance = ctx.getProcessInstance(processInstanceId);
+		
+		@SuppressWarnings("unchecked")
+		Collection<TaskInstance> taskInstances = processInstance.getTaskMgmtInstance().getUnfinishedTasks(rootToken);
+
+		return encapsulateInstances(taskInstances);
+	}
+	
+	private Collection<TaskInstanceW> encapsulateInstances(Collection<TaskInstance> taskInstances) {
+		Collection<TaskInstanceW> instances = new ArrayList<TaskInstanceW>();
+		
+		for(TaskInstance instance : taskInstances) {
+			TaskInstanceW taskW = getTaskInstance(instance.getId());
+			taskW.setTaskInstance(instance);
+			instances.add(taskW);
+		}
+		
+		return instances;
 	}
 
 	public Long getProcessInstanceId() {
