@@ -2,7 +2,9 @@ package is.idega.idegaweb.egov.bpm.cases.email;
 
 import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMResources;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
@@ -44,14 +46,15 @@ import com.idega.jbpm.artifacts.impl.ProcessArtifactsProviderImpl;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.view.View;
 import com.idega.util.CoreConstants;
+import com.idega.util.FileUtil;
 import com.idega.util.IWTimestamp;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/13 08:32:19 $ by $Author: arunas $
  */
 @Scope("singleton")
 @Service
@@ -66,6 +69,9 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	
 	private static final String TEXT_PLAIN_TYPE = "text/plain";
 	private static final String MULTIPART_MIXED_TYPE = "multipart/Mixed";
+	private static final String TEXT_HTML_TYPE = "text/html";
+	private static final String MULTI_ALTERNATIVE_TYPE = "multipart/alternative";
+	private static final String HTML_EXTENSION = ".html";
 
 	public void onApplicationEvent(ApplicationEvent ae) {
 		
@@ -219,11 +225,32 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			Object content = msg.getContent();
 			
 			if (msg.isMimeType(TEXT_PLAIN_TYPE)){
+			    
+			    if (content instanceof String)
+				msgAndAttachments[0] = content;
 				
-				if (content instanceof String)
-					msgAndAttachments[0] = content;
+			} else 
+			    
+			    if (msg.isMimeType(TEXT_HTML_TYPE)){
+			    			    			    
+				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
 				
-			}else 	
+				createAttachmentFile (content, filesfolder);    
+			    			   			    
+				msgAndAttachments[1] = getFileUploadManager().getFiles(filesfolder, null, getUploadedResourceResolver());
+ 
+			} else 
+			    
+			    if (msg.isMimeType(MULTI_ALTERNATIVE_TYPE)) {
+			    
+				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
+			    
+				createAttachmentFile(content, filesfolder);
+			    
+				msgAndAttachments[1] = getFileUploadManager().getFiles(filesfolder, null, getUploadedResourceResolver());
+			    
+			} else 	
+			      
 			    if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
 				
 				Multipart messageMultiPart = (Multipart) content;
@@ -233,9 +260,16 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				for (int i = 0; i < messageMultiPart.getCount(); i++) {
 				    
 				    Part messagePart = messageMultiPart.getBodyPart(i);
-							    
-				    if (messagePart.getContent() instanceof String)
-				    	msgText = msgText + messagePart.getContent();
+				    
+					    
+				    if (messagePart.getContent() instanceof String) {
+					
+					if (messagePart.isMimeType(TEXT_HTML_TYPE))	
+					    createAttachmentFile (messagePart.getContent(), filesfolder);
+					else
+					    msgText = msgText + messagePart.getContent();
+				    }	    
+				    
 				    
 				    String disposition = messagePart.getDisposition();
 				
@@ -278,6 +312,68 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		}
 		
 		return pisformsgs;
+	}
+	
+	protected void createAttachmentFile (Object content, String filesfolder) {
+	    
+	    String fileName = System.currentTimeMillis() + HTML_EXTENSION;
+	    
+	    try {
+		
+		if (content instanceof String) {
+		    
+		    try{
+			FileUtil.createFileAndFolder(getUploadedResourceResolver().getRealBasePath() + filesfolder, fileName);
+			    
+			FileWriter fstream = new FileWriter(getUploadedResourceResolver().getRealBasePath() + filesfolder + fileName);
+			    
+			BufferedWriter out = new BufferedWriter(fstream);
+			out.write(content.toString());
+			
+			out.close();
+			    
+		    }catch (Exception e){
+			e.printStackTrace();
+		    }	    
+		    
+		} else {
+		    
+		    Multipart messageMultiPart = (Multipart)content;
+    	    		for (int i = 0; i < messageMultiPart.getCount(); i++) {
+    		    
+    	    		    Part messagePart = messageMultiPart.getBodyPart(i);
+    
+    	    		    if (messagePart.isMimeType(TEXT_HTML_TYPE)) {
+    		    					
+    	    			Object htmlContent = messagePart.getContent();
+    			
+    	    			try{
+    				    FileUtil.createFileAndFolder(getUploadedResourceResolver().getRealBasePath() + filesfolder, fileName);
+    				    
+    				    FileWriter fstream = new FileWriter(getUploadedResourceResolver().getRealBasePath() + filesfolder + fileName);
+    				    
+    				    BufferedWriter out = new BufferedWriter(fstream);
+    				    out.write(htmlContent.toString());
+    				
+    				    out.close();
+    				    
+    	    			}catch (Exception e){
+    	    			    e.printStackTrace();
+    	    			}
+    		
+    	    		    }			
+    		
+    	    		}
+    	    	
+	     }//end if	
+	    
+	    } catch (MessagingException e) {
+		Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+	    }
+	    catch (IOException e) {
+		Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+	    }
+	    
 	}
 	
 	class PISFORMSG {
