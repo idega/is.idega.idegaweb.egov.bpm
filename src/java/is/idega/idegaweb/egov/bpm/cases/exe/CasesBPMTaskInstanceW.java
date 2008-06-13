@@ -43,9 +43,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/06/13 08:08:02 $ by $Author: anton $
+ * Last modified: $Date: 2008/06/13 11:12:17 $ by $Author: anton $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -296,11 +296,6 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
-	}
-
-	public String getLabelOutput() {
-		
-		return null;
 	}
 	
 	public String getName(Locale locale) {
