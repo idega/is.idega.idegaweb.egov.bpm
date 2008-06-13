@@ -52,9 +52,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/06/13 08:32:19 $ by $Author: arunas $
+ * Last modified: $Date: 2008/06/13 12:52:53 $ by $Author: arunas $
  */
 @Scope("singleton")
 @Service
@@ -160,7 +160,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    	String subject = msg.getSubject();
 				    	ti.setName(subject);
 				    	
-				    	Object[] msgAndAttachments = parseContent(msg);
+				    	Object[] msgAndAttachments = parseContent(msg, ti.getId());
 				    	
 				    	String text = (String)msgAndAttachments[0];
 				    	
@@ -215,7 +215,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		}
 	}
 	
-	protected Object[] parseContent(Message msg) {
+	protected Object[] parseContent(Message msg, long taskID) {
 		
 //		contentType: TEXT/PLAIN; charset=UTF-8; format=flowed
 		
@@ -231,30 +231,22 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				
 			} else 
 			    
-			    if (msg.isMimeType(TEXT_HTML_TYPE)){
+			    if (msg.isMimeType(TEXT_HTML_TYPE) || msg.isMimeType(MULTI_ALTERNATIVE_TYPE)){
 			    			    			    
-				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
+				String filesfolder = taskID + CoreConstants.SLASH;
 				
 				createAttachmentFile (content, filesfolder);    
 			    			   			    
 				msgAndAttachments[1] = getFileUploadManager().getFiles(filesfolder, null, getUploadedResourceResolver());
  
-			} else 
-			    
-			    if (msg.isMimeType(MULTI_ALTERNATIVE_TYPE)) {
-			    
-				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
-			    
-				createAttachmentFile(content, filesfolder);
-			    
-				msgAndAttachments[1] = getFileUploadManager().getFiles(filesfolder, null, getUploadedResourceResolver());
-			    
 			} else 	
 			      
 			    if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
 				
 				Multipart messageMultiPart = (Multipart) content;
-				String filesfolder = System.currentTimeMillis() + CoreConstants.SLASH;
+				
+				String filesfolder = taskID + CoreConstants.SLASH;
+				
 				String msgText = CoreConstants.EMPTY;
 				
 				for (int i = 0; i < messageMultiPart.getCount(); i++) {
@@ -323,6 +315,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		if (content instanceof String) {
 		    
 		    try{
+			
 			FileUtil.createFileAndFolder(getUploadedResourceResolver().getRealBasePath() + filesfolder, fileName);
 			    
 			FileWriter fstream = new FileWriter(getUploadedResourceResolver().getRealBasePath() + filesfolder + fileName);
