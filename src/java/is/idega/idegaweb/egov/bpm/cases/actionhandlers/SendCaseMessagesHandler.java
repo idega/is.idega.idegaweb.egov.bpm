@@ -29,16 +29,15 @@ import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
 import com.idega.presentation.IWContext;
-import com.idega.user.data.User;
 import com.idega.user.business.UserBusiness;
-import com.idega.util.CoreConstants;
+import com.idega.user.data.User;
 import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/05/30 15:04:19 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/15 11:59:41 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
