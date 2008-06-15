@@ -27,7 +27,7 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.IdegaJbpmContext;
+import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.bundle.ProcessBundle;
 import com.idega.jbpm.bundle.ProcessBundleManager;
 import com.idega.util.CoreConstants;
@@ -35,9 +35,9 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/05/19 13:53:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/15 16:03:31 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -52,7 +52,7 @@ public class CasesBPMProcessMgmtBean {
 	private ProcessBundleManager processBundleManager;
 	private CasesBPMDAO casesBPMDAO;
 	private ProcessBundle processBundle;
-	private IdegaJbpmContext idegaJbpmContext;
+	private BPMContext idegaJbpmContext;
 	
 	private List<SelectItem> casesTypes = new ArrayList<SelectItem>();
 	private List<SelectItem> casesCategories = new ArrayList<SelectItem>();
@@ -309,12 +309,12 @@ public class CasesBPMProcessMgmtBean {
 		this.processDefinitionId = processDefinitionId;
 	}
 
-	public IdegaJbpmContext getIdegaJbpmContext() {
+	public BPMContext getIdegaJbpmContext() {
 		return idegaJbpmContext;
 	}
 
 	@Autowired
-	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
 	}
 	

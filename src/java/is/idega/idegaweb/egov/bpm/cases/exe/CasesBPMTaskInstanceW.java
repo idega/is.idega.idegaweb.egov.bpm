@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 import org.jbpm.JbpmContext;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +26,7 @@ import com.idega.business.IBORuntimeException;
 import com.idega.core.cache.IWCacheManager2;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.jbpm.IdegaJbpmContext;
+import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessException;
@@ -43,21 +44,19 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/06/15 12:08:44 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/15 16:03:17 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
 public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	private Long taskInstanceId;
-	@Autowired
-	private BPMFactory bpmFactory;
-	@Autowired
-	private IdegaJbpmContext idegaJbpmContext;
 	private TaskInstance taskInstance;
-	@Autowired
+	
+	private BPMFactory bpmFactory;
+	private BPMContext idegaJbpmContext;
 	private VariablesHandler variablesHandler;
 	
 	private static final String CASHED_TASK_NAMES = "casesBPM_taskinstance_names";
@@ -285,6 +284,8 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		return bpmFactory;
 	}
 
+	@Required
+	@Autowired
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
@@ -350,11 +351,13 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		return iwma;
 	}
 
-	public IdegaJbpmContext getIdegaJbpmContext() {
+	public BPMContext getIdegaJbpmContext() {
 		return idegaJbpmContext;
 	}
 
-	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+	@Required
+	@Autowired
+	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
 	}
 
@@ -362,6 +365,8 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		return variablesHandler;
 	}
 
+	@Required
+	@Autowired
 	public void setVariablesHandler(VariablesHandler variablesHandler) {
 		this.variablesHandler = variablesHandler;
 	}

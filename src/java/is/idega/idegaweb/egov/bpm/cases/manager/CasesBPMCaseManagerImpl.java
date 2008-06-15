@@ -39,7 +39,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.IdegaJbpmContext;
+import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
@@ -50,9 +50,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/06/06 14:22:15 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/15 16:03:31 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -61,7 +61,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
 	
 	private CasesBPMDAO casesBPMDAO;
-	private IdegaJbpmContext idegaJbpmContext;
+	private BPMContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
 	
 	static final String beanIdentifier = "casesBPMCaseHandler";
@@ -345,12 +345,12 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		}
 	}
 
-	public IdegaJbpmContext getIdegaJbpmContext() {
+	public BPMContext getIdegaJbpmContext() {
 		return idegaJbpmContext;
 	}
 
 	@Autowired
-	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
 	}
 

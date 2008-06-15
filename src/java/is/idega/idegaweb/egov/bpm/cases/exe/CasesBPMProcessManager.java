@@ -1,10 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
@@ -12,37 +8,58 @@ import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/15 16:02:34 $ by $Author: civilis $
  */
-@Scope("singleton")
-@Service("casesBpmProcessManager")
-public class CasesBPMProcessManager implements ProcessManager {
-
-	private CasesBPMResources casesBPMResources;
+public abstract class CasesBPMProcessManager implements ProcessManager {
 
 	public ProcessDefinitionW getProcessDefinition(long pdId) {
 		
-		return getCasesBPMResources().createProcessDefinition(pdId);
+		return createProcessDefinition(pdId);
 	}
 
 	public ProcessInstanceW getProcessInstance(long piId) {
 		
-		return getCasesBPMResources().createProcessInstance(piId);
+		return createProcessInstance(piId);
 	}
 	
 	public TaskInstanceW getTaskInstance(long tiId) {
 		
-		return getCasesBPMResources().createTaskInstance(tiId);
+		return createTaskInstance(tiId);
 	}
 
-	public CasesBPMResources getCasesBPMResources() {
-		return casesBPMResources;
+	protected abstract ProcessDefinitionW createPDW();
+	
+//	synchronized because spring doesn't do it when autowiring beans
+	public synchronized ProcessDefinitionW createProcessDefinition(long pdId) {
+		
+		
+		ProcessDefinitionW pdw = createPDW();
+		pdw.setProcessDefinitionId(pdId);
+		
+		return pdw;
 	}
 
-	@Autowired
-	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
-		this.casesBPMResources = casesBPMResources;
+	protected abstract ProcessInstanceW createPIW();
+	
+//	synchronized because spring doesn't do it when autowiring beans
+	public synchronized ProcessInstanceW createProcessInstance(long piId) {
+		
+		ProcessInstanceW piw = createPIW();
+		piw.setProcessInstanceId(piId);
+		
+		return piw;
+	}
+	
+	protected abstract TaskInstanceW createTIW();
+	
+//	synchronized because spring doesn't do it when autowiring beans
+	public synchronized TaskInstanceW createTaskInstance(long tiId) {
+		
+		TaskInstanceW tiw = createTIW();
+		tiw.setTaskInstanceId(tiId);
+		
+		return tiw;
 	}
 }
