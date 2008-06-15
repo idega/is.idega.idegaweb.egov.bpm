@@ -20,6 +20,7 @@ import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -31,9 +32,12 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.jbpm.view.View;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
@@ -44,17 +48,23 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/06/01 17:02:33 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/15 16:01:29 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
 public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
+	public static final String IDENTIFIER_PREFIX = "P";
+	
 	private Long processDefinitionId;
-	private CasesBPMResources casesBPMResources;
+	
 	private BPMFactory bpmFactory;
+	private CasesBPMDAO casesBPMDAO;
+	private BPMContext bpmContext;
+	private VariablesHandler variablesHandler;
+	
 	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
 	
 	public void startProcess(View view) {
@@ -71,9 +81,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		Long caseTypeId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseTypeActionVariableName));
 		Integer identifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		
-		CasesBPMResources bpmRes = getCasesBPMResources();
-		
-		JbpmContext ctx = bpmRes.getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getBpmContext().createJbpmContext();
 		
 		try {
 //			TODO: check if this is really start task instance id
@@ -97,7 +105,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
-			bpmRes.getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
+			getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
 			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
@@ -105,27 +113,25 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			bind.setProcInstId(ti.getProcessInstance().getId());
 			bind.setCaseIdentierID(identifierNumber);
 			bind.setDateCreated(created.getDate());
-			bpmRes.getCasesBPMDAO().persist(bind);
+			getCasesBPMDAO().persist(bind);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			bpmRes.getIdegaJbpmContext().closeAndCommit(ctx);
+			getBpmContext().closeAndCommit(ctx);
 		}
 	}
 	
 	public View loadInitView(int initiatorId) {
 		
-		CasesBPMResources bpmRes = getCasesBPMResources();
-		
-		JbpmContext ctx = bpmRes.getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getBpmContext().createJbpmContext();
 		
 		try {
 			Long processDefinitionId = getProcessDefinitionId();
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
 
 //			TODO: if not bound, then create default case category, case type and bind to it
-			CaseTypesProcDefBind bind = bpmRes.getBpmBindsDAO().find(CaseTypesProcDefBind.class, pd.getName());
+			CaseTypesProcDefBind bind = getCasesBPMDAO().find(CaseTypesProcDefBind.class, pd.getName());
 			
 			ProcessInstance pi = new ProcessInstance(pd);
 			
@@ -135,9 +141,9 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			
 			List<String> preferred = new ArrayList<String>(1);
 			preferred.add(XFormsView.VIEW_TYPE);
-			View view = bpmRes.getBpmFactory().takeView(taskInstance.getId(), true, preferred);
+			View view = getBpmFactory().takeView(taskInstance.getId(), true, preferred);
 			
-			Object[] identifiers = bpmRes.generateNewCaseIdentifier();
+			Object[] identifiers = generateNewCaseIdentifier();
 			Integer identifierNumber = (Integer)identifiers[0];
 			String identifier = (String)identifiers[1];
 			
@@ -169,13 +175,13 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			
 		} finally {
 			
-			bpmRes.getIdegaJbpmContext().closeAndCommit(ctx);
+			getBpmContext().closeAndCommit(ctx);
 		}
 	}
 	
 	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
 		
-		getCasesBPMResources().getVariablesHandler().submitVariables(variables, ti.getId(), true);
+		getVariablesHandler().submitVariables(variables, ti.getId(), true);
 		
 		if(proceed) {
 		
@@ -219,21 +225,93 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		this.processDefinitionId = processDefinitionId;
 	}
 	
-	public CasesBPMResources getCasesBPMResources() {
-		return casesBPMResources;
-	}
-
-	@Autowired(required=true)
-	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
-		this.casesBPMResources = casesBPMResources;
-	}
-
 	public BPMFactory getBpmFactory() {
 		return bpmFactory;
 	}
 
+	@Required
 	@Autowired
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
+	}
+	
+	class CaseIdentifier {
+		
+		IWTimestamp time;
+		Integer number;
+		
+		String generate() {
+			
+			String nr = String.valueOf(++number);
+			
+			while(nr.length() < 4)
+				nr = "0"+nr;
+			
+			return new StringBuffer(IDENTIFIER_PREFIX)
+			.append(CoreConstants.MINUS)
+			.append(time.getYear())
+			.append(CoreConstants.MINUS)
+			.append(time.getMonth() < 10 ? "0"+time.getMonth() : time.getMonth())
+			.append(CoreConstants.MINUS)
+			.append(time.getDay() < 10 ? "0"+time.getDay() : time.getDay())
+			.append(CoreConstants.MINUS)
+			.append(nr)
+			.toString();
+		}
+	}
+	
+	private CaseIdentifier lastCaseIdentifierNumber;
+	
+	public synchronized Object[] generateNewCaseIdentifier() {
+		
+		IWTimestamp currentTime = new IWTimestamp();
+		
+		if(lastCaseIdentifierNumber == null || !currentTime.equals(lastCaseIdentifierNumber.time)) {
+
+			lastCaseIdentifierNumber = new CaseIdentifier();
+			
+			CaseProcInstBind b = getCasesBPMDAO().getCaseProcInstBindLatestByDateQN(new Date());
+			
+			if(b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
+				
+				lastCaseIdentifierNumber.time = new IWTimestamp(b.getDateCreated());
+				lastCaseIdentifierNumber.number = b.getCaseIdentierID();
+			} else {
+			
+				lastCaseIdentifierNumber.time = currentTime;
+				lastCaseIdentifierNumber.number = 0;
+			}
+		}
+		
+		String generated = lastCaseIdentifierNumber.generate();
+		
+		return new Object[] {lastCaseIdentifierNumber.number, generated};
+	}
+
+	public CasesBPMDAO getCasesBPMDAO() {
+		return casesBPMDAO;
+	}
+
+	@Autowired
+	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
+		this.casesBPMDAO = casesBPMDAO;
+	}
+
+	public BPMContext getBpmContext() {
+		return bpmContext;
+	}
+
+	@Autowired
+	public void setBpmContext(BPMContext bpmContext) {
+		this.bpmContext = bpmContext;
+	}
+
+	public VariablesHandler getVariablesHandler() {
+		return variablesHandler;
+	}
+
+	@Autowired
+	public void setVariablesHandler(VariablesHandler variablesHandler) {
+		this.variablesHandler = variablesHandler;
 	}
 }
