@@ -25,6 +25,7 @@ import com.idega.business.IBORuntimeException;
 import com.idega.core.cache.IWCacheManager2;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessException;
@@ -32,7 +33,9 @@ import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.identity.BPMAccessControlException;
 import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
+import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.jbpm.view.View;
+import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -40,26 +43,37 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/06/13 11:55:50 $ by $Author: anton $
+ * Last modified: $Date: 2008/06/15 12:08:44 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
 public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	private Long taskInstanceId;
-	private CasesBPMResources casesBPMResources;
+	@Autowired
 	private BPMFactory bpmFactory;
+	@Autowired
+	private IdegaJbpmContext idegaJbpmContext;
 	private TaskInstance taskInstance;
-	private Map<Long, Map<Locale, String>> cashTaskNames;
+	@Autowired
+	private VariablesHandler variablesHandler;
 	
-	private static final String CASHED_TASK_NAMES = "cash_taskinstance_names";
+	private static final String CASHED_TASK_NAMES = "casesBPM_taskinstance_names";
 	
 	public TaskInstance getTaskInstance() {
-		if(taskInstance == null) {
-			JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
-			taskInstance = ctx.getTaskInstance(taskInstanceId);
+		
+		if(taskInstance == null && getTaskInstanceId() != null) {
+			
+			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+			
+			try {
+				taskInstance = ctx.getTaskInstance(getTaskInstanceId());
+				
+			} finally {
+				getIdegaJbpmContext().closeAndCommit(ctx);
+			}
 		}
 		return taskInstance;
 	}
@@ -79,11 +93,11 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	public void assign(int userId) {
 		
-		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			Long taskInstanceId = getTaskInstanceId();
-			RolesManager rolesManager = getCasesBPMResources().getBpmFactory().getRolesManager();
+			RolesManager rolesManager = getBpmFactory().getRolesManager();
 			rolesManager.hasRightsToAssignTask(taskInstanceId, userId);
 			
 			getTaskInstance().setActorId(String.valueOf(userId));
@@ -93,13 +107,13 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			throw new ProcessException(e, e.getUserFriendlyMessage());
 			
 		} finally {
-			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 	
 	public User getAssignedTo() {
 		
-		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			Long taskInstanceId = getTaskInstanceId();
@@ -129,16 +143,16 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			throw new ProcessException(e, e.getUserFriendlyMessage());
 			
 		} finally {
-			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 
 	public void start(int userId) {
-		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			Long taskInstanceId = getTaskInstanceId();
-			RolesManager rolesManager = getCasesBPMResources().getBpmFactory().getRolesManager();
+			RolesManager rolesManager = getBpmFactory().getRolesManager();
 			rolesManager.hasRightsToStartTask(taskInstanceId, userId);
 			
 			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
@@ -150,7 +164,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			throw new ProcessException(e, e.getUserFriendlyMessage());
 			
 		} finally {
-			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 
@@ -160,7 +174,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 
 	public void submit(View view, boolean proceedProcess) {
 		
-		JbpmContext ctx = getCasesBPMResources().getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			Long taskInstanceId = getTaskInstanceId();
@@ -173,13 +187,13 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	    	ctx.save(taskInstance);
 			
 		} finally {
-			getCasesBPMResources().getIdegaJbpmContext().closeAndCommit(ctx);
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 	
 	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
 		
-		getCasesBPMResources().getVariablesHandler().submitVariables(variables, ti.getId(), true);
+		getVariablesHandler().submitVariables(variables, ti.getId(), true);
 		
 		if(proceed) {
 		
@@ -204,9 +218,9 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	public View loadView() {
 		
-		CasesBPMResources bpmRes = getCasesBPMResources();
+		//CasesBPMResources bpmRes = getCasesBPMResources();
 		Long taskInstanceId = getTaskInstanceId();
-		JbpmContext ctx = bpmRes.getIdegaJbpmContext().createJbpmContext();
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
 			TaskInstance taskInstance = ctx.getTaskInstance(taskInstanceId);
@@ -218,17 +232,17 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			
 			if(taskInstance.hasEnded()) {
 				
-				view = bpmRes.getBpmFactory().getViewByTaskInstance(taskInstanceId, false, preferred);
+				view = getBpmFactory().getViewByTaskInstance(taskInstanceId, false, preferred);
 				
 			} else {
 				
-				view = bpmRes.getBpmFactory().takeView(taskInstanceId, true, preferred);
+				view = getBpmFactory().takeView(taskInstanceId, true, preferred);
 			}
 			
 			Map<String, String> parameters = new HashMap<String, String>(1);
 			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));
 			view.populateParameters(parameters);
-			view.populateVariables(bpmRes.getVariablesHandler().populateVariables(taskInstance.getId()));
+			view.populateVariables(getVariablesHandler().populateVariables(taskInstance.getId()));
 			
 			return view;
 		
@@ -237,21 +251,12 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		} catch(Exception e) {
 			throw new RuntimeException(e);
 		} finally {
-			bpmRes.getIdegaJbpmContext().closeAndCommit(ctx);
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 	}
 	
 	public Long getTaskInstanceId() {
 		return taskInstanceId;
-	}
-
-	public CasesBPMResources getCasesBPMResources() {
-		return casesBPMResources;
-	}
-
-	@Autowired(required=true)
-	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
-		this.casesBPMResources = casesBPMResources;
 	}
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
@@ -280,7 +285,6 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		return bpmFactory;
 	}
 
-	@Autowired
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
@@ -295,28 +299,70 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	}
 	
 	public String getName(Locale locale) {
-		IWApplicationContext iwc = IWMainApplication.getDefaultIWApplicationContext();
-		cashTaskNames = IWCacheManager2.getInstance(iwc.getIWMainApplication()).getCache(CASHED_TASK_NAMES);
 		
-		Map<Locale, String> names = cashTaskNames.get(getTaskInstanceId());
+		final IWMainApplication iwma = getIWMA();
+		@SuppressWarnings("unchecked")
+		Map<Long, Map<Locale, String>> cashTaskNames = IWCacheManager2.getInstance(iwma).getCache(CASHED_TASK_NAMES);
+		final Map<Locale, String> names;
+		final Long taskInstanceId = getTaskInstanceId();
 		
-		try {
-			String name = cashTaskNames.get(getTaskInstanceId()).get(locale);
-			if(name == null) {
-				View taskInstanceView = loadView();
-				String notCashedName = taskInstanceView.getDisplayName(locale);
-				cashTaskNames.get(getTaskInstanceId()).put(locale, notCashedName);
-				return notCashedName;
+		synchronized (cashTaskNames) {
+//			synchronizing on CASHED_TASK_NAMES map, as it's accessed from multiple threads
+			
+			if(cashTaskNames.containsKey(taskInstanceId)) {
+			
+				names = cashTaskNames.get(getTaskInstanceId());
 			} else {
-				return name;
+				
+				names = new HashMap<Locale, String>(5);
+				cashTaskNames.put(taskInstanceId, names);
 			}
-		} catch(NullPointerException e) {
-			View taskInstanceView = loadView();
-			String name = taskInstanceView.getDisplayName(locale);
-			Map<Locale, String> newNames = new HashMap<Locale, String>(5);
-			newNames.put(locale, name);
-			cashTaskNames.put(getTaskInstanceId(), newNames);
-			return name;
 		}
+		
+		final String name;
+		
+		if(names.containsKey(locale))
+			name = names.get(locale);
+		else {
+			
+			View taskInstanceView = loadView();
+			name = taskInstanceView.getDisplayName(locale);
+			names.put(locale, name);
+		}
+		
+		return name;
+	}
+	
+	private IWMainApplication getIWMA() {
+		
+		final IWContext iwc = IWContext.getCurrentInstance();
+		final IWMainApplication iwma;
+//		trying to get iwma from iwc, if available, downgrading to default iwma, if not
+		
+		if(iwc != null) {
+			
+			iwma = iwc.getIWMainApplication();
+			
+		} else {
+			iwma = IWMainApplication.getDefaultIWMainApplication();
+		}
+		
+		return iwma;
+	}
+
+	public IdegaJbpmContext getIdegaJbpmContext() {
+		return idegaJbpmContext;
+	}
+
+	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+		this.idegaJbpmContext = idegaJbpmContext;
+	}
+
+	public VariablesHandler getVariablesHandler() {
+		return variablesHandler;
+	}
+
+	public void setVariablesHandler(VariablesHandler variablesHandler) {
+		this.variablesHandler = variablesHandler;
 	}
 }
