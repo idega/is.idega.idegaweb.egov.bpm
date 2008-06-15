@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.annotation.Resource;
 
@@ -22,20 +23,21 @@ import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/06/15 16:03:17 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/15 16:33:16 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
 public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	
 	private Long processInstanceId;
+	private ProcessInstance processInstance;
 	
 	private BPMContext idegaJbpmContext;
 	private ProcessManager processManager;
 	
-	public Collection<TaskInstanceW> getAllTaskInstances() {
+	public List<TaskInstanceW> getAllTaskInstances() {
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
@@ -51,7 +53,7 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 		}
 	}
 	
-	public Collection<TaskInstanceW> getUnfinishedTaskInstances(Token rootToken) {
+	public List<TaskInstanceW> getUnfinishedTaskInstances(Token rootToken) {
 		
 		ProcessInstance processInstance = rootToken.getProcessInstance();
 		
@@ -61,12 +63,35 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 		return encapsulateInstances(taskInstances);
 	}
 	
-	private Collection<TaskInstanceW> encapsulateInstances(Collection<TaskInstance> taskInstances) {
-		Collection<TaskInstanceW> instances = new ArrayList<TaskInstanceW>();
+	public List<TaskInstanceW> getAllUnfinishedTaskInstances() {
+	
+		ProcessInstance processInstance = getProcessInstance();
+	
+		@SuppressWarnings("unchecked")
+		Collection<TaskInstance> taskInstances = processInstance.getTaskMgmtInstance().getUnfinishedTasks(processInstance.getRootToken());
+		
+		@SuppressWarnings("unchecked")
+		List<Token> tokens = processInstance.findAllTokens();
+		
+		for (Token token : tokens) {
+			
+			if(!token.equals(processInstance.getRootToken())) {
+		
+				@SuppressWarnings("unchecked")
+				Collection<TaskInstance> tis = processInstance.getTaskMgmtInstance().getUnfinishedTasks(token);
+				taskInstances.addAll(tis);
+			}
+		}
+
+		return encapsulateInstances(taskInstances);
+	}
+	
+	private ArrayList<TaskInstanceW> encapsulateInstances(Collection<TaskInstance> taskInstances) {
+		ArrayList<TaskInstanceW> instances = new ArrayList<TaskInstanceW>(taskInstances.size());
 		
 		for(TaskInstance instance : taskInstances) {
-			TaskInstanceW taskW = getProcessManager().getTaskInstance(instance.getId());
-			instances.add(taskW);
+			TaskInstanceW tiw = getProcessManager().getTaskInstance(instance.getId());
+			instances.add(tiw);
 		}
 		
 		return instances;
@@ -98,5 +123,21 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	@Resource(name="casesBpmProcessManager")
 	public void setProcessManager(ProcessManager processManager) {
 		this.processManager = processManager;
+	}
+
+	public ProcessInstance getProcessInstance() {
+		
+		if(processInstance == null && getProcessInstanceId() != null) {
+			
+			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+			
+			try {
+				processInstance = ctx.getProcessInstance(getProcessInstanceId());
+				
+			} finally {
+				getIdegaJbpmContext().closeAndCommit(ctx);
+			}
+		}
+		return processInstance;
 	}
 }
