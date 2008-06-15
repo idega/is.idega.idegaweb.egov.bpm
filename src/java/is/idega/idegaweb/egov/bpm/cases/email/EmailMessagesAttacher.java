@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.email;
 
-import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMResources;
+import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -41,7 +41,7 @@ import com.idega.core.file.tmp.TmpFileResolverType;
 import com.idega.core.file.tmp.TmpFilesManager;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.IdegaJbpmContext;
+import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.artifacts.impl.ProcessArtifactsProviderImpl;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.view.View;
@@ -52,16 +52,16 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/06/13 12:52:53 $ by $Author: arunas $
+ * Last modified: $Date: 2008/06/15 16:00:18 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
 public class EmailMessagesAttacher implements ApplicationListener {
 	
 	private CasesBPMDAO casesBPMDAO;
-	private IdegaJbpmContext idegaJbpmContext;
+	private BPMContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
 	private IXFormViewFactory xfvFact;
 	private TmpFilesManager fileUploadManager;
@@ -85,7 +85,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 			for (Entry<String, Message> entry : msgs.entrySet()) {
 				
-				if(entry.getKey().startsWith(CasesBPMResources.IDENTIFIER_PREFIX)) {
+				if(entry.getKey().startsWith(CasesBPMProcessDefinitionW.IDENTIFIER_PREFIX)) {
 					
 					try {
 						String[] keyParts = entry.getKey().split(CoreConstants.MINUS);
@@ -420,12 +420,12 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 	
-	public IdegaJbpmContext getIdegaJbpmContext() {
+	public BPMContext getIdegaJbpmContext() {
 		return idegaJbpmContext;
 	}
 
 	@Autowired
-	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
 	}
 
