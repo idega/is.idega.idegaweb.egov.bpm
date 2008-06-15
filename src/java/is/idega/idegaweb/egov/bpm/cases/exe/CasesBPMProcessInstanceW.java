@@ -12,37 +12,43 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.jbpm.IdegaJbpmContext;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/06/13 11:55:50 $ by $Author: anton $
+ * Last modified: $Date: 2008/06/15 12:07:28 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
 public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	
 	private Long processInstanceId;
-	private CasesBPMResources casesBPMResources;
+	private IdegaJbpmContext idegaJbpmContext;
+	private CasesBPMProcessManager casesBPMProcessManager;
 	
-	public TaskInstanceW getTaskInstance(long tiId) {
-		return getCasesBPMResources().createTaskInstance(tiId);
+	public Collection<TaskInstanceW> getAllTaskInstances() {
+		
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			ProcessInstance processInstance = ctx.getProcessInstance(processInstanceId);
+			
+			@SuppressWarnings("unchecked")
+			Collection<TaskInstance> taskInstances = processInstance.getTaskMgmtInstance().getTaskInstances();
+			return encapsulateInstances(taskInstances);
+			
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
+		}
 	}
 	
-	public Collection<TaskInstanceW> getTaskInstances(long processInstanceId, JbpmContext ctx) {
-		ProcessInstance processInstance = ctx.getProcessInstance(processInstanceId);
+	public Collection<TaskInstanceW> getUnfinishedTaskInstances(Token rootToken) {
 		
-		@SuppressWarnings("unchecked")
-		Collection<TaskInstance> taskInstances = processInstance.getTaskMgmtInstance().getTaskInstances();
-		
-		return encapsulateInstances(taskInstances);
-	}
-	
-	public Collection<TaskInstanceW> getUnfinishedTasks(long processInstanceId, Token rootToken, JbpmContext ctx) {
-		ProcessInstance processInstance = ctx.getProcessInstance(processInstanceId);
+		ProcessInstance processInstance = rootToken.getProcessInstance();
 		
 		@SuppressWarnings("unchecked")
 		Collection<TaskInstance> taskInstances = processInstance.getTaskMgmtInstance().getUnfinishedTasks(rootToken);
@@ -54,7 +60,7 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 		Collection<TaskInstanceW> instances = new ArrayList<TaskInstanceW>();
 		
 		for(TaskInstance instance : taskInstances) {
-			TaskInstanceW taskW = getTaskInstance(instance.getId());
+			TaskInstanceW taskW = getCasesBPMProcessManager().getTaskInstance(instance.getId());
 			instances.add(taskW);
 		}
 		
@@ -68,13 +74,23 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	public void setProcessInstanceId(Long processInstanceId) {
 		this.processInstanceId = processInstanceId;
 	}
-	
-	public CasesBPMResources getCasesBPMResources() {
-		return casesBPMResources;
+
+	public IdegaJbpmContext getIdegaJbpmContext() {
+		return idegaJbpmContext;
 	}
 
-	@Autowired(required=true)
-	public void setCasesBPMResources(CasesBPMResources casesBPMResources) {
-		this.casesBPMResources = casesBPMResources;
+	@Autowired
+	public void setIdegaJbpmContext(IdegaJbpmContext idegaJbpmContext) {
+		this.idegaJbpmContext = idegaJbpmContext;
+	}
+	
+	public CasesBPMProcessManager getCasesBPMProcessManager() {
+		return casesBPMProcessManager;
+	}
+
+	@Autowired
+	public void setCasesBPMProcessManager(
+			CasesBPMProcessManager casesBPMProcessManager) {
+		this.casesBPMProcessManager = casesBPMProcessManager;
 	}
 }
