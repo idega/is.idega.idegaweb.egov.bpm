@@ -48,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/06/15 16:01:29 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/18 18:17:28 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -76,7 +76,12 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		
 		Map<String, String> parameters = view.resolveParameters();
 		
-		int userId = Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName));
+		final Integer userId;
+		if(parameters.containsKey(CasesBPMProcessConstants.userIdActionVariableName))
+			userId = Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName));
+		else
+			userId = null;
+		
 		Long caseCatId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseCategoryIdActionVariableName));
 		Long caseTypeId = Long.parseLong(parameters.get(CasesBPMProcessConstants.caseTypeActionVariableName));
 		Integer identifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
@@ -89,7 +94,13 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			TaskInstance ti = ctx.getTaskInstance(startTaskInstanceId);
 			
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
-			User user = getUserBusiness(iwc).getUser(userId);
+			
+			final User user;
+			if(userId != null)
+				user = getUserBusiness(iwc).getUser(userId);
+			else
+				user = null;
+			
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
 			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseManagerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
@@ -122,7 +133,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		}
 	}
 	
-	public View loadInitView(int initiatorId) {
+	public View loadInitView(Integer initiatorId) {
 		
 		JbpmContext ctx = getBpmContext().createJbpmContext();
 		
@@ -152,7 +163,10 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			
 			parameters.put(ProcessConstants.START_PROCESS, ProcessConstants.START_PROCESS);
 			parameters.put(ProcessConstants.TASK_INSTANCE_ID, String.valueOf(taskInstance.getId()));
-			parameters.put(CasesBPMProcessConstants.userIdActionVariableName, String.valueOf(initiatorId));
+			
+			if(initiatorId != null)
+				parameters.put(CasesBPMProcessConstants.userIdActionVariableName, initiatorId.toString());
+			
 			parameters.put(CasesBPMProcessConstants.caseCategoryIdActionVariableName, String.valueOf(bind.getCasesCategoryId()));
 			parameters.put(CasesBPMProcessConstants.caseTypeActionVariableName, String.valueOf(bind.getCasesTypeId()));
 			parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam, String.valueOf(identifierNumber));
