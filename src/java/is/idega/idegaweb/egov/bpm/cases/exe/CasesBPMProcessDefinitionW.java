@@ -48,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/06/18 18:17:28 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/19 10:25:51 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -209,8 +209,11 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			ti.setEnd(new Date());
 		}
     	
+//		TODO: perhaps some bpm user, and then later bind it to real user if that's created etc
 		Integer usrId = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getIdToUse();
-    	ti.setActorId(usrId.toString());
+		
+		if(usrId != null)
+			ti.setActorId(usrId.toString());
 	}
 	
 	public Long getProcessDefinitionId() {
