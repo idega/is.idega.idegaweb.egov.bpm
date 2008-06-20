@@ -39,9 +39,9 @@ import com.idega.util.URIUtil;
  * Interface is meant to be extended by beans, reflecting application type for egov applications
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/06/15 16:00:18 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/20 09:55:00 $ by $Author: civilis $
  *
  */
 public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
@@ -164,13 +164,14 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		}
 	}
 
-	public String getUrl(IWApplicationContext iwac, Application app) {
+	public String getUrl(IWContext iwc, Application app) {
 		
 		String pdName = app.getUrl();
 		
 		if(pdName == null)
 			return "#";
 		
+		/*
 		Collection<ICPage> icpages = getPages(egovBPMPageType);
 		
 		ICPage icPage = null;
@@ -188,6 +189,9 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		
 		if(!uri.startsWith("/pages"))
 			uri = "/pages"+uri;
+		 */
+		
+		String uri = getBuilderService(iwc).getFullPageUrlByPageType(iwc, egovBPMPageType, true);
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
@@ -197,7 +201,7 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 			URIUtil uriUtil = new URIUtil(uri);
 			uriUtil.setParameter(BPMTaskViewer.PROCESS_DEFINITION_PROPERTY, String.valueOf(pd.getId()));
 			uri = uriUtil.getUri();
-			return iwac.getIWMainApplication().getTranslatedURIWithContext(uri);
+			return iwc.getIWMainApplication().getTranslatedURIWithContext(uri);
 			
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
