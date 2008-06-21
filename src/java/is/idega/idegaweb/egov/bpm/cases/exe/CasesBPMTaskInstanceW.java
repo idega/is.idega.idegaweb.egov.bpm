@@ -32,7 +32,6 @@ import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessException;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.identity.BPMAccessControlException;
-import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.jbpm.view.View;
@@ -44,9 +43,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/06/15 16:03:17 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/21 16:45:58 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -206,13 +205,10 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 			ti.setEnd(new Date());
 		}
     	
-		BPMUser usr = getBpmFactory().getBpmUserFactory().getCurrentBPMUser();
+		Integer usrId = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getIdToUse();
 		
-		if(usr != null) {
-		
-			Integer usrId = usr.getIdToUse();
-	    	ti.setActorId(usrId.toString());
-		}
+		if(usrId != null)
+			ti.setActorId(usrId.toString());
 	}
 	
 	public View loadView() {
