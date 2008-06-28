@@ -3,10 +3,10 @@ package is.idega.idegaweb.egov.bpm.cases.email;
 import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,9 +52,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/06/15 16:00:18 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/28 19:08:04 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -191,10 +191,10 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    	vars.put("string:fromAddress", fromAddress);
 
 				    	@SuppressWarnings("unchecked")
-				    	List<File> files = (List<File>)msgAndAttachments[1];
+				    	List<URI> filesUris = (List<URI>)msgAndAttachments[1];
 				    	
-				    	if(files != null)
-				    		vars.put("files:attachments", files);
+				    	if(filesUris != null)
+				    		vars.put("files:attachments", filesUris);
 				    	
 						BPMFactory bpmFactory = getBpmFactory();
 						
@@ -237,7 +237,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				
 				createAttachmentFile (content, filesfolder);    
 			    			   			    
-				msgAndAttachments[1] = getFileUploadManager().getFiles(filesfolder, null, getUploadedResourceResolver());
+				msgAndAttachments[1] = getFileUploadManager().getFilesUris(filesfolder, null, getUploadedResourceResolver());
  
 			} else 	
 			      
@@ -277,7 +277,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				}//for end
 			    
 				msgAndAttachments[0] = msgText;
-				msgAndAttachments[1] = getFileUploadManager().getFiles(filesfolder, null, getUploadedResourceResolver());
+				msgAndAttachments[1] = getFileUploadManager().getFilesUris(filesfolder, null, getUploadedResourceResolver());
 				
 			    }// else if end
 			
