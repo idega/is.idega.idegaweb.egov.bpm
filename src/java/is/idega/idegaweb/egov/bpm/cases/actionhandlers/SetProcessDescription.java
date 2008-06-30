@@ -16,6 +16,7 @@ import com.idega.business.IBORuntimeException;
 import com.idega.core.persistence.Param;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.presentation.IWContext;
 import com.idega.util.expression.ELUtil;
@@ -33,6 +34,7 @@ public class SetProcessDescription implements ActionHandler {
 	private static final long serialVersionUID = -4735864635886588195L;
 	private String processDescription;
 	private BPMDAO bpmBindsDAO;
+	private ProcessArtifactsProvider processArtifactsProvider;
 
 	public String getProcessDescription() {
 		return processDescription;
@@ -48,6 +50,8 @@ public class SetProcessDescription implements ActionHandler {
 		FacesContext fctx = FacesContext.getCurrentInstance();
 		final IWContext iwc = IWContext.getIWContext(fctx);
 		final ProcessInstance pi = ctx.getProcessInstance();
+		
+		setProcessDescription(getProcessArtifactsProvider().getProcessDescription(pi.getId()));
 		
 		Integer caseId = getBpmBindsDAO().getSingleResult(CaseProcInstBind.getCaseIdByProcessInstanceId, Integer.class,
 				new Param(CaseProcInstBind.procInstIdProp, pi.getId()));
@@ -75,5 +79,15 @@ public class SetProcessDescription implements ActionHandler {
 	@Autowired
 	public void setBpmBindsDAO(BPMDAO bpmBindsDAO) {
 		this.bpmBindsDAO = bpmBindsDAO;
+	}
+	
+	public ProcessArtifactsProvider getProcessArtifactsProvider() {
+		return processArtifactsProvider;
+	}
+
+	@Autowired
+	public void setProcessArtifactsProvider(
+			ProcessArtifactsProvider processArtifactsProvider) {
+		this.processArtifactsProvider = processArtifactsProvider;
 	}
 }
