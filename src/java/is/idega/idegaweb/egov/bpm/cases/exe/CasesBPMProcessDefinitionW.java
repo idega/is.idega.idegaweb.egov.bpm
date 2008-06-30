@@ -48,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/06/19 10:25:51 $ by $Author: civilis $
+ * Last modified: $Date: 2008/06/30 09:20:59 $ by $Author: anton $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -117,7 +117,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
 			getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
-			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
+			
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
@@ -125,6 +125,8 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			bind.setCaseIdentierID(identifierNumber);
 			bind.setDateCreated(created.getDate());
 			getCasesBPMDAO().persist(bind);
+			
+			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
