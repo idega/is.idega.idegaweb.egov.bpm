@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-definition
+  xmlns=""  name="followupResponses">
+  
+	<start-state name="start-state1">
+        <transition to="createTasksForAllRolesUsers" name="tr1"></transition>
+	</start-state>
+
+	<node name="createTasksForAllRolesUsers">
+		<event type="node-leave">
+			<action name="createTasksForAllRolesUsersAction" class="com.idega.jbpm.invitation.AssignTasksForRolesUsers">
+				<tasksExp>
+					#{followupTasks}
+				</tasksExp>
+			</action>
+		</event>
+		<transition to="sendMessagesForAllRolesUsers" name="tr2"></transition>
+	</node>
+
+	<node name="sendMessagesForAllRolesUsers">
+	   <event type="node-enter">
+	         <action name="SendFollowupMessages" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendCaseMessagesHandler">
+	            <messagesBundle>is.idega.idegaweb.egov.bpm</messagesBundle>
+	            <subjectKey>cases_bpm.followup.subject</subjectKey>
+	            <messageKey>cases_bpm.followup.message</messageKey>
+	            <messageValues>{list: {mv: [{type: "bean", value: "user.name"}]}}</messageValues>
+	            <sendToRoles>#{sendMessagesToRoles}</sendToRoles>
+            </action>
+        </event>
+		<transition to="end-state1" name="toEnd"></transition>
+	</node>
+
+
+	<end-state name="end-state1"></end-state>
+
+
+</process-definition>
