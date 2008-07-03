@@ -337,7 +337,7 @@ public class CasesEngine {
 		if (!StringUtil.isEmpty(processDefinitionId)) {
 			results.add(new QueryResultsBean(processDefinitionId, casesByProcessDefinition));
 		}
-		if (statuses != null) {
+		if (statuses != null && (!isCaseSuperAdmin || !StringUtil.isEmpty(criteriaBean.getStatusId()))) {
 			results.add(new QueryResultsBean(statuses, casesByStatus));
 		}
 		if (searchingByUserCases || !isCaseSuperAdmin) {
