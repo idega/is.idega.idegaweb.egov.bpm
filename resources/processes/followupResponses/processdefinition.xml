@@ -14,11 +14,33 @@
 					#{followupTasks}
 				</tasksExp>
 			</action>
+			
+			<!--  
+			<script>
+                <expression>
+	                System.out.println("FOLLOWUP RESP SCRIPT");
+	                
+	                if(tasks != null) {
+	                
+	                    StringBuilder sb = new StringBuilder();
+	                    
+	                    String[] roles = tb.getRoles();
+	                
+		                for (String role : roles) {
+		                    
+		                    sb.append(role).append(com.idega.util.CoreConstants.SPACE);
+		                }
+	                }
+                </expression>
+                <variable name='followupTasks' access='read' mapped-name='tasks' />
+            </script>
+            -->
 		</event>
 		<transition to="sendMessagesForAllRolesUsers" name="tr2"></transition>
 	</node>
 
 	<node name="sendMessagesForAllRolesUsers">
+	<!--  
 	   <event type="node-enter">
 	         <action name="SendFollowupMessages" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendCaseMessagesHandler">
 	            <messagesBundle>is.idega.idegaweb.egov.bpm</messagesBundle>
@@ -28,6 +50,7 @@
 	            <sendToRoles>#{sendMessagesToRoles}</sendToRoles>
             </action>
         </event>
+        -->
 		<transition to="end-state1" name="toEnd"></transition>
 	</node>
 
