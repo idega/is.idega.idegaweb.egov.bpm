@@ -9,7 +9,10 @@
 	    	<include method="getCaseManagerView" />
 	    	<include method="getProcessInstanceId" />
 	    	<include method="setCaseSubject" />
+	    	<include method="getCasesListByUserQuery" />
     	</create>
+    	
+    	<convert match="is.idega.idegaweb.egov.bpm.cases.business.CasesListSearchCriteriaBean" converter="bean" />
 	</allow>
 	<signatures>
 		<![CDATA[

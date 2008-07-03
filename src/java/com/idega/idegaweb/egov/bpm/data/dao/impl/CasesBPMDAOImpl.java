@@ -3,6 +3,7 @@ package com.idega.idegaweb.egov.bpm.data.dao.impl;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 
 import org.jbpm.graph.exe.Token;
@@ -10,17 +11,21 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.util.CoreConstants;
+import com.idega.util.IWTimestamp;
+import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/07/03 14:15:51 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -164,4 +169,67 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		} else
 			return new ArrayList<Token>(0);
 	}
+
+	public List<Integer> getCaseIdsByProcessDefinitionId(Long processDefinitionId) {
+		if (processDefinitionId == null) {
+			return new ArrayList<Integer>(0);
+		}
+		
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionId, Integer.class, new Param(CaseProcInstBind.processDefinitionIdProp,
+				processDefinitionId));
+	}
+
+	public List<Integer> getCaseIdsByCaseNumber(String caseNumber) {
+		if (caseNumber == null || CoreConstants.EMPTY.equals(caseNumber)) {
+			return new ArrayList<Integer>(0);
+		}
+		
+		if (!caseNumber.startsWith(CoreConstants.PERCENT)) {
+			caseNumber = CoreConstants.PERCENT + caseNumber;
+		}
+		if (!caseNumber.endsWith(CoreConstants.PERCENT)) {
+			caseNumber = caseNumber + CoreConstants.PERCENT;
+		}
+		
+		return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber, Integer.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));
+	}
+
+	public List<Integer> getCaseIdsByProcessUserStatus(String status) {
+		if (status == null || CoreConstants.EMPTY.equals(status)) {
+			return null;
+		}
+		
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessUserStatus, Integer.class, new Param(ProcessUserBind.statusProp, status));
+	}
+
+	public List<Integer> getCaseIdsByCaseStatus(String[] statuses) {
+		if (statuses == null || statuses.length == 0) {
+			return null;
+		}
+		
+		HashSet<String> statusesInSet = new HashSet<String>(statuses.length);
+		for (int i = 0; i < statuses.length; i++) {
+			statusesInSet.add(statuses[i]);
+		}
+		
+		return getResultList(CaseProcInstBind.getCaseIdsByCaseStatus, Integer.class, new Param(CaseProcInstBind.caseStatusesProp, statusesInSet));
+	}
+
+	public List<Integer> getCaseIdsByUserIds(String userId) {
+		if (StringUtil.isEmpty(userId)) {
+			return null;
+		}
+		
+		return getResultList(CaseProcInstBind.getCaseIdsByUserIds, Integer.class, new Param(ProcessUserBind.userIdParam, userId));
+	}
+
+	public List<Integer> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo) {
+		if (dateFrom == null || dateTo == null) {
+			return null;
+		}
+
+		return getResultList(CaseProcInstBind.getCaseIdsByDateRange, Integer.class, new Param(CaseProcInstBind.caseStartDateProp, dateFrom.getTimestamp().toString()),
+				new Param(CaseProcInstBind.caseEndDateProp, dateTo.getTimestamp().toString()));
+	}
+	
 }

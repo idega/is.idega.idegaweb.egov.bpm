@@ -1,6 +1,8 @@
 package com.idega.idegaweb.egov.bpm.data;
 
 
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
+
 import java.io.Serializable;
 import java.util.Date;
 
@@ -22,9 +24,9 @@ import com.idega.jbpm.data.ProcessRole;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/06/30 09:20:59 $ by $Author: anton $
+ * Last modified: $Date: 2008/07/03 14:15:51 $ by $Author: valdas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -84,6 +86,41 @@ import com.idega.jbpm.data.ProcessRole;
 				"inner join "+ProcessUserBind.TABLE_NAME+" pu " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu.process_instance_id " +
 				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :"+ProcessUserBind.statusProp
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessUserStatus, resultSetMapping="caseId", 
+					query=
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME+" cp inner join " + ProcessUserBind.TABLE_NAME + " pu on cp." + 
+				CaseProcInstBind.procInstIdColumnName + " = pu.process_instance_id where pu.user_status = :" + ProcessUserBind.statusProp
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionId, resultSetMapping="caseId", 
+					query=
+				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
+				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pi.PROCESSDEFINITION_ in (:" + 
+				CaseProcInstBind.processDefinitionIdProp + ")"
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumber, resultSetMapping="caseId", 
+					query=
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE pv on cp." +
+				CaseProcInstBind.procInstIdColumnName + " = pv.PROCESSINSTANCE_ where pv.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' and " +
+				"lower(pv.STRINGVALUE_) like :" + CaseProcInstBind.caseNumberProp + " group by cp.case_id"
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 
+					query=
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE pv on cp." +
+				CaseProcInstBind.procInstIdColumnName + " = pv.PROCESSINSTANCE_ where pv.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName + "' and " +
+				"pv.STRINGVALUE_ in (:" + CaseProcInstBind.caseStatusesProp + ") group by cp.case_id"
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByUserIds, resultSetMapping="caseId", 
+					query=
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_TASK_INSTANCE ti on cp." + 
+				CaseProcInstBind.procInstIdColumnName + " = ti.PROCINST_ where ti.ACTORID_ in (:" + ProcessUserBind.userIdParam + ") and ti.END_ is null group by " +
+				"cp.case_id"
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByDateRange, resultSetMapping="caseId",
+					query=
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." + 
+				CaseProcInstBind.procInstIdColumnName + " = pi.id_ where pi.start_ between :" + CaseProcInstBind.caseStartDateProp + " and :" +
+				CaseProcInstBind.caseEndDateProp
 			)
 		}
 )
@@ -99,6 +136,13 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByProcessInstanceIdsProcessInstanceEnded = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded";
 	public static final String getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded";
 	public static final String getCaseIdsByProcessInstanceIdsAndProcessUserStatus = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus";
+	public static final String getCaseIdsByProcessDefinitionId = "CaseProcInstBind.getCaseIdsByProcessDefinitionId";
+	public static final String getCaseIdsByCaseNumber = "CaseProcInstBind.getCaseIdsByCaseNumber";
+	public static final String getCaseIdsByCaseStatus = "CaseProcInstBind.getCaseIdsByCaseStatus";
+	public static final String getCaseIdsByProcessUserStatus = "CaseProcInstBind.getCaseIdsByProcessUserStatus";
+	public static final String getCaseIdsByUserIds = "CaseProcInstBind.getCaseIdsByUserIds";
+	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
+	
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
 	
@@ -123,6 +167,12 @@ public class CaseProcInstBind implements Serializable {
 	@Column(name="date_created")
 	@Temporal(TemporalType.DATE)
 	private Date dateCreated;
+	
+	public static final String processDefinitionIdProp = "processDefinitionId";
+	public static final String caseNumberProp = "caseNumber";
+	public static final String caseStatusesProp = "caseStatuses";
+	public static final String caseStartDateProp = "caseStartDateProp";
+	public static final String caseEndDateProp = "caseEndDateProp";
 
 	public CaseProcInstBind() { }
 

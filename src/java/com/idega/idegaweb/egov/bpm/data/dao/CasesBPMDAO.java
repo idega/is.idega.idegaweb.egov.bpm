@@ -10,12 +10,13 @@ import com.idega.core.persistence.GenericDao;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
+import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/04/21 05:09:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/07/03 14:15:51 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -36,4 +37,16 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs);
 	
 	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
+	
+	public abstract List<Integer> getCaseIdsByProcessDefinitionId(Long processDefinitionId);
+	
+	public abstract List<Integer> getCaseIdsByCaseNumber(String caseNumber);
+	
+	public abstract List<Integer> getCaseIdsByProcessUserStatus(String status);
+	
+	public abstract List<Integer> getCaseIdsByCaseStatus(String[] statuses);
+	
+	public abstract List<Integer> getCaseIdsByUserIds(String userId);
+	
+	public abstract List<Integer> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
 }
