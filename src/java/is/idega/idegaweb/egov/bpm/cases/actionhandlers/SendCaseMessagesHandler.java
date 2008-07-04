@@ -19,6 +19,7 @@ import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
+import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 
 import com.idega.block.process.message.data.Message;
 import com.idega.business.IBOLookup;
@@ -35,9 +36,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/06/15 11:59:41 $ by $Author: civilis $
+ * Last modified: $Date: 2008/07/04 10:49:02 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
@@ -51,6 +52,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 	private String messageValues;
 	private String messagesBundle;
 	private String sendToRoles;
+	private String sendFromProcessInstanceExp;
 	
 	public String getSendToRoles() {
 		return sendToRoles;
@@ -60,15 +62,56 @@ public class SendCaseMessagesHandler implements ActionHandler {
 		this.sendToRoles = sendToRoles;
 	}
 
-	public void execute(ExecutionContext ctx) throws Exception {
+	public void execute(ExecutionContext ectx) throws Exception {
 		
 		FacesContext fctx = FacesContext.getCurrentInstance();
 		final IWContext iwc = IWContext.getIWContext(fctx);
-		final String sendToRoles = getSendToRoles();
-		final ProcessInstance pi = ctx.getProcessInstance();
+		final String sendToRoles = (String)JbpmExpressionEvaluator.evaluate(getSendToRoles(), ectx);
+		final ProcessInstance pi;
+		ProcessInstance candPI;
+		String caseIdStr;
+		
+		if(getSendFromProcessInstanceExp() != null) {
+
+//			resolving candidate process instance from expression, if present
+			candPI = (ProcessInstance)JbpmExpressionEvaluator.evaluate(getSendFromProcessInstanceExp(), ectx);
+			caseIdStr = (String)candPI.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdVariableName);
+			
+		} else {
+			
+//			using current process instance candidate process instance
+			candPI = ectx.getProcessInstance();
+			caseIdStr = (String)ectx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
+		}
+		
+		if(caseIdStr == null) {
+			
+//			no case id variable found, trying to get it from super process
+
+			Token superToken = candPI.getSuperProcessToken();
+			
+			if(superToken != null) {
+				
+//				found super process, trying to get variable from there
+				candPI = superToken.getProcessInstance();
+				caseIdStr = (String)candPI.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdVariableName);
+				
+			} else {
+				
+				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Case id not found in the process instance ("+candPI.getId()+"), and no superprocess found");
+				return;
+			}
+			
+			if(candPI == null) {
+				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Case id not found in the process instance ("+candPI.getId()+")");
+				return;
+			}
+		}
+		
+		pi = candPI;
 		
 		CasesBusiness casesBusiness = getCasesBusiness(iwc);
-		String caseIdStr = (String)ctx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
+		
 		final GeneralCase theCase = casesBusiness.getGeneralCase(new Integer(caseIdStr));
 		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
 		final UserBusiness userBusiness  = getUserBusiness(iwc);
@@ -79,7 +122,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 
 		final String subjectValuesExp = getSubjectValues();
 		final String messageValuesExp = getMessageValues();
-		final Token tkn = ctx.getToken();
+		final Token tkn = ectx.getToken();
 		String bundleIdentifier = getMessagesBundle();
 		
 		if(bundleIdentifier == null)
@@ -215,5 +258,17 @@ public class SendCaseMessagesHandler implements ActionHandler {
 
 	public void setMessagesBundle(String messagesBundle) {
 		this.messagesBundle = messagesBundle;
+	}
+
+	/**
+	 * If send not from current process. Optional
+	 * @return Expression to resolve process instance
+	 */
+	public String getSendFromProcessInstanceExp() {
+		return sendFromProcessInstanceExp;
+	}
+
+	public void setSendFromProcessInstanceExp(String sendFromProcessInstanceExp) {
+		this.sendFromProcessInstanceExp = sendFromProcessInstanceExp;
 	}
 }
