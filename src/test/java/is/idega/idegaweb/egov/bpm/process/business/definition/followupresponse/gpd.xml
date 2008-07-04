@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root-container name="followupResponses" width="703" height="593">
+  <node name="start-state1" x="329" y="39" width="21" height="22">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="tasksForAllRolesUsers" x="226" y="306" width="226" height="34">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="createTasksForAllRolesUsers" x="258" y="95" width="162" height="30">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="sendMessagesForAllRolesUsers" x="236" y="169" width="205" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="end-state1" x="328" y="393" width="22" height="25"/>
+</root-container>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-definition
+  xmlns=""  name="followupResponses">
+  
+    <start-state name="start-state1">
+        <transition to="createTasksForAllRolesUsers" name="tr1"></transition>
+    </start-state>
+
+    <task-node name="tasksForAllRolesUsers">
+        <transition to="end-state1" name="toEnd"></transition>
+    </task-node>
+
+    <node name="createTasksForAllRolesUsers">
+        <event type="node-leave">
+            <action name="createTasksForAllRolesUsersAction" class="com.idega.jbpm.invitation.AssignTasksForRolesUsers">
+                <tasksExp>
+                    #{followupTasks}
+                </tasksExp>
+            </action>
+            <script>
+                <expression>
+                    String joinedRoles = com.idega.util.CoreConstants.EMPTY;
+                    org.jbpm.graph.exe.ProcessInstance sendFromProcessInstance = null;
+                    
+                    if(tasksBeans != null) {
+                    
+                        StringBuilder sb = new StringBuilder();
+                    
+                        for (com.idega.jbpm.invitation.AssignTasksForRolesUsersBean tb : tasksBeans) {
+                        
+                            String[] roles = tb.getRoles();
+                            
+                            if(sendFromProcessInstance == null) {
+                                sendFromProcessInstance = tb.getToken().getProcessInstance();
+                            }
+                            
+                            if(roles != null) {
+                            
+                                for (String role : roles) {
+                                    
+                                    sb.append(role).append(com.idega.util.CoreConstants.SPACE);
+                                }
+                            }
+                        }
+                        
+                        joinedRoles = sb.toString();
+                    }
+                    
+                    System.out.println("Process instance = "+sendFromProcessInstance);
+                </expression>
+                <variable name='followupTasks' access='read' mapped-name='tasksBeans' />
+                <variable name='rolesToSendMessages' access='write' mapped-name='joinedRoles' />
+                <variable name='sendFromProcessInstance' access='write' mapped-name='sendFromProcessInstance' />
+            </script>
+        </event>
+        <transition to="sendMessagesForAllRolesUsers" name="tr2"></transition>
+    </node>
+
+    <node name="sendMessagesForAllRolesUsers">
+        <transition to="tasksForAllRolesUsers" name="tr3"></transition>
+    </node>
+
+    <end-state name="end-state1"></end-state>
+
+
+</process-definition>

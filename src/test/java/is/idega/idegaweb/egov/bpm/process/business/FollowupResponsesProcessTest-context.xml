@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns:context="http://www.springframework.org/schema/context"
+        xmlns:tx="http://www.springframework.org/schema/tx"
+        
+        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd
+                            http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd
+                            http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
+        ">
+        
+        <bean class="com.idega.util.expression.ELUtil" />
+        <bean class="com.idega.jbpm.exe.impl.BPMFactoryImpl" />
+        <bean class="com.idega.jbpm.data.dao.impl.BPMDAOImpl" />
+        <bean class="com.idega.jbpm.identity.RolesManagerImpl" />
+        <bean class="com.idega.jbpm.identity.authorization.IdentityAuthorizationService" />
+        <bean class="com.idega.jbpm.identity.authentication.IdentityAuthenticationService" />
+        <bean class="com.idega.jbpm.variables.impl.VariablesHandlerImpl" />
+        <bean class="com.idega.jbpm.variables.impl.BinaryVariablesHandlerImpl" />
+        <bean class="com.idega.core.file.util.FileURIHandlerFactoryImpl" />
+        <bean id="bpmUserFactory" class="com.idega.jbpm.identity.BPMUserFactoryImpl" scope="singleton">
+            <lookup-method name="createUser" bean="BPMUser" />
+        </bean>
+        
+        
+        <bean id="defaultJbpmConfiguration" class="org.jbpm.JbpmConfiguration" factory-method="getInstance" scope="singleton">
+            <constructor-arg value="com/idega/jbpm/jbpm.cfg.xml" />
+        </bean>
+        
+        <bean id="idegaJbpmContext" class="com.idega.jbpm.IdegaJbpmContext">
+	        <property name="jbpmConfiguration" ref="defaultJbpmConfiguration" />
+	        <property name="entityManagerFactory" ref="entityManagerFactory" />
+        </bean>
+</beans>
