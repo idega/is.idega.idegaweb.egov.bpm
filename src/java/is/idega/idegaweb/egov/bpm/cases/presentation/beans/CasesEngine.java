@@ -39,6 +39,7 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.user.business.UserBusiness;
@@ -61,6 +62,7 @@ public class CasesEngine {
 	private BuilderLogicWrapper builderLogic;
 	private GeneralCasesListBuilder casesListBuilder;
 	private CasesBPMDAO casesBPMDAO;
+	private RolesManager rolesManager;
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
@@ -159,6 +161,38 @@ public class CasesEngine {
 		return getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, component, true);
 	}
 	
+	private List<Integer> getCasesByContactQuery(IWContext iwc, String contact) {
+		if (StringUtil.isEmpty(contact)) {
+			return null;
+		}
+		
+		Collection<User> usersByContactInfo = getUserBusiness(iwc).getUsersByNameOrEmailOrPhone(contact);
+		
+		if (ListUtil.isEmpty(usersByContactInfo)) {
+			return null;
+		}
+		
+		List<Integer> casesByContact = null;
+		List<Integer> casesByContactPerson = null;
+		for (User contactPerson: usersByContactInfo) {
+			casesByContactPerson =  getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc, contactPerson, false));
+			
+			if (!ListUtil.isEmpty(casesByContactPerson)) {
+				if (ListUtil.isEmpty(casesByContact)) {
+					casesByContact = new ArrayList<Integer>();
+				}
+				
+				for (Integer caseId: casesByContactPerson) {
+					if (!casesByContact.contains(caseId)) {
+						casesByContact.add(caseId);
+					}
+				}
+			}
+		}
+		
+		return casesByContact;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private Collection<Case> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
 		CasesBusiness casesBusiness = getCasesBusiness(iwc);
@@ -208,9 +242,20 @@ public class CasesEngine {
 		//	Personal ID
 		String personalId = criteriaBean.getPersonalId();
 		
+		//	Contact
+		boolean checkSimpleCases = true;
+		String contact = criteriaBean.getContact();
+		List<Integer> casesByContact = getCasesByContactQuery(iwc, contact);
+		if (!StringUtil.isEmpty(contact)) {
+			if (ListUtil.isEmpty(casesByContact)) {
+				return null;
+			}
+			
+			checkSimpleCases = false;
+		}
+		
 		//	Process
 		List<Integer> casesByProcessDefinition = null;
-		boolean checkSimpleCases = true;
 		String processDefinitionId = criteriaBean.getProcessId();
 		if (processDefinitionId != null) {
 			Long procDefId = null;
@@ -346,6 +391,9 @@ public class CasesEngine {
 		if (!StringUtil.isEmpty(dateRange)) {
 			results.add(new QueryResultsBean(dateRange, casesByDate));
 		}
+		if (!StringUtil.isEmpty(contact)) {
+			results.add(new QueryResultsBean("contactInfo", casesByContact));
+		}
 		List<Integer> casesToSelect = checkBPMCasesIds(results);
 		logger.log(Level.INFO, "BPM cases to select: " + casesToSelect);
 		
@@ -366,7 +414,7 @@ public class CasesEngine {
 		
 		Collection<Case> cases = null;
 		if (checkSimpleCases) {
-			cases = casesBusiness.getCasesByCriteria(caseNumber, description, name, personalId, processDefinitionId, statuses, dateFrom, dateTo,
+			cases = casesBusiness.getCasesByCriteria(caseNumber, description, name, personalId, statuses, dateFrom, dateTo,
 					((searchingByUserCases || !useBPMQueries) && !isCaseSuperAdmin) ? currentUser : null, useBPMQueries ? handlersGroups: null);
 		}
 		else {
@@ -596,4 +644,14 @@ public class CasesEngine {
 		}
 		
 	}
+
+	public RolesManager getRolesManager() {
+		return rolesManager;
+	}
+
+	@Autowired
+	public void setRolesManager(RolesManager rolesManager) {
+		this.rolesManager = rolesManager;
+	}
+
 }

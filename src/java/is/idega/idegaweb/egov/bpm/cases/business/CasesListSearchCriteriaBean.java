@@ -10,6 +10,7 @@ public class CasesListSearchCriteriaBean {
 	private String statusId;
 	private String dateRange;
 	private String caseListType;
+	private String contact;
 	
 	public String getCaseNumber() {
 		return caseNumber;
@@ -58,6 +59,12 @@ public class CasesListSearchCriteriaBean {
 	}
 	public void setCaseListType(String caseListType) {
 		this.caseListType = caseListType;
+	}
+	public String getContact() {
+		return contact;
+	}
+	public void setContact(String contact) {
+		this.contact = contact;
 	}
 	
 }
