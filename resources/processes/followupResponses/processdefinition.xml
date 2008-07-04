@@ -15,42 +15,54 @@
 				</tasksExp>
 			</action>
 			
-			<!--  
 			<script>
                 <expression>
-	                System.out.println("FOLLOWUP RESP SCRIPT");
-	                
-	                if(tasks != null) {
-	                
-	                    StringBuilder sb = new StringBuilder();
-	                    
-	                    String[] roles = tb.getRoles();
-	                
-		                for (String role : roles) {
-		                    
-		                    sb.append(role).append(com.idega.util.CoreConstants.SPACE);
-		                }
-	                }
+                    String joinedRoles = com.idega.util.CoreConstants.EMPTY;
+                    org.jbpm.graph.exe.ProcessInstance sendFromProcessInstance = null;
+                    
+                    if(tasksBeans != null) {
+                    
+                        StringBuilder sb = new StringBuilder();
+                    
+                        for (com.idega.jbpm.invitation.AssignTasksForRolesUsersBean tb : tasksBeans) {
+                        
+                            String[] roles = tb.getRoles();
+                            
+                            if(sendFromProcessInstance == null) {
+                                sendFromProcessInstance = tb.getToken().getProcessInstance();
+                            }
+                            
+                            if(roles != null) {
+                            
+                                for (String role : roles) {
+                                    
+                                    sb.append(role).append(com.idega.util.CoreConstants.SPACE);
+                                }
+                            }
+                        }
+                        
+                        joinedRoles = sb.toString();
+                    }
                 </expression>
-                <variable name='followupTasks' access='read' mapped-name='tasks' />
+                <variable name='followupTasks' access='read' mapped-name='tasksBeans' />
+                <variable name='rolesToSendMessages' access='write' mapped-name='joinedRoles' />
+                <variable name='sendFromProcessInstance' access='write' mapped-name='sendFromProcessInstance' />
             </script>
-            -->
 		</event>
 		<transition to="sendMessagesForAllRolesUsers" name="tr2"></transition>
 	</node>
 
 	<node name="sendMessagesForAllRolesUsers">
-	<!--  
 	   <event type="node-enter">
 	         <action name="SendFollowupMessages" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendCaseMessagesHandler">
 	            <messagesBundle>is.idega.idegaweb.egov.bpm</messagesBundle>
 	            <subjectKey>cases_bpm.followup.subject</subjectKey>
 	            <messageKey>cases_bpm.followup.message</messageKey>
 	            <messageValues>{list: {mv: [{type: "bean", value: "user.name"}]}}</messageValues>
-	            <sendToRoles>#{sendMessagesToRoles}</sendToRoles>
+	            <sendToRoles>#{rolesToSendMessages}</sendToRoles>
+	            <sendFromProcessInstanceExp>#{sendFromProcessInstance}</sendFromProcessInstanceExp>
             </action>
         </event>
-        -->
 		<transition to="end-state1" name="toEnd"></transition>
 	</node>
 

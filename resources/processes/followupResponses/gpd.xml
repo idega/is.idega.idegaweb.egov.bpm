@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root-container name="followupResponses" width="707" height="597">
+<root-container name="followupResponses" width="703" height="593">
   <node name="start-state1" x="329" y="39" width="21" height="22">
     <edge>
       <label x="5" y="-10"/>
@@ -11,10 +11,10 @@
       <label x="5" y="-10"/>
     </edge>
   </node>
-  <node name="sendMessagesForAllRolesUsers" x="0" y="0" width="132" height="36">
+  <node name="sendMessagesForAllRolesUsers" x="283" y="162" width="132" height="36">
     <edge>
       <label x="5" y="-10"/>
     </edge>
   </node>
-  <node name="end-state1" x="0" y="0" width="132" height="36"/>
+  <node name="end-state1" x="331" y="229" width="20" height="25"/>
 </root-container>
