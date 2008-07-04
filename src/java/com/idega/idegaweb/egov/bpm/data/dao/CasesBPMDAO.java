@@ -14,9 +14,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/07/03 14:15:51 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/04 15:19:49 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -49,4 +49,6 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Integer> getCaseIdsByUserIds(String userId);
 	
 	public abstract List<Integer> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
+	
+	public abstract List<Integer> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
 }

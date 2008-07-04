@@ -19,13 +19,14 @@ import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
+import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/07/03 14:15:51 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/04 15:19:49 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -230,6 +231,17 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		return getResultList(CaseProcInstBind.getCaseIdsByDateRange, Integer.class, new Param(CaseProcInstBind.caseStartDateProp, dateFrom.getTimestamp().toString()),
 				new Param(CaseProcInstBind.caseEndDateProp, dateTo.getTimestamp().toString()));
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<Integer> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds) {
+		if (ListUtil.isEmpty(processInstanceIds)) {
+			return null;
+		}
+		
+		return getEntityManager().createNamedQuery(CaseProcInstBind.getCaseIdsByProcessInstanceIds)
+									.setParameter(CaseProcInstBind.processInstanceIdsProp, processInstanceIds)
+									.getResultList();
 	}
 	
 }
