@@ -277,6 +277,7 @@ public class CasesEngine {
 			}
 			
 			if (ListUtil.isEmpty(casesByProcessDefinition)) {
+				logger.log(Level.INFO, "No cases found by process definition ID: " + processDefinitionId);
 				return null;	//	No cases found by process - terminating search
 			}
 			
