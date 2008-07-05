@@ -1,5 +1,6 @@
 package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -24,9 +25,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/07/04 15:19:49 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/05 08:38:06 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -238,6 +239,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(processInstanceIds)) {
 			return null;
 		}
+		
+		List<Long> realIds = new ArrayList<Long>(processInstanceIds.size());
+		for (Object id: processInstanceIds) {
+			if (id instanceof BigInteger) {
+				//	TODO: find out why we get BigInteger instead of Long
+				realIds.add(Long.valueOf(((BigInteger) id).longValue()));
+			}
+		}
+		
+		processInstanceIds = ListUtil.isEmpty(realIds) ? processInstanceIds : realIds;
 		
 		return getEntityManager().createNamedQuery(CaseProcInstBind.getCaseIdsByProcessInstanceIds)
 									.setParameter(CaseProcInstBind.processInstanceIdsProp, processInstanceIds)
