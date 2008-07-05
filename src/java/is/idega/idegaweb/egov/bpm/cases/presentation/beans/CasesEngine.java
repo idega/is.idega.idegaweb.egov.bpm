@@ -175,17 +175,23 @@ public class CasesEngine {
 		List<Integer> casesByContact = null;
 		List<Integer> casesByContactPerson = null;
 		for (User contactPerson: usersByContactInfo) {
-			casesByContactPerson =  getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc, contactPerson, false));
+			try {
+				casesByContactPerson = getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc, contactPerson, false));
+			} catch(Exception e) {
+				logger.log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);
+			}
 			
-			if (!ListUtil.isEmpty(casesByContactPerson)) {
-				if (ListUtil.isEmpty(casesByContact)) {
-					casesByContact = new ArrayList<Integer>();
-				}
-				
-				for (Integer caseId: casesByContactPerson) {
-					if (!casesByContact.contains(caseId)) {
-						casesByContact.add(caseId);
-					}
+			if (ListUtil.isEmpty(casesByContactPerson)) {
+				return null;
+			}
+			
+			if (ListUtil.isEmpty(casesByContact)) {
+				casesByContact = new ArrayList<Integer>();
+			}
+			
+			for (Integer caseId: casesByContactPerson) {
+				if (!casesByContact.contains(caseId)) {
+					casesByContact.add(caseId);
 				}
 			}
 		}
