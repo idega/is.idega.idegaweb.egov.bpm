@@ -24,9 +24,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2008/07/08 08:11:37 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/08 09:13:13 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -171,13 +171,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return new ArrayList<Token>(0);
 	}
 
-	public List<Integer> getCaseIdsByProcessDefinitionId(Long processDefinitionId) {
-		if (processDefinitionId == null) {
-			return new ArrayList<Integer>(0);
+	public List<Integer> getCaseIdsByProcessDefinitionIdsAndName(List<Long> processDefinitionIds, String processDefinitionName) {
+		if (ListUtil.isEmpty(processDefinitionIds) || StringUtil.isEmpty(processDefinitionName)) {
+			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionId, Integer.class, new Param(CaseProcInstBind.processDefinitionIdProp,
-				processDefinitionId));
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, Integer.class, new Param(CaseProcInstBind.processDefinitionIdsProp, 
+				processDefinitionIds), new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 	}
 
 	public List<Integer> getCaseIdsByCaseNumber(String caseNumber) {

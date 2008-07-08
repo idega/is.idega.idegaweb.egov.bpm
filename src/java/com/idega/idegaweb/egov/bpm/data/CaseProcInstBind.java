@@ -21,9 +21,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/07/04 15:19:49 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/08 09:13:13 $ by $Author: valdas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -90,11 +90,11 @@ import javax.persistence.TemporalType;
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME+" cp inner join " + ProcessUserBind.TABLE_NAME + " pu on cp." + 
 				CaseProcInstBind.procInstIdColumnName + " = pu.process_instance_id where pu.user_status = :" + ProcessUserBind.statusProp
 			),
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionId, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pi.PROCESSDEFINITION_ in (:" + 
-				CaseProcInstBind.processDefinitionIdProp + ")"
+				CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " group by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumber, resultSetMapping="caseId", 
 					query=
@@ -135,7 +135,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByProcessInstanceIdsProcessInstanceEnded = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded";
 	public static final String getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded";
 	public static final String getCaseIdsByProcessInstanceIdsAndProcessUserStatus = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus";
-	public static final String getCaseIdsByProcessDefinitionId = "CaseProcInstBind.getCaseIdsByProcessDefinitionId";
+	public static final String getCaseIdsByProcessDefinitionIdsAndName = "CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName";
 	public static final String getCaseIdsByCaseNumber = "CaseProcInstBind.getCaseIdsByCaseNumber";
 	public static final String getCaseIdsByCaseStatus = "CaseProcInstBind.getCaseIdsByCaseStatus";
 	public static final String getCaseIdsByProcessUserStatus = "CaseProcInstBind.getCaseIdsByProcessUserStatus";
@@ -167,7 +167,8 @@ public class CaseProcInstBind implements Serializable {
 	@Temporal(TemporalType.DATE)
 	private Date dateCreated;
 	
-	public static final String processDefinitionIdProp = "processDefinitionId";
+	public static final String processDefinitionIdsProp = "processDefinitionIds";
+	public static final String processDefinitionNameProp = "processDefinitionName";
 	public static final String caseNumberProp = "caseNumber";
 	public static final String caseStatusesProp = "caseStatuses";
 	public static final String caseStartDateProp = "caseStartDateProp";
