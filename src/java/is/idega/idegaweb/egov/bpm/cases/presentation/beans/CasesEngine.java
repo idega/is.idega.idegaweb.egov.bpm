@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 
+import org.jbpm.graph.def.ProcessDefinition;
 import org.jdom.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -38,6 +39,7 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.business.JbpmProcessBusinessBean;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
@@ -63,6 +65,7 @@ public class CasesEngine {
 	private GeneralCasesListBuilder casesListBuilder;
 	private CasesBPMDAO casesBPMDAO;
 	private RolesManager rolesManager;
+	private JbpmProcessBusinessBean jbpmProcessBusiness;
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
@@ -199,6 +202,43 @@ public class CasesEngine {
 		return casesByContact;
 	}
 	
+	private List<Integer> getCasesByProcessDefinition(String processDefinitionId) {
+		if (StringUtil.isEmpty(processDefinitionId)) {
+			return null;
+		}
+		
+		Long procDefId = null;
+		try {
+			procDefId = Long.valueOf(processDefinitionId);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		}
+		if (procDefId == null) {
+			return null;
+		}
+		
+		List<Long> processDefinitionIds = new ArrayList<Long>(1);
+		processDefinitionIds.add(procDefId);
+		
+		ProcessDefinition processDefinition = null;
+		try {
+			processDefinition = getJbpmProcessBusiness().getProcessDefinition(procDefId);
+		} catch(Exception e) {
+			logger.log(Level.SEVERE, "Error getting process definition by ID: " + processDefinitionId, e);
+		}
+		if (processDefinition == null) {
+			return null;
+		}
+		
+		try {
+			return getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndName(processDefinitionIds, processDefinition.getName());
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
 	@SuppressWarnings("unchecked")
 	private Collection<Case> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
 		CasesBusiness casesBusiness = getCasesBusiness(iwc);
@@ -254,28 +294,17 @@ public class CasesEngine {
 		List<Integer> casesByContact = getCasesByContactQuery(iwc, contact);
 		if (!StringUtil.isEmpty(contact)) {
 			if (ListUtil.isEmpty(casesByContact)) {
-				return null;
+				logger.log(Level.INFO, "No cases found by contact: " + contact);
+				return null;	//	No cases found by contact - terminating search
 			}
 			
 			checkSimpleCases = false;
 		}
 		
 		//	Process
-		List<Integer> casesByProcessDefinition = null;
 		String processDefinitionId = criteriaBean.getProcessId();
-		if (processDefinitionId != null) {
-			Long procDefId = null;
-			try {
-				procDefId = Long.valueOf(processDefinitionId);
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
-			}
-			try {
-				casesByProcessDefinition = getCasesBPMDAO().getCaseIdsByProcessDefinitionId(procDefId);
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
-			
+		List<Integer> casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId);
+		if (!StringUtil.isEmpty(processDefinitionId)) {
 			if (ListUtil.isEmpty(casesByProcessDefinition)) {
 				logger.log(Level.INFO, "No cases found by process definition ID: " + processDefinitionId);
 				return null;	//	No cases found by process - terminating search
@@ -302,7 +331,8 @@ public class CasesEngine {
 					e.printStackTrace();
 				}
 				
-				if (casesByStatus == null || casesByStatus.isEmpty()) {
+				if (ListUtil.isEmpty(casesByStatus)) {
+					logger.log(Level.INFO, "No cases found for user: " + currentUser.getName());
 					return null;	//	No cases found for current user, terminating search
 				}
 			}
@@ -661,4 +691,12 @@ public class CasesEngine {
 		this.rolesManager = rolesManager;
 	}
 
+	public JbpmProcessBusinessBean getJbpmProcessBusiness() {
+		return jbpmProcessBusiness;
+	}
+
+	@Autowired
+	public void setJbpmProcessBusiness(JbpmProcessBusinessBean jbpmProcessBusiness) {
+		this.jbpmProcessBusiness = jbpmProcessBusiness;
+	}
 }
