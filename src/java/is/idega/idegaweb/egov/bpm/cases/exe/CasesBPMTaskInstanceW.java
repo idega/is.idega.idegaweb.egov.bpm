@@ -43,9 +43,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/06/21 16:45:58 $ by $Author: civilis $
+ * Last modified: $Date: 2008/07/08 14:20:16 $ by $Author: anton $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -303,7 +303,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		final Map<Locale, String> names;
 		final Long taskInstanceId = getTaskInstanceId();
 		
-		synchronized (cashTaskNames) {
+//		synchronized (cashTaskNames) {
 //			synchronizing on CASHED_TASK_NAMES map, as it's accessed from multiple threads
 			
 			if(cashTaskNames.containsKey(taskInstanceId)) {
@@ -314,7 +314,7 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 				names = new HashMap<Locale, String>(5);
 				cashTaskNames.put(taskInstanceId, names);
 			}
-		}
+//		}
 		
 		final String name;
 		
