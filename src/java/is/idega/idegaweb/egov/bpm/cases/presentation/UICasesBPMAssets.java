@@ -38,9 +38,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  *
- * Last modified: $Date: 2008/06/11 14:53:58 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/08 14:04:49 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -52,6 +52,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	
 	private boolean fullView = false;
 	private boolean inCasesComponent = false;
+	private boolean usePdfDownloadColumn = true;
 	
 	private Long processInstanceId;
 	private Integer caseId;
@@ -270,7 +271,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		Integer caseId = stateBean.getCaseId();
 		
 		String mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
-			.append(processInstanceId.toString()).append(", ").append(caseId.toString()).append(");").toString();
+			.append(processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ").append(isUsePdfDownloadColumn()).append(");").toString();
 		
 		if (!isSingle) {
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction).append("\n});").toString();
@@ -278,4 +279,13 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		PresentationUtil.addJavaScriptActionToBody(iwc, mainAction);
 	}
+
+	public boolean isUsePdfDownloadColumn() {
+		return usePdfDownloadColumn;
+	}
+
+	public void setUsePdfDownloadColumn(boolean usePdfDownloadColumn) {
+		this.usePdfDownloadColumn = usePdfDownloadColumn;
+	}
+	
 }

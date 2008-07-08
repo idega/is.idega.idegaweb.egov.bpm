@@ -26,7 +26,7 @@ CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
 CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS = 'casesBPMPDFGeneratorAndDownloader';
 
-CasesBPMAssets.initGrid = function(container, piId, caseId) {
+CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn) {
 	if (container == null) {
 		return false;
 	}
@@ -59,7 +59,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId) {
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
 				CasesBPMAssets.initTasksGrid(caseId, piId, container, false);
-				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights);
+				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn);
 				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights);
 				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights);
 			}
@@ -106,12 +106,13 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
 };
 
-CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights) {
+CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn) {
     var identifier = 'caseForms';
     
     var populatingFunction = function(params, callback) {
         params.piId = piId;
         params.rightsChanger = hasRightChangeRights;
+        params.downloadDocument = usePdfDownloadColumn;
         BPMProcessAssets.getProcessDocumentsList(params, {
             callback: function(result) {
                 callback(result);
@@ -131,7 +132,9 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FORM_NAME);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_SUBMITTED_BY);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
-    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF);    //  TODO: check if need to download document in PDF
+    if (usePdfDownloadColumn) {
+    	namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF);
+    }
     if (hasRightChangeRights) {
         namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
     }
@@ -139,7 +142,9 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'submittedByName',index:'submittedByName'});
     modelForColumns.push({name:'submittedDate',index:'submittedDate'});
-    modelForColumns.push({name:'downloadAsPdf',index:'downloadAsPdf'});
+    if (usePdfDownloadColumn) {
+    	modelForColumns.push({name:'downloadAsPdf',index:'downloadAsPdf'});
+    }
     if (hasRightChangeRights) {
         modelForColumns.push({name:'rightsForDocumentResources',index:'rightsForDocumentResources'});
     }
