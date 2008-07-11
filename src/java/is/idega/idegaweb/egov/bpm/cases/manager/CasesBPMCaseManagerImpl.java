@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;
@@ -26,12 +27,15 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
+import com.idega.block.text.data.LocalizedText;
+import com.idega.block.text.data.LocalizedTextHome;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
+import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.core.persistence.Param;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
@@ -46,13 +50,15 @@ import com.idega.presentation.IWContext;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.CoreUtil;
+import com.idega.util.StringUtil;
 import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/06/15 16:03:31 $ by $Author: civilis $
+ * Last modified: $Date: 2008/07/11 13:27:21 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -372,16 +378,45 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		try {
 			ArrayList<AdvancedProperty> props = new ArrayList<AdvancedProperty>(casesProcesses.size());
 			
+			Locale locale = null;
+			IWContext iwc = CoreUtil.getIWContext();
+			if (iwc != null) {
+				locale = iwc.getCurrentLocale();
+			}
+			if (locale == null) {
+				locale = Locale.ENGLISH;
+			}
+			int localeId = ICLocaleBusiness.getLocaleId(locale);
+			
+			LocalizedTextHome textHome = (LocalizedTextHome) IDOLookup.getHome(LocalizedText.class);
+			
+			String localizedName = null;
 			for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
 				
 				ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
-				props.add(new AdvancedProperty(String.valueOf(pd.getId()), pd.getName()));
+				
+				localizedName = getProcessDefinitionLocalizedName(pd, localeId, textHome);
+				
+				props.add(new AdvancedProperty(String.valueOf(pd.getId()), StringUtil.isEmpty(localizedName) ? pd.getName() : localizedName));
 			}
 			
 			return props;
-			
+		} catch(Exception e) {
+			e.printStackTrace();
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
+		
+		return null;
+	}
+	
+	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, int localeId, LocalizedTextHome textHome) {
+		try {
+			LocalizedText text = textHome.findLocalizedNameForApplication(pd.getName(), localeId);
+			return text.getBody();
+		} catch(Exception e) {
+		}
+		
+		return null;
 	}
 }
