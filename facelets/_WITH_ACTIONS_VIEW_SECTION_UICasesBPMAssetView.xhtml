@@ -45,6 +45,24 @@
 								#{casesBPMAssetsState.processView.caseIdentifier}
 							</div>
 						</div>
+						<!--  
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_status']}
+							</div>
+							<div class="assetEntryRight">
+								#{casesBPMAssetsState.taskView.taskStatus}
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.assigned_to']}
+							</div>
+							<div class="assetEntryRight">
+								#{casesBPMAssetsState.taskView.assignedTo}
+							</div>
+						</div>
+						-->
 						<div class="assetEntry">
 							<div class="assetEntryLeft">
 								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.time_created']}
@@ -55,6 +73,36 @@
 						</div>
 					</div>
 				</div>
+				<!--  
+				<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="assetSection">
+					<div class="assetHeader">
+						#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.views']}
+					</div>
+					<div class="assetContent">
+						<div class="assetEntry">
+							<span class="selected">
+								<b>
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_form']}
+								</b>
+							</span>
+						</div>
+					</div>
+				</t:div>			
+				
+				<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="assetSection">
+					<div class="assetHeader">
+						#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.actions']}
+					</div>
+					<div class="assetContent">
+					    <t:div rendered="#{casesBPMAssetsState.canStartTask}" styleClass="assetEntry">
+						  <h:commandLink value="Start task" action="#{casesBPMAssetsState.startTask}" />
+						</t:div>
+						<t:div rendered="#{casesBPMAssetsState.canTakeTask}" styleClass="assetEntry">
+						  <h:commandLink value="Take task" action="#{casesBPMAssetsState.assignTask}" />
+						</t:div>
+					</div>
+				</t:div>
+				-->
 		</div>
 	</ui:define>
 	<ui:define name="chibaform">
