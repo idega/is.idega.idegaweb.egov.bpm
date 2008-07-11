@@ -16,27 +16,64 @@
                 <Subject_fbc_5 mapping="string:subject"/>
                <Text_fbc_6 mapping="string:text"/>
             </data>
-            </xf:instance>            
+            </xf:instance>   
+            
+             <xf:instance id="control-instance">
+			<control xmlns="">
+				<readonly>false</readonly>
+				<enable>true</enable>
+			</control>
+	</xf:instance>	
+                     
             <xf:submission action="xformsBPM:/nouri" id="submit_data_submission" method="post" replace="none" />
-        <xf:bind id="bind.fbc_5" nodeset="Subject_fbc_5" type="string"/>
-         <xf:bind id="bind.fbc_6" nodeset="Text_fbc_6" type="string"/>
+            
+            <xf:action id="submission-error" ev:event="xforms-submit-error">
+					<xf:setvalue ev:event="xforms-value-changed" ref="instance('control-instance')/enable">true</xf:setvalue>
+				<xf:message level="modeless" ref="instance('localized_strings')/page-1-error.label[@lang=instance('localized_strings')/current_language]"/>
+	</xf:action>
+	
+            
+        <xf:bind id="bind.fbc_5" nodeset="Subject_fbc_5" type="string" readonly="instance('control-instance')/readonly = 'true'"/>
+         <xf:bind id="bind.fbc_6" nodeset="Text_fbc_6" type="string" readonly="instance('control-instance')/readonly = 'true'"/>
       </xf:model>
         <xf:model id="data_model">
             <xf:instance xmlns="" id="localized_strings">
                   <localized_strings>
                         <default_language>en</default_language>
                        <current_language>en</current_language>
+                       
                        <form.title lang="en">Email message</form.title>
+                         <form.title lang="is_IS">Email message</form.title>
+                         
                        <page-1.label lang="en">First section</page-1.label>
+                           <page-1.label lang="is_IS">First section</page-1.label>
+                           
                        <page-2.label lang="en">Submitted</page-2.label>
-                    
+                      <page-2.label lang="is_IS">Submitted</page-2.label>
+                      
                        <page-2.info lang="en">Form submitted, thank You!</page-2.info>
-                    <fbc_5.title lang="is_is">Simple text input</fbc_5.title>
-               <fbc_5.title lang="en">Subject</fbc_5.title>
-               <fbc_6.title lang="is_is">Paragraph text input</fbc_6.title>
+                         <page-2.info lang="is_IS">Form submitted, thank You!</page-2.info>
+                       
+         
+              	 <fbc_5.title lang="en">Subject</fbc_5.title>
+                  <fbc_5.title lang="is_IS">Subject</fbc_5.title>
+                  
                <fbc_6.title lang="en">Text</fbc_6.title>
+               <fbc_6.title lang="is_IS">Text</fbc_6.title>
+               
+                <page-1-error.label lang="en">Submission error. Please check your form!</page-1-error.label>
+        <page-1-error.label lang="is_IS"></page-1-error.label>
+               
             </localized_strings>
             </xf:instance>
+            
+             <xf:instance id="locale-instance" relevant="false()" src="context:fb-afk-loginSession.currentLocale"/>
+             
+ <xf:action ev:event="xforms-model-ready">
+				<xf:setvalue model="data_model"
+					ref="instance('localized_strings')/current_language" value="instance('locale-instance')/fb-afk-loginSession.currentLocale"/>
+	</xf:action>
+            
           </xf:model>
         <xs:schema id="fb-schema">
         </xs:schema>
