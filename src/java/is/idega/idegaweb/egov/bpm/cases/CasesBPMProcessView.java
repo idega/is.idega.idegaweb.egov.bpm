@@ -4,6 +4,7 @@ import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +29,9 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
+import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.identity.BPMAccessControlException;
 import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
@@ -41,9 +44,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/06/15 16:00:18 $ by $Author: civilis $
+ * Last modified: $Date: 2008/07/15 16:36:45 $ by $Author: anton $
  */
 @Scope("singleton")
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
@@ -61,19 +64,31 @@ public class CasesBPMProcessView {
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
 		try {
-			TaskInstance ti = ctx.getTaskInstance(taskInstanceId);
+			TaskInstance tInst = ctx.getTaskInstance(taskInstanceId);
+		
+			ProcessInstance processInstance = ctx.getProcessInstance(tInst.getProcessInstance().getId());
+			ProcessInstanceW processInstanceW = getBPMFactory().getProcessManager(processInstance.getProcessDefinition().getId()).getProcessInstance(tInst.getProcessInstance().getId());
+			@SuppressWarnings("unchecked")
+			Collection<TaskInstanceW> taskInstances = processInstanceW.getAllTaskInstances();
+			
+			TaskInstanceW ti = null;
+			for(TaskInstanceW task : taskInstances) {
+				if(task.getTaskInstanceId() == taskInstanceId) {
+					ti = task;
+				}
+			}
 			
 			if(ti == null) {
 				Logger.getLogger(getClass().getName()).log(Level.WARNING, "No task instance found for task instance id provided: "+taskInstanceId);
 				return new CasesBPMTaskViewBean();
 			}
 			IWContext iwc = IWContext.getInstance();
-			IWTimestamp createTime = new IWTimestamp(ti.getCreate());
-			String taskStatus = getTaskStatus(ti);
-			String assignedTo = getTaskAssignedTo(ti);
+			IWTimestamp createTime = new IWTimestamp(ti.getTaskInstance().getCreate());
+			String taskStatus = getTaskStatus(ti.getTaskInstance());
+			String assignedTo = getTaskAssignedTo(ti.getTaskInstance());
 			
 			CasesBPMTaskViewBean bean = new CasesBPMTaskViewBean();
-			bean.setTaskName(ti.getName());
+			bean.setTaskName(ti.getName(iwc.getCurrentLocale()));
 			bean.setTaskStatus(taskStatus);
 			bean.setAssignedTo(assignedTo);
 			bean.setCreatedDate(createTime.getLocaleDateAndTime(iwc.getLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
