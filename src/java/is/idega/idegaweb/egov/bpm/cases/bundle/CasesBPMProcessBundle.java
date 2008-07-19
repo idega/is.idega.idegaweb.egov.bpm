@@ -33,19 +33,19 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bundle.ProcessBundle;
+import com.idega.jbpm.bundle.ProcessBundleResources;
 import com.idega.jbpm.view.ViewResource;
 import com.idega.jbpm.view.ViewToTask;
 import com.idega.jbpm.view.ViewToTaskType;
 import com.idega.user.business.GroupBusiness;
 import com.idega.user.data.Group;
-import com.idega.util.CoreConstants;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  * 
- * Last modified: $Date: 2008/06/01 17:02:19 $ by $Author: civilis $
+ * Last modified: $Date: 2008/07/19 20:43:59 $ by $Author: civilis $
  * 
  */
 @Scope("prototype")
@@ -67,6 +67,7 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	
 	private static final String XFFileNamePropertyPostfix = ".view.xforms.file_name";
 
+	private ProcessBundleResources bundleResources;
 	private IWBundle bundle;
 	private CasesBPMDAO casesBPMDAO;
 	private String bundlePropertiesLocationWithinBundle;
@@ -75,40 +76,39 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	
 	private ViewToTask viewToTaskBinder;
 
-	public ViewToTask getViewToTaskBinder() {
-		return viewToTaskBinder;
-	}
-
-	@Autowired
-	@ViewToTaskType("xforms")
-	public void setViewToTaskBinder(ViewToTask viewToTaskBinder) {
-		this.viewToTaskBinder = viewToTaskBinder;
-	}
-
-	public DocumentManagerFactory getDocumentManagerFactory() {
-		return documentManagerFactory;
-	}
-
-	@Autowired
-	public void setDocumentManagerFactory(
-			DocumentManagerFactory documentManagerFactory) {
-		this.documentManagerFactory = documentManagerFactory;
-	}
-
 	public ProcessDefinition getProcessDefinition() throws IOException {
 
 		if(pd == null) {
+
+			/*
+			InputStream pdIs = null;
 		
-			String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
+			if(getBundle() != null) {
+//				resolving from bundle
+			
+				String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
 
-			if (templateBundleLocationWithinBundle == null)
-				throw new IllegalStateException(
-						"No templateBundleLocationWithinBundle set");
+				if (templateBundleLocationWithinBundle == null)
+					throw new IllegalStateException(
+							"No templateBundleLocationWithinBundle set");
 
-			InputStream pdIs = getBundle().getResourceInputStream(
-					templateBundleLocationWithinBundle + processDefinitionFileName);
-			ProcessDefinition pd = ProcessDefinition.parseXmlInputStream(pdIs);
-			this.pd = pd;
+				pdIs = getBundle().getResourceInputStream(
+						templateBundleLocationWithinBundle + processDefinitionFileName);
+				
+			} else if(getBundleInputStream() != null) {
+//				resolving from zip
+				
+				pdIs = resolveISFromZIP(getBundleInputStream(), "processdefinition.xml");
+			}
+			*/
+			
+			InputStream pdIs = getBundleResources().getResourceIS(processDefinitionFileName);
+			
+			if(pdIs != null) {
+			
+				ProcessDefinition pd = ProcessDefinition.parseXmlInputStream(pdIs);
+				this.pd = pd;
+			}
 		}
 		
 		return pd;
@@ -117,14 +117,31 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	public List<ViewResource> getViewResources(String taskName)
 			throws IOException {
 
-		String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
+		/*
+		String formsPathWithin;
+		
+		if(getBundle() != null) {
+		
+			String templateBundleLocationWithinBundle = getBundlePropertiesLocationWithinBundle().substring(0, getBundlePropertiesLocationWithinBundle().lastIndexOf(CoreConstants.SLASH)+1);
 
-		if (templateBundleLocationWithinBundle == null)
-			throw new IllegalStateException(
-					"No templateBundleLocationWithinBundle set");
+			if (templateBundleLocationWithinBundle == null)
+				throw new IllegalStateException(
+						"No templateBundleLocationWithinBundle set");
 
-		String formsPathWithin = templateBundleLocationWithinBundle	+ formsPath;
-		Properties properties = resolveBundleProperties();
+			formsPathWithin = templateBundleLocationWithinBundle	+ formsPath;
+		} else if(getBundleInputStream() != null) {
+			
+			formsPathWithin = "forms/";
+		} else
+			throw new IllegalStateException("No bundle nor bundle zip stream provided");
+		 */
+		
+		ProcessBundleResources resources = getBundleResources();
+		InputStream propertiesIs = resources.getResourceIS("bundle.properties");
+		
+		final Properties properties = new Properties();
+		properties.load(propertiesIs);
+		//Properties properties = resolveBundleProperties();
 
 		for (Entry<Object, Object> entry : properties.entrySet()) {
 
@@ -142,8 +159,17 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 				CasesBPMBundledFormViewResource resource = new CasesBPMBundledFormViewResource();
 				resource.setTaskName(taskName);
 				resource.setDocumentManagerFactory(getDocumentManagerFactory());
-				String pathWithinBundle = formsPathWithin + fileName;
-				resource.setResourceLocation(getBundle(), pathWithinBundle);
+				String pathWithinBundle = formsPath + fileName;
+				
+				resource.setResourceLocation(resources, pathWithinBundle);
+				
+//				if(getBundle() != null) {
+//				
+//					resource.setResourceLocation(getBundle(), pathWithinBundle);
+//				} else if(getBundleInputStream() != null) {
+//				
+//					resource.setResourceLocation(getBundleInputStream(), pathWithinBundle);
+//				}
 
 				ArrayList<ViewResource> viewResources = new ArrayList<ViewResource>(1);
 				viewResources.add(resource);
@@ -172,14 +198,67 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	}
 
 	protected Properties resolveBundleProperties() throws IOException {
+	
+		InputStream propertiesIs = getBundleResources().getResourceIS("bundle.properties");
 		
-		InputStream propertiesIs = getBundle()
-		.getResourceInputStream(getBundlePropertiesLocationWithinBundle());
+//		if(getBundle() != null) {
+//		
+//			propertiesIs = getBundle()
+//			.getResourceInputStream(getBundlePropertiesLocationWithinBundle());
+//			
+//		} else if(getBundleInputStream() != null) {
+//
+//			propertiesIs = resolveISFromZIP(getBundleInputStream(), "bundle.properties");
+//		}
+		
+		if(propertiesIs != null) {
+		
+			final Properties properties = new Properties();
+			properties.load(propertiesIs);
+			
+			return properties;
+		} else {
 
-		Properties properties = new Properties();
-		properties.load(propertiesIs);
-		return properties;
+			throw new RuntimeException("Expected bundle.properties not found");
+		}
 	}
+	
+	/*
+	private InputStream resolveISFromZIP(InputStream zipInputStream, String fileName) {
+		
+		ZipInputStream zipStream = null;
+		
+		try {
+			ZipEntry entry;
+			zipStream = new ZipInputStream(zipInputStream);
+			
+			while ((entry = zipStream.getNextEntry()) != null) {
+				
+				String entryName = entry.getName();
+				
+				System.out.println("entry="+entryName);
+				
+				if(fileName.equals(entryName)) {
+					
+					ZipInstaller zip = new ZipInstaller();
+				
+					ByteArrayOutputStream os = new ByteArrayOutputStream();
+					zip.writeFromStreamToStream(zipInputStream, os);
+					InputStream is = new ByteArrayInputStream(os.toByteArray());
+					zipStream.closeEntry();
+					return is;
+				}
+				
+				zipStream.closeEntry();
+			}
+			
+		} catch (IOException e) {
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving file from zip by file name="+fileName, e);
+		}
+		
+		return null;
+	}
+	*/
 	
 	public void configure(ProcessDefinition pd) {
 		
@@ -305,5 +384,33 @@ public class CasesBPMProcessBundle implements ProcessBundle {
 	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
+	}
+
+	public ProcessBundleResources getBundleResources() {
+		return bundleResources;
+	}
+
+	public void setBundleResources(ProcessBundleResources bundleResources) {
+		this.bundleResources = bundleResources;
+	}
+	
+	public ViewToTask getViewToTaskBinder() {
+		return viewToTaskBinder;
+	}
+
+	@Autowired
+	@ViewToTaskType("xforms")
+	public void setViewToTaskBinder(ViewToTask viewToTaskBinder) {
+		this.viewToTaskBinder = viewToTaskBinder;
+	}
+
+	public DocumentManagerFactory getDocumentManagerFactory() {
+		return documentManagerFactory;
+	}
+
+	@Autowired
+	public void setDocumentManagerFactory(
+			DocumentManagerFactory documentManagerFactory) {
+		this.documentManagerFactory = documentManagerFactory;
 	}
 }
