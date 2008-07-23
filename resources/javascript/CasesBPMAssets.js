@@ -334,7 +334,6 @@ CasesBPMAssets.hideHeaderTableIfNoContent = function(container) {
 						allText += ' ';
 					}
 				}
-				allText = allText.replace(/^\s*|\s*$/g, '');
 				if (allText == '') {
 					allText = '-';
 				}
