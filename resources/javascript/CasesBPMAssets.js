@@ -79,6 +79,8 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
                 callback(result);
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
+                
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
             }
         });
     };
@@ -88,7 +90,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY);
     if (hasRightChangeRights) {
-        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
     
     var modelForColumns = new Array();
@@ -120,6 +122,8 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
                 CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX + piId));
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
+                
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
             }
         });
     };
@@ -133,10 +137,10 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_SUBMITTED_BY);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
     if (usePdfDownloadColumn) {
-    	namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF);
+    	namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF*/);
     }
     if (hasRightChangeRights) {
-        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
@@ -169,6 +173,8 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
                 CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX + piId));
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
+                
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
             }
         });
     };
@@ -182,7 +188,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_SENDER);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
     if (hasRightChangeRights) {
-        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
     var modelForColumns = new Array();
     modelForColumns.push({name:'subject',index:'subject'});
@@ -210,6 +216,8 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
                 callback(result);
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
+                
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
             }
         });
     };
@@ -269,7 +277,81 @@ CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, popul
     jQuery(table).attr('cellspacing', 0);
 }
 
+CasesBPMAssets.hideHeaderTableIfNoContent = function(container) {
+	container = jQuery(container);
+	
+	var hideHeader = false;
+	var changeBody = false;
+	var textFromRows = null;
+	var rowsWithIllegalIds = jQuery('#-1', container);
+	if (rowsWithIllegalIds != null && rowsWithIllegalIds.length > 0) {
+		hideHeader = true;
+		changeBody = true;
+		textFromRows = new Array();
+		
+		var row = null;
+		var text = null;
+		var cells = null;
+		for (var i = 0; i < rowsWithIllegalIds.length; i++) {
+			row = jQuery(rowsWithIllegalIds[i]);
+			cells = jQuery('td', row);
+			
+			for (var j = 0; j < cells.length; j++) {
+				text = jQuery(cells[j]).text();
+				if (text != null && text != '' && text != ' ') {
+					textFromRows.push(text);
+				}
+			}
+		}
+	}
+	
+	var divsWithNoContent = jQuery("div[records='0']", container);
+	if (divsWithNoContent != null && divsWithNoContent.length > 0) {
+		hideHeader = true;
+		changeBody = true;
+		textFromRows = ['-'];
+	}
+	
+	if (hideHeader) {
+		var headers = jQuery('div.gridHeadersTableContainer', container);
+		for (var i = 0; i < headers.length; i++) {
+			jQuery(headers[i]).css('display', 'none');
+		}
+	}
+	if (changeBody) {
+		var bodies = jQuery('div.gridBodyTableContainer', container);
+		var gridBody = null;
+		for (var i = 0; i < bodies.length; i++) {
+			gridBody =  jQuery(bodies[i]);
+			
+			gridBody.empty();
+			gridBody.addClass('noContentInCasesListGridBody');
+			if (textFromRows != null) {
+				var allText = '';
+				for (var j = 0; j < textFromRows.length; j++) {
+					allText += textFromRows[j];
+					if ((j + 1) < textFromRows.length) {
+						allText += ' ';
+					}
+				}
+				allText = allText.replace(/^\s*|\s*$/g, '');
+				if (allText == '') {
+					allText = '-';
+				}
+				gridBody.text(allText);
+			}
+		}
+	}
+}
+
 CasesBPMAssets.getProcessRersourceView = function(caseId, taskInstanceId) {
+	if (!caseId || !taskInstanceId) {
+		return false;
+	}
+	if (caseId < 0 || taskInstanceId < 0) {
+		return false;
+	}
+	
     changeWindowLocationHref('prm_case_pk=' + caseId + '&tiId=' + taskInstanceId + '&cp_prm_action=8');
 }
 
@@ -343,7 +425,7 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_NAME);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_SIZE);
     if (subGridParams.rightsChanger) {
-        namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS);
+        namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
     subGridParams.colNames = namesForColumns;
     
