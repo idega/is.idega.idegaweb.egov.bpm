@@ -14,6 +14,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;
@@ -37,6 +39,7 @@ import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
 import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.core.persistence.Param;
+import com.idega.data.IDOFinderException;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -56,9 +59,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/07/11 13:27:21 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/24 07:02:08 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -415,6 +418,12 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			LocalizedText text = textHome.findLocalizedNameForApplication(pd.getName(), localeId);
 			return text.getBody();
 		} catch(Exception e) {
+			if (e instanceof IDOFinderException) {
+				Logger.getLogger(CasesBPMCaseManagerImpl.class.getName()).log(Level.WARNING, "No localized name for process: " + pd.getName() + ", locale: " + localeId);
+			}
+			else {
+				e.printStackTrace();
+			}
 		}
 		
 		return null;

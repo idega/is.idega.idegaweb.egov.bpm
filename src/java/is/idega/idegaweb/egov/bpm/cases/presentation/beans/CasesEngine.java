@@ -302,7 +302,13 @@ public class CasesEngine {
 		}
 		
 		//	Process
+		boolean simpleCasesOnly = false;
 		String processDefinitionId = criteriaBean.getProcessId();
+		if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
+			useBPMQueries = false;
+			simpleCasesOnly = true;
+			processDefinitionId = null;
+		}
 		List<Integer> casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId);
 		if (!StringUtil.isEmpty(processDefinitionId)) {
 			if (ListUtil.isEmpty(casesByProcessDefinition)) {
@@ -411,27 +417,29 @@ public class CasesEngine {
 			}
 		}
 		
-		//	Cases that MUST be selected
-		List<QueryResultsBean> results = new ArrayList<QueryResultsBean>();
-		if (!StringUtil.isEmpty(caseNumber)) {
-			results.add(new QueryResultsBean(caseNumber, casesByNumber));
+		List<Integer> casesToSelect = null;
+		if (useBPMQueries) {
+			List<QueryResultsBean> results = new ArrayList<QueryResultsBean>();
+			if (!StringUtil.isEmpty(caseNumber)) {
+				results.add(new QueryResultsBean(caseNumber, casesByNumber));
+			}
+			if (!StringUtil.isEmpty(processDefinitionId)) {
+				results.add(new QueryResultsBean(processDefinitionId, casesByProcessDefinition));
+			}
+			if (statuses != null && (!isCaseSuperAdmin || !StringUtil.isEmpty(criteriaBean.getStatusId()))) {
+				results.add(new QueryResultsBean(statuses, casesByStatus));
+			}
+			if (searchingByUserCases || !isCaseSuperAdmin) {
+				results.add(new QueryResultsBean(UserCases.TYPE, casesByUser));
+			}
+			if (!StringUtil.isEmpty(dateRange)) {
+				results.add(new QueryResultsBean(dateRange, casesByDate));
+			}
+			if (!StringUtil.isEmpty(contact)) {
+				results.add(new QueryResultsBean("contactInfo", casesByContact));
+			}
+			casesToSelect = checkBPMCasesIds(results);
 		}
-		if (!StringUtil.isEmpty(processDefinitionId)) {
-			results.add(new QueryResultsBean(processDefinitionId, casesByProcessDefinition));
-		}
-		if (statuses != null && (!isCaseSuperAdmin || !StringUtil.isEmpty(criteriaBean.getStatusId()))) {
-			results.add(new QueryResultsBean(statuses, casesByStatus));
-		}
-		if (searchingByUserCases || !isCaseSuperAdmin) {
-			results.add(new QueryResultsBean(UserCases.TYPE, casesByUser));
-		}
-		if (!StringUtil.isEmpty(dateRange)) {
-			results.add(new QueryResultsBean(dateRange, casesByDate));
-		}
-		if (!StringUtil.isEmpty(contact)) {
-			results.add(new QueryResultsBean("contactInfo", casesByContact));
-		}
-		List<Integer> casesToSelect = checkBPMCasesIds(results);
 		logger.log(Level.INFO, "BPM cases to select: " + casesToSelect);
 		
 		Collection<Group> handlersGroups = null;
@@ -452,7 +460,7 @@ public class CasesEngine {
 		Collection<Case> cases = null;
 		if (checkSimpleCases) {
 			cases = casesBusiness.getCasesByCriteria(caseNumber, description, name, personalId, statuses, dateFrom, dateTo,
-					((searchingByUserCases || !useBPMQueries) && !isCaseSuperAdmin) ? currentUser : null, useBPMQueries ? handlersGroups: null);
+					((searchingByUserCases || !useBPMQueries) && !isCaseSuperAdmin) ? currentUser : null, useBPMQueries ? handlersGroups: null, simpleCasesOnly);
 		}
 		else {
 			cases = new ArrayList<Case>();
