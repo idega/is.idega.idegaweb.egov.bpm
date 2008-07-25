@@ -1,5 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
@@ -17,6 +19,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.FacesContext;
@@ -30,7 +33,6 @@ import org.springframework.stereotype.Service;
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.text.data.LocalizedText;
-import com.idega.block.text.data.LocalizedTextHome;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -39,7 +41,6 @@ import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
 import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.core.persistence.Param;
-import com.idega.data.IDOFinderException;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -54,14 +55,15 @@ import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
+import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/07/24 07:02:08 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/25 06:10:11 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -391,14 +393,14 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			}
 			int localeId = ICLocaleBusiness.getLocaleId(locale);
 			
-			LocalizedTextHome textHome = (LocalizedTextHome) IDOLookup.getHome(LocalizedText.class);
+			ApplicationHome appHome = (ApplicationHome) IDOLookup.getHome(Application.class);
 			
 			String localizedName = null;
 			for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
 				
 				ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
 				
-				localizedName = getProcessDefinitionLocalizedName(pd, localeId, textHome);
+				localizedName = getProcessDefinitionLocalizedName(pd, localeId, appHome);
 				
 				props.add(new AdvancedProperty(String.valueOf(pd.getId()), StringUtil.isEmpty(localizedName) ? pd.getName() : localizedName));
 			}
@@ -413,19 +415,31 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		return null;
 	}
 	
-	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, int localeId, LocalizedTextHome textHome) {
+	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, int localeId, ApplicationHome appHome) {
+		Collection<Application> apps = null;
 		try {
-			LocalizedText text = textHome.findLocalizedNameForApplication(pd.getName(), localeId);
-			return text.getBody();
-		} catch(Exception e) {
-			if (e instanceof IDOFinderException) {
-				Logger.getLogger(CasesBPMCaseManagerImpl.class.getName()).log(Level.WARNING, "No localized name for process: " + pd.getName() + ", locale: " + localeId);
-			}
-			else {
-				e.printStackTrace();
+			apps = appHome.findAllByApplicationUrl(pd.getName());
+		} catch (FinderException e) {
+			e.printStackTrace();
+		}
+		if (ListUtil.isEmpty(apps)) {
+			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName());
+			return null;
+		}
+		
+		String name = null;
+		LocalizedText locText = null;
+		for (Application app: apps) {
+			locText = app.getLocalizedText(localeId);
+			if (locText != null) {
+				name = locText.getBody();
+				if (!StringUtil.isEmpty(name)) {
+					return name;
+				}
 			}
 		}
 		
+		Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find localized name for process: " + pd.getName() + ", locale: " + localeId);
 		return null;
 	}
 }
