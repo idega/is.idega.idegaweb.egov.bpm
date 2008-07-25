@@ -61,9 +61,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/07/25 06:10:11 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/25 13:10:38 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -391,7 +391,6 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			if (locale == null) {
 				locale = Locale.ENGLISH;
 			}
-			int localeId = ICLocaleBusiness.getLocaleId(locale);
 			
 			ApplicationHome appHome = (ApplicationHome) IDOLookup.getHome(Application.class);
 			
@@ -400,7 +399,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 				
 				ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
 				
-				localizedName = getProcessDefinitionLocalizedName(pd, localeId, appHome);
+				localizedName = getProcessDefinitionLocalizedName(pd, locale, appHome);
 				
 				props.add(new AdvancedProperty(String.valueOf(pd.getId()), StringUtil.isEmpty(localizedName) ? pd.getName() : localizedName));
 			}
@@ -415,7 +414,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		return null;
 	}
 	
-	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, int localeId, ApplicationHome appHome) {
+	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, Locale locale, ApplicationHome appHome) {
 		Collection<Application> apps = null;
 		try {
 			apps = appHome.findAllByApplicationUrl(pd.getName());
@@ -429,6 +428,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		
 		String name = null;
 		LocalizedText locText = null;
+		int localeId = ICLocaleBusiness.getLocaleId(locale);
 		for (Application app: apps) {
 			locText = app.getLocalizedText(localeId);
 			if (locText != null) {
@@ -439,7 +439,17 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			}
 		}
 		
-		Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find localized name for process: " + pd.getName() + ", locale: " + localeId);
-		return null;
+		Application app = apps.iterator().next();
+		name = app.getLocalizedName(locale);
+		if (!StringUtil.isEmpty(name)) {
+			return name;
+		}
+		name = app.getNameByLocale(locale);
+		if (!StringUtil.isEmpty(name)) {
+			return name;
+		}
+		Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find localized name for process: " + pd.getName() + ", locale: " + locale.toString());
+		
+		return app.getName();
 	}
 }

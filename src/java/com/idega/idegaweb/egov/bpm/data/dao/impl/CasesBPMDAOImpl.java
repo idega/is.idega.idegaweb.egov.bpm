@@ -24,9 +24,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/07/08 09:13:13 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/25 13:10:38 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -233,15 +233,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				new Param(CaseProcInstBind.caseEndDateProp, dateTo.getTimestamp().toString()));
 	}
 
-	@SuppressWarnings("unchecked")
 	public List<Integer> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds) {
 		if (ListUtil.isEmpty(processInstanceIds)) {
 			return null;
 		}
 		
-		return getEntityManager().createNamedQuery(CaseProcInstBind.getCaseIdsByProcessInstanceIds)
-								.setParameter(CaseProcInstBind.processInstanceIdsProp, processInstanceIds)
-								.getResultList();
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Integer.class, new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
 	}
 	
 }
