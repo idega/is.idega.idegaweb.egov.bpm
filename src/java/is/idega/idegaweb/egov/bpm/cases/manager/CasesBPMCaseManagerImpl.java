@@ -13,6 +13,7 @@ import is.idega.idegaweb.egov.cases.presentation.OpenCases;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -34,6 +35,7 @@ import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.text.data.LocalizedText;
 import com.idega.builder.bean.AdvancedProperty;
+import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -61,9 +63,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/07/25 13:10:38 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/28 08:48:22 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -404,6 +406,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 				props.add(new AdvancedProperty(String.valueOf(pd.getId()), StringUtil.isEmpty(localizedName) ? pd.getName() : localizedName));
 			}
 			
+			Collections.sort(props, new AdvancedPropertyComparator(locale));
 			return props;
 		} catch(Exception e) {
 			e.printStackTrace();
