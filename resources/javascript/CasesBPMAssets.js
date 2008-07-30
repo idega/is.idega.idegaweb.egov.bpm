@@ -627,7 +627,7 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 	if (sameRightsSetterId != null) {
 		var sameRightsSetter = document.getElementById(sameRightsSetterId);
 		if (sameRightsSetter != null) {
-			setSameRightsForAttachments = sameRightsSetter.checked;
+			setSameRightsForAttachments = true;
 		}
 	}
 	
