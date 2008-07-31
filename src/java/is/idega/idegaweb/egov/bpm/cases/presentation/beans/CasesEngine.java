@@ -83,7 +83,8 @@ public class CasesEngine {
 		return null;
 	}
 	
-	public Document getCaseManagerView(String caseIdStr) {
+	public Document getCaseManagerView(String caseIdStr, String caseProcessorType) {
+
 		IWContext iwc = CoreUtil.getIWContext();
 		
 		if (caseIdStr == null || CoreConstants.EMPTY.equals(caseIdStr) || iwc == null) {
@@ -93,7 +94,7 @@ public class CasesEngine {
 		
 		try {
 			Integer caseId = new Integer(caseIdStr);
-			UIComponent caseAssets = getCasesBPMProcessView().getCaseManagerView(iwc, null, caseId);
+			UIComponent caseAssets = getCasesBPMProcessView().getCaseManagerView(iwc, null, caseId, caseProcessorType);
 			
 			Document rendered = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, caseAssets, true);
 			

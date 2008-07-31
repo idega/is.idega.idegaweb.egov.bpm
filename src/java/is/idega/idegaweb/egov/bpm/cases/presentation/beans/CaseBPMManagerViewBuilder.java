@@ -21,7 +21,7 @@ import com.idega.webface.WFUtil;
 @Service(GeneralCaseManagerViewBuilder.SPRING_BEAN_IDENTIFIER)
 public class CaseBPMManagerViewBuilder implements GeneralCaseManagerViewBuilder {
 
-	public UIComponent getCaseManagerView(IWContext iwc) throws RemoteException {
+	public UIComponent getCaseManagerView(IWContext iwc, String caseProcessorType) throws RemoteException {
 		Integer caseId = null;
 		try {
 			caseId = Integer.valueOf(iwc.getParameter(CasesProcessor.PARAMETER_CASE_PK));
@@ -46,7 +46,7 @@ public class CaseBPMManagerViewBuilder implements GeneralCaseManagerViewBuilder 
 		}
 
 		GeneralCasesListBuilder listBuilder = WFUtil.getBeanInstance(iwc, GeneralCasesListBuilder.SPRING_BEAN_IDENTIFIER);
-		UIComponent view = listBuilder.getCaseManagerView(iwc, caseId);
+		UIComponent view = listBuilder.getCaseManagerView(iwc, caseId, caseProcessorType);
 		
 		if (view == null) {
 			IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
