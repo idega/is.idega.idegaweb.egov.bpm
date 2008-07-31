@@ -33,6 +33,8 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
+import com.idega.block.process.presentation.UserCases;
+import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.text.data.LocalizedText;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
@@ -59,13 +61,14 @@ import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/07/28 08:48:22 $ by $Author: valdas $
+ * Last modified: $Date: 2008/07/31 13:17:45 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -163,9 +166,16 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 //		return links;
 	}
 
-	public UIComponent getView(IWContext iwc, Case theCase) {
+	public UIComponent getView(IWContext iwc, Case theCase, String caseProcessorType) {
 		CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 		stateBean.setDisplayPropertyForStyleAttribute(false);	//	TODO:	is it always not visible?
+		
+		CaseManagerState managerState = ELUtil.getInstance().getBean(CaseManagerState.beanIdentifier);
+		
+		if(!UserCases.TYPE.equals(caseProcessorType))
+			managerState.setFullView(true);
+		else
+			managerState.setFullView(false);
 		
 		UICasesBPMAssets casesAssets = (UICasesBPMAssets)iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
 		UIViewRoot viewRoot = iwc.getViewRoot();

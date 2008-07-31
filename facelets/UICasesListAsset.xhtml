@@ -11,7 +11,7 @@
 				<t:div style="float: left">
 					<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/>
 				</t:div>
-				<t:div rendered="#{loginSession.loggedIn}" style="float: right">
+				<t:div rendered="#{loginSession.loggedIn and caseManagerState.fullView}" style="float: right">
 					<t:outputText styleClass="watchUnwatchCase" value="#{casesBPMAssetsState.watchCaseStatusLabel}"></t:outputText>
 				</t:div>
 				<div class="spacer" />
