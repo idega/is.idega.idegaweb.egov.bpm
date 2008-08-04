@@ -631,7 +631,16 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 		}
 	}
 	
-	BPMProcessAssets.setAccessRightsForProcessResource(element.name, taskInstanceId, fileHashValue, canAccess, setSameRightsForAttachments);
+	BPMProcessAssets.setAccessRightsForProcessResource(element.name, taskInstanceId, fileHashValue, canAccess, setSameRightsForAttachments, {
+		callback: function(message) {
+			if (message == null){
+				return false;
+			}else {
+				if (setSameRightsForAttachments) 
+					humanMsg.displayMsg(message);	
+			}
+		}
+	});
 }
 
 CasesBPMAssets.closeAccessRightsSetterBox = function() {

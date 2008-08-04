@@ -38,9 +38,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  *
- * Last modified: $Date: 2008/07/08 14:04:49 $ by $Author: valdas $
+ * Last modified: $Date: 2008/08/04 11:21:10 $ by $Author: arunas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -220,6 +220,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		//	CSS sources
 		PresentationUtil.addStyleSheetToHeader(iwc, web2Business.getBundleURIToJQGridStyles());
+		PresentationUtil.addStyleSheetToHeader(iwc, web2Business.getBundleUriToHumanizedMessagesStyleSheet());
 		
 		boolean isSingle = CoreUtil.isSingleComponentRenderingProcess(iwc);
 		
@@ -231,6 +232,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		scripts.add(web2Business.getBundleURIToJQGrid());
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
+		scripts.add(web2Business.getBundleUriToHumanizedMessagesScript());
 		scripts.add(bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js");
 		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, scripts);
 
