@@ -40,9 +40,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/08/05 07:09:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/05 08:16:19 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -178,8 +178,15 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 //			TODO: either send message, or fire an event of this stuff to the process
 			
 			if(handlerUserId == null) {
+				
+				User currentHandler = genCase.getHandledBy();
+				
+				if(currentHandler != null) {
+				
+					getProcessWatcher().removeWatch(getProcessInstanceId(), new Integer(currentHandler.getPrimaryKey().toString()));
+				}
+				
 				casesBusiness.untakeCase(genCase);
-				getProcessWatcher().removeWatch(getProcessInstanceId(), caseId);
 				
 			} else {
 			
