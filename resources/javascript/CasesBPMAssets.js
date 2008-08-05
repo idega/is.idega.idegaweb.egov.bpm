@@ -55,6 +55,8 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 	    		CasesBPMAssets.setWatchOrUnwatchTask(watcher, processInstanceId);
 	    	});
 	   	}
+	   	
+	   	CasesBPMAssets.initTakeCaseSelector(container, piId);
 		
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
@@ -66,6 +68,52 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 		});
 	});
 };
+
+CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
+	
+	var takeCaseSelect = jQuery('.takeCaseSelect', container);
+	
+	BPMProcessAssets.getAllHandlerUsers(piId, {
+        callback: function(handlerUsers) {
+        	
+        	if(handlerUsers != null && handlerUsers.length != 0) {
+        		
+        		var selectId = takeCaseSelect.attr("id");
+            
+	            if(selectId == null) {
+	                
+	                var date = new Date();
+	                selectId = 'takeCase_' + date.getTime();
+	                takeCaseSelect.attr("id", selectId);
+	            }
+	            
+	            DWRUtil.addOptions(selectId, handlerUsers, 'id', 'value');
+	            
+	            var selected = IWCORE.getSelectedFromAdvancedProperties(handlerUsers);
+	            
+	            if(selected != null) {
+	                
+	                takeCaseSelect.val(selected);
+	            }
+	            
+	            takeCaseSelect.css("display", "inline");
+	            
+	            if (takeCaseSelect != null && takeCaseSelect.length > 0) {
+	                
+	                var attributeName = 'processinstanceid';
+	                takeCaseSelect.attr(attributeName, piId);
+	                takeCaseSelect.change(function() {
+	                    var watcher = jQuery(this);
+	                    var processInstanceId = watcher.attr(attributeName);
+	                    var handlerId = watcher.val();
+	                    
+	                    CasesBPMAssets.assignCase(handlerId, processInstanceId);
+	                });
+	            }
+        	}
+        }
+    });
+}
 
 CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights) {
 	
@@ -666,4 +714,18 @@ CasesBPMAssets.setWatchOrUnwatchTask = function(element, processInstanceId) {
 			jQuery(element).text(message);
 		}
 	});
+}
+
+CasesBPMAssets.assignCase = function(handlerId, processInstanceId) {
+	
+	showLoadingMessage('');
+    BPMProcessAssets.assignCase(handlerId, processInstanceId, {
+        callback: function(message) {
+            closeAllLoadingMessages();
+            
+            if (message == null) {
+                return false;
+            }
+        }
+    });
 }
