@@ -1,7 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,7 +23,6 @@ import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.cache.IWCacheManager2;
-import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
@@ -44,9 +42,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/07/16 11:42:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/05 07:10:04 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -258,24 +256,6 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 	
 	public Long getTaskInstanceId() {
 		return taskInstanceId;
-	}
-
-	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
-		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
-			throw new IBORuntimeException(ile);
-		}
-	}
-	
-	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
-		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
-		}
-		catch (IBOLookupException ile) {
-			throw new IBORuntimeException(ile);
-		}
 	}
 
 	public void setTaskInstanceId(Long taskInstanceId) {
