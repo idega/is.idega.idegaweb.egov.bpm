@@ -14,14 +14,16 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.artifacts.presentation.bean.BPMProcessWatcher;
+import com.idega.jbpm.exe.ProcessWatch;
+import com.idega.jbpm.exe.ProcessWatchType;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 
 @Scope("singleton")
-@Service(BPMProcessWatcher.SPRING_BEAN_IDENTIFIER)
-public class BPMProcessWatcherImpl implements BPMProcessWatcher {
+@ProcessWatchType("cases")
+@Service
+public class BPMProcessWatcherImpl implements ProcessWatch {
 	
 	private CasesBPMProcessView processView = null;
 
@@ -39,13 +41,18 @@ public class BPMProcessWatcherImpl implements BPMProcessWatcher {
 		
 		return false;
 	}
-
+	
 	public boolean removeWatch(Long processInstanceId) {
+	
+		User performer = CoreUtil.getIWContext().getCurrentUser();
+		return removeWatch(processInstanceId, new Integer(performer.getPrimaryKey().toString()));
+	}
+
+	public boolean removeWatch(Long processInstanceId, Integer userIdToRemoveFrom) {
 		try {
 			CasesBPMDAO dao = getProcessView().getCasesBPMDAO();
-			User performer = CoreUtil.getIWContext().getCurrentUser();
 			
-			ProcessUserBind caseUser = dao.getProcessUserBind(processInstanceId, Integer.valueOf(performer.getPrimaryKey().toString()), true);
+			ProcessUserBind caseUser = dao.getProcessUserBind(processInstanceId, userIdToRemoveFrom, true);
 			
 			if(caseUser.getStatus() != null && caseUser.getStatus() == Status.PROCESS_WATCHED)
 				caseUser.setStatus(Status.NO_STATUS);
@@ -59,16 +66,19 @@ public class BPMProcessWatcherImpl implements BPMProcessWatcher {
 		
 		return false;
 	}
-
+	
 	public boolean takeWatch(Long processInstanceId) {
+		
+		User performer = CoreUtil.getIWContext().getCurrentUser();
+		return assignWatch(processInstanceId, new Integer(performer.getPrimaryKey().toString()));
+	}
+
+	public boolean assignWatch(Long processInstanceId, Integer assignedUserId) {
 		try {
 			CasesBPMDAO dao = getProcessView().getCasesBPMDAO();
-			User performer = CoreUtil.getIWContext().getCurrentUser();
 			
-			ProcessUserBind caseUser = dao.getProcessUserBind(processInstanceId, Integer.valueOf(performer.getPrimaryKey().toString()), true);
-			
+			ProcessUserBind caseUser = dao.getProcessUserBind(processInstanceId, assignedUserId, true);
 			caseUser.setStatus(Status.PROCESS_WATCHED);
-			
 			dao.merge(caseUser);
 	
 			return true;
