@@ -4,6 +4,7 @@
 		xmlns:ui="http://java.sun.com/jsf/facelets"
 		xmlns:h="http://java.sun.com/jsf/html"
 		xmlns:t="http://myfaces.apache.org/tomahawk"
+		xmlns:f="http://java.sun.com/jsf/core"
 >
 	<t:div styleClass="caseGrids">
 		<t:div styleClass="caseTasksPart" style="#{casesBPMAssetsState.tasksVisibilityProperty}">
@@ -13,6 +14,7 @@
 				</t:div>
 				<t:div rendered="#{loginSession.loggedIn and caseManagerState.fullView}" style="float: right">
 					<t:outputText styleClass="watchUnwatchCase" value="#{casesBPMAssetsState.watchCaseStatusLabel}"></t:outputText>
+					<h:selectOneListbox styleClass="takeCaseSelect" style="margin-left: 10px; display: none;" />
 				</t:div>
 				<div class="spacer" />
 				<t:div style="display: none;" rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}" />
