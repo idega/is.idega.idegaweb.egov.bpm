@@ -13,7 +13,7 @@ import javax.faces.context.FacesContext;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.jbpm.artifacts.presentation.bean.BPMProcessWatcher;
+import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.presentation.IWContext;
@@ -23,9 +23,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  *
- * Last modified: $Date: 2008/06/04 12:59:18 $ by $Author: valdas $
+ * Last modified: $Date: 2008/08/05 07:11:15 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -37,7 +37,7 @@ public class CasesBPMAssetsState implements Serializable {
 	public static final String beanIdentifier = "casesBPMAssetsState";
 	
 	private transient CasesBPMProcessView casesBPMProcessView;
-	private transient BPMProcessWatcher processWatcher;
+	private transient ProcessWatch processWatcher;
 	
 	private Integer caseId;
 	private Long processInstanceId;
@@ -195,7 +195,7 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 	
 	public void takeWatch() {
-		boolean result = getProcessWathcer().takeWatch(getProcessInstanceId());
+		boolean result = getProcessWatch().takeWatch(getProcessInstanceId());
 		isWatched = null;
 		
 		String message = result ? "Case added to your cases list (My Cases)" : "We were unable to add this case to your watch list due to internal error";
@@ -204,7 +204,7 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 	
 	public void removeWatch() {
-		boolean result = getProcessWathcer().removeWatch(getProcessInstanceId());
+		boolean result = getProcessWatch().removeWatch(getProcessInstanceId());
 		isWatched = null;
 		
 		String message = result ? "Case removed from your cases list (My Cases)" : "We were unable to remove this case from your watch list due to internal error";
@@ -213,7 +213,7 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 	
 	public String getWatchCaseStatusLabel() {
-		return getProcessWathcer().getWatchCaseStatusLabel(isWatched());
+		return getProcessWatch().getWatchCaseStatusLabel(isWatched());
 	}
 	
 	public String getTasksVisibilityProperty() {
@@ -250,7 +250,7 @@ public class CasesBPMAssetsState implements Serializable {
 	public boolean isWatched() {
 		
 		if(isWatched == null) {
-			isWatched = getProcessWathcer().isWatching(getProcessInstanceId());
+			isWatched = getProcessWatch().isWatching(getProcessInstanceId());
 		}
 		
 		return isWatched == null ? false : isWatched;
@@ -329,12 +329,12 @@ public class CasesBPMAssetsState implements Serializable {
 		this.displayPropertyForStyleAttribute = displayPropertyForStyleAttribute ? "block" : "none";
 	}
 
-	private BPMProcessWatcher getProcessWathcer() {
+	private ProcessWatch getProcessWatch() {
+		
 		if (processWatcher == null) {
-			processWatcher = (BPMProcessWatcher) WFUtil.getBeanInstance(BPMProcessWatcher.SPRING_BEAN_IDENTIFIER);
+			processWatcher = getCasesBPMProcessView().getBPMFactory().getProcessManagerByProcessInstanceId(getProcessInstanceId()).getProcessInstance(getProcessInstanceId()).getProcessWatcher();
 		}
 	
 		return processWatcher;
 	}
-	
 }
