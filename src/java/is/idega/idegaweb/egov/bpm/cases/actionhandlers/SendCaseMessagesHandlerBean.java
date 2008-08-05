@@ -19,9 +19,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/05/16 18:17:08 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/05 07:09:17 $ by $Author: civilis $
  */
 @Service(SendCaseMessagesHandlerBean.beanIdentifier)
 public class SendCaseMessagesHandlerBean {
@@ -49,7 +49,7 @@ public class SendCaseMessagesHandlerBean {
 			for (int i = 0; i < rolesNames.length; i++)
 				rolesNamesSet.add(rolesNames[i]);
 			
-			allUsers = getRolesManager().getAllUsersForRoles(rolesNamesSet, pi);
+			allUsers = getRolesManager().getAllUsersForRoles(rolesNamesSet, pi.getId());
 		} else
 			allUsers = new ArrayList<User>(0);
 		
