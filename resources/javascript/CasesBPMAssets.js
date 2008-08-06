@@ -679,7 +679,7 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 		}
 	}
 	
-	BPMProcessAssets.setAccessRightsForProcessResource(element.name, taskInstanceId, fileHashValue, canAccess, setSameRightsForAttachments, {
+	BPMProcessAssets.setAccessRightsForProcessResource(element.name, processId, taskInstanceId, fileHashValue, canAccess, setSameRightsForAttachments, {
 		callback: function(message) {
 			if (message == null){
 				return false;
