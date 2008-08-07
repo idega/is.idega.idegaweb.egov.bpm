@@ -2,6 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandlerBean;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
@@ -35,11 +36,14 @@ import com.idega.user.data.User;
 import com.idega.webface.WFUtil;
 
 /**
+ * @deprecated left for backwards compatibility - use is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandler
+ * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/07/04 10:49:02 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/07 09:33:51 $ by $Author: civilis $
  */
+@Deprecated
 public class SendCaseMessagesHandler implements ActionHandler {
 
 	private static final long serialVersionUID = 1212382470685233437L;
