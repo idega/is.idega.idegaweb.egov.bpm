@@ -1,26 +1,22 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
+import is.idega.idegaweb.egov.bpm.cases.messages.SendMessage;
+import is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandler.LocalizedMessages;
+
 import java.util.Locale;
 
 import junit.framework.AssertionFailedError;
 
-import is.idega.idegaweb.egov.bpm.cases.messages.SendMessage;
-import is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandler.LocalizedMessages;
-
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/08/07 09:38:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/07 18:06:01 $ by $Author: civilis $
  */
-@Scope("singleton")
-@Service
 public class SendMessageMockupImpl implements SendMessage {
 	
 	public void send(final ProcessInstance pi, final Integer caseId, final LocalizedMessages msgs, final Token tkn, final String sendToRoles) {

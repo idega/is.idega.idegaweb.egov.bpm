@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.testbase.EgovBPMBaseTest;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
@@ -12,19 +13,18 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.core.test.base.IdegaBaseTransactionalTest;
 import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/08/07 09:38:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/07 18:06:01 $ by $Author: civilis $
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 @Transactional
-public final class SendCaseMessagesHandlerTest extends IdegaBaseTransactionalTest {
+public final class SendCaseMessagesHandlerTest extends EgovBPMBaseTest {
 
 	@Autowired
 	private IdegaJbpmContext bpmContext;
@@ -61,15 +61,14 @@ public final class SendCaseMessagesHandlerTest extends IdegaBaseTransactionalTes
 						    );
 			jctx.deployProcessDefinition(superProcess);
 			
-			
 		} finally {
 			bpmContext.closeAndCommit(jctx);
 		}
 	}
 	
 	@Test
-	public void testFollowup() throws Exception {
-
+	public void testSend() throws Exception {
+		
 		deployProcessDefinitions();
 		
 		JbpmContext jbpmContext = bpmContext.createJbpmContext();

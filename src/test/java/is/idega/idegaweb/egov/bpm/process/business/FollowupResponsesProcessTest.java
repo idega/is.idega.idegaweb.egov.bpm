@@ -1,5 +1,7 @@
 package is.idega.idegaweb.egov.bpm.process.business;
 
+import is.idega.idegaweb.egov.bpm.cases.testbase.EgovBPMBaseTest;
+
 import java.io.InputStream;
 import java.util.Collection;
 
@@ -15,19 +17,19 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.core.test.base.IdegaBaseTransactionalTest;
 import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/07/04 10:42:13 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/07 18:06:01 $ by $Author: civilis $
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 @Transactional
-public final class FollowupResponsesProcessTest extends IdegaBaseTransactionalTest {
+@SuppressWarnings("unchecked")
+public final class FollowupResponsesProcessTest extends EgovBPMBaseTest {
 
 	@Autowired
 	private IdegaJbpmContext bpmContext;
