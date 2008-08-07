@@ -1,4 +1,4 @@
-package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
+package is.idega.idegaweb.egov.bpm.cases.messages;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,11 +18,13 @@ import com.idega.util.CoreConstants;
 
 
 /**
+ * @deprecated code moved to SendMessageImpl, left for backwards compatibility
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/08/05 07:09:17 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/07 09:38:17 $ by $Author: civilis $
  */
+@Deprecated
 @Service(SendCaseMessagesHandlerBean.beanIdentifier)
 public class SendCaseMessagesHandlerBean {
 
