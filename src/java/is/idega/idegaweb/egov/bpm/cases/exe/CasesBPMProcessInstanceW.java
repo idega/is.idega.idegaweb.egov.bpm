@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
 
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
@@ -13,6 +14,7 @@ import javax.annotation.Resource;
 import javax.ejb.FinderException;
 
 import org.jbpm.JbpmContext;
+import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.taskmgmt.exe.TaskInstance;
@@ -29,9 +31,9 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
+import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.presentation.IWContext;
@@ -40,9 +42,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/08/05 08:16:19 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/07 09:35:04 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -165,58 +167,24 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	}
 
 	public void assignHandler(Integer handlerUserId) {
-
-		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, getProcessInstanceId());
 		
-		Integer caseId = cpi.getCaseId();
-
-		try {
-			IWApplicationContext iwac = getIWAC();
-			CasesBusiness casesBusiness = getCasesBusiness(iwac);
-			GeneralCase genCase = casesBusiness.getGeneralCase(caseId);
-			
-//			TODO: either send message, or fire an event of this stuff to the process
-			
-			if(handlerUserId == null) {
-				
-				User currentHandler = genCase.getHandledBy();
-				
-				if(currentHandler != null) {
-				
-					getProcessWatcher().removeWatch(getProcessInstanceId(), new Integer(currentHandler.getPrimaryKey().toString()));
-				}
-				
-				casesBusiness.untakeCase(genCase);
-				
-			} else {
-			
-				User currentHandler = genCase.getHandledBy();
-				
-				if(currentHandler == null || !String.valueOf(handlerUserId).equals(String.valueOf(currentHandler.getPrimaryKey()))) {
-					
-					UserBusiness userBusiness = getUserBusiness(iwac);
-					
-					IWContext iwc = IWContext.getCurrentInstance();
-					
-					User handler = userBusiness.getUser(handlerUserId);
-					User performer = iwc.getCurrentUser();
-					
-					casesBusiness.takeCase(genCase, handler, iwc, performer, true, false);
-					
-					getProcessWatcher().assignWatch(getProcessInstanceId(), handlerUserId);
-				}
-			}
-			
-		} catch (RemoteException e) {
-			throw new IBORuntimeException(e);
-		} catch (FinderException e) {
-			throw new IBORuntimeException(e);
-		}
+		ProcessInstance pi = getProcessInstance();
+		
+//		creating new token, so there are no race conditions for variables
+		Token tkn = new Token(pi.getRootToken(), "assignUnassignHandler_"+System.currentTimeMillis());
+		
+		ExecutionContext ectx = new ExecutionContext(tkn);
+		
+		IWContext iwc = IWContext.getCurrentInstance();
+		Integer performerId = iwc.getCurrentUserId();
+		
+		ectx.setVariable(CaseHandlerAssignmentHandler.performerUserIdVarName, performerId);
+		
+		if(handlerUserId != null)
+			ectx.setVariable(CaseHandlerAssignmentHandler.handlerUserIdVarName, handlerUserId);
+		
+		pi.getProcessDefinition().fireEvent(handlerUserId != null ? CaseHandlerAssignmentHandler.assignHandlerEventType : CaseHandlerAssignmentHandler.unassignHandlerEventType, ectx);
 	}
-	
-//	private void fireAssignedEvent(long processInstanceId) {
-//		
-//	}
 	
 	private IWApplicationContext getIWAC() {
 		
