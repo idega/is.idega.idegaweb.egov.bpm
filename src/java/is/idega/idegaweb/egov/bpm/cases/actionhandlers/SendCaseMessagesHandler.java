@@ -39,16 +39,14 @@ import com.idega.webface.WFUtil;
  * @deprecated left for backwards compatibility - use is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandler
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/08/07 09:33:51 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/08 16:17:41 $ by $Author: civilis $
  */
 @Deprecated
 public class SendCaseMessagesHandler implements ActionHandler {
 
 	private static final long serialVersionUID = 1212382470685233437L;
-	
-	private static final String beanUserIdentifier = "bean:user";
 	
 	private String subjectKey;
 	private String subjectValues;
@@ -175,7 +173,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 						String formattedMsg;
 						String formattedSubject;
 						
-						mvCtx.put(beanUserIdentifier, user);
+						mvCtx.setValue(MessageValueContext.userBean, user);
 						
 						if(unformattedMsg == null)
 							formattedMsg = unformattedMsg;

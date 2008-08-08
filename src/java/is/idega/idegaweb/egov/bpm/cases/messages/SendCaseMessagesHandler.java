@@ -23,9 +23,9 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/08/07 09:38:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/08 16:17:41 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
@@ -103,93 +103,6 @@ public class SendCaseMessagesHandler implements ActionHandler {
 		final Token tkn = ectx.getToken();
 		
 		getSendMessage().send(pi, new Integer(caseIdStr), getLocalizedMessages(), tkn, sendToRoles);
-		
-		
-//		if(System.getProperty(IdegaBaseTest.testSystemProp) == null) {
-//			
-//			FacesContext fctx = FacesContext.getCurrentInstance();
-//			final IWContext iwc = IWContext.getIWContext(fctx);
-//			
-//			CasesBusiness casesBusiness = getCasesBusiness(iwc);
-//			
-//			final GeneralCase theCase = casesBusiness.getGeneralCase(new Integer(caseIdStr));
-//			final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
-//			final UserBusiness userBusiness  = getUserBusiness(iwc);
-//			
-//			final String subjectValuesExp = getSubjectValues();
-//			final String messageValuesExp = getMessageValues();
-//			
-//			String bundleIdentifier = getMessagesBundle();
-//			
-//			if(bundleIdentifier == null)
-//				bundleIdentifier = IWBundleStarter.IW_BUNDLE_IDENTIFIER;
-//			
-//			final Locale defaultLocale = iwc.getCurrentLocale();
-//			final IWBundle iwb = iwc.getIWMainApplication().getBundle(bundleIdentifier);
-//			
-//			new Thread(new Runnable() {
-//
-//				public void run() {
-//					
-//					try {
-//						SendCaseMessagesHandlerBean bean = (SendCaseMessagesHandlerBean)WFUtil.getBeanInstance(iwc, SendCaseMessagesHandlerBean.beanIdentifier);
-//						Collection<User> users = bean.getUsersToSendMessageTo(iwc, sendToRoles, pi);
-//						
-//						HashMap<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
-//						MessageValueContext mvCtx = new MessageValueContext(5);
-//						
-//						for (User user : users) {
-//							
-//							Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
-//							
-//							if(preferredLocale == null)
-//								preferredLocale = defaultLocale;
-//							
-//							String unformattedSubject;
-//							String unformattedMsg;
-//							
-//							if(!unformattedForLocales.containsKey(preferredLocale)) {
-//							
-//								IWResourceBundle iwrb = iwb.getResourceBundle(preferredLocale);
-//							
-//								unformattedSubject = iwrb.getLocalizedString(subjectKey, subjectKey);
-//								unformattedMsg = iwrb.getLocalizedString(msgKey, msgKey);
-//								
-//								unformattedForLocales.put(preferredLocale, new String[] {unformattedSubject, unformattedMsg});
-//							} else {
-//								
-//								String[] unf = unformattedForLocales.get(preferredLocale);
-//								
-//								unformattedSubject = unf[0];
-//								unformattedMsg = unf[1];
-//							}
-//							
-//							String formattedMsg;
-//							String formattedSubject;
-//							
-//							mvCtx.put(beanUserIdentifier, user);
-//							
-//							if(unformattedMsg == null)
-//								formattedMsg = unformattedMsg;
-//							else
-//								formattedMsg = bean.getFormattedMessage(unformattedMsg, messageValuesExp, tkn, mvCtx);
-//							
-//							if(unformattedSubject == null)
-//								formattedSubject = unformattedSubject;
-//							else
-//								formattedSubject = bean.getFormattedMessage(unformattedSubject, subjectValuesExp, tkn, mvCtx);
-//							
-//							Message message = messageBusiness.createUserMessage(theCase, user, null, null, formattedSubject, formattedMsg, formattedMsg, null, false, null, false, true);
-//							message.store();
-//						}
-//						
-//					} catch (RemoteException e) {
-//						Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
-//					}
-//				}
-//				
-//			}).start();
-//		}
 	}
 	
 	protected LocalizedMessages getLocalizedMessages() {

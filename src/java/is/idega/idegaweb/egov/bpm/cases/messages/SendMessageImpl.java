@@ -38,15 +38,15 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/08/07 09:38:43 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/08 16:17:41 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
 public class SendMessageImpl implements SendMessage {
 	
-	private static final String beanUserIdentifier = "bean:user";
+	
 	@Autowired
 	private BPMFactory bpmFactory;
 	@Autowired
@@ -100,7 +100,7 @@ public class SendMessageImpl implements SendMessage {
 						String formattedMsg;
 						String formattedSubject;
 						
-						mvCtx.put(beanUserIdentifier, user);
+						mvCtx.setValue(MessageValueContext.userBean, user);
 						
 						if(unformattedMsg == null)
 							formattedMsg = unformattedMsg;
@@ -111,6 +111,8 @@ public class SendMessageImpl implements SendMessage {
 							formattedSubject = unformattedSubject;
 						else
 							formattedSubject = getFormattedMessage(unformattedSubject, msgs.getSubjectValuesExp(), tkn, mvCtx);
+						
+						System.out.println("message="+formattedMsg);
 						
 						Message message = messageBusiness.createUserMessage(theCase, user, null, null, formattedSubject, formattedMsg, formattedMsg, null, false, null, false, true);
 						message.store();
