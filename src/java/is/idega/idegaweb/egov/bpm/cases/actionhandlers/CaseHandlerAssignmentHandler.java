@@ -5,12 +5,17 @@ import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 import java.rmi.RemoteException;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
+import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.business.IBOLookup;
@@ -20,8 +25,12 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
+import com.idega.jbpm.identity.JSONExpHandler;
+import com.idega.jbpm.identity.Role;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
@@ -29,14 +38,15 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/08/07 09:34:20 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/11 13:30:51 $ by $Author: civilis $
  */
 public class CaseHandlerAssignmentHandler implements ActionHandler {
 
 	private static final long serialVersionUID = -6642593190563557536L;
 	
+	private String caseHandlerRoleExp;
 	private String subjectKey;
 	private String subjectValues;
 	private String messageKey;
@@ -50,6 +60,8 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	@Autowired
 	@ProcessWatchType("cases")
 	private ProcessWatch processWatcher;
+	@Autowired
+	private BPMFactory bpmFactory;
 	
 	public static final String assignHandlerEventType = 		"handlerAssignedToCase";
 	public static final String unassignHandlerEventType = 		"handlerUnassignedFromCase";
@@ -60,12 +72,12 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		
 		ELUtil.getInstance().autowire(this);
 		
-		Long processInstanceId = ectx.getProcessInstance().getId();
+		ProcessInstance pi = ectx.getProcessInstance();
+		Long processInstanceId = pi.getId();
 		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
 		
 		String event = ectx.getEvent().getEventType();
-		Integer handlerUserId = (Integer)ectx.getVariable(handlerUserIdVarName);
-		Integer performerUserId = (Integer)ectx.getVariable(performerUserIdVarName);
+		
 		Integer caseId = cpi.getCaseId();
 		
 		try {
@@ -73,38 +85,26 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 			CasesBusiness casesBusiness = getCasesBusiness(iwac);
 			GeneralCase genCase = casesBusiness.getGeneralCase(caseId);
 			
+			final Role caseHandlerRole;
+			
+			if(getCaseHandlerRoleExp() != null) {
+				
+				caseHandlerRole = JSONExpHandler.resolveRoleFromJSONExpression(getCaseHandlerRoleExp());
+			} else {
+
+				String defaultCaseHandlerRoleName = "bpm_caseHandler";
+				Logger.getLogger(getClass().getName()).log(Level.INFO, "No caseHandler role expression found, using default="+defaultCaseHandlerRoleName);
+				caseHandlerRole = new Role(defaultCaseHandlerRoleName);
+			}
+			
 			if(assignHandlerEventType.equals(event)) {
-				
-				User currentHandler = genCase.getHandledBy();
-				
-				if(currentHandler == null || !String.valueOf(handlerUserId).equals(String.valueOf(currentHandler.getPrimaryKey()))) {
-					
-					UserBusiness userBusiness = getUserBusiness(iwac);
-					
-					IWContext iwc = IWContext.getCurrentInstance();
-					
-					User handler = userBusiness.getUser(handlerUserId);
-					User performer = userBusiness.getUser(performerUserId);
-					
-					casesBusiness.takeCase(genCase, handler, iwc, performer, true, false);
-					
-					getProcessWatcher().assignWatch(processInstanceId, handlerUserId);
-				}
-				
-				sendMessages(ectx, true);
+
+				unassign(genCase, processInstanceId, casesBusiness, ectx, caseHandlerRole);
+				assign(genCase, pi, casesBusiness, ectx, iwac, caseHandlerRole);
 				
 			} else if(unassignHandlerEventType.equals(event)) {
 				
-				User currentHandler = genCase.getHandledBy();
-				
-				if(currentHandler != null) {
-				
-					getProcessWatcher().removeWatch(processInstanceId, new Integer(currentHandler.getPrimaryKey().toString()));
-				}
-				
-				casesBusiness.untakeCase(genCase);
-				
-				sendMessages(ectx, false);
+				unassign(genCase, processInstanceId, casesBusiness, ectx, caseHandlerRole);
 				
 			} else
 				throw new IllegalArgumentException("Illegal event type provided="+ectx.getEvent().getEventType());
@@ -114,6 +114,53 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		} catch (FinderException e) {
 			throw new IBORuntimeException(e);
 		}
+	}
+	
+	private void unassign(GeneralCase genCase, Long processInstanceId, CasesBusiness casesBusiness, ExecutionContext ectx, Role caseHandlerRole) throws Exception {
+		
+		User currentHandler = genCase.getHandledBy();
+		
+		if(currentHandler != null) {
+		
+			getProcessWatcher().removeWatch(processInstanceId, new Integer(currentHandler.getPrimaryKey().toString()));
+			getBpmFactory().getRolesManager().removeIdentitiesForRoles(Arrays.asList(new Role[] {caseHandlerRole}), currentHandler.getPrimaryKey().toString(), IdentityType.USER, processInstanceId);
+		}
+		
+		casesBusiness.untakeCase(genCase);
+		
+		sendMessages(ectx, false);
+	}
+	
+	private void assign(GeneralCase genCase, ProcessInstance pi, CasesBusiness casesBusiness, ExecutionContext ectx, IWApplicationContext iwac, Role caseHandlerRole) throws Exception {
+		
+		Integer handlerUserId = (Integer)ectx.getVariable(handlerUserIdVarName);
+		Integer performerUserId = (Integer)ectx.getVariable(performerUserIdVarName);
+		
+//		assigning handler
+		User currentHandler = genCase.getHandledBy();
+		
+		if(currentHandler == null || !String.valueOf(handlerUserId).equals(String.valueOf(currentHandler.getPrimaryKey()))) {
+			
+			UserBusiness userBusiness = getUserBusiness(iwac);
+			
+			IWContext iwc = IWContext.getCurrentInstance();
+			
+			User handler = userBusiness.getUser(handlerUserId);
+			User performer = userBusiness.getUser(performerUserId);
+			
+//			statistics and status change. also keeping handlerId there
+			casesBusiness.takeCase(genCase, handler, iwc, performer, true, false);
+			
+//			the case now appears in handler's mycases list
+			getProcessWatcher().assignWatch(pi.getId(), handlerUserId);
+		}
+		
+//		creating case handler role and assigning handler user to this, so that 'ordinary' users could see their contacts etc (they have the permission to see caseHandler contacts)
+		List<Role> roles = Arrays.asList(new Role[] {caseHandlerRole});
+		getBpmFactory().getRolesManager().createProcessRoles(pi.getProcessDefinition().getName(), roles, pi.getId());
+		getBpmFactory().getRolesManager().createIdentitiesForRoles(roles, handlerUserId.toString(), IdentityType.USER, pi.getId());
+		
+		sendMessages(ectx, true);
 	}
 	
 	private void sendMessages(ExecutionContext ectx, boolean assigned) throws Exception {
@@ -236,5 +283,21 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 
 	public void setInlineMessage(Map<String, String> inlineMessage) {
 		this.inlineMessage = inlineMessage;
+	}
+
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
+	}
+
+	public String getCaseHandlerRoleExp() {
+		return caseHandlerRoleExp;
+	}
+
+	public void setCaseHandlerRoleExp(String caseHandlerRoleExp) {
+		this.caseHandlerRoleExp = caseHandlerRoleExp;
 	}
 }
