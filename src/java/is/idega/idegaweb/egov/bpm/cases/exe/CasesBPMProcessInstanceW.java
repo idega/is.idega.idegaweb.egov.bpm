@@ -9,11 +9,13 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.annotation.Resource;
 import javax.ejb.FinderException;
 
 import org.jbpm.JbpmContext;
+import org.jbpm.graph.def.Event;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
@@ -42,9 +44,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/08/07 09:35:04 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/11 13:31:15 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -240,6 +242,14 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 		} catch (FinderException e) {
 			throw new IBORuntimeException(e);
 		}
+	}
+	
+	public boolean hasHandlerAssignmentSupport() {
+		
+		@SuppressWarnings("unchecked")
+		Map<String, Event> events = getProcessInstance().getProcessDefinition().getEvents();
+		
+		return events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
 	}
 
 	public CasesBPMDAO getCasesBPMDAO() {
