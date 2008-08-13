@@ -11,6 +11,7 @@
         ">
         
         <bean class="com.idega.util.expression.ELUtil" />
+        <bean class="com.idega.jbpm.identity.permission.PermissionsFactoryImpl" />
         <bean class="com.idega.jbpm.exe.impl.BPMFactoryImpl" />
         <bean class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendMessageMockupImpl" />
         <bean class="com.idega.jbpm.data.dao.impl.BPMDAOImpl" />
