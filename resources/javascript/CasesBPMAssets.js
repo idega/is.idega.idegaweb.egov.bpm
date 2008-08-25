@@ -274,12 +274,20 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CONTACT_NAME);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_EMAIL_ADDRESS);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_PHONE_NUMBER);
+    
+    if (hasRightChangeRights) {
+        namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
+    }
+    
     //namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_ADDRESS);
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'emailAddress',index:'emailAddress'});
     modelForColumns.push({name:'phoneNumber',index:'phoneNumber'});
    	//modelForColumns.push({name:'address',index:'address'});
+   	if (hasRightChangeRights) {
+        modelForColumns.push({name:'rightsForContact',index:'rightsForContact'});
+    }
     
     var onSelectRowFunction = function(rowId) {
     }
@@ -618,7 +626,8 @@ CasesBPMAssets.takeCurrentProcessTask = function(event, taskInstanceId, id, allo
 	});
 }
 
-CasesBPMAssets.changeAccessRightsForBpmRelatedResource = function(event, processId, taskId, id, fileHashValue, setSameRightsForAttachments) {	
+CasesBPMAssets.showAccessRightsForBpmRelatedResourceChangeMenu = function(event, processId, taskId, id, fileHashValue, setSameRightsForAttachments, userId) {
+	
 	var element = jQuery('#' + id);
 	if (element == null || event == null) {
 		return false;
@@ -652,19 +661,28 @@ CasesBPMAssets.changeAccessRightsForBpmRelatedResource = function(event, process
 	rightsBox.css('top', yCoord + 'px');
 	rightsBox.css('left', xCoord + 'px');
 	
-	BPMProcessAssets.getAccessRightsSetterBox(processId, taskId, fileHashValue, setSameRightsForAttachments, {
-		callback: function(component) {
-			if (component == null) {
-				return false;
-			}
-			
-			insertNodesToContainer(component, rightsBox[0]);
-			jQuery(rightsBox).show('fast');
-		}
-	});
+	var clbck = {
+	   callback: function(component) {
+            if (component == null) {
+                return false;
+            }
+            
+            insertNodesToContainer(component, rightsBox[0]);
+            jQuery(rightsBox).show('fast');
+        }
+	};
+	
+	if(taskId != null) {
+    
+        BPMProcessAssets.getAccessRightsSetterBox(processId, taskId, fileHashValue, setSameRightsForAttachments, clbck);    
+        
+    } else {
+        
+        BPMProcessAssets.getContactsAccessRightsSetterBox(processId, userId, clbck);
+    }
 }
 
-CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, taskInstanceId, fileHashValue, sameRightsSetterId) {
+CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, taskInstanceId, userId, fileHashValue, sameRightsSetterId) {
 	var element = document.getElementById(id);
 	if (element == null) {
 		return false;
@@ -679,11 +697,11 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 		}
 	}
 	
-	BPMProcessAssets.setAccessRightsForProcessResource(element.name, processId, taskInstanceId, fileHashValue, canAccess, setSameRightsForAttachments, {
+	BPMProcessAssets.setAccessRightsForProcessResource(element.name, processId, taskInstanceId, fileHashValue, canAccess, setSameRightsForAttachments, userId, {
 		callback: function(message) {
-			if (message == null){
+			if (message == null) {
 				return false;
-			}else {
+			} else {
 				if (setSameRightsForAttachments) 
 					humanMsg.displayMsg(message);	
 			}
