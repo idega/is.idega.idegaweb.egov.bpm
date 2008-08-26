@@ -626,12 +626,13 @@ CasesBPMAssets.takeCurrentProcessTask = function(event, taskInstanceId, id, allo
 	});
 }
 
-CasesBPMAssets.showAccessRightsForBpmRelatedResourceChangeMenu = function(event, processId, taskId, id, fileHashValue, setSameRightsForAttachments, userId) {
+CasesBPMAssets.showAccessRightsForBpmRelatedResourceChangeMenu = function(event, processId, taskId, element, fileHashValue, setSameRightsForAttachments, userId) {
 	
-	var element = jQuery('#' + id);
 	if (element == null || event == null) {
 		return false;
 	}
+	
+	element = jQuery(element);
 	
 	var offsets = element.offset();
 	if (offsets == null) {
@@ -648,16 +649,11 @@ CasesBPMAssets.showAccessRightsForBpmRelatedResourceChangeMenu = function(event,
 		event.cancelBubble = true;
 	}
 	
-	var rightsBoxId = 'caseProcessResourceAccessRightsSetterBox';
-	var rightsBox = jQuery('#' + rightsBoxId);
-	if (rightsBox == null || rightsBox.length == 0) {
-		var htmlForBox = '<div id=\''+rightsBoxId+'\' class=\'caseProcessResourceAccessRightsSetterStyle\' />';
-		jQuery(document.body).append(htmlForBox);
-		rightsBox = jQuery('#' + rightsBoxId);
-	}
-	else {
-		rightsBox.empty();
-	}
+    var htmlForBox = "<div class='caseProcessResourceAccessRightsSetterStyle' />";
+	var rightsBox = jQuery(htmlForBox);
+		
+	jQuery(document.body).append(rightsBox);
+	   
 	rightsBox.css('top', yCoord + 'px');
 	rightsBox.css('left', xCoord + 'px');
 	
@@ -668,7 +664,8 @@ CasesBPMAssets.showAccessRightsForBpmRelatedResourceChangeMenu = function(event,
             }
             
             insertNodesToContainer(component, rightsBox[0]);
-            jQuery(rightsBox).show('fast');
+            
+            rightsBox.show('fast');
         }
 	};
 	
@@ -709,14 +706,50 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 	});
 }
 
-CasesBPMAssets.closeAccessRightsSetterBox = function() {
-	var rightsBoxId = 'caseProcessResourceAccessRightsSetterBox';
-	var rightsBox = jQuery('#' + rightsBoxId);
-	if (rightsBox == null || rightsBox.length == 0) {
+CasesBPMAssets.closeAccessRightsSetterBox = function(element) {
+	
+	var rightsBoxCands = jQuery(element).parents(".caseProcessResourceAccessRightsSetterStyle");
+	
+	if (rightsBoxCands == null || rightsBoxCands.length == 0) {
 		return false;
 	}
 	
-	rightsBox.hide('fast');
+	var rightsBox = jQuery(rightsBoxCands[0]);
+	
+	rightsBox.hide('fast', 
+        function () {
+            rightsBox.remove();
+        }
+	);
+}
+
+CasesBPMAssets.setRoleDefaultContactsForUser = function(element, processInstanceId, userId) {
+	
+	showLoadingMessage();
+	
+	var rightsBoxCands = jQuery(element).parents(".caseProcessResourceAccessRightsSetterStyle");
+    
+    if (rightsBoxCands == null || rightsBoxCands.length == 0) {
+    	closeLoadingMessage();
+        return false;
+    }
+    
+    var rightsBox = jQuery(rightsBoxCands[0]);
+    
+	var clbck = {
+       callback: function(component) {
+            if (component == null) {
+            	closeLoadingMessage();
+                return false;
+            }
+            
+            rightsBox.empty();
+            insertNodesToContainer(component, rightsBox[0]);
+            closeLoadingMessage();
+        }
+    };
+    
+    BPMProcessAssets.setRoleDefaultContactsForUser(processInstanceId, userId, clbck);
 }
 
 CasesBPMAssets.setWatchOrUnwatchTask = function(element, processInstanceId) {
