@@ -8,8 +8,12 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.annotation.Resource;
 import javax.ejb.FinderException;
@@ -33,20 +37,29 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
 import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.identity.BPMUser;
+import com.idega.jbpm.identity.Role;
+import com.idega.jbpm.identity.permission.BPMTypedPermission;
+import com.idega.jbpm.identity.permission.PermissionsFactory;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.user.util.UserComparator;
+import com.idega.util.CoreUtil;
 
 /**
+ * TODO: we could create abstract class for some generic methods, like getPeopleConntectedToTheProcess
+ * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/08/11 13:31:15 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/28 12:02:36 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -59,6 +72,10 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	private ProcessManager processManager;
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+	@Autowired
+	private BPMFactory bpmFactory;
+	@Autowired
+	private PermissionsFactory permissionsFactory;
 	
 	@Autowired
 	@ProcessWatchType("cases")
@@ -244,12 +261,62 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 		}
 	}
 	
+	public List<User> getUsersConnectedToProcess() {
+		
+		final Collection<User> users;
+		
+		try {
+			Long processInstanceId = getProcessInstanceId();
+			BPMTypedPermission perm = (BPMTypedPermission)getPermissionsFactory().getRoleAccessPermission(processInstanceId, null, false);
+			users = getBpmFactory().getRolesManager().getAllUsersForRoles(null, processInstanceId, perm);
+			
+		} catch(Exception e) {
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving all process instance users", e);
+			return null;
+		}
+		
+		if(users != null && !users.isEmpty()) {
+
+//			using separate list, as the resolved one could be cashed (shared) and so
+			ArrayList<User> connectedPeople = new ArrayList<User>(users);
+
+			for (Iterator<User> iterator = connectedPeople.iterator(); iterator.hasNext();) {
+				
+				User user = iterator.next();
+				String hideInContacts = user.getMetaData(BPMUser.HIDE_IN_CONTACTS);
+				
+				if(hideInContacts != null)
+//					excluding ones, that should be hidden in contacts list
+					iterator.remove();
+			}
+			
+			try {
+				Collections.sort(connectedPeople, new UserComparator(CoreUtil.getIWContext().getCurrentLocale()));
+			} catch(Exception e) {
+				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while sorting contacts list ("+connectedPeople+")", e);
+			}
+			
+			return connectedPeople; 
+		}
+		
+		return null;
+	}
+	
 	public boolean hasHandlerAssignmentSupport() {
 		
 		@SuppressWarnings("unchecked")
 		Map<String, Event> events = getProcessInstance().getProcessDefinition().getEvents();
 		
 		return events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
+	}
+	
+	public void setContactsPermission(Role role, Integer userId) {
+		
+		Long processInstanceId = getProcessInstanceId();
+	
+		getBpmFactory().getRolesManager().setContactsPermission(
+				role, processInstanceId, userId
+		);
 	}
 
 	public CasesBPMDAO getCasesBPMDAO() {
@@ -258,5 +325,21 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 
 	public ProcessWatch getProcessWatcher() {
 		return processWatcher;
+	}
+	
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
+	}
+
+	public PermissionsFactory getPermissionsFactory() {
+		return permissionsFactory;
+	}
+
+	public void setPermissionsFactory(PermissionsFactory permissionsFactory) {
+		this.permissionsFactory = permissionsFactory;
 	}
 }

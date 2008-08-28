@@ -48,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/06/30 15:25:20 $ by $Author: anton $
+ * Last modified: $Date: 2008/08/28 12:02:36 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -103,7 +103,9 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
-			GeneralCase genCase = getCasesBusiness(iwc).storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseManagerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
+			CasesBusiness casesBusiness = getCasesBusiness(iwc);
+			
+			GeneralCase genCase = casesBusiness.storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseManagerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
 
 			ti.getProcessInstance().setStart(new Date());
 			
@@ -112,6 +114,9 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
 			caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
 			caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
+			caseData.put(CasesBPMProcessConstants.caseStatusReceivedVariableName, casesBusiness.getCaseStatusOpen().getStatus());
+			caseData.put(CasesBPMProcessConstants.caseStatusInProgressVariableName, casesBusiness.getCaseStatusPending().getStatus());
+			caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
 			
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));

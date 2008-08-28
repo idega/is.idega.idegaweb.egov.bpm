@@ -31,6 +31,7 @@ import com.idega.jbpm.exe.ProcessException;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.identity.BPMAccessControlException;
 import com.idega.jbpm.identity.BPMUser;
+import com.idega.jbpm.identity.Role;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.jbpm.view.View;
@@ -42,9 +43,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/08/05 07:10:04 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/28 12:02:36 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")
@@ -314,6 +315,15 @@ public class CasesBPMTaskInstanceW implements TaskInstanceW {
 		}
 		
 		return name;
+	}
+	
+	public void setTaskRolePermissions(Role role, boolean setSameForAttachments, String variableIdentifier) {
+		
+		Long processInstanceId = getTaskInstance().getProcessInstance().getId();
+
+		getBpmFactory().getRolesManager().setTaskRolePermissionsTIScope(
+				role, processInstanceId, getTaskInstanceId(), setSameForAttachments, variableIdentifier
+		);
 	}
 	
 	private IWMainApplication getIWMA() {
