@@ -52,9 +52,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/06/28 19:08:04 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/28 12:01:55 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -185,16 +185,16 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    		}
 						}
 				    	
-				    	vars.put("string:subject", subject);
-				    	vars.put("string:text", text);
-				    	vars.put("string:fromPersonal", fromPersonal);
-				    	vars.put("string:fromAddress", fromAddress);
+				    	vars.put("string_subject", subject);
+				    	vars.put("string_text", text);
+				    	vars.put("string_fromPersonal", fromPersonal);
+				    	vars.put("string_fromAddress", fromAddress);
 
 				    	@SuppressWarnings("unchecked")
 				    	List<URI> filesUris = (List<URI>)msgAndAttachments[1];
 				    	
 				    	if(filesUris != null)
-				    		vars.put("files:attachments", filesUris);
+				    		vars.put("files_attachments", filesUris);
 				    	
 						BPMFactory bpmFactory = getBpmFactory();
 						

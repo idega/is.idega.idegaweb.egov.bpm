@@ -8,15 +8,15 @@
    <task-node name="email">
       <task name="Email">
          <controller>
-            <variable name="string:subject" access="read,write"></variable>
-            <variable name="string:text" access="read,write"></variable>
-            <variable name="files:attachments" access="read,write"></variable>
-				<variable access="read,write" name="string:fromPersonal"></variable>
-				<variable access="read,write" name="string:fromAddress"></variable>
+            <variable name="string_subject" access="read,write"></variable>
+            <variable name="string_text" access="read,write"></variable>
+            <variable name="files_attachments" access="read,write"></variable>
+				<variable access="read,write" name="string_fromPersonal"></variable>
+				<variable access="read,write" name="string_fromAddress"></variable>
          </controller>
          <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
             <expression>
-                variable(string:emailReadAssignmentExpression)
+                variable(string_emailReadAssignmentExpression)
             </expression>
          </assignment>
       </task>

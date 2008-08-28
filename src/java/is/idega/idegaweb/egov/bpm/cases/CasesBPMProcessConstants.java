@@ -5,29 +5,33 @@ import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/05/30 08:44:11 $ by $Author: valdas $
+ * Last modified: $Date: 2008/08/28 12:01:55 $ by $Author: civilis $
  *
  */
 public class CasesBPMProcessConstants {
 	
 	private CasesBPMProcessConstants () {}
 	
-	public static final String actionTakenVariableName = "string:actionTaken";
-	public static final String caseIdVariableName = "string:caseId";
-	public static final String caseTypeNameVariableName = "string:caseTypeName";
-	public static final String caseCategoryNameVariableName = "string:caseCategoryName";
-	public static final String caseCreatedDateVariableName = "string:caseCreatedDateString";
-	public static final String caseAllocateToVariableName = "string:allocateTo";
-	public static final String casePerformerIdVariableName = "string:performerId";
-	public static final String caseStatusVariableName = "string:caseStatus";
-	public static final String caseOwnerFirstNameVariableName = "string:ownerFirstName";
-	public static final String caseOwnerLastNameVariableName = "string:ownerLastName";
+	public static final String actionTakenVariableName = "string_actionTaken";
+	public static final String caseIdVariableName = "string_caseId";
+	public static final String caseTypeNameVariableName = "string_caseTypeName";
+	public static final String caseCategoryNameVariableName = "string_caseCategoryName";
+	public static final String caseCreatedDateVariableName = "string_caseCreatedDateString";
+	public static final String caseAllocateToVariableName = "string_allocateTo";
+	public static final String casePerformerIdVariableName = "string_performerId";
+	public static final String caseStatusVariableName = "string_caseStatus";
+	public static final String caseOwnerFirstNameVariableName = "string_ownerFirstName";
+	public static final String caseOwnerLastNameVariableName = "string_ownerLastName";
 	public static final String caseIdentifier = ProcessArtifactsProvider.CASE_IDENTIFIER;
 	
 	public static final String caseIdentifierNumberParam = "caseIdentifierNumber";
 	public static final String userIdActionVariableName = "userId";
 	public static final String caseCategoryIdActionVariableName = "caseCategoryId";
 	public static final String caseTypeActionVariableName = "caseType";
+	
+	public static final String caseStatusReceivedVariableName = "string_caseStatusReceived";
+	public static final String caseStatusInProgressVariableName = "string_caseStatusInProgress";
+	public static final String caseStatusClosedVariableName = "string_caseStatusClosed";
 }

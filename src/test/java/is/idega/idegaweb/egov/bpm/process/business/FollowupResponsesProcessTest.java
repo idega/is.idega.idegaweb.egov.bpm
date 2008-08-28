@@ -21,9 +21,9 @@ import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/08/07 18:06:01 $ by $Author: civilis $
+ * Last modified: $Date: 2008/08/28 12:03:05 $ by $Author: civilis $
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -51,14 +51,14 @@ public final class FollowupResponsesProcessTest extends EgovBPMBaseTest {
 						      "<task-node name=\"submitOwnerActionTaken\">" +
 						      "		<task name='Task for subprocess'>" +
 						      "			<controller>" +
-						      "				<variable name='string:ownerKennitala' access='read,write,required'></variable>"+
+						      "				<variable name='string_ownerKennitala' access='read,write,required'></variable>"+
 						      "			</controller>" +
 						      /*
 						      "<assignment class='com.idega.jbpm.identity.JSONAssignmentHandler'>"+
 						      "<expression>" +
 						      "{taskAssignment: {roles: {role: [" +
 						      "{roleName: \"bpm_handler\", accesses: {access: [read]}}," +
-						      "{roleName: \"bpm_owner\", accesses: {access: [read, write]}, scope: PI, assignIdentities: {string: [\"current_user\"]}}," +
+						      "{roleName: \"bpm_owner\", accesses: {access: [read, write]}, scope: PI, assignIdentities: {string_ [\"current_user\"]}}," +
 						      "{roleName: \"bpm_invited\", accesses: {access: [read]}, scope: PI}" +
 						      "]} }}" +
 						      "</expression>" +
@@ -69,7 +69,7 @@ public final class FollowupResponsesProcessTest extends EgovBPMBaseTest {
 						      "<task-node name=\"submitOwnerActionTaken2\">" +
 						      "		<task name='Task for subprocess 2'>" +
 						      "			<controller>" +
-						      "				<variable name='string:ownerKennitala' access='read,write,required'></variable>"+
+						      "				<variable name='string_ownerKennitala' access='read,write,required'></variable>"+
 						      "			</controller>" +
 						      "		</task>" +
 						      "</task-node>" +
