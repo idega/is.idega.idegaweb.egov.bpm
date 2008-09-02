@@ -38,9 +38,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/08/08 16:17:41 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/02 13:59:02 $ by $Author: arunas $
  */
 @Scope("singleton")
 @Service
@@ -112,7 +112,6 @@ public class SendMessageImpl implements SendMessage {
 						else
 							formattedSubject = getFormattedMessage(unformattedSubject, msgs.getSubjectValuesExp(), tkn, mvCtx);
 						
-						System.out.println("message="+formattedMsg);
 						
 						Message message = messageBusiness.createUserMessage(theCase, user, null, null, formattedSubject, formattedMsg, formattedMsg, null, false, null, false, true);
 						message.store();
