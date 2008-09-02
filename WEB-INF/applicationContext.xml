@@ -8,8 +8,6 @@
         <property name="processManager" ref="casesBpmProcessManager" />
     </bean>
     
-    <bean id="appTypeBPM" class="is.idega.idegaweb.egov.bpm.application.ApplicationTypeBPM" scope="singleton" />
-    
     <bean id="casesBpmProcessManager" class="is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessManager" scope="singleton">
         <lookup-method name="createPDW" bean="casesPDW" />
         <lookup-method name="createPIW" bean="casesPIW" />
