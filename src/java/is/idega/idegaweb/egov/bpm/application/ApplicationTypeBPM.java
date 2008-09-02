@@ -1,24 +1,22 @@
 package is.idega.idegaweb.egov.bpm.application;
 
 import is.idega.idegaweb.egov.application.business.ApplicationType;
-import is.idega.idegaweb.egov.application.business.ApplicationTypePluggedInEvent;
 import is.idega.idegaweb.egov.application.data.Application;
 
 import java.rmi.RemoteException;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
-import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.core.builder.business.BuilderService;
 import com.idega.core.builder.business.BuilderServiceFactory;
@@ -30,27 +28,29 @@ import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.data.dao.BPMDAO;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.util.URIUtil;
 
 /**
- * Interface is meant to be extended by beans, reflecting application type for egov applications
- * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/06/20 09:55:00 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/02 12:56:20 $ by $Author: civilis $
  *
  */
-public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAware, ApplicationListener {
+@Scope("singleton")
+@Service(ApplicationTypeBPM.beanIdentifier)
+public class ApplicationTypeBPM implements ApplicationType {
 
-	private ApplicationContext ctx;
-	private BPMDAO bpmBindsDAO;
-	private CasesBPMDAO casesBPMDAO;
-	private BPMContext idegaJbpmContext;
-	public static final String beanIdentifier = "appTypeBPM";
+	@Autowired private BPMFactory bpmFactory;
+	@Autowired private BPMDAO bpmBindsDAO;
+	@Autowired private CasesBPMDAO casesBPMDAO;
+	@Autowired private BPMContext idegaJbpmContext;
+	static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
 	private static final String egovBPMPageType = "bpm_app_starter";
 	
@@ -66,6 +66,10 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	public String getType() {
 		return appType;
 	}
+	
+	public String getBeanIdentifier() {
+		return beanIdentifier;
+	}
 
 	public void beforeStore(IWContext iwc, Application app) {
 		
@@ -78,6 +82,8 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	
 			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(pdId);
 			app.setUrl(pd.getName());
+			
+			
 
 		} catch(Exception exp) {
 			iwc.addMessage(null, new FacesMessage("Exception:" + exp.getMessage()));
@@ -90,29 +96,41 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 	
 	public boolean afterStore(IWContext iwc, Application app) {
 		
-		return false;
-	}
-	
-	public void setApplicationContext(ApplicationContext applicationcontext)
-			throws BeansException {
-		ctx = applicationcontext;		
-	}
-
-	public void onApplicationEvent(ApplicationEvent applicationevent) {
+		String procDef = iwc.getParameter(UIApplicationTypeBPMHandler.MENU_PARAM);
 		
-		if(applicationevent instanceof ContextRefreshedEvent) {
-			
-			ApplicationTypePluggedInEvent event = new ApplicationTypePluggedInEvent(this);
-			event.setAppTypeBeanIdentifier(beanIdentifier);
-			ctx.publishEvent(event);
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		
+		try {
+			Long pdId = new Long(procDef);
+	
+			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(pdId);
+			ProcessDefinitionW pdw = getBpmFactory().getProcessManager(pd.getId()).getProcessDefinition(pdId);
+		
+			if(iwc.isParameterSet(UIApplicationTypeBPMHandler.rolesToStartCaseNeedToBeCheckedParam) && iwc.getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam) != null && iwc.getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam).length != 0) {
+				
+//				setting roles, that can start process
+				List<String> vals = Arrays.asList(iwc.getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam));
+				pdw.setRolesCanStartProcess(vals, app.getPrimaryKey());
+				
+			} else {
+				
+				pdw.setRolesCanStartProcess(null, app.getPrimaryKey());
+			}
+
+		} catch(Exception exp) {
+			iwc.addMessage(null, new FacesMessage("Exception:" + exp.getMessage()));
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "", exp);
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
+		
+		return false;
 	}
 	
 	public BPMDAO getBpmBindsDAO() {
 		return bpmBindsDAO;
 	}
 
-	@Autowired
 	public void setBpmBindsDAO(BPMDAO bpmBindsDAO) {
 		this.bpmBindsDAO = bpmBindsDAO;
 	}
@@ -153,6 +171,14 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		}
 		
 		return "-1";
+	}
+	
+	public List<String> getRolesCanStartProcess(Long pdId, Object applicationId) {
+		
+		return getBpmFactory()
+			.getProcessManager(pdId)
+			.getProcessDefinition(pdId)
+			.getRolesCanStartProcess(applicationId);
 	}
 	
 	protected BuilderService getBuilderService(IWApplicationContext iwac) {
@@ -227,7 +253,6 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		return casesBPMDAO;
 	}
 
-	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
@@ -236,8 +261,15 @@ public class ApplicationTypeBPM implements ApplicationType, ApplicationContextAw
 		return idegaJbpmContext;
 	}
 
-	@Autowired
 	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
+	}
+
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
 	}
 }

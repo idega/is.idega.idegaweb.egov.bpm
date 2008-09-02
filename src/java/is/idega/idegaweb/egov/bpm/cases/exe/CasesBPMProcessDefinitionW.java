@@ -20,7 +20,6 @@ import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +29,7 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.egov.bpm.data.AppProcBindDefinition;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -48,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/08/28 12:02:36 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/02 12:56:20 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -59,10 +59,15 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	public static final String IDENTIFIER_PREFIX = "P";
 	
 	private Long processDefinitionId;
+	private ProcessDefinition processDefinition;
 	
+	@Autowired
 	private BPMFactory bpmFactory;
+	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+	@Autowired
 	private BPMContext bpmContext;
+	@Autowired
 	private VariablesHandler variablesHandler;
 	
 	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
@@ -199,6 +204,65 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		}
 	}
 	
+	public List<String> getRolesCanStartProcess(Object context) {
+		
+		Integer appId = new Integer(context.toString());
+		
+		ProcessDefinition pd = getProcessDefinition();
+		AppProcBindDefinition def = (AppProcBindDefinition)pd.getDefinition(AppProcBindDefinition.class);
+		
+		final List<String> rolesCanStart;
+		
+		if(def != null) {
+			
+			rolesCanStart = def.getRolesCanStartProcess(appId);
+		} else
+			rolesCanStart = null;
+		
+		return rolesCanStart;
+	}
+	
+	/**
+	 * sets roles, whose users can start process (and see application).
+	 * @param roles - idega roles keys (<b>not</b> process roles)
+	 * @param context - some context depending implementation, e.g., roles can start process using applications - then context will be application id
+	 */
+	public void setRolesCanStartProcess(List<String> roles, Object context) {
+		
+		ProcessDefinition pd = getProcessDefinition();
+		AppProcBindDefinition def = (AppProcBindDefinition)pd.getDefinition(AppProcBindDefinition.class);
+		
+		if(def == null) {
+			
+			def = new AppProcBindDefinition();
+			
+			JbpmContext ctx = getBpmContext().createJbpmContext();
+			
+			try {
+				getBpmContext().saveProcessEntity(def);
+				
+				pd = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+				pd.addDefinition(def);
+				
+			} finally {
+				getBpmContext().closeAndCommit(ctx);
+			}
+			
+			ctx = getBpmContext().createJbpmContext();
+			
+			try {
+				pd = ctx.getGraphSession().loadProcessDefinition(getProcessDefinitionId());
+				def = (AppProcBindDefinition)pd.getDefinition(AppProcBindDefinition.class);
+				
+			} finally {
+				getBpmContext().closeAndCommit(ctx);
+			}
+		}
+		
+		Integer appId = new Integer(context.toString());
+		def.updateRolesCanStartProcess(appId, roles);
+	}
+	
 	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
 		
 		getVariablesHandler().submitVariables(variables, ti.getId(), true);
@@ -252,8 +316,6 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		return bpmFactory;
 	}
 
-	@Required
-	@Autowired
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
@@ -315,7 +377,6 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		return casesBPMDAO;
 	}
 
-	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
@@ -324,7 +385,6 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		return bpmContext;
 	}
 
-	@Autowired
 	public void setBpmContext(BPMContext bpmContext) {
 		this.bpmContext = bpmContext;
 	}
@@ -333,8 +393,24 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		return variablesHandler;
 	}
 
-	@Autowired
 	public void setVariablesHandler(VariablesHandler variablesHandler) {
 		this.variablesHandler = variablesHandler;
+	}
+
+	public ProcessDefinition getProcessDefinition() {
+		
+		if(processDefinition == null && getProcessDefinitionId() != null) {
+		
+			JbpmContext ctx = getBpmContext().createJbpmContext();
+			
+			try {
+				processDefinition = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+				
+			} finally {
+				getBpmContext().closeAndCommit(ctx);
+			}
+		}
+		
+		return processDefinition;
 	}
 }
