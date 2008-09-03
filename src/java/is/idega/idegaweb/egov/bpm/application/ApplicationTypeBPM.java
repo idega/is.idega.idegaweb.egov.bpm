@@ -4,6 +4,8 @@ import is.idega.idegaweb.egov.application.business.ApplicationType;
 import is.idega.idegaweb.egov.application.data.Application;
 
 import java.rmi.RemoteException;
+import java.security.AccessControlException;
+import java.security.Permission;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -30,16 +32,20 @@ import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.identity.permission.BPMTypedPermission;
+import com.idega.jbpm.identity.permission.NativeRolesPermissionsHandler;
+import com.idega.jbpm.identity.permission.PermissionsFactory;
 import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.DropdownMenu;
+import com.idega.user.data.User;
 import com.idega.util.URIUtil;
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2008/09/02 12:56:20 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/03 13:48:36 $ by $Author: civilis $
  *
  */
 @Scope("singleton")
@@ -50,6 +56,8 @@ public class ApplicationTypeBPM implements ApplicationType {
 	@Autowired private BPMDAO bpmBindsDAO;
 	@Autowired private CasesBPMDAO casesBPMDAO;
 	@Autowired private BPMContext idegaJbpmContext;
+	@Autowired private PermissionsFactory permissionsFactory;
+	
 	static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
 	private static final String egovBPMPageType = "bpm_app_starter";
@@ -173,12 +181,17 @@ public class ApplicationTypeBPM implements ApplicationType {
 		return "-1";
 	}
 	
+	public List<String> getRolesCanStartProcessDWR(Long pdId, String applicationId) {
+		
+		return getRolesCanStartProcess(pdId, applicationId);
+	}
+	
 	public List<String> getRolesCanStartProcess(Long pdId, Object applicationId) {
 		
 		return getBpmFactory()
-			.getProcessManager(pdId)
-			.getProcessDefinition(pdId)
-			.getRolesCanStartProcess(applicationId);
+		.getProcessManager(pdId)
+		.getProcessDefinition(pdId)
+		.getRolesCanStartProcess(applicationId);
 	}
 	
 	protected BuilderService getBuilderService(IWApplicationContext iwac) {
@@ -271,5 +284,57 @@ public class ApplicationTypeBPM implements ApplicationType {
 
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
+	}
+
+	/**
+	 * checks, if the application is visible for current user
+	 * This is implemented only for applications category list.
+	 * In other words, if the link of the start form is given to anyone, then that user will be able to open the form (and submit)
+	 */
+	public boolean isVisible(Application app) {
+		
+		final Long pdId = new Long(getSelectedElement(app));
+		
+		final ProcessDefinitionW pdw = getBpmFactory().getProcessManager(pdId).getProcessDefinition(pdId);
+		final List<String> rolesCanStart = pdw.getRolesCanStartProcess(app.getPrimaryKey());
+		
+		if(rolesCanStart != null && !rolesCanStart.isEmpty()) {
+			
+			IWContext iwc = IWContext.getCurrentInstance();
+			
+			if(iwc != null && iwc.isLoggedOn()) {
+				
+				if(iwc.isSuperAdmin())
+					return true;
+				
+				User usr = iwc.getCurrentUser();
+				
+				BPMTypedPermission permission = getPermissionsFactory().getTypedPermission(NativeRolesPermissionsHandler.handlerType);
+				permission.setAttribute(NativeRolesPermissionsHandler.userAtt, usr);
+				permission.setAttribute(NativeRolesPermissionsHandler.rolesAtt, rolesCanStart);
+				
+				try {
+					getBpmFactory().getRolesManager().checkPermission((Permission)permission);
+					return true;
+					
+				} catch (AccessControlException e) {
+					return false;
+				}
+			}
+			
+			return false;
+			
+		} else {
+
+			return true;
+		}
+	}
+
+	public PermissionsFactory getPermissionsFactory() {
+		return permissionsFactory;
+	}
+
+	public void setPermissionsFactory(PermissionsFactory permissionsFactory) {
+		this.permissionsFactory = permissionsFactory;
 	}
 }
