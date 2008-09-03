@@ -21,7 +21,6 @@ import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.data.ICRole;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.idegaweb.IWUserContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
@@ -31,14 +30,15 @@ import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.Label;
 import com.idega.presentation.ui.SelectOption;
 import com.idega.presentation.ui.SelectPanel;
+import com.idega.util.CoreConstants;
 import com.idega.util.expression.ELUtil;
 
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/09/02 12:56:20 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/03 13:49:03 $ by $Author: civilis $
  *
  */
 public class UIApplicationTypeBPMHandler extends Block implements ApplicationTypeHandlerComponent {
@@ -160,15 +160,19 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		rolesContainer.add(rolesSpan);
 		
 		
-		IWResourceBundle iwrb = getResourceBundle(iwc);
 		IWBundle bundle = getBundle(iwc);
 		
-		//iwrb.getBundle("").
-		//iwrb.get
+		String includeJs1 = "'"+w2b.getBundleURIToJQueryLib()+"', '"+bundle.getVirtualPathWithFileNameString("javascript/ApplicationTypeBPMHandler.js")+"'";
 		
-		String act = "LazyLoader.loadMultiple(['"+w2b.getBundleURIToJQueryLib()+"', '"+bundle.getVirtualPathWithFileNameString("javascript/ApplicationTypeBPMHandler.js")+"'], function() {AppTypeBPM.processRolesCheckbox('"+cb.getId()+"', '"+rolesSpan.getId()+"', '"+rolesMenu.getId()+"')});";
+		String act = "LazyLoader.loadMultiple(["+includeJs1+"], function() {AppTypeBPM.processRolesCheckbox('"+cb.getId()+"', '"+rolesSpan.getId()+"', '"+rolesMenu.getId()+"')});";
 			
 		cb.setOnClick(act);
+		
+		String includeJs2 = "'"+CoreConstants.DWR_ENGINE_SCRIPT+"', '/dwr/interface/ApplicationTypeBPM.js'";
+		
+		act = "LazyLoader.loadMultiple(["+includeJs1+", "+includeJs2+"], function() {AppTypeBPM.processProcessesSelector('"+menu.getId()+"', '"+rolesMenu.getId()+"', '"+rolesSpan.getId()+"', '"+cb.getId()+"', "+(application != null ? application.getPrimaryKey().toString() : null)+");});";
+		
+		menu.setOnChange(act);
 		
 		add(container);
 		
