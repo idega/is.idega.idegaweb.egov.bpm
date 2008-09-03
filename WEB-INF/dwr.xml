@@ -12,10 +12,19 @@
 	    	<include method="getCasesListByUserQuery" />
     	</create>
     	
+    	<create creator="jsf" javascript="ApplicationTypeBPM">
+            <param name="managedBeanName" value="appTypeBPM" />
+            <param name="class" value="is.idega.idegaweb.egov.bpm.application.ApplicationTypeBPM" />
+            <include method="getRolesCanStartProcessDWR" />
+        </create>
+    	
     	<convert match="is.idega.idegaweb.egov.bpm.cases.business.CasesListSearchCriteriaBean" converter="bean" />
 	</allow>
 	<signatures>
 		<![CDATA[
+		  import java.util.List;
+		
+		  List<String> ApplicationTypeBPM.getRolesCanStartProcessDWR(Long, String);
 		]]>
 	</signatures>
 </dwr>
