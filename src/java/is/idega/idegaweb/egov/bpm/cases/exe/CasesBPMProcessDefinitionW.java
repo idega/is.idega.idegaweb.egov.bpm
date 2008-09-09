@@ -48,27 +48,22 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/09/02 12:56:20 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/09 13:55:15 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
 public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	
-	public static final String IDENTIFIER_PREFIX = "P";
-	
 	private Long processDefinitionId;
 	private ProcessDefinition processDefinition;
 	
-	@Autowired
-	private BPMFactory bpmFactory;
-	@Autowired
-	private CasesBPMDAO casesBPMDAO;
-	@Autowired
-	private BPMContext bpmContext;
-	@Autowired
-	private VariablesHandler variablesHandler;
+	@Autowired private BPMFactory bpmFactory;
+	@Autowired private CasesBPMDAO casesBPMDAO;
+	@Autowired private BPMContext bpmContext;
+	@Autowired private VariablesHandler variablesHandler;
+	@Autowired private CaseIdentifier caseIdentifier;
 	
 	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
 	
@@ -165,7 +160,7 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 			preferred.add(XFormsView.VIEW_TYPE);
 			View view = getBpmFactory().takeView(taskInstance.getId(), true, preferred);
 			
-			Object[] identifiers = generateNewCaseIdentifier();
+			Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
 			Integer identifierNumber = (Integer)identifiers[0];
 			String identifier = (String)identifiers[1];
 			
@@ -319,59 +314,6 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
-	
-	class CaseIdentifier {
-		
-		IWTimestamp time;
-		Integer number;
-		
-		String generate() {
-			
-			String nr = String.valueOf(++number);
-			
-			while(nr.length() < 4)
-				nr = "0"+nr;
-			
-			return new StringBuffer(IDENTIFIER_PREFIX)
-			.append(CoreConstants.MINUS)
-			.append(time.getYear())
-			.append(CoreConstants.MINUS)
-			.append(time.getMonth() < 10 ? "0"+time.getMonth() : time.getMonth())
-			.append(CoreConstants.MINUS)
-			.append(time.getDay() < 10 ? "0"+time.getDay() : time.getDay())
-			.append(CoreConstants.MINUS)
-			.append(nr)
-			.toString();
-		}
-	}
-	
-	private CaseIdentifier lastCaseIdentifierNumber;
-	
-	public synchronized Object[] generateNewCaseIdentifier() {
-		
-		IWTimestamp currentTime = new IWTimestamp();
-		
-		if(lastCaseIdentifierNumber == null || !currentTime.equals(lastCaseIdentifierNumber.time)) {
-
-			lastCaseIdentifierNumber = new CaseIdentifier();
-			
-			CaseProcInstBind b = getCasesBPMDAO().getCaseProcInstBindLatestByDateQN(new Date());
-			
-			if(b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
-				
-				lastCaseIdentifierNumber.time = new IWTimestamp(b.getDateCreated());
-				lastCaseIdentifierNumber.number = b.getCaseIdentierID();
-			} else {
-			
-				lastCaseIdentifierNumber.time = currentTime;
-				lastCaseIdentifierNumber.number = 0;
-			}
-		}
-		
-		String generated = lastCaseIdentifierNumber.generate();
-		
-		return new Object[] {lastCaseIdentifierNumber.number, generated};
-	}
 
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
@@ -412,5 +354,13 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		}
 		
 		return processDefinition;
+	}
+
+	public CaseIdentifier getCaseIdentifier() {
+		return caseIdentifier;
+	}
+
+	public void setCaseIdentifier(CaseIdentifier caseIdentifier) {
+		this.caseIdentifier = caseIdentifier;
 	}
 }

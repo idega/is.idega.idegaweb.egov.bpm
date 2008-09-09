@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.email;
 
-import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
+import is.idega.idegaweb.egov.bpm.cases.exe.CaseIdentifier;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -52,9 +52,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/08/28 12:01:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/09 13:55:16 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -85,7 +85,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 			for (Entry<String, Message> entry : msgs.entrySet()) {
 				
-				if(entry.getKey().startsWith(CasesBPMProcessDefinitionW.IDENTIFIER_PREFIX)) {
+				if(entry.getKey().startsWith(CaseIdentifier.IDENTIFIER_PREFIX)) {
 					
 					try {
 						String[] keyParts = entry.getKey().split(CoreConstants.MINUS);
