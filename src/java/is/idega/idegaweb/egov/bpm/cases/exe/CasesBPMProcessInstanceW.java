@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
 
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
@@ -57,9 +58,9 @@ import com.idega.util.CoreUtil;
  * TODO: we could create abstract class for some generic methods, like getPeopleConntectedToTheProcess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/08/28 12:02:36 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -240,6 +241,46 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 		}
 	}
 
+	public String getProcessDescription() {
+	    
+		if (processInstanceId == null) {
+			return null;
+		}
+		
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		try {
+			Object o = ctx.getProcessInstance(processInstanceId).getContextInstance().getVariable(CasesBPMProcessConstants.caseDescription);
+			return o == null ? null : String.valueOf(o);
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+		
+		return null;
+	}
+	
+	public String getCaseIdentifier() {
+	    
+	    if (processInstanceId == null) {
+		return null;
+	    }
+	    
+	    JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+	    
+	    try {
+		   String identifier = (String)ctx.getProcessInstance(processInstanceId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+			
+		   return identifier;
+		
+	    } finally {
+		getIdegaJbpmContext().closeAndCommit(ctx);
+	    }
+	    
+	    
+	}
+	
 	public Integer getHandlerId() {
 		
 		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, getProcessInstanceId());

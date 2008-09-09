@@ -5,9 +5,9 @@ import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/08/28 12:01:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
  *
  */
 public class CasesBPMProcessConstants {
@@ -25,6 +25,7 @@ public class CasesBPMProcessConstants {
 	public static final String caseOwnerFirstNameVariableName = "string_ownerFirstName";
 	public static final String caseOwnerLastNameVariableName = "string_ownerLastName";
 	public static final String caseIdentifier = ProcessArtifactsProvider.CASE_IDENTIFIER;
+	public static final String caseDescription = ProcessArtifactsProvider.CASE_DESCRIPTION;
 	
 	public static final String caseIdentifierNumberParam = "caseIdentifierNumber";
 	public static final String userIdActionVariableName = "userId";

@@ -13,9 +13,9 @@ import org.jbpm.graph.exe.Token;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/08/07 18:06:01 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
  */
 public class SendMessageMockupImpl implements SendMessage {
 	
@@ -23,11 +23,11 @@ public class SendMessageMockupImpl implements SendMessage {
 
 		if(!"english message".equals(msgs.getLocalizedMessage(new Locale("en"))))
 			throw new AssertionFailedError();
-		if(!"icelandic message".equals(msgs.getLocalizedMessage(new Locale("is_IS"))))
+		if(!"icelandic message".equals(msgs.getLocalizedMessage(new Locale("is","IS"))))
 			throw new AssertionFailedError();
 		if(!"english subject".equals(msgs.getLocalizedSubject(new Locale("en"))))
 			throw new AssertionFailedError();
-		if(!"icelandic subject".equals(msgs.getLocalizedSubject(new Locale("is_IS"))))
+		if(!"icelandic subject".equals(msgs.getLocalizedSubject(new Locale("is", "IS"))))
 			throw new AssertionFailedError();
 	}
 }

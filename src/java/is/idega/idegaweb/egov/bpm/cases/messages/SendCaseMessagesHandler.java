@@ -17,15 +17,16 @@ import org.jbpm.graph.exe.Token;
 import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.idegaweb.IWBundle;
 import com.idega.presentation.IWContext;
 import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/08/08 16:17:41 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
  */
 public class SendCaseMessagesHandler implements ActionHandler {
 
@@ -120,8 +121,9 @@ public class SendCaseMessagesHandler implements ActionHandler {
 				HashMap<Locale, String> subjects = new HashMap<Locale, String>(getInlineSubject().size());
 				
 				for (Entry<String, String> entry : getInlineSubject().entrySet()) {
-					
-					subjects.put(new Locale(entry.getKey()), entry.getValue());
+				    
+				    	Locale subjectLocale = ICLocaleBusiness.getLocaleFromLocaleString(entry.getKey());
+				    	subjects.put(subjectLocale, entry.getValue());
 				}
 				
 				msgs.setInlineSubjects(subjects);
@@ -132,8 +134,8 @@ public class SendCaseMessagesHandler implements ActionHandler {
 				HashMap<Locale, String> messages = new HashMap<Locale, String>(getInlineMessage().size());
 				
 				for (Entry<String, String> entry : getInlineMessage().entrySet()) {
-					
-					messages.put(new Locale(entry.getKey()), entry.getValue());
+					Locale msgLocale = ICLocaleBusiness.getLocaleFromLocaleString(entry.getKey());
+					messages.put(msgLocale, entry.getValue());
 				}
 				
 				msgs.setInlineMessages(messages);

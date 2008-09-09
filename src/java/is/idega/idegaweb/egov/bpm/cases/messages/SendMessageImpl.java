@@ -26,8 +26,10 @@ import com.idega.block.process.message.data.Message;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
 import com.idega.jbpm.process.business.messages.MessageValueHandler;
 import com.idega.presentation.IWContext;
@@ -38,9 +40,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/09/02 13:59:02 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
  */
 @Scope("singleton")
 @Service
@@ -53,7 +55,7 @@ public class SendMessageImpl implements SendMessage {
 	private MessageValueHandler messageValueHandler;
 
 	public void send(final ProcessInstance pi, final Integer caseId, final LocalizedMessages msgs, final Token tkn, final String sendToRoles) {
-		
+	
 		final IWContext iwc = IWContext.getCurrentInstance();
 		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
 		final UserBusiness userBusiness  = getUserBusiness(iwc);
@@ -69,6 +71,9 @@ public class SendMessageImpl implements SendMessage {
 					
 					final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
 					Collection<User> users = getUsersToSendMessageTo(iwc, sendToRoles, pi);
+					
+					long pid = pi.getId();
+					ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
 					
 					HashMap<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
 					MessageValueContext mvCtx = new MessageValueContext(5);
@@ -96,11 +101,12 @@ public class SendMessageImpl implements SendMessage {
 							unformattedSubject = unf[0];
 							unformattedMsg = unf[1];
 						}
-						
-						String formattedMsg;
-						String formattedSubject;
+					
+						String formattedMsg ;
+						String formattedSubject ;
 						
 						mvCtx.setValue(MessageValueContext.userBean, user);
+						mvCtx.setValue(MessageValueContext.piwBean, piw);
 						
 						if(unformattedMsg == null)
 							formattedMsg = unformattedMsg;
@@ -112,7 +118,8 @@ public class SendMessageImpl implements SendMessage {
 						else
 							formattedSubject = getFormattedMessage(unformattedSubject, msgs.getSubjectValuesExp(), tkn, mvCtx);
 						
-						
+						formattedMsg = StringConverterUtility.loadConvert(formattedMsg);
+
 						Message message = messageBusiness.createUserMessage(theCase, user, null, null, formattedSubject, formattedMsg, formattedMsg, null, false, null, false, true);
 						message.store();
 					}
