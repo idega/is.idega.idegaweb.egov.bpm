@@ -38,9 +38,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  *
- * Last modified: $Date: 2008/08/04 11:21:10 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/09 09:30:06 $ by $Author: arunas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -231,6 +231,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		}
 		scripts.add(web2Business.getBundleURIToJQGrid());
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
+		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
 		scripts.add(web2Business.getBundleUriToHumanizedMessagesScript());
 		scripts.add(bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js");
