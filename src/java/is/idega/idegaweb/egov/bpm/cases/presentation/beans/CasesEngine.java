@@ -2,70 +2,54 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
-import is.idega.idegaweb.egov.bpm.cases.business.CasesListSearchCriteriaBean;
+import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
+import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 
-import org.jbpm.graph.def.ProcessDefinition;
 import org.jdom.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseBusiness;
-import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
-import com.idega.core.accesscontrol.business.NotLoggedOnException;
-import com.idega.core.builder.business.ICBuilderConstants;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.business.JbpmProcessBusinessBean;
-import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
-import com.idega.presentation.ui.handlers.IWDatePickerHandler;
-import com.idega.user.business.UserBusiness;
-import com.idega.user.data.Group;
 import com.idega.user.data.User;
-import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
-import com.idega.util.IWTimestamp;
-import com.idega.util.ListUtil;
-import com.idega.util.StringUtil;
 
 @Service("casesEngineDWR")
 @Scope("singleton")
 public class CasesEngine {
 	
-	private BPMFactory bpmFactory;
-	private CaseManagersProvider caseManagersProvider;
+//	private BPMFactory bpmFactory;
+//	private CaseManagersProvider caseManagersProvider;
 	private CasesBPMProcessView casesBPMProcessView;
 	private BuilderLogicWrapper builderLogic;
 	private GeneralCasesListBuilder casesListBuilder;
-	private CasesBPMDAO casesBPMDAO;
-	private RolesManager rolesManager;
-	private JbpmProcessBusinessBean jbpmProcessBusiness;
+//	private CasesBPMDAO casesBPMDAO;
+//	private RolesManager rolesManager;
+//	private JbpmProcessBusinessBean jbpmProcessBusiness;
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
@@ -165,6 +149,7 @@ public class CasesEngine {
 		return getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, component, true);
 	}
 	
+	/*
 	private List<Integer> getCasesByContactQuery(IWContext iwc, String contact) {
 		if (StringUtil.isEmpty(contact)) {
 			return null;
@@ -203,6 +188,7 @@ public class CasesEngine {
 		return casesByContact;
 	}
 	
+	
 	private List<Integer> getCasesByProcessDefinition(String processDefinitionId) {
 		if (StringUtil.isEmpty(processDefinitionId)) {
 			return null;
@@ -239,23 +225,71 @@ public class CasesEngine {
 		
 		return null;
 	}
+	*/
 	
-	@SuppressWarnings("unchecked")
 	private Collection<Case> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
-		CasesBusiness casesBusiness = getCasesBusiness(iwc);
-		if (casesBusiness == null) {
+		
+		final User currentUser;
+		
+		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
+			
+			Logger.getLogger(getClass().getName()).log(Level.INFO, "Not logged in, skipping searching");
 			return null;
 		}
 		
-		User currentUser = null;
-		try {
-			currentUser = iwc.getCurrentUser();
-		} catch(NotLoggedOnException e) {
-			e.printStackTrace();
+		CasesBusiness casesBusiness = getCasesBusiness(iwc);
+		
+		String casesProcessorType = criteriaBean.getCaseListType() != null ? criteriaBean.getCaseListType() : MyCases.TYPE;
+		
+		Collection<GeneralCase> genCases = casesBusiness.getCasesForUser(currentUser, casesProcessorType);
+		
+		if(criteriaBean.getStatusId() != null)
+			criteriaBean.setStatuses(new String[] {criteriaBean.getStatusId()});
+		
+		Collection<Case> cases = null;
+		
+		if(genCases != null && !genCases.isEmpty()) {
+			
+			List<Integer> caseIdsByUser = new ArrayList<Integer>(genCases.size());
+			
+			for (GeneralCase genCase : genCases) {
+				
+				caseIdsByUser.add(new Integer(genCase.getPrimaryKey().toString()));
+			}
+			
+			List<CasesListSearchFilter> filters = criteriaBean.getFilters();
+			
+			if(filters != null) {
+			
+				for (CasesListSearchFilter filt : filters) {
+					
+					caseIdsByUser = filt.doFilter(caseIdsByUser);
+				}
+			}
+			
+			if(caseIdsByUser != null && !caseIdsByUser.isEmpty()) {
+				
+				cases = casesBusiness.getCasesByIds(caseIdsByUser);
+			}
 		}
-		if (currentUser == null) {
+		
+		return cases;
+	}
+	
+	/*
+	@SuppressWarnings("unchecked")
+	private Collection<Case> getCasesByQueryOLD(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
+		
+		CasesBusiness casesBusiness = getCasesBusiness(iwc);
+		
+		final User currentUser;
+		
+		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
+			
+			Logger.getLogger(getClass().getName()).log(Level.INFO, "Not logged in, skipping searching");
 			return null;
 		}
+		
 		boolean isCaseSuperAdmin = iwc.getIWMainApplication().getAccessController().hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN, iwc);
 		
 		Locale locale = iwc.getCurrentLocale();
@@ -379,9 +413,22 @@ public class CasesEngine {
 		List<Integer> casesByUser = null;
 		if (searchingByUserCases || !isCaseSuperAdmin) {
 			try {
-				casesByUser = getCasesBPMDAO().getCaseIdsByUserIds(currentUser.getId());
+				String casesProcessorType = OpenCases.TYPE;
+				Collection<GeneralCase> genCases = getCasesBusiness(iwc).getCasesForUser(currentUser, casesProcessorType);
+				
+				if(genCases != null && !genCases.isEmpty()) {
+					
+					casesByUser = new ArrayList<Integer>(genCases.size());
+					
+					for (GeneralCase genCase : genCases) {
+						
+						casesByUser.add(new Integer(genCase.getPrimaryKey().toString()));
+					}
+				}
+				
+//				casesByUser = getCasesBPMDAO().getCaseIdsByUserIds(currentUser.getId());
 			} catch(Exception e) {
-				e.printStackTrace();
+				Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving cases for the user with the id = "+currentUser.getId(), e);
 			}
 		}
 		
@@ -461,7 +508,7 @@ public class CasesEngine {
 		Collection<Case> cases = null;
 		if (checkSimpleCases) {
 			cases = casesBusiness.getCasesByCriteria(caseNumber, description, name, personalId, statuses, dateFrom, dateTo,
-					((searchingByUserCases || !useBPMQueries) && !isCaseSuperAdmin) ? currentUser : null, useBPMQueries ? handlersGroups: null, simpleCasesOnly);
+					((searchingByUserCases || !useBPMQueries) && !isCaseSuperAdmin) ? currentUser : null, !useBPMQueries ? handlersGroups: null, simpleCasesOnly);
 		}
 		else {
 			cases = new ArrayList<Case>();
@@ -479,6 +526,7 @@ public class CasesEngine {
 		logger.log(Level.INFO, "Final list: " + cases);
 		return cases;
 	}
+	
 	
 	private List<Integer> checkBPMCasesIds(List<QueryResultsBean> results) {
 		if (ListUtil.isEmpty(results)) {
@@ -526,6 +574,7 @@ public class CasesEngine {
 		
 		return sameIdsInAllLists;
 	}
+	
 	
 	private Collection<Case> checkIfAllCanBeDisplayed(Collection<Case> cases, List<Integer> casesToSelect) {
 		if (ListUtil.isEmpty(cases)) {
@@ -596,6 +645,7 @@ public class CasesEngine {
 		
 		return cases;
 	}
+	*/
 
 	public BuilderLogicWrapper getBuilderLogic() {
 		return builderLogic;
@@ -606,9 +656,16 @@ public class CasesEngine {
 		this.builderLogic = builderLogic;
 	}
 
+	/*
 	public BPMFactory getBpmFactory() {
 		return bpmFactory;
 	}
+	
+	@Autowired
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
+	}
+	*/
 
 	public GeneralCasesListBuilder getCasesListBuilder() {
 		return casesListBuilder;
@@ -617,11 +674,6 @@ public class CasesEngine {
 	@Autowired
 	public void setCasesListBuilder(GeneralCasesListBuilder casesListBuilder) {
 		this.casesListBuilder = casesListBuilder;
-	}
-
-	@Autowired
-	public void setBpmFactory(BPMFactory bpmFactory) {
-		this.bpmFactory = bpmFactory;
 	}
 
 	private CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
@@ -635,6 +687,7 @@ public class CasesEngine {
 		return null;
 	}
 	
+	/*
 	private UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
 			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
@@ -644,6 +697,7 @@ public class CasesEngine {
 		
 		return null;
 	}
+	
 
 	public CaseManagersProvider getCaseManagersProvider() {
 		return caseManagersProvider;
@@ -653,6 +707,7 @@ public class CasesEngine {
 	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
 		this.caseManagersProvider = caseManagersProvider;
 	}
+	*/
 
 	public CasesBPMProcessView getCasesBPMProcessView() {
 		return casesBPMProcessView;
@@ -663,6 +718,7 @@ public class CasesEngine {
 		this.casesBPMProcessView = casesBPMProcessView;
 	}
 
+	/*
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
@@ -671,6 +727,7 @@ public class CasesEngine {
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
+	
 	
 	private class QueryResultsBean {
 		private Object query = null;
@@ -708,4 +765,5 @@ public class CasesEngine {
 	public void setJbpmProcessBusiness(JbpmProcessBusinessBean jbpmProcessBusiness) {
 		this.jbpmProcessBusiness = jbpmProcessBusiness;
 	}
+	*/
 }
