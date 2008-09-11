@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,9 +49,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/09/09 13:55:15 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/11 14:39:35 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -279,6 +280,18 @@ public class CasesBPMProcessDefinitionW implements ProcessDefinitionW {
 		
 		if(usrId != null)
 			ti.setActorId(usrId.toString());
+	}
+	
+	public String getStartTaskName() {
+		
+		List<String> preferred = new ArrayList<String>(1);
+		preferred.add(XFormsView.VIEW_TYPE);
+		
+		Long taskId = getProcessDefinition().getTaskMgmtDefinition().getStartTask().getId();
+		
+		View view = getBpmFactory().getViewByTask(taskId, false, preferred);
+		
+		return view.getDisplayName(new Locale("is","IS"));
 	}
 	
 	public Long getProcessDefinitionId() {
