@@ -12,7 +12,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -31,7 +30,6 @@ import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.block.form.process.XFormsView;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -51,7 +49,6 @@ import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.Role;
 import com.idega.jbpm.identity.permission.BPMTypedPermission;
 import com.idega.jbpm.identity.permission.PermissionsFactory;
-import com.idega.jbpm.view.View;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
@@ -62,9 +59,9 @@ import com.idega.util.CoreUtil;
  * TODO: we could create abstract class for some generic methods, like getPeopleConntectedToTheProcess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/09/11 15:49:12 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/11 17:21:44 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -262,24 +259,7 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	public ProcessDefinitionW getProcessDefinitionW () {
 		
 		Long pdId = getProcessInstance().getProcessDefinition().getId();
-		return 	getProcessManager().getProcessDefinition(pdId);
-	}
-	
-	public String getStartedTaskName() {
-		
-		 if (processInstanceId == null) {
-		    	return null;
-		 }
-		 
-		List<String> preferred = new ArrayList<String>(1);
-		preferred.add(XFormsView.VIEW_TYPE);
-		
-		Long taskId = getProcessInstance().getProcessDefinition().getTaskMgmtDefinition().getStartTask().getId();
-		
-		View view = getBpmFactory().getViewByTask(taskId, false, preferred);
-		
-		return view.getDisplayName(new Locale("is","IS"));
-		
+		return getProcessManager().getProcessDefinition(pdId);
 	}
 	
 	public Integer getHandlerId() {
