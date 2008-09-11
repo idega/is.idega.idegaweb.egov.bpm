@@ -41,6 +41,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.ProcessWatch;
@@ -61,9 +62,9 @@ import com.idega.util.CoreUtil;
  * TODO: we could create abstract class for some generic methods, like getPeopleConntectedToTheProcess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/09/11 13:33:37 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/11 15:49:12 $ by $Author: arunas $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -245,42 +246,23 @@ public class CasesBPMProcessInstanceW implements ProcessInstanceW {
 	}
 
 	public String getProcessDescription() {
-	    
-		if (processInstanceId == null) {
-			return null;
-		}
+
+		String description = (String) getProcessInstance().getContextInstance().getVariable(CasesBPMProcessConstants.caseDescription);
 		
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-		try {
-			Object o = ctx.getProcessInstance(processInstanceId).getContextInstance().getVariable(CasesBPMProcessConstants.caseDescription);
-			return o == null ? null : String.valueOf(o);
-			
-		} catch(Exception e) {
-			e.printStackTrace();
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
-		}
-		
-		return null;
+		return description;
 	}
 	
 	public String getCaseIdentifier() {
 	    
-	    if (processInstanceId == null) {
-	    	return null;
-	    }
-	    
-	    JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-	    
-	    try {
-		   String identifier = (String)ctx.getProcessInstance(processInstanceId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+		   String identifier = (String) getProcessInstance().getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
 			
 		   return identifier;
+	}
+	
+	public ProcessDefinitionW getProcessDefinitionW () {
 		
-	    } finally {
-		getIdegaJbpmContext().closeAndCommit(ctx);
-	    }
-	    
+		Long pdId = getProcessInstance().getProcessDefinition().getId();
+		return 	getProcessManager().getProcessDefinition(pdId);
 	}
 	
 	public String getStartedTaskName() {
