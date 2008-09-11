@@ -18,7 +18,7 @@
             <include method="getRolesCanStartProcessDWR" />
         </create>
     	
-    	<convert match="is.idega.idegaweb.egov.bpm.cases.business.CasesListSearchCriteriaBean" converter="bean" />
+    	<convert match="is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean" converter="bean" />
 	</allow>
 	<signatures>
 		<![CDATA[
