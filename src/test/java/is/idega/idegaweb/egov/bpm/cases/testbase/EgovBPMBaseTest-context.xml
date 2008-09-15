@@ -27,12 +27,11 @@
         </bean>
         
         
-        <bean id="defaultJbpmConfiguration" class="org.jbpm.JbpmConfiguration" factory-method="getInstance" scope="singleton">
+        <bean id="jbpmConfigurationWrapper" class="org.jbpm.JbpmConfigurationW" factory-method="createJbpmConfiguration" scope="singleton">
             <constructor-arg value="com/idega/jbpm/jbpm.cfg.xml" />
         </bean>
         
         <bean id="idegaJbpmContext" class="com.idega.jbpm.IdegaJbpmContext">
-	        <property name="jbpmConfiguration" ref="defaultJbpmConfiguration" />
-	        <property name="entityManagerFactory" ref="entityManagerFactory" />
+            <property name="entityManagerFactory" ref="entityManagerFactory" />
         </bean>
 </beans>
