@@ -35,10 +35,6 @@
       <groupId>com.idega.block.platform</groupId>
       <artifactId>com.idega.core</artifactId>
      </dependency>
-     <dependency>
-      <groupId>com.idega.block.platform</groupId>
-  	  <artifactId>com.idega.springframework</artifactId>
-    </dependency>
     <dependency>
       <groupId>com.idega.block.egov</groupId>
   	  <artifactId>is.idega.idegaweb.egov.cases</artifactId>
@@ -47,35 +43,19 @@
       <groupId>com.idega.block.egov</groupId>
       <artifactId>is.idega.idegaweb.egov.application</artifactId>
     </dependency>
-     <dependency>
-      <groupId>com.idega.block.addon</groupId>
-  	  <artifactId>org.jboss.jbpm</artifactId>
-    </dependency>
     <dependency>
       <groupId>com.idega.block.addon</groupId>
       <artifactId>com.idega.block.email</artifactId>
     </dependency>
     <dependency>
       <groupId>com.idega.block.addon</groupId>
-  	  <artifactId>com.idega.documentmanager</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.idega.block.addon</groupId>
-      <artifactId>com.idega.block.form</artifactId>
-    </dependency>
-    <dependency>
-      <groupId>com.idega.block.addon</groupId>
-      <artifactId>org.chiba.web</artifactId>
+      <artifactId>com.idega.bpm</artifactId>
     </dependency>
     <dependency>
       <groupId>poi</groupId>
       <artifactId>poi</artifactId>
       <version>${poi-poi-version}</version>
       <type>jar</type>
-    </dependency>
-    <dependency>
-      <groupId>com.idega.block.platform</groupId>
-      <artifactId>com.idega.facelets</artifactId>
     </dependency>
   </dependencies>
 </project>
