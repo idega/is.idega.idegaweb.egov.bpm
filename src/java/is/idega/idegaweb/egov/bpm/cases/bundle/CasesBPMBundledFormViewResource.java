@@ -7,7 +7,7 @@ import javax.xml.parsers.DocumentBuilder;
 
 import org.w3c.dom.Document;
 
-import com.idega.block.form.process.XFormsView;
+import com.idega.bpm.xformsview.XFormsView;
 import com.idega.documentmanager.business.DocumentManager;
 import com.idega.documentmanager.business.DocumentManagerFactory;
 import com.idega.idegaweb.IWMainApplication;
@@ -19,9 +19,9 @@ import com.idega.util.xml.XmlUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  * 
- * Last modified: $Date: 2008/07/19 20:43:59 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/16 18:20:55 $ by $Author: civilis $
  * 
  */
 public class CasesBPMBundledFormViewResource implements ViewResource {

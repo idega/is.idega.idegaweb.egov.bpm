@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.block.form.process.XFormsView;
+import com.idega.bpm.xformsview.XFormsView;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -43,9 +43,9 @@ import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/08/28 12:02:36 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/16 18:20:55 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesTIW")

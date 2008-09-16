@@ -35,7 +35,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.email.client.business.ApplicationEmailEvent;
-import com.idega.block.form.process.IXFormViewFactory;
+import com.idega.bpm.xformsview.IXFormViewFactory;
 import com.idega.core.file.tmp.TmpFileResolver;
 import com.idega.core.file.tmp.TmpFileResolverType;
 import com.idega.core.file.tmp.TmpFilesManager;
@@ -52,9 +52,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/09/09 13:55:16 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/16 18:20:55 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
