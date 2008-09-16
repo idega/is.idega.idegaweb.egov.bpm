@@ -28,6 +28,7 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
@@ -40,9 +41,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/16 14:23:17 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -57,20 +58,30 @@ public class SendMessageImpl implements SendMessage {
 	public void send(final ProcessInstance pi, final Integer caseId, final LocalizedMessages msgs, final Token tkn, final String sendToRoles) {
 	
 		final IWContext iwc = IWContext.getCurrentInstance();
-		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
-		final UserBusiness userBusiness  = getUserBusiness(iwc);
+		final IWApplicationContext iwac;
+		final IWMainApplication iwma;
+
+		if(iwc != null)
+			iwma = IWMainApplication.getIWMainApplication(iwc);
+		else
+			iwma = IWMainApplication.getDefaultIWMainApplication();
 		
-		final Locale defaultLocale = iwc.getCurrentLocale();
+		iwac = iwma.getIWApplicationContext();
+		
+		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwac);
+		final UserBusiness userBusiness  = getUserBusiness(iwac);
+		
+		final Locale defaultLocale = iwma.getDefaultLocale();
 		
 		new Thread(new Runnable() {
 
 			public void run() {
 				
 				try {
-					CasesBusiness casesBusiness = getCasesBusiness(iwc);
+					CasesBusiness casesBusiness = getCasesBusiness(iwac);
 					
 					final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-					Collection<User> users = getUsersToSendMessageTo(iwc, sendToRoles, pi);
+					Collection<User> users = getUsersToSendMessageTo(sendToRoles, pi);
 					
 					long pid = pi.getId();
 					ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
@@ -164,7 +175,7 @@ public class SendMessageImpl implements SendMessage {
 		return getMessageValueHandler().getFormattedMessage(unformattedMessage, messageValues, tkn, mvCtx);
 	}
 	
-	public Collection<User> getUsersToSendMessageTo(IWContext iwc, String rolesNamesAggr, ProcessInstance pi) {
+	public Collection<User> getUsersToSendMessageTo(String rolesNamesAggr, ProcessInstance pi) {
 		
 		Collection<User> allUsers;
 		
