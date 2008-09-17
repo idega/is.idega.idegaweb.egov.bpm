@@ -4,14 +4,12 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
 
-    <bean id="casesBPMManagersCreator" class="is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMManagersCreator" scope="singleton">
-        <property name="processManager" ref="casesBpmProcessManager" />
-    </bean>
-    
-    <bean id="casesBpmProcessManager" class="is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessManager" scope="singleton">
+    <bean id="casesBpmProcessManager" class="com.idega.bpm.bundle.exe.DefaultBPMProcessManager" scope="singleton">
         <lookup-method name="createPDW" bean="casesPDW" />
         <lookup-method name="createPIW" bean="casesPIW" />
         <lookup-method name="createTIW" bean="casesTIW" />
     </bean>
+    
+    <bean id="casesTIW" class="com.idega.bpm.bundle.exe.DefaultBPMTaskInstanceW" scope="prototype" />
     
 </beans>
