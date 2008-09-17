@@ -11,7 +11,7 @@ import javax.faces.context.FacesContext;
 
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
 
-import com.idega.block.form.business.XFormToPDFWriter;
+import com.idega.bpm.pdf.XFormToPDFWriter;
 import com.idega.facelets.ui.FaceletComponent;
 import com.idega.idegaweb.IWBundle;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;

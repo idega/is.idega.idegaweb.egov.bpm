@@ -16,9 +16,9 @@ import javax.faces.context.FacesContext;
 
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
 
-import com.idega.block.form.business.XFormToPDFWriter;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.Web2Business;
+import com.idega.bpm.pdf.XFormToPDFWriter;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -38,9 +38,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  *
- * Last modified: $Date: 2008/09/09 09:30:06 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/17 13:19:21 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
