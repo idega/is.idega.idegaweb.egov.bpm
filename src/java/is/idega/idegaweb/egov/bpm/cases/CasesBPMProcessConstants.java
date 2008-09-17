@@ -5,16 +5,15 @@ import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/17 13:14:19 $ by $Author: civilis $
  *
  */
 public class CasesBPMProcessConstants {
 	
 	private CasesBPMProcessConstants () {}
 	
-	public static final String actionTakenVariableName = "string_actionTaken";
 	public static final String caseIdVariableName = "string_caseId";
 	public static final String caseTypeNameVariableName = "string_caseTypeName";
 	public static final String caseCategoryNameVariableName = "string_caseCategoryName";
