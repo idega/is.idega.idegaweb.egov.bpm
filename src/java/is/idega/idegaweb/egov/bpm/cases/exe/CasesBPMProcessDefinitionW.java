@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.bpm.bundle.exe.DefaultBPMProcessDefinitionW;
+import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
 import com.idega.bpm.xformsview.XFormsView;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -44,9 +44,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/09/17 13:18:28 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/18 17:10:42 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")

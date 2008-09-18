@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.bpm.bundle.exe.DefaultBPMProcessInstanceW;
+import com.idega.bpm.exe.DefaultBPMProcessInstanceW;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -39,9 +39,9 @@ import com.idega.user.data.User;
  * TODO: we could create abstract class for some generic methods, like getPeopleConntectedToTheProcess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/09/17 13:18:44 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/18 17:10:42 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
