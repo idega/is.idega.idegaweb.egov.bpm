@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.messages;
 
-import is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandler.LocalizedMessages;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
@@ -18,21 +17,20 @@ import javax.ejb.FinderException;
 
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.message.data.Message;
+import com.idega.bpm.process.messages.LocalizedMessages;
+import com.idega.bpm.process.messages.SendMailMessageImpl;
+import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
-import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
-import com.idega.jbpm.process.business.messages.MessageValueHandler;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
@@ -41,21 +39,18 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2008/09/16 14:23:17 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/19 15:19:15 $ by $Author: civilis $
  */
 @Scope("singleton")
+@SendMessageType("caseMessage")
 @Service
-public class SendMessageImpl implements SendMessage {
+public class SendCaseMessageImpl extends SendMailMessageImpl {
 	
-	
-	@Autowired
-	private BPMFactory bpmFactory;
-	@Autowired
-	private MessageValueHandler messageValueHandler;
-
-	public void send(final ProcessInstance pi, final Integer caseId, final LocalizedMessages msgs, final Token tkn, final String sendToRoles) {
+	public void send(final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
+		
+		final Integer caseId = (Integer)context;
 	
 		final IWContext iwc = IWContext.getCurrentInstance();
 		final IWApplicationContext iwac;
@@ -81,7 +76,7 @@ public class SendMessageImpl implements SendMessage {
 					CasesBusiness casesBusiness = getCasesBusiness(iwac);
 					
 					final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-					Collection<User> users = getUsersToSendMessageTo(sendToRoles, pi);
+					Collection<User> users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
 					
 					long pid = pi.getId();
 					ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
@@ -96,42 +91,15 @@ public class SendMessageImpl implements SendMessage {
 						if(preferredLocale == null)
 							preferredLocale = defaultLocale;
 						
-						String unformattedSubject;
-						String unformattedMsg;
-						
-						if(!unformattedForLocales.containsKey(preferredLocale)) {
-						
-							unformattedSubject = msgs.getLocalizedSubject(preferredLocale);;
-							unformattedMsg = msgs.getLocalizedMessage(preferredLocale);
-							
-							unformattedForLocales.put(preferredLocale, new String[] {unformattedSubject, unformattedMsg});
-						} else {
-							
-							String[] unf = unformattedForLocales.get(preferredLocale);
-							
-							unformattedSubject = unf[0];
-							unformattedMsg = unf[1];
-						}
-					
-						String formattedMsg ;
-						String formattedSubject ;
-						
 						mvCtx.setValue(MessageValueContext.userBean, user);
 						mvCtx.setValue(MessageValueContext.piwBean, piw);
-						
-						if(unformattedMsg == null)
-							formattedMsg = unformattedMsg;
-						else
-							formattedMsg = getFormattedMessage(unformattedMsg, msgs.getMessageValuesExp(), tkn, mvCtx);
-						
-						if(unformattedSubject == null)
-							formattedSubject = unformattedSubject;
-						else
-							formattedSubject = getFormattedMessage(unformattedSubject, msgs.getSubjectValuesExp(), tkn, mvCtx);
-						
-						formattedMsg = StringConverterUtility.loadConvert(formattedMsg);
 
-						Message message = messageBusiness.createUserMessage(theCase, user, null, null, formattedSubject, formattedMsg, formattedMsg, null, false, null, false, true);
+						String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
+						
+						String subject = subjNMsg[0];
+						String text = subjNMsg[1];
+
+						Message message = messageBusiness.createUserMessage(theCase, user, null, null, subject, text, text, null, false, null, false, true);
 						message.store();
 					}
 					
@@ -193,13 +161,5 @@ public class SendMessageImpl implements SendMessage {
 			allUsers = new ArrayList<User>(0);
 		
 		return allUsers;
-	}
-
-	public BPMFactory getBpmFactory() {
-		return bpmFactory;
-	}
-
-	public MessageValueHandler getMessageValueHandler() {
-		return messageValueHandler;
 	}
 }
