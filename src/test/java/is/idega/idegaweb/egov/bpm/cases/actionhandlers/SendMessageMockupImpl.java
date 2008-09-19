@@ -1,8 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import is.idega.idegaweb.egov.bpm.cases.messages.SendMessage;
-import is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandler.LocalizedMessages;
-
 import java.util.Locale;
 
 import junit.framework.AssertionFailedError;
@@ -10,16 +7,19 @@ import junit.framework.AssertionFailedError;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 
+import com.idega.bpm.process.messages.LocalizedMessages;
+import com.idega.bpm.process.messages.SendMessage;
+
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/09/09 06:02:43 $ by $Author: arunas $
+ * Last modified: $Date: 2008/09/19 15:19:29 $ by $Author: civilis $
  */
 public class SendMessageMockupImpl implements SendMessage {
 	
-	public void send(final ProcessInstance pi, final Integer caseId, final LocalizedMessages msgs, final Token tkn, final String sendToRoles) {
+	public void send(final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
 
 		if(!"english message".equals(msgs.getLocalizedMessage(new Locale("en"))))
 			throw new AssertionFailedError();
