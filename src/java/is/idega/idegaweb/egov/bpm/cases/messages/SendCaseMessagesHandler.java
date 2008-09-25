@@ -11,6 +11,7 @@ import org.jbpm.graph.exe.Token;
 import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMessage;
 import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.bpm.process.messages.SendMessagesHandler;
@@ -18,9 +19,9 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/09/19 15:19:15 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/25 11:55:05 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler extends SendMessagesHandler {
 
@@ -78,8 +79,9 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		final ProcessInstance pi = candPI;
 		final Token tkn = ectx.getToken();
 		
-		getLocalizedMessages().setSendToRoles(sendToRoles);
-		getSendMessage().send(new Integer(caseIdStr), pi, getLocalizedMessages(), tkn);
+		LocalizedMessages msgs = getLocalizedMessages();
+		msgs.setSendToRoles(sendToRoles);
+		getSendMessage().send(new Integer(caseIdStr), pi, msgs, tkn);
 	}
 
 	public SendMessage getSendMessage() {
