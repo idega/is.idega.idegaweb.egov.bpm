@@ -7,6 +7,7 @@ import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -18,7 +19,7 @@ import org.apache.myfaces.custom.htmlTag.HtmlTag;
 
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.Web2Business;
-import com.idega.bpm.pdf.XFormToPDFWriter;
+import com.idega.bpm.pdf.servlet.XFormToPDFWriter;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -38,9 +39,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.30 $
+ * @version $Revision: 1.31 $
  *
- * Last modified: $Date: 2008/09/17 13:19:21 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/26 15:04:19 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -53,6 +54,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private boolean fullView = false;
 	private boolean inCasesComponent = false;
 	private boolean usePdfDownloadColumn = true;
+	private boolean allowPDFSigning = true;
 	
 	private Long processInstanceId;
 	private Integer caseId;
@@ -219,8 +221,17 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		
 		//	CSS sources
-		PresentationUtil.addStyleSheetToHeader(iwc, web2Business.getBundleURIToJQGridStyles());
-		PresentationUtil.addStyleSheetToHeader(iwc, web2Business.getBundleUriToHumanizedMessagesStyleSheet());
+		List<String> cssFiles = new ArrayList<String>();
+		cssFiles.add(web2Business.getBundleURIToJQGridStyles());
+		cssFiles.add(web2Business.getBundleUriToHumanizedMessagesStyleSheet());
+		if (isAllowPDFSigning()) {
+			try {
+				cssFiles.add(web2Business.getThickboxStyleFilePath());
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+		PresentationUtil.addStyleSheetsToHeader(iwc, cssFiles);
 		
 		boolean isSingle = CoreUtil.isSingleComponentRenderingProcess(iwc);
 		
@@ -233,6 +244,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
 		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
+		if (isAllowPDFSigning()) {
+			try {
+				scripts.add(web2Business.getThickboxScriptFilePath());
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+			scripts.add("/dwr/interface/PDFGeneratorFromProcess.js");
+		}
 		scripts.add(web2Business.getBundleUriToHumanizedMessagesScript());
 		scripts.add(bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js");
 		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, scripts);
@@ -274,7 +293,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		Integer caseId = stateBean.getCaseId();
 		
 		String mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
-			.append(processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ").append(isUsePdfDownloadColumn()).append(");").toString();
+			.append(processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ").append(isUsePdfDownloadColumn()).append(", ")
+			.append(isAllowPDFSigning()).append(");").toString();
 		
 		if (!isSingle) {
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction).append("\n});").toString();
@@ -289,6 +309,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setUsePdfDownloadColumn(boolean usePdfDownloadColumn) {
 		this.usePdfDownloadColumn = usePdfDownloadColumn;
+	}
+
+	public boolean isAllowPDFSigning() {
+		return allowPDFSigning;
+	}
+
+	public void setAllowPDFSigning(boolean allowPDFSigning) {
+		this.allowPDFSigning = allowPDFSigning;
 	}
 	
 }

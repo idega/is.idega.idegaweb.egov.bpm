@@ -134,13 +134,14 @@ public class CasesEngine {
 			return null;
 		}
 		
+		//	TODO: use real parameters
 		Collection<Case> cases = getCasesByQuery(iwc, criteriaBean);
 		UIComponent component = null;
 		if (UserCases.TYPE.equals(criteriaBean.getCaseListType())) {
-			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false);
+			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false, true);
 		}
 		else {
-			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false);
+			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false, true);
 		}
 		if (component == null) {
 			return null;

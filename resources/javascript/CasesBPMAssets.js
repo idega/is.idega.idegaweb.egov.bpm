@@ -26,7 +26,7 @@ CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
 CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS = 'casesBPMPDFGeneratorAndDownloader';
 
-CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn) {
+CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning) {
 	if (container == null) {
 		return false;
 	}
@@ -61,7 +61,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
 				CasesBPMAssets.initTasksGrid(caseId, piId, container, false);
-				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn);
+				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning);
 				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights);
 				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights);
 			}
@@ -156,13 +156,14 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
 };
 
-CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn) {
+CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning) {
     var identifier = 'caseForms';
     
     var populatingFunction = function(params, callback) {
         params.piId = piId;
         params.rightsChanger = hasRightChangeRights;
         params.downloadDocument = usePdfDownloadColumn;
+        params.allowPDFSigning = allowPDFSigning;
         BPMProcessAssets.getProcessDocumentsList(params, {
             callback: function(result) {
                 callback(result);
@@ -187,6 +188,9 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     if (usePdfDownloadColumn) {
     	namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF*/);
     }
+    if (allowPDFSigning) {
+    	namesForColumns.push('');
+    }
     if (hasRightChangeRights) {
         namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
@@ -196,6 +200,9 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     modelForColumns.push({name:'submittedDate',index:'submittedDate'});
     if (usePdfDownloadColumn) {
     	modelForColumns.push({name:'downloadAsPdf',index:'downloadAsPdf'});
+    }
+    if (allowPDFSigning) {
+    	modelForColumns.push({name:'allowPDFSigning',index:'allowPDFSigning'});
     }
     if (hasRightChangeRights) {
         modelForColumns.push({name:'rightsForDocumentResources',index:'rightsForDocumentResources'});
@@ -598,6 +605,29 @@ CasesBPMAssets.setCurrentWindowToDownloadCaseResource = function(uri, styleClass
 CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
 	var uri = '&taskInstanceId=' + taskId;
 	CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS);
+	
+	if (event) {
+		if (event.stopPropagation) {
+			event.stopPropagation();
+		}
+		event.cancelBubble = true;
+	}
+}
+
+CasesBPMAssets.signCaseDocument = function(event, taskId, uri, pdfParameterName, message, lightBoxTitle) {
+	showLoadingMessage(message);
+	PDFGeneratorFromProcess.getGeneratedPDFFromXForm(taskId, null, null, false, {
+		callback: function(pathToPDF) {
+			closeAllLoadingMessages();
+			
+			if (pathToPDF == null || pathToPDF == '') {
+				return false;
+			}
+			
+			uri += '&' + pdfParameterName + '=' + pathToPDF;
+			TB_show(lightBoxTitle, uri, null);
+		}
+	});
 	
 	if (event) {
 		if (event.stopPropagation) {
