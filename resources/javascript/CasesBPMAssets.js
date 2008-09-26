@@ -625,7 +625,11 @@ CasesBPMAssets.signCaseDocument = function(event, taskId, uri, pdfParameterName,
 			}
 			
 			uri += '&' + pdfParameterName + '=' + pathToPDF;
-			TB_show(lightBoxTitle, uri, null);
+			//TB_show(lightBoxTitle, uri, null);
+			var width = Math.round(window.getWidth() * 0.8);
+			var height = Math.round(window.getHeight() * 0.8);
+			MOOdalBox.init({resizeDuration: 0, evalScripts: true, animateCaption: false, defContentsWidth: width, defContentsHeight: height});
+			MOOdalBox.open(uri, lightBoxTitle, '');
 		}
 	});
 	

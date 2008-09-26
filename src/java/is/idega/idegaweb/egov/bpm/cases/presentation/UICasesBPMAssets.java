@@ -39,9 +39,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.31 $
+ * @version $Revision: 1.32 $
  *
- * Last modified: $Date: 2008/09/26 15:04:19 $ by $Author: valdas $
+ * Last modified: $Date: 2008/09/26 15:26:50 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -225,8 +225,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		cssFiles.add(web2Business.getBundleURIToJQGridStyles());
 		cssFiles.add(web2Business.getBundleUriToHumanizedMessagesStyleSheet());
 		if (isAllowPDFSigning()) {
+			//	TODO: use thickbox
+//			try {
+//				cssFiles.add(web2Business.getThickboxStyleFilePath());
+//			} catch (RemoteException e) {
+//				e.printStackTrace();
+//			}
 			try {
-				cssFiles.add(web2Business.getThickboxStyleFilePath());
+				cssFiles.add(web2Business.getMoodalboxStyleFilePath());
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
@@ -245,8 +251,15 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
 		if (isAllowPDFSigning()) {
+			//	TODO: use thickbox
+//			try {
+//				scripts.add(web2Business.getThickboxScriptFilePath());
+//			} catch (RemoteException e) {
+//				e.printStackTrace();
+//			}
 			try {
-				scripts.add(web2Business.getThickboxScriptFilePath());
+				scripts.add(web2Business.getBundleURIToMootoolsLib());
+				scripts.add(web2Business.getMoodalboxScriptFilePath(false));
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
