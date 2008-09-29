@@ -614,7 +614,7 @@ CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
 	}
 }
 
-CasesBPMAssets.signCaseDocument = function(event, taskId, uri, pdfParameterName, message, lightBoxTitle) {
+CasesBPMAssets.signCaseDocument = function(event, taskId, uri, pdfParameterName, message, lightBoxTitle, closeLightBoxTitle) {
 	showLoadingMessage(message);
 	PDFGeneratorFromProcess.getGeneratedPDFFromXForm(taskId, null, null, false, {
 		callback: function(pathToPDF) {
@@ -624,12 +624,10 @@ CasesBPMAssets.signCaseDocument = function(event, taskId, uri, pdfParameterName,
 				return false;
 			}
 			
+			var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
+			var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
 			uri += '&' + pdfParameterName + '=' + pathToPDF;
-			//TB_show(lightBoxTitle, uri, null);
-			var width = Math.round(window.getWidth() * 0.8);
-			var height = Math.round(window.getHeight() * 0.8);
-			MOOdalBox.init({resizeDuration: 0, evalScripts: true, animateCaption: false, defContentsWidth: width, defContentsHeight: height});
-			MOOdalBox.open(uri, lightBoxTitle, '');
+			GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}});
 		}
 	});
 	

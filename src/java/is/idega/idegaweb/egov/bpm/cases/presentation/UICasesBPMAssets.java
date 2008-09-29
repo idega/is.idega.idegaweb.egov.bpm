@@ -7,7 +7,6 @@ import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.io.IOException;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -39,9 +38,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.32 $
+ * @version $Revision: 1.33 $
  *
- * Last modified: $Date: 2008/09/26 15:26:50 $ by $Author: valdas $
+ * Last modified: $Date: 2008/09/29 13:48:44 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -225,17 +224,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		cssFiles.add(web2Business.getBundleURIToJQGridStyles());
 		cssFiles.add(web2Business.getBundleUriToHumanizedMessagesStyleSheet());
 		if (isAllowPDFSigning()) {
-			//	TODO: use thickbox
-//			try {
-//				cssFiles.add(web2Business.getThickboxStyleFilePath());
-//			} catch (RemoteException e) {
-//				e.printStackTrace();
-//			}
-			try {
-				cssFiles.add(web2Business.getMoodalboxStyleFilePath());
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
+			cssFiles.add(web2Business.getBundleUtiToGreyBoxStyleSheet());
 		}
 		PresentationUtil.addStyleSheetsToHeader(iwc, cssFiles);
 		
@@ -251,18 +240,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
 		if (isAllowPDFSigning()) {
-			//	TODO: use thickbox
-//			try {
-//				scripts.add(web2Business.getThickboxScriptFilePath());
-//			} catch (RemoteException e) {
-//				e.printStackTrace();
-//			}
-			try {
-				scripts.add(web2Business.getBundleURIToMootoolsLib());
-				scripts.add(web2Business.getMoodalboxScriptFilePath(false));
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
+			scripts.add(web2Business.getBundleUtiToGreyBoxScript());
 			scripts.add("/dwr/interface/PDFGeneratorFromProcess.js");
 		}
 		scripts.add(web2Business.getBundleUriToHumanizedMessagesScript());

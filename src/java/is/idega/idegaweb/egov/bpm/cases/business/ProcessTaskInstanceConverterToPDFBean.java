@@ -57,7 +57,8 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		
 		String xformInPDF = getXFormInPDF(iwc, taskInstanceId, formId, uploadPath, checkExistence);
 		if (StringUtil.isEmpty(xformInPDF)) {
-			logger.log(Level.SEVERE, "Unable to get 'XForm' with task instance id: " + taskInstanceId);
+			logger.log(Level.SEVERE, new StringBuilder("Unable to get 'XForm' with ").append(StringUtil.isEmpty(formId) ? "task instance id: " + taskInstanceId :
+														"form id: " + formId).toString());
 			return null;
 		}
 		return xformInPDF;
@@ -81,33 +82,14 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		
 		boolean needToGenerate = true;
 		if (checkExistence) {
-//			//	Generating PDF for XForm despite PDF already exists or not. If exists - it will be overridden
-//			return generatePDF(iwc, slide, taskInstanceId, formId, pathInSlide, pdfName, pathToForm);
-			
 			WebdavResource xformInPDF = getXFormInPDFResource(slide, pathToForm);
 			needToGenerate = xformInPDF == null || !xformInPDF.exists();
 		}
-//		else if (existsXFormInPDF(slide, pathToForm)) {
-//			if (xformInPDF == null || !xformInPDF.exists()) {
-//				//	XForm in PDF doesn't exist - trying to generate it
-//				if (!generatePDF(iwc, slide, taskInstanceId, formId, pathInSlide, pdfName, pathToForm)) {
-//					return false;
-//				}
-//			}
-		
 		if (needToGenerate) {
 			return generatePDF(iwc, slide, taskInstanceId, formId, pathInSlide, pdfName, pathToForm);
 		}
 		
 		return pathToForm;
-		
-//		if (xformInPDF == null || !xformInPDF.exists()) {
-//			return false;
-//		}
-//		Long length = Long.valueOf(xformInPDF.getGetContentLength());
-//		setAsDownload(iwc, pdfName, length.intValue());
-//		
-//		return true;
 	}
 	
 	private WebdavResource getXFormInPDFResource(IWSlideService slide, String pathToForm) {
@@ -149,8 +131,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		return viewer;
 	}
 	
-	private String generatePDF(IWContext iwc, IWSlideService slide, String taskInstanceId, String formId, String pathInSlide, String pdfName,
-			String pathToForm) {
+	private String generatePDF(IWContext iwc, IWSlideService slide, String taskInstanceId, String formId, String pathInSlide, String pdfName, String pathToForm) {
 		UIComponent viewer = getComponentToRender(iwc, taskInstanceId, formId);
 		if (viewer == null) {
 			logger.log(Level.SEVERE, "Unable to get viewer for " + taskInstanceId == null ? "xform: " + formId : "taskInstance: " + taskInstanceId);
@@ -166,7 +147,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			return null;
 		}
 		if (generator.generatePDF(iwc, viewer, pdfName, pathInSlide, true, isFormViewer)) {
-			return pathToForm;//setXForm(slide, pathToForm);
+			return pathToForm;
 		}
 		
 		logger.log(Level.SEVERE, "Unable to generate PDF for " + taskInstanceId == null ? "xform: " + formId: "taskInstance: " + taskInstanceId);
