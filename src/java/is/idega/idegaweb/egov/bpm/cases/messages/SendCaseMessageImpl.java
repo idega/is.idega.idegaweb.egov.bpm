@@ -27,6 +27,7 @@ import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -39,9 +40,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/09/19 15:19:15 $ by $Author: civilis $
+ * Last modified: $Date: 2008/09/29 10:56:06 $ by $Author: arunas $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -96,8 +97,8 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 						String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
 						
-						String subject = subjNMsg[0];
-						String text = subjNMsg[1];
+						String subject = StringConverterUtility.loadConvert(subjNMsg[0]);
+						String text = StringConverterUtility.loadConvert(subjNMsg[1]);
 
 						Message message = messageBusiness.createUserMessage(theCase, user, null, null, subject, text, text, null, false, null, false, true);
 						message.store();
