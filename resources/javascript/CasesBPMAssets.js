@@ -178,7 +178,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     };
 
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(subgridId, rowId, hasRightChangeRights, identifier);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning);
     };
     
     var namesForColumns = new Array();
@@ -215,7 +215,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
 };
 
-CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightChangeRights) {
+CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightChangeRights, allowPDFSigning) {
     var identifier = 'caseEmails';
     
     var populatingFunction = function(params, callback) {
@@ -235,7 +235,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     };
     
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(subgridId, rowId, hasRightChangeRights, identifier);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning);
     };
     
     var namesForColumns = new Array();
@@ -417,7 +417,7 @@ CasesBPMAssets.getProcessRersourceView = function(caseId, taskInstanceId) {
     changeWindowLocationHref('prm_case_pk=' + caseId + '&tiId=' + taskInstanceId + '&cp_prm_action=8');
 }
 
-CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, hasRightChangeRights, identifier) {
+CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning) {
     var subgridTableId = subgridId + '_t';
     var subGridContainer = jQuery('#' + subgridId);
 	subGridContainer.html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\'></table>');
@@ -425,6 +425,7 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
     var subGridParams = new JQGridParams();
     subGridParams.rightsChanger = hasRightChangeRights;
     subGridParams.identifier = identifier +'Attachments';
+    subGridParams.allowPDFSigning = allowPDFSigning;
     subGridParams.populateFromFunction = function(params, callback) {
         params.taskId = rowId;
         BPMProcessAssets.getTaskAttachments(params, {
@@ -486,6 +487,9 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_DESCRIPTION);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_NAME);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_SIZE);
+    if (allowPDFSigning) {
+    	namesForColumns.push('');
+    }
     if (subGridParams.rightsChanger) {
         namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
@@ -495,6 +499,9 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
     modelForColumns.push({name:'description',index:'description'});
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'fileSize',index:'fileSize'});
+    if (subGridParams.allowPDFSigning) {
+    	modelForColumns.push({name:'allowPDFSigning',index:'allowPDFSigning'});
+    }
     if (subGridParams.rightsChanger) {
         modelForColumns.push({name:'rightsForAttachment',index:'rightsForAttachment'});
     }
@@ -614,20 +621,20 @@ CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
 	}
 }
 
-CasesBPMAssets.signCaseDocument = function(event, taskId, uri, pdfParameterName, message, lightBoxTitle, closeLightBoxTitle) {
+CasesBPMAssets.signCaseDocument = function(event, uri, parameters, parametersValues, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
 	showLoadingMessage(message);
-	PDFGeneratorFromProcess.getGeneratedPDFFromXForm(taskId, null, null, false, {
-		callback: function(pathToPDF) {
+	PDFGeneratorFromProcess.getHashValueForGeneratedPDFFromXForm(parametersValues[0], false, {
+		callback: function(binaryVariableHash) {
 			closeAllLoadingMessages();
 			
-			if (pathToPDF == null || pathToPDF == '') {
+			if (binaryVariableHash == null || binaryVariableHash == '') {
+				CasesBPMAssets.showHumanizedMessage(errorMessage);
 				return false;
 			}
 			
-			var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
-			var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
-			uri += '&' + pdfParameterName + '=' + pathToPDF;
-			GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}});
+			//CasesBPMAssets.initFormsGrid(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, true);	//	TODO: re-paint documents grid
+			
+			CasesBPMAssets.openDocumentSignerWindow(uri, parameters, [parametersValues[0], binaryVariableHash], lightBoxTitle, closeLightBoxTitle);
 		}
 	});
 	
@@ -637,6 +644,36 @@ CasesBPMAssets.signCaseDocument = function(event, taskId, uri, pdfParameterName,
 		}
 		event.cancelBubble = true;
 	}
+}
+
+CasesBPMAssets.signCaseAttachment = function(event, uri, parameters, parametersValues, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
+	showLoadingMessage(message);
+	try {
+		CasesBPMAssets.openDocumentSignerWindow(uri, parameters, parametersValues, lightBoxTitle, closeLightBoxTitle);
+	} catch(e) {
+		CasesBPMAssets.showHumanizedMessage(errorMessage);
+	}
+	
+	if (event) {
+		if (event.stopPropagation) {
+			event.stopPropagation();
+		}
+		event.cancelBubble = true;
+	}
+}
+
+CasesBPMAssets.openDocumentSignerWindow = function(uri, parameters, parametersValues, lightBoxTitle, closeLightBoxTitle) {
+	for (var i = 0; i < parameters.length; i++) {
+		uri += '&' + parameters[i] + '=' + parametersValues[i];
+	}
+	var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
+	var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
+	GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}});
+	closeAllLoadingMessages();
+}
+
+CasesBPMAssets.showHumanizedMessage = function(message) {
+	humanMsg.displayMsg(message);
 }
 
 CasesBPMAssets.takeCurrentProcessTask = function(event, taskInstanceId, id, allowReAssign) {

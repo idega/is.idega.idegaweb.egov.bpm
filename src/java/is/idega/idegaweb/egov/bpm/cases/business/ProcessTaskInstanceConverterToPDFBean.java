@@ -10,10 +10,13 @@ import javax.faces.component.UIComponent;
 
 import org.apache.commons.httpclient.HttpException;
 import org.apache.webdav.lib.WebdavResource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.form.presentation.FormViewer;
+import com.idega.block.process.variables.Variable;
+import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
 import com.idega.bpm.pdf.business.ProcessTaskInstanceConverterToPDF;
 import com.idega.business.IBOLookup;
@@ -21,6 +24,9 @@ import com.idega.business.IBOLookupException;
 import com.idega.graphics.generator.business.PDFGenerator;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
 import com.idega.util.CoreConstants;
@@ -33,6 +39,9 @@ import com.idega.util.expression.ELUtil;
 public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanceConverterToPDF {
 
 	private static final Logger logger = Logger.getLogger(ProcessTaskInstanceConverterToPDFBean.class.getName());
+	
+	private IWSlideService slide;
+	@Autowired private BPMFactory bpmFactory;
 	
 	public String getGeneratedPDFFromXForm(String taskInstanceId, String formId, String uploadPath, boolean checkExistence) {
 		if (StringUtil.isEmpty(taskInstanceId) && StringUtil.isEmpty(formId)) {
@@ -64,13 +73,80 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		return xformInPDF;
 	}
 	
-	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String pathInSlide, boolean checkExistence) {
-		IWSlideService slide = null;
+	public String getHashValueForGeneratedPDFFromXForm(String taskInstanceId, boolean checkExistence) {
+		if (StringUtil.isEmpty(taskInstanceId)) {
+			logger.log(Level.INFO, "Only taks instances can have binary variables!");
+			return null;
+		}
+		Long taskId = null;
 		try {
-			slide = (IWSlideService) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
-		} catch (IBOLookupException e) {
+			taskId = Long.valueOf(taskInstanceId);
+		} catch(NumberFormatException e) {
+			logger.log(Level.SEVERE, "Invalid task instance id: " + taskInstanceId, e);
+		}
+		if (taskId == null) {
+			return null;
+		}
+		
+		TaskInstanceW taskInstance = null;
+		try {
+			taskInstance = getBpmFactory().getProcessManagerByTaskInstanceId(taskId).getTaskInstance(taskId);
+		} catch(Exception e) {
+			logger.log(Level.SEVERE, "Error getting task instance by id: " + taskInstanceId, e);
+		}
+		if (taskInstance == null) {
+			return null;
+		}
+		
+		WebdavResource tempPDFResource = getXFormInPDFResource(getSlideService(),
+				getGeneratedPDFFromXForm(taskInstanceId, null, BPMConstants.TEMP_PDF_OF_XFORMS_PATH_IN_SLIDE, checkExistence));
+		if (tempPDFResource == null || !tempPDFResource.exists()) {
+			logger.log(Level.SEVERE, "PDF was not generated for task instance: " + taskInstanceId);
+			return null;
+		}
+		
+		BinaryVariable newAttachment = null;
+		String fileName = tempPDFResource.getDisplayName();
+		Variable variable = new Variable(fileName, VariableDataType.FILE);
+		try {
+			newAttachment = taskInstance.addAttachment(variable, fileName, tempPDFResource.getMethodData());
+		} catch(Exception e) {
+			logger.log(Level.SEVERE, "Unable to set binary variable for task instance: " + taskInstanceId, e);
+			return null;
+		} finally {
+			removeTemporaryResource(tempPDFResource);
+		}
+		
+		return newAttachment == null ? null : String.valueOf(newAttachment.getHash());
+	}
+	
+	private void removeTemporaryResource(WebdavResource resource) {
+		if (resource == null) {
+			return;
+		}
+		
+		try {
+			resource.deleteMethod();
+		} catch (HttpException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	private IWSlideService getSlideService() {
+		if (slide == null) {
+			try {
+				slide = (IWSlideService) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
+			} catch (IBOLookupException e) {
+				e.printStackTrace();
+			}
+		}
+		return slide;
+	}
+	
+	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String pathInSlide, boolean checkExistence) {
+		IWSlideService slide = getSlideService();
 		if (slide == null) {
 			return null;
 		}
@@ -93,6 +169,10 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 	}
 	
 	private WebdavResource getXFormInPDFResource(IWSlideService slide, String pathToForm) {
+		if (slide == null || StringUtil.isEmpty(pathToForm)) {
+			return null;
+		}
+		
 		WebdavResource xformInPDF = null;
 		try {
 			xformInPDF = slide.getWebdavResourceAuthenticatedAsRoot(pathToForm);
@@ -152,6 +232,14 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		
 		logger.log(Level.SEVERE, "Unable to generate PDF for " + taskInstanceId == null ? "xform: " + formId: "taskInstance: " + taskInstanceId);
 		return null;
+	}
+
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
 	}
 
 }
