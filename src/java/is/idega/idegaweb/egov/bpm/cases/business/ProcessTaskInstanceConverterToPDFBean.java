@@ -21,6 +21,7 @@ import com.idega.bpm.BPMConstants;
 import com.idega.bpm.pdf.business.ProcessTaskInstanceConverterToPDF;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
 import com.idega.graphics.generator.business.PDFGenerator;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
@@ -34,13 +35,12 @@ import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
-@Scope("session")
+@Scope("singleton")
 @Service(ProcessTaskInstanceConverterToPDF.STRING_BEAN_IDENTIFIER)
 public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanceConverterToPDF {
 
 	private static final Logger logger = Logger.getLogger(ProcessTaskInstanceConverterToPDFBean.class.getName());
 	
-	private IWSlideService slide;
 	@Autowired private BPMFactory bpmFactory;
 	
 	public String getGeneratedPDFFromXForm(String taskInstanceId, String formId, String uploadPath, boolean checkExistence) {
@@ -135,14 +135,12 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 	}
 	
 	private IWSlideService getSlideService() {
-		if (slide == null) {
-			try {
-				slide = (IWSlideService) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
-			} catch (IBOLookupException e) {
-				e.printStackTrace();
-			}
+		try {
+			return (IWSlideService) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
+		} catch (IBOLookupException e) {
+			throw new IBORuntimeException(e);
 		}
-		return slide;
+			
 	}
 	
 	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String pathInSlide, boolean checkExistence) {
