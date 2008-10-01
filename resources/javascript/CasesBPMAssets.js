@@ -628,9 +628,7 @@ CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, lightBoxTitle,
 	BPMProcessAssets.getSigningAction(taskInstanceId, null, {
 		  
 		  callback: function(uri) {
-					console.log(uri);
 					closeAllLoadingMessages();
-		            
 		            CasesBPMAssets.openDocumentSignerWindow(uri, lightBoxTitle, closeLightBoxTitle);
 		        }
 		  
