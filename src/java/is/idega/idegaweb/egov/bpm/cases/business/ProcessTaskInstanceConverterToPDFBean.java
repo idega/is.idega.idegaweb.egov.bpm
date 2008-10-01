@@ -1,6 +1,9 @@
 package is.idega.idegaweb.egov.bpm.cases.business;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+
 import java.io.IOException;
+import java.io.InputStream;
 import java.rmi.RemoteException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -98,40 +101,55 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			return null;
 		}
 		
-		WebdavResource tempPDFResource = getXFormInPDFResource(getSlideService(),
-				getGeneratedPDFFromXForm(taskInstanceId, null, BPMConstants.TEMP_PDF_OF_XFORMS_PATH_IN_SLIDE, checkExistence));
-		if (tempPDFResource == null || !tempPDFResource.exists()) {
-			logger.log(Level.SEVERE, "PDF was not generated for task instance: " + taskInstanceId);
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null) {
+			return null;
+		}
+		PDFGenerator generator = ELUtil.getInstance().getBean(CoreConstants.SPRING_BEAN_NAME_PDF_GENERATOR);
+		if (generator == null) {
+			return null;
+		}
+		UIComponent viewer = getComponentToRender(iwc, taskInstanceId, null);
+		if (viewer == null) {
+			logger.log(Level.SEVERE, "Unable to get viewer for taskInstance: " + taskInstanceId);
+			return null;
+		}
+		boolean isFormViewer = viewer instanceof FormViewer;
+		if (isFormViewer) {
+			((FormViewer) viewer).setPdfViewer(true);
+		}
+		InputStream streamToPDF = generator.getStreamToGeneratedPDF(iwc, viewer, true, isFormViewer);
+		if (streamToPDF == null) {
 			return null;
 		}
 		
+		ProcessArtifacts procArtifacts = ELUtil.getInstance().getBean(CoreConstants.SPRING_BEAN_NAME_PROCESS_ARTIFACTS);
+		String fileName = procArtifacts.getFileNameForGeneratedPDFFromTaskInstance(taskInstanceId);
+		String description = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc)
+		.getLocalizedString("auto_generated_pdf", "Generated PDF from document");
+		
 		BinaryVariable newAttachment = null;
-		String fileName = new StringBuilder("Document_").append(taskInstanceId).toString();
-		Variable variable = new Variable(fileName, VariableDataType.FILE);
+		Variable variable = new Variable("generated_pdf_from_document_task", VariableDataType.FILE);
 		try {
-			newAttachment = taskInstance.addAttachment(variable, fileName, tempPDFResource.getMethodData());
+			newAttachment = taskInstance.addAttachment(variable, fileName, description, streamToPDF);
 		} catch(Exception e) {
 			logger.log(Level.SEVERE, "Unable to set binary variable for task instance: " + taskInstanceId, e);
 			return null;
 		} finally {
-			removeTemporaryResource(tempPDFResource);
+			closeInputStream(streamToPDF);
 		}
 		
 		return newAttachment == null ? null : String.valueOf(newAttachment.getHash());
 	}
 	
-	private void removeTemporaryResource(WebdavResource resource) {
-		if (resource == null) {
+	private void closeInputStream(InputStream stream) {
+		if (stream == null) {
 			return;
 		}
 		
 		try {
-			resource.deleteMethod();
-		} catch (HttpException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+			stream.close();
+		} catch (IOException e) {}
 	}
 	
 	private IWSlideService getSlideService() {

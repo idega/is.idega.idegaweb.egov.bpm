@@ -28,6 +28,7 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
+import com.idega.bpm.bean.CasesBPMAssetProperties;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -37,6 +38,7 @@ import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.webface.WFUtil;
 
 @Service("casesEngineDWR")
 @Scope("singleton")
@@ -67,18 +69,31 @@ public class CasesEngine {
 		return null;
 	}
 	
-	public Document getCaseManagerView(String caseIdStr, String caseProcessorType) {
-
-		IWContext iwc = CoreUtil.getIWContext();
+	public Document getCaseManagerView(CasesBPMAssetProperties properties) {
+		if (properties == null) {
+			return null;
+		}
 		
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null) {
+			return null;
+		}
+		
+		String caseIdStr = properties.getCaseId();
 		if (caseIdStr == null || CoreConstants.EMPTY.equals(caseIdStr) || iwc == null) {
 			logger.log(Level.WARNING, "Either not provided:\n caseId="+caseIdStr+", iwc="+iwc);
 			return null;
 		}
 		
 		try {
+			CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
+			if (stateBean != null) {
+				stateBean.setUsePDFDownloadColumn(properties.isUsePDFDownloadColumn());
+				stateBean.setAllowPDFSigning(properties.isAllowPDFSigning());
+			}
+			
 			Integer caseId = new Integer(caseIdStr);
-			UIComponent caseAssets = getCasesBPMProcessView().getCaseManagerView(iwc, null, caseId, caseProcessorType);
+			UIComponent caseAssets = getCasesBPMProcessView().getCaseManagerView(iwc, null, caseId, properties.getProcessorType());
 			
 			Document rendered = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, caseAssets, true);
 			
@@ -134,14 +149,15 @@ public class CasesEngine {
 			return null;
 		}
 		
-		//	TODO: use real parameters
 		Collection<Case> cases = getCasesByQuery(iwc, criteriaBean);
 		UIComponent component = null;
 		if (UserCases.TYPE.equals(criteriaBean.getCaseListType())) {
-			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false, true);
+			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning());
 		}
 		else {
-			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false, true);
+			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning());
 		}
 		if (component == null) {
 			return null;

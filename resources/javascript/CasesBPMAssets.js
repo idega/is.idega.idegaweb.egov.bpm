@@ -621,18 +621,19 @@ CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
 	}
 }
 
-CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, lightBoxTitle, closeLightBoxTitle,message) {
+CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, variableHash, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
 	showLoadingMessage(message);
+	try {
+		BPMProcessAssets.getSigningAction(taskInstanceId, null, {
+			callback: function(uri) {
+				closeAllLoadingMessages();
+				CasesBPMAssets.openDocumentSignerWindow(uri, lightBoxTitle, closeLightBoxTitle);
+			}  
+		});
+	} catch(e) {
+		CasesBPMAssets.CasesBPMAssets.showHumanizedMessage(errorMessage);
+	}
 	
-	var uri;
-	BPMProcessAssets.getSigningAction(taskInstanceId, null, {
-		  
-		  callback: function(uri) {
-					closeAllLoadingMessages();
-		            CasesBPMAssets.openDocumentSignerWindow(uri, lightBoxTitle, closeLightBoxTitle);
-		        }
-		  
-	});
 	if (event) {
 		if (event.stopPropagation) {
 			event.stopPropagation();
@@ -641,19 +642,15 @@ CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, lightBoxTitle,
 	}
 }
 
-CasesBPMAssets.signCaseAttachment = function(event,taskInstanceId, variableHash, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
+CasesBPMAssets.signCaseAttachment = function(event, taskInstanceId, variableHash, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
 	showLoadingMessage(message);
 	try {
 		BPMProcessAssets.getSigningAction(taskInstanceId, variableHash, {
-			  
-			  callback: function(uri) {
-			            closeAllLoadingMessages();
-			            
-			            CasesBPMAssets.openDocumentSignerWindow(uri, lightBoxTitle, closeLightBoxTitle);
-			        }
-			  
+			callback: function(uri) {
+				closeAllLoadingMessages();
+				CasesBPMAssets.openDocumentSignerWindow(uri, lightBoxTitle, closeLightBoxTitle);
+			} 
 		});
-		
 	} catch(e) {
 		CasesBPMAssets.showHumanizedMessage(errorMessage);
 	}
@@ -667,6 +664,10 @@ CasesBPMAssets.signCaseAttachment = function(event,taskInstanceId, variableHash,
 }
 
 CasesBPMAssets.openDocumentSignerWindow = function(uri, lightBoxTitle, closeLightBoxTitle) {
+	if (uri == null || uri == '') {
+		return false;
+	}
+	
 	var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
 	var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
 	GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}});

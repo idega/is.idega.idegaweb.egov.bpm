@@ -30,8 +30,12 @@
 	<signatures>
 		<![CDATA[
 		  import java.util.List;
+		  
+		  import com.idega.bpm.bean.CasesBPMAssetProperties;
 		
 		  List<String> ApplicationTypeBPM.getRolesCanStartProcessDWR(Long, String);
+		  
+		  CasesEngine.getCaseManagerView(CasesBPMAssetProperties);
 		]]>
 	</signatures>
 </dwr>

@@ -23,9 +23,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  *
- * Last modified: $Date: 2008/08/05 07:11:15 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/01 14:50:15 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -46,6 +46,8 @@ public class CasesBPMAssetsState implements Serializable {
 	//private Integer tabSelected;
 	//private FacetRendered facetRendered = FacetRendered.ASSETS_GRID;
 	private String displayPropertyForStyleAttribute = "block";
+	private Boolean usePDFDownloadColumn = Boolean.TRUE;
+	private Boolean allowPDFSigning = Boolean.TRUE;
 	
 //	private enum FacetRendered {
 //		
@@ -337,4 +339,21 @@ public class CasesBPMAssetsState implements Serializable {
 	
 		return processWatcher;
 	}
+
+	public Boolean getUsePDFDownloadColumn() {
+		return usePDFDownloadColumn;
+	}
+
+	public void setUsePDFDownloadColumn(Boolean usePDFDownloadColumn) {
+		this.usePDFDownloadColumn = usePDFDownloadColumn;
+	}
+
+	public Boolean getAllowPDFSigning() {
+		return allowPDFSigning;
+	}
+
+	public void setAllowPDFSigning(Boolean allowPDFSigning) {
+		this.allowPDFSigning = allowPDFSigning;
+	}
+
 }

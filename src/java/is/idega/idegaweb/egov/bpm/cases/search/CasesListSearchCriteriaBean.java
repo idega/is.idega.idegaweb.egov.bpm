@@ -49,6 +49,9 @@ public class CasesListSearchCriteriaBean {
 	@Autowired private RolesManager rolesManager;
 	@Autowired private BPMFactory bpmFactory;
 	
+	private boolean usePDFDownloadColumn = true;
+	private boolean allowPDFSigning = true;
+	
 	public String getCaseNumber() {
 		return caseNumber;
 	}
@@ -425,4 +428,21 @@ public class CasesListSearchCriteriaBean {
 	public void setStatuses(String[] statuses) {
 		this.statuses = statuses;
 	}
+
+	public boolean isUsePDFDownloadColumn() {
+		return usePDFDownloadColumn;
+	}
+
+	public void setUsePDFDownloadColumn(boolean usePDFDownloadColumn) {
+		this.usePDFDownloadColumn = usePDFDownloadColumn;
+	}
+
+	public boolean isAllowPDFSigning() {
+		return allowPDFSigning;
+	}
+
+	public void setAllowPDFSigning(boolean allowPDFSigning) {
+		this.allowPDFSigning = allowPDFSigning;
+	}
+	
 }
