@@ -621,23 +621,20 @@ CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
 	}
 }
 
-CasesBPMAssets.signCaseDocument = function(event, uri, parameters, parametersValues, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
+CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, lightBoxTitle, closeLightBoxTitle,message) {
 	showLoadingMessage(message);
-	PDFGeneratorFromProcess.getHashValueForGeneratedPDFFromXForm(parametersValues[0], false, {
-		callback: function(binaryVariableHash) {
-			closeAllLoadingMessages();
-			
-			if (binaryVariableHash == null || binaryVariableHash == '') {
-				CasesBPMAssets.showHumanizedMessage(errorMessage);
-				return false;
-			}
-			
-			//CasesBPMAssets.initFormsGrid(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, true);	//	TODO: re-paint documents grid
-			
-			CasesBPMAssets.openDocumentSignerWindow(uri, parameters, [parametersValues[0], binaryVariableHash], lightBoxTitle, closeLightBoxTitle);
-		}
-	});
 	
+	var uri;
+	BPMProcessAssets.getSigningAction(taskInstanceId, null, {
+		  
+		  callback: function(uri) {
+					console.log(uri);
+					closeAllLoadingMessages();
+		            
+		            CasesBPMAssets.openDocumentSignerWindow(uri, lightBoxTitle, closeLightBoxTitle);
+		        }
+		  
+	});
 	if (event) {
 		if (event.stopPropagation) {
 			event.stopPropagation();
@@ -646,9 +643,18 @@ CasesBPMAssets.signCaseDocument = function(event, uri, parameters, parametersVal
 	}
 }
 
-CasesBPMAssets.signCaseAttachment = function(event, uri, parameters, parametersValues, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
+CasesBPMAssets.signCaseAttachment = function(event, uri, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
 	showLoadingMessage(message);
 	try {
+		BPMProcessAssets.getSigningAction(taskInstanceId, null, {
+			  
+			  callback: function(uri) {
+			            closeAllLoadingMessages();
+			            
+			            CasesBPMAssets.openDocumentSignerWindow(uri, lightBoxTitle, closeLightBoxTitle);
+			        }
+			  
+		});
 		CasesBPMAssets.openDocumentSignerWindow(uri, parameters, parametersValues, lightBoxTitle, closeLightBoxTitle);
 	} catch(e) {
 		CasesBPMAssets.showHumanizedMessage(errorMessage);
@@ -662,10 +668,7 @@ CasesBPMAssets.signCaseAttachment = function(event, uri, parameters, parametersV
 	}
 }
 
-CasesBPMAssets.openDocumentSignerWindow = function(uri, parameters, parametersValues, lightBoxTitle, closeLightBoxTitle) {
-	for (var i = 0; i < parameters.length; i++) {
-		uri += '&' + parameters[i] + '=' + parametersValues[i];
-	}
+CasesBPMAssets.openDocumentSignerWindow = function(uri, lightBoxTitle, closeLightBoxTitle) {
 	var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
 	var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
 	GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}});
