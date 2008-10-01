@@ -641,10 +641,10 @@ CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, lightBoxTitle,
 	}
 }
 
-CasesBPMAssets.signCaseAttachment = function(event, uri, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
+CasesBPMAssets.signCaseAttachment = function(event,taskInstanceId, variableHash, message, lightBoxTitle, closeLightBoxTitle, errorMessage) {
 	showLoadingMessage(message);
 	try {
-		BPMProcessAssets.getSigningAction(taskInstanceId, null, {
+		BPMProcessAssets.getSigningAction(taskInstanceId, variableHash, {
 			  
 			  callback: function(uri) {
 			            closeAllLoadingMessages();
@@ -653,7 +653,7 @@ CasesBPMAssets.signCaseAttachment = function(event, uri, message, lightBoxTitle,
 			        }
 			  
 		});
-		CasesBPMAssets.openDocumentSignerWindow(uri, parameters, parametersValues, lightBoxTitle, closeLightBoxTitle);
+		
 	} catch(e) {
 		CasesBPMAssets.showHumanizedMessage(errorMessage);
 	}
