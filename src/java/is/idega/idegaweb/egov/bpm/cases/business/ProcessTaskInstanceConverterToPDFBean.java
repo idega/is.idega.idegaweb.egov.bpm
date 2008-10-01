@@ -106,7 +106,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		}
 		
 		BinaryVariable newAttachment = null;
-		String fileName = tempPDFResource.getDisplayName();
+		String fileName = new StringBuilder("Document_").append(taskInstanceId).toString();
 		Variable variable = new Variable(fileName, VariableDataType.FILE);
 		try {
 			newAttachment = taskInstance.addAttachment(variable, fileName, tempPDFResource.getMethodData());
@@ -140,7 +140,6 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		} catch (IBOLookupException e) {
 			throw new IBORuntimeException(e);
 		}
-			
 	}
 	
 	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String pathInSlide, boolean checkExistence) {
