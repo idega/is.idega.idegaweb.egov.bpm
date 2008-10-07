@@ -26,7 +26,6 @@
             <xf:submission action="xformsBPM:/nouri" id="submit_data_submission" method="post" replace="none" />
             
             <xf:action id="submission-error" ev:event="xforms-submit-error">
-					<xf:setvalue ev:event="xforms-value-changed" ref="instance('control-instance')/enable">true</xf:setvalue>
 				<xf:message level="modeless" ref="instance('localized_strings')/page-1-error.label[@lang=instance('localized_strings')/current_language]"/>
 	</xf:action>
 	
