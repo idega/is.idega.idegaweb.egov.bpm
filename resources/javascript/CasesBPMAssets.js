@@ -136,7 +136,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     var namesForColumns = new Array();
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TASK_NAME);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
-    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY);
+    //namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY);
     if (hasRightChangeRights) {
         namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
@@ -144,7 +144,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'createdDate',index:'createdDate'});
-    modelForColumns.push({name:'takenBy',index:'takenBy'});
+    //modelForColumns.push({name:'takenBy',index:'takenBy'});
     if (hasRightChangeRights) {
         modelForColumns.push({name:'rightsForTaskResources',index:'rightsForTaskResources'});
     }
@@ -286,12 +286,12 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
         namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
     
-    //namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_ADDRESS);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_ADDRESS);
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'emailAddress',index:'emailAddress'});
     modelForColumns.push({name:'phoneNumber',index:'phoneNumber'});
-   	//modelForColumns.push({name:'address',index:'address'});
+   	modelForColumns.push({name:'address',index:'address'});
    	if (hasRightChangeRights) {
         modelForColumns.push({name:'rightsForContact',index:'rightsForContact'});
     }
