@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.article.business.CommentsPersistenceManager;
-import com.idega.block.process.business.CaseManager;
 import com.idega.block.rss.business.RSSBusiness;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -20,6 +19,8 @@ import com.idega.content.business.ContentConstants;
 import com.idega.core.accesscontrol.business.NotLoggedOnException;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.rights.Right;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
@@ -41,7 +42,6 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 	public static final String SPRING_BEAN_IDENTIFIER = "bpmCommentsPersistenceManagerImpl";
 	
 	@Autowired private BPMFactory bpmFactory;
-	@Autowired(required = false) private CaseManager caseManager;
 	
 	private WireFeedOutput wfo = new WireFeedOutput();
 
@@ -62,11 +62,16 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 	}
 
 	public boolean hasRightsToViewComments(Long processInstanceId) {
+		
 		if (processInstanceId == null) {
 			return false;
 		}
 		
-		return getCaseManager() == null ? false : getCaseManager().hasRightsToViewComments(processInstanceId);
+		ProcessInstanceW piw = getBpmFactory()
+		.getProcessManagerByProcessInstanceId(processInstanceId)
+		.getProcessInstance(processInstanceId);
+		
+		return piw.hasRight(Right.processHandler);
 	}
 	
 	private Long getConvertedValue(String value) {
@@ -81,14 +86,6 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		}
 		
 		return null;
-	}
-
-	public CaseManager getCaseManager() {
-		return caseManager;
-	}
-
-	public void setCaseManager(CaseManager caseManager) {
-		this.caseManager = caseManager;
 	}
 
 	public BPMFactory getBpmFactory() {
