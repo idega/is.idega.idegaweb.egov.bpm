@@ -136,6 +136,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     var namesForColumns = new Array();
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TASK_NAME);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_DATE);
+    //			TODO commented for future use. 'Taken by' column label isn't shown now
     //namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY);
     if (hasRightChangeRights) {
         namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
@@ -144,6 +145,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'createdDate',index:'createdDate'});
+    //			TODO commented for future use. 'Taken by' column label isn't shown now
     //modelForColumns.push({name:'takenBy',index:'takenBy'});
     if (hasRightChangeRights) {
         modelForColumns.push({name:'rightsForTaskResources',index:'rightsForTaskResources'});
