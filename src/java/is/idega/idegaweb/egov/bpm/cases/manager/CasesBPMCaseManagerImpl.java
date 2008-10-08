@@ -11,6 +11,8 @@ import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.presentation.OpenCases;
 
+import java.security.AccessControlException;
+import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -54,6 +56,8 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
+import com.idega.jbpm.identity.permission.Access;
+import com.idega.jbpm.identity.permission.PermissionsFactory;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
@@ -66,9 +70,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2008/10/01 14:50:58 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/08 15:33:17 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -79,6 +83,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	private CasesBPMDAO casesBPMDAO;
 	private BPMContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
+	@Autowired private PermissionsFactory permissionsFactory;
 	
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
@@ -468,4 +473,31 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		
 		return app.getName();
 	}
+
+	public boolean hasRightsToViewComments(Long processInstanceId) {
+		return hasCaseHandlerRights(processInstanceId);
+	}
+	
+	public boolean hasCaseHandlerRights(Long processInstanceId) {
+		if (processInstanceId == null) {
+			return false;
+		}
+		
+		try {
+			Permission perm = getPermissionsFactory().getAccessPermission(processInstanceId, Access.caseHandler);
+			getBpmFactory().getRolesManager().checkPermission(perm);
+			return true;
+		} catch (AccessControlException e) {
+			return false;
+		}
+	}
+
+	public PermissionsFactory getPermissionsFactory() {
+		return permissionsFactory;
+	}
+
+	public void setPermissionsFactory(PermissionsFactory permissionsFactory) {
+		this.permissionsFactory = permissionsFactory;
+	}
+
 }
