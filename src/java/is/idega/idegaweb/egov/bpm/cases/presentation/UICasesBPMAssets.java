@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.business.CommentsPersistenceManagerImpl;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
@@ -16,6 +17,8 @@ import javax.faces.context.FacesContext;
 
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
 
+import com.idega.block.article.business.CommentsPersistenceManager;
+import com.idega.block.article.component.CommentsViewer;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.pdf.servlet.XFormToPDFWriter;
@@ -33,14 +36,15 @@ import com.idega.presentation.text.DownloadLink;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.PresentationUtil;
+import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.33 $
+ * @version $Revision: 1.34 $
  *
- * Last modified: $Date: 2008/09/29 13:48:44 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/08 15:34:51 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -101,6 +105,17 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		getFacets().put(assetsFacet, div);
 //		</assets grid component>
 //		<asset view>
+		
+		CasesBPMAssetsState stateBean = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
+		CommentsPersistenceManager commentsManager = ELUtil.getInstance().getBean(CommentsPersistenceManagerImpl.SPRING_BEAN_IDENTIFIER);
+		if (commentsManager.hasRightsToViewComments(stateBean.getProcessInstanceId())) {
+			CommentsViewer comments = new CommentsViewer();
+			comments.setShowViewController(false);
+			comments.setSpringBeanIdentifier(CommentsPersistenceManagerImpl.SPRING_BEAN_IDENTIFIER);
+			comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
+			comments.setNewestEntriesOnTop(true);
+			div.getChildren().add(comments);
+		}
 		
 		div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		div.setValue(divTag);
