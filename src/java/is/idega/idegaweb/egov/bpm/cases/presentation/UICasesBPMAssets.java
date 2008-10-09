@@ -42,9 +42,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.34 $
+ * @version $Revision: 1.35 $
  *
- * Last modified: $Date: 2008/10/08 15:34:51 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/09 12:40:14 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -114,6 +114,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			comments.setSpringBeanIdentifier(CommentsPersistenceManagerImpl.SPRING_BEAN_IDENTIFIER);
 			comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
 			comments.setNewestEntriesOnTop(true);
+			comments.setShowCommentsList(false);
 			div.getChildren().add(comments);
 		}
 		
