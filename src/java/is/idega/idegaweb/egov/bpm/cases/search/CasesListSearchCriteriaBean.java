@@ -118,18 +118,43 @@ public class CasesListSearchCriteriaBean {
 				
 				if (ListUtil.isEmpty(casesByNumberIds)) {
 					logger.log(Level.INFO, "No cases found by number: " + caseNumber);
-					casesIds.clear();	//	No results
+					//casesIds.clear();	//	No results
 				}
 				else {
 					logger.log(Level.INFO, "Cases found by number (" + caseNumber + "): " + casesByNumberIds);
 					//	"Narrowing" results
-					casesIds.retainAll(casesByNumberIds);
+					//casesIds.retainAll(casesByNumberIds);
 				}
-			
+				casesIds = getNarrowedResults(casesIds, casesByNumberIds);
+				
 				logger.log(Level.INFO, "IDs AFTER filtering by number (" + caseNumber + "): " + casesIds);
 				return casesIds;
 			}
 		};
+	}
+	
+	private List<Integer> getNarrowedResults(List<Integer> casesIds, List<Integer> filterResults) {
+		if (ListUtil.isEmpty(casesIds)) {
+			logger.log(Level.INFO, "There are no start data, emptying IDs");
+			return null;
+		}
+		if (ListUtil.isEmpty(filterResults)) {
+			logger.log(Level.INFO, "No results found, emptying IDs");
+			return null;
+		}
+		
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Integer id: filterResults) {
+			if (casesIds.contains(id)) {
+				logger.log(Level.INFO, "HAS ID: " + id);
+				ids.add(id);
+			}
+			else {
+				logger.log(Level.INFO, "NO ID: " + id + " in: " + casesIds);
+			}
+		}
+		
+		return ids;
 	}
 	
 	public CasesListSearchFilter getGeneralCasesFilter() {
