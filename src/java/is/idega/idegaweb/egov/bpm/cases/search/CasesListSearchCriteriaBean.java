@@ -19,6 +19,8 @@ import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.process.data.Case;
+import com.idega.block.process.data.CaseHome;
+import com.idega.block.process.presentation.UserCases;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -78,33 +80,44 @@ public class CasesListSearchCriteriaBean {
 				}
 
 				String caseNumber = getCaseNumber();
-				if (!StringUtil.isEmpty(caseNumber)) {
-					String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
-					
-					//	"BPM" cases
-					List<Integer> bpmCases = null;
-					try {
-						bpmCases = getCasesBPMDAO().getCaseIdsByCaseNumber(loweredCaseNumber);
-					} catch(Exception e) {
-						logger.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
-					}
-					
-					//	Old cases
-					List<Integer> generalCases = getGeneralCasesByNumber(loweredCaseNumber);
-					if (ListUtil.isEmpty(bpmCases) && ListUtil.isEmpty(generalCases)) {
-						logger.log(Level.INFO, "No cases found by number: " + caseNumber);
-						casesIds.clear();	//	No results
-					}
-					
-					//	"Narrowing" results
-					if (!ListUtil.isEmpty(bpmCases)) {
-						casesIds.retainAll(bpmCases);
-					}
-					if (!ListUtil.isEmpty(generalCases)) {
-						casesIds.retainAll(generalCases);
-					}
+				if (StringUtil.isEmpty(caseNumber)) {
+					logger.log(Level.WARNING, "Case number is undefined, not filtering by it!");
+					return casesIds;
 				}
 				
+				String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
+				List<Integer> casesByNumberIds = new ArrayList<Integer>();
+				
+				//	"BPM" cases
+				List<Integer> bpmCases = null;
+				try {
+					bpmCases = getCasesBPMDAO().getCaseIdsByCaseNumber(loweredCaseNumber);
+				} catch(Exception e) {
+					logger.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
+				}
+				if (!ListUtil.isEmpty(bpmCases)) {
+					logger.log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
+					casesByNumberIds.addAll(bpmCases);
+				}
+				
+				//	Old cases
+				List<Integer> simpleCases = UserCases.TYPE.equals(getCaseListType()) ? getUserCasesByNumber(loweredCaseNumber) :
+					getGeneralCasesByNumber(loweredCaseNumber);
+				if (!ListUtil.isEmpty(simpleCases)) {
+					logger.log(Level.INFO, "Simple cases by number (" + caseNumber + "): " + simpleCases);
+					casesByNumberIds.addAll(simpleCases);
+				}
+				
+				if (ListUtil.isEmpty(casesByNumberIds)) {
+					logger.log(Level.INFO, "No cases found by number: " + caseNumber);
+					casesIds.clear();	//	No results
+				}
+				else {
+					//	"Narrowing" results
+					casesIds.retainAll(casesByNumberIds);
+				}
+			
+				logger.log(Level.INFO, "IDs after filtering by number (" + caseNumber + "): " + casesIds);
 				return casesIds;
 			}
 		};
@@ -119,37 +132,35 @@ public class CasesListSearchCriteriaBean {
 					return casesIds;
 				}
 				
-				if (!StringUtil.isEmpty(getDescription()) || !StringUtil.isEmpty(getName()) || !StringUtil.isEmpty(getPersonalId()) || 
-						!ArrayUtil.isEmpty(getStatuses()) || getDateFrom() != null || getDateTo() != null) {
+				if (StringUtil.isEmpty(getDescription()) && StringUtil.isEmpty(getName()) && StringUtil.isEmpty(getPersonalId()) &&
+						ArrayUtil.isEmpty(getStatuses()) && getDateFrom() == null && getDateTo() == null) {
+					logger.log(Level.WARNING, "None of criterias are defined, not filtering by it!");
+					return casesIds;
+				}
 					
-						IWContext iwc = CoreUtil.getIWContext();
-						CasesBusiness casesBusiness = getCasesBusiness(iwc);
-						
-						String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
-						
-						Collection<Case> cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
-								getDateTo(), null, null, false);
-						
-						if (ListUtil.isEmpty(cases)) {
-							logger.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
-									.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
-									.append(", dateRange: ").append(getDateRange())
-							.toString());
-							casesIds.clear();
-						}
-						else {	
-							List<Integer> casesByCriteria = new ArrayList<Integer>(cases.size());
-							for (Case cs : cases) {
-								try {
-									casesByCriteria.add(new Integer(cs.getPrimaryKey().toString()));
-								} catch(NumberFormatException e) {
-									e.printStackTrace();
-								}
-							}
-							casesIds.retainAll(casesByCriteria);
-						}
+				IWContext iwc = CoreUtil.getIWContext();
+				CasesBusiness casesBusiness = getCasesBusiness();
+				
+				String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
+				
+				Collection<Case> cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
+						getDateTo(), null, null, false, UserCases.TYPE.equals(getCaseListType()));
+				
+				if (ListUtil.isEmpty(cases)) {
+					logger.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
+							.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
+							.append(", dateRange: ").append(getDateRange())
+					.toString());
+					casesIds.clear();
+				}
+				else {	
+					List<Integer> casesByCriteria = getCasesIds(cases);
+					logger.log(Level.INFO, "Cases by criterias: " + casesByCriteria);
+					
+					casesIds.retainAll(casesByCriteria);
 				}
 				
+				logger.log(Level.INFO, "IDs after filtering by criterias: " + casesIds);
 				return casesIds;
 			}
 		};
@@ -164,20 +175,23 @@ public class CasesListSearchCriteriaBean {
 				if (ListUtil.isEmpty(casesIds)) {
 					return casesIds;
 				}
-					
 				String contact = getContact();
-				if (!StringUtil.isEmpty(contact)) {
-					List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
-				
-					if (ListUtil.isEmpty(casesByContact)) {
-						logger.log(Level.INFO, "No cases found by contact: " + contact);
-						casesIds.clear();
-					}
-					else {
-						casesIds.retainAll(casesByContact);
-					}
+				if (StringUtil.isEmpty(contact)) {
+					logger.log(Level.WARNING, "Contact is undefined, not filtering by it!");
+					return casesIds;
 				}
 				
+				List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
+				if (ListUtil.isEmpty(casesByContact)) {
+					logger.log(Level.INFO, "No BPM cases found by contact: " + contact);
+					casesIds.clear();
+				}
+				else {
+					logger.log(Level.INFO, "Found BPM cases by contact: " + contact);
+					casesIds.retainAll(casesByContact);
+				}
+				
+				logger.log(Level.INFO, "IDs after filtering by contact (" + contact + "): " + casesIds);
 				return casesIds;
 			}
 			
@@ -195,29 +209,81 @@ public class CasesListSearchCriteriaBean {
 				}
 					
 				String processDefinitionId = getProcessId();
-				if (!StringUtil.isEmpty(processDefinitionId)) {
-					List<Integer> casesByProcessDefinition = null;
-					if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
-						//	Getting ONLY none "BPM" cases
-						casesByProcessDefinition = getCasesBusiness(IWMainApplication.getDefaultIWApplicationContext()).getFilteredProcesslessCasesIds(casesIds);
-					}
-					else {
-						//	Getting "BPM" cases
-						casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId);
-					}
-					
-					if (ListUtil.isEmpty(casesByProcessDefinition)) {
-						logger.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
-						casesIds.clear();
-					}
-					else {
-						casesIds.retainAll(casesByProcessDefinition);
-					}
+				if (StringUtil.isEmpty(processDefinitionId)) {
+					logger.log(Level.WARNING, "Process definition id is undefined, not filtering by it!");
+					return casesIds;
 				}
 				
+				List<Integer> casesByProcessDefinition = null;
+				if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
+					//	Getting ONLY none "BPM" cases
+					casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, UserCases.TYPE.equals(getCaseListType()));
+				}
+				else {
+					//	Getting "BPM" cases
+					casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId);
+				}
+				
+				if (ListUtil.isEmpty(casesByProcessDefinition)) {
+					logger.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
+					casesIds.clear();
+				}
+				else {
+					logger.log(Level.INFO, "Cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
+					casesIds.retainAll(casesByProcessDefinition);
+				}
+				
+				logger.log(Level.INFO, "IDs after filtering by process definition (" + processDefinitionId + "): " + casesIds);
 				return casesIds;
 			}
 		};
+	}
+	
+	private CaseHome getCaseHome() {
+		try {
+			return (CaseHome) IDOLookup.getHome(Case.class);
+		} catch (IDOLookupException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	private List<Integer> getUserCasesByNumber(String number) {
+		CaseHome caseHome = getCaseHome();
+		if (caseHome == null) {
+			return null;
+		}
+		
+		Collection<Case> cases = null;
+		try {
+			cases = caseHome.findByCriteria(number, null, null, null, null, null, null, null, true);
+		} catch (FinderException e) {
+			e.printStackTrace();
+		}
+		
+		return getCasesIds(cases);
+	}
+	
+	private List<Integer> getCasesIds(Collection<Case> cases) {
+		if (ListUtil.isEmpty(cases)) {
+			return null;
+		}
+		
+		Integer id = null;
+		List<Integer> ids = new ArrayList<Integer>(cases.size());
+		for (Case theCase: cases) {
+			try {
+				id = Integer.valueOf(theCase.getId());
+			} catch(NumberFormatException e) {
+				e.printStackTrace();
+			}
+			
+			if (id != null && !ids.contains(id)) {
+				ids.add(id);
+			}
+		}
+		
+		return ids;
 	}
 	
 	private List<Integer> getGeneralCasesByNumber(String caseNumber) {
@@ -408,9 +474,9 @@ public class CasesListSearchCriteriaBean {
 		}
 	}
 	
-	private CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
+	private CasesBusiness getCasesBusiness() {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+			return (CasesBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
 		}
 		catch (IBOLookupException e) {
 			throw new IBORuntimeException(e);
