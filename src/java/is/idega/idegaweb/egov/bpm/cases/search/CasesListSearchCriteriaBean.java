@@ -97,7 +97,10 @@ public class CasesListSearchCriteriaBean {
 				} catch(Exception e) {
 					logger.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
 				}
-				if (!ListUtil.isEmpty(bpmCases)) {
+				if (ListUtil.isEmpty(bpmCases)) {
+					logger.log(Level.INFO, "No BPM cases found by number: " + caseNumber);
+				}
+				else {
 					logger.log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
 					casesByNumberIds.addAll(bpmCases);
 				}
@@ -105,7 +108,10 @@ public class CasesListSearchCriteriaBean {
 				//	Old cases
 				List<Integer> simpleCases = UserCases.TYPE.equals(getCaseListType()) ? getUserCasesByNumber(loweredCaseNumber) :
 					getGeneralCasesByNumber(loweredCaseNumber);
-				if (!ListUtil.isEmpty(simpleCases)) {
+				if (ListUtil.isEmpty(simpleCases)) {
+					logger.log(Level.INFO, "No simple cases found by number: " + caseNumber);
+				}
+				else {
 					logger.log(Level.INFO, "Simple cases by number (" + caseNumber + "): " + simpleCases);
 					casesByNumberIds.addAll(simpleCases);
 				}
@@ -115,6 +121,7 @@ public class CasesListSearchCriteriaBean {
 					casesIds.clear();	//	No results
 				}
 				else {
+					logger.log(Level.INFO, "Cases found by number (" + caseNumber + "): " + casesByNumberIds);
 					//	"Narrowing" results
 					casesIds.retainAll(casesByNumberIds);
 				}
