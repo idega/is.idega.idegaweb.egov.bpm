@@ -14,9 +14,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/07/08 09:13:13 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/11 14:08:40 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -38,17 +38,17 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
 	
-	public abstract List<Integer> getCaseIdsByProcessDefinitionIdsAndName(List<Long> processDefinitionIds, String processDefinitionName);
+	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndName(List<Long> processDefinitionIds, String processDefinitionName);
 	
-	public abstract List<Integer> getCaseIdsByCaseNumber(String caseNumber);
+	public abstract List<Long> getCaseIdsByCaseNumber(String caseNumber);
 	
-	public abstract List<Integer> getCaseIdsByProcessUserStatus(String status);
+	public abstract List<Long> getCaseIdsByProcessUserStatus(String status);
 	
-	public abstract List<Integer> getCaseIdsByCaseStatus(String[] statuses);
+	public abstract List<Long> getCaseIdsByCaseStatus(String[] statuses);
 	
-	public abstract List<Integer> getCaseIdsByUserIds(String userId);
+	public abstract List<Long> getCaseIdsByUserIds(String userId);
 	
-	public abstract List<Integer> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
+	public abstract List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
 	
-	public abstract List<Integer> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
+	public abstract List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
 }

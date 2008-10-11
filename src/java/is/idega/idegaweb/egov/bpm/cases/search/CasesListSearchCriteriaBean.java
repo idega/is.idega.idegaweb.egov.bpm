@@ -91,7 +91,7 @@ public class CasesListSearchCriteriaBean {
 				List<Integer> casesByNumberIds = new ArrayList<Integer>();
 				
 				//	"BPM" cases
-				List<Integer> bpmCases = null;
+				List<Long> bpmCases = null;
 				try {
 					bpmCases = getCasesBPMDAO().getCaseIdsByCaseNumber(loweredCaseNumber);
 				} catch(Exception e) {
@@ -102,7 +102,7 @@ public class CasesListSearchCriteriaBean {
 				}
 				else {
 					logger.log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
-					casesByNumberIds.addAll(bpmCases);
+					casesByNumberIds.addAll(getConvertedFromLongs(bpmCases));
 				}
 				
 				//	Old cases
@@ -133,6 +133,24 @@ public class CasesListSearchCriteriaBean {
 		};
 	}
 	
+	private List<Integer> getConvertedFromLongs(List<Long> values) {
+		if (ListUtil.isEmpty(values)) {
+			return null;
+		}
+		
+		List<Integer> convertedValues = new ArrayList<Integer>();
+		for (Object o: values) {
+			if (o instanceof Long) {
+				convertedValues.add(Integer.valueOf(((Long) o).intValue()));
+			}
+			else {
+				logger.log(Level.WARNING, "Object is not type of Long: " + o);
+			}
+		}
+		
+		return convertedValues;
+	}
+	
 	private List<Integer> getNarrowedResults(List<Integer> casesIds, List<Integer> filterResults) {
 		if (ListUtil.isEmpty(casesIds)) {
 			logger.log(Level.INFO, "There are no start data, emptying IDs");
@@ -143,14 +161,21 @@ public class CasesListSearchCriteriaBean {
 			return null;
 		}
 		
+		Integer id = null;
 		List<Integer> ids = new ArrayList<Integer>();
-		for (Integer id: filterResults) {
-			if (casesIds.contains(id)) {
-				logger.log(Level.INFO, "HAS ID: " + id);
-				ids.add(id);
+		for (Object o: filterResults) {
+			if (o instanceof Integer) {
+				id = (Integer) o;
+				if (casesIds.contains(id)) {
+					logger.log(Level.INFO, "HAS ID: " + id);
+					ids.add(id);
+				}
+				else {
+					logger.log(Level.INFO, "NO ID: " + id + " in: " + casesIds);
+				}
 			}
 			else {
-				logger.log(Level.INFO, "NO ID: " + id + " in: " + casesIds);
+				logger.log(Level.WARNING, "ID is not type of Integer: " + o);
 			}
 		}
 		
@@ -261,7 +286,7 @@ public class CasesListSearchCriteriaBean {
 				}
 				else {
 					//	Getting "BPM" cases
-					casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId);
+					casesByProcessDefinition = getConvertedFromLongs(getCasesByProcessDefinition(processDefinitionId));
 				}
 				
 				if (ListUtil.isEmpty(casesByProcessDefinition)) {
@@ -358,7 +383,7 @@ public class CasesListSearchCriteriaBean {
 		return generalCases;
 	}
 		
-	private List<Integer> getCasesByProcessDefinition(String processDefinitionId) {
+	private List<Long> getCasesByProcessDefinition(String processDefinitionId) {
 		
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
@@ -547,8 +572,8 @@ public class CasesListSearchCriteriaBean {
 		for (User contactPerson: usersByContactInfo) {
 			
 			try {
-				casesByContactPerson = getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc, contactPerson,
-						false));
+				casesByContactPerson = getConvertedFromLongs(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc,
+																																contactPerson, false)));
 			} catch(Exception e) {
 				logger.log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);
 			}

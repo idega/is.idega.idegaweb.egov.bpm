@@ -24,9 +24,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  *
- * Last modified: $Date: 2008/07/25 13:10:38 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/11 14:08:40 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -171,18 +171,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return new ArrayList<Token>(0);
 	}
 
-	public List<Integer> getCaseIdsByProcessDefinitionIdsAndName(List<Long> processDefinitionIds, String processDefinitionName) {
+	public List<Long> getCaseIdsByProcessDefinitionIdsAndName(List<Long> processDefinitionIds, String processDefinitionName) {
 		if (ListUtil.isEmpty(processDefinitionIds) || StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, Integer.class, new Param(CaseProcInstBind.processDefinitionIdsProp, 
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, Long.class, new Param(CaseProcInstBind.processDefinitionIdsProp, 
 				processDefinitionIds), new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 	}
 
-	public List<Integer> getCaseIdsByCaseNumber(String caseNumber) {
+	public List<Long> getCaseIdsByCaseNumber(String caseNumber) {
 		if (caseNumber == null || CoreConstants.EMPTY.equals(caseNumber)) {
-			return new ArrayList<Integer>(0);
+			return new ArrayList<Long>(0);
 		}
 		
 		if (!caseNumber.startsWith(CoreConstants.PERCENT)) {
@@ -192,18 +192,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			caseNumber = caseNumber + CoreConstants.PERCENT;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber, Integer.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));
+		return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber, Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));
 	}
 
-	public List<Integer> getCaseIdsByProcessUserStatus(String status) {
+	public List<Long> getCaseIdsByProcessUserStatus(String status) {
 		if (status == null || CoreConstants.EMPTY.equals(status)) {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessUserStatus, Integer.class, new Param(ProcessUserBind.statusProp, status));
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessUserStatus, Long.class, new Param(ProcessUserBind.statusProp, status));
 	}
 
-	public List<Integer> getCaseIdsByCaseStatus(String[] statuses) {
+	public List<Long> getCaseIdsByCaseStatus(String[] statuses) {
 		if (statuses == null || statuses.length == 0) {
 			return null;
 		}
@@ -213,32 +213,32 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			statusesInSet.add(statuses[i]);
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByCaseStatus, Integer.class, new Param(CaseProcInstBind.caseStatusesProp, statusesInSet));
+		return getResultList(CaseProcInstBind.getCaseIdsByCaseStatus, Long.class, new Param(CaseProcInstBind.caseStatusesProp, statusesInSet));
 	}
 
-	public List<Integer> getCaseIdsByUserIds(String userId) {
+	public List<Long> getCaseIdsByUserIds(String userId) {
 		if (StringUtil.isEmpty(userId)) {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByUserIds, Integer.class, new Param(ProcessUserBind.userIdParam, userId));
+		return getResultList(CaseProcInstBind.getCaseIdsByUserIds, Long.class, new Param(ProcessUserBind.userIdParam, userId));
 	}
 
-	public List<Integer> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo) {
+	public List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo) {
 		if (dateFrom == null || dateTo == null) {
 			return null;
 		}
 
-		return getResultList(CaseProcInstBind.getCaseIdsByDateRange, Integer.class, new Param(CaseProcInstBind.caseStartDateProp, dateFrom.getTimestamp().toString()),
+		return getResultList(CaseProcInstBind.getCaseIdsByDateRange, Long.class, new Param(CaseProcInstBind.caseStartDateProp, dateFrom.getTimestamp().toString()),
 				new Param(CaseProcInstBind.caseEndDateProp, dateTo.getTimestamp().toString()));
 	}
 
-	public List<Integer> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds) {
+	public List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds) {
 		if (ListUtil.isEmpty(processInstanceIds)) {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Integer.class, new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class, new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
 	}
 	
 }
