@@ -78,12 +78,14 @@ public class CasesListSearchCriteriaBean {
 				if (ListUtil.isEmpty(casesIds)) {
 					return casesIds;
 				}
-
+				
 				String caseNumber = getCaseNumber();
 				if (StringUtil.isEmpty(caseNumber)) {
 					logger.log(Level.WARNING, "Case number is undefined, not filtering by it!");
 					return casesIds;
 				}
+				
+				logger.log(Level.INFO, "IDs BEFORE filtering by number: " + casesIds);
 				
 				String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
 				List<Integer> casesByNumberIds = new ArrayList<Integer>();
@@ -117,7 +119,7 @@ public class CasesListSearchCriteriaBean {
 					casesIds.retainAll(casesByNumberIds);
 				}
 			
-				logger.log(Level.INFO, "IDs after filtering by number (" + caseNumber + "): " + casesIds);
+				logger.log(Level.INFO, "IDs AFTER filtering by number (" + caseNumber + "): " + casesIds);
 				return casesIds;
 			}
 		};
@@ -137,6 +139,8 @@ public class CasesListSearchCriteriaBean {
 					logger.log(Level.WARNING, "None of criterias are defined, not filtering by it!");
 					return casesIds;
 				}
+				
+				logger.log(Level.INFO, "IDs BEFORE filtering by criterias: " + casesIds);
 					
 				IWContext iwc = CoreUtil.getIWContext();
 				CasesBusiness casesBusiness = getCasesBusiness();
@@ -160,7 +164,7 @@ public class CasesListSearchCriteriaBean {
 					casesIds.retainAll(casesByCriteria);
 				}
 				
-				logger.log(Level.INFO, "IDs after filtering by criterias: " + casesIds);
+				logger.log(Level.INFO, "IDs AFTER filtering by criterias: " + casesIds);
 				return casesIds;
 			}
 		};
@@ -181,6 +185,8 @@ public class CasesListSearchCriteriaBean {
 					return casesIds;
 				}
 				
+				logger.log(Level.INFO, "IDs BEFORE filtering by contact (" + contact + "): " + casesIds);
+				
 				List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
 				if (ListUtil.isEmpty(casesByContact)) {
 					logger.log(Level.INFO, "No BPM cases found by contact: " + contact);
@@ -191,7 +197,7 @@ public class CasesListSearchCriteriaBean {
 					casesIds.retainAll(casesByContact);
 				}
 				
-				logger.log(Level.INFO, "IDs after filtering by contact (" + contact + "): " + casesIds);
+				logger.log(Level.INFO, "IDs AFTER filtering by contact (" + contact + "): " + casesIds);
 				return casesIds;
 			}
 			
@@ -214,6 +220,8 @@ public class CasesListSearchCriteriaBean {
 					return casesIds;
 				}
 				
+				logger.log(Level.INFO, "IDs BEFORE filtering by process definition (" + processDefinitionId + "): " + casesIds);
+				
 				List<Integer> casesByProcessDefinition = null;
 				if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
 					//	Getting ONLY none "BPM" cases
@@ -233,7 +241,7 @@ public class CasesListSearchCriteriaBean {
 					casesIds.retainAll(casesByProcessDefinition);
 				}
 				
-				logger.log(Level.INFO, "IDs after filtering by process definition (" + processDefinitionId + "): " + casesIds);
+				logger.log(Level.INFO, "IDs AFTER filtering by process definition (" + processDefinitionId + "): " + casesIds);
 				return casesIds;
 			}
 		};
@@ -299,7 +307,7 @@ public class CasesListSearchCriteriaBean {
 		
 		Collection<Case> casesByNumber = null;
 		try {
-			casesByNumber = caseHome.getCasesByCriteria(caseNumber, null, null, null, null, null, null, null, true);
+			casesByNumber = caseHome.getCasesByCriteria(caseNumber, null, null, null, null, null, null, null, false);
 		} catch (FinderException e) {
 			e.printStackTrace();
 		}
