@@ -1,6 +1,8 @@
 package is.idega.idegaweb.egov.bpm.cases.search;
 
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.util.ArrayList;
@@ -11,6 +13,8 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ejb.FinderException;
+
 import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -18,7 +22,10 @@ import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.data.IDOLookup;
+import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
@@ -26,12 +33,16 @@ import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.ArrayUtil;
+import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 public class CasesListSearchCriteriaBean {
+	
+	private static final Logger logger = Logger.getLogger(CasesListSearchCriteriaBean.class.getName());
 	
 	private String caseNumber;
 	private String description;
@@ -62,74 +73,85 @@ public class CasesListSearchCriteriaBean {
 
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
-				if(casesIds != null && !casesIds.isEmpty()) {
+				if (ListUtil.isEmpty(casesIds)) {
+					return casesIds;
+				}
 
-					String caseNumber = getCaseNumber();
+				String caseNumber = getCaseNumber();
+				if (!StringUtil.isEmpty(caseNumber)) {
+					String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
 					
-					if (!StringUtil.isEmpty(caseNumber)) {
-						
-						Locale locale = IWContext.getCurrentInstance().getCurrentLocale();
-						
-						try {
-							List<Integer> casesByNumber = getCasesBPMDAO().getCaseIdsByCaseNumber(caseNumber.toLowerCase(locale));
-							
-							if(casesByNumber != null && !casesByNumber.isEmpty())
-								casesIds.retainAll(casesByNumber);
-							
-						} catch(Exception e) {
-							Logger.getLogger(getClass().getName()).log(Level.WARNING, "Exception while resolving case ids by case number = "+caseNumber, e);
-						}
+					//	"BPM" cases
+					List<Integer> bpmCases = null;
+					try {
+						bpmCases = getCasesBPMDAO().getCaseIdsByCaseNumber(loweredCaseNumber);
+					} catch(Exception e) {
+						logger.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
+					}
+					
+					//	Old cases
+					List<Integer> generalCases = getGeneralCasesByNumber(loweredCaseNumber);
+					if (ListUtil.isEmpty(bpmCases) && ListUtil.isEmpty(generalCases)) {
+						logger.log(Level.INFO, "No cases found by number: " + caseNumber);
+						casesIds.clear();	//	No results
+					}
+					
+					//	"Narrowing" results
+					if (!ListUtil.isEmpty(bpmCases)) {
+						casesIds.retainAll(bpmCases);
+					}
+					if (!ListUtil.isEmpty(generalCases)) {
+						casesIds.retainAll(generalCases);
 					}
 				}
 				
 				return casesIds;
 			}
-			
 		};
 	}
 	
-	/**
-	 * TODO: non process cases are not searched by case nr. Implement that in casenumberfilter perhaps
-	 * @return
-	 */
 	public CasesListSearchFilter getGeneralCasesFilter() {
-		
 		return new CasesListSearchFilter() {
 
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
-				if(casesIds != null && !casesIds.isEmpty()) {
+				if (ListUtil.isEmpty(casesIds)) {
+					return casesIds;
+				}
+				
+				if (!StringUtil.isEmpty(getDescription()) || !StringUtil.isEmpty(getName()) || !StringUtil.isEmpty(getPersonalId()) || 
+						!ArrayUtil.isEmpty(getStatuses()) || getDateFrom() != null || getDateTo() != null) {
 					
-					if(!StringUtil.isEmpty(getDescription()) || !StringUtil.isEmpty(getName()) 
-							|| !StringUtil.isEmpty(getPersonalId()) || getStatuses() != null || getDateFrom() != null || getDateTo() != null) {
-					
-						
-						IWContext iwc = IWContext.getCurrentInstance();
+						IWContext iwc = CoreUtil.getIWContext();
 						CasesBusiness casesBusiness = getCasesBusiness(iwc);
 						
-						String description = getDescription() != null ? getDescription().toLowerCase(iwc.getCurrentLocale()) : null;
+						String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
 						
-						Collection<Case> cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(), getDateTo(),
-								null, null, false);
+						Collection<Case> cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
+								getDateTo(), null, null, false);
 						
-						if(cases != null) {
-							
-							ArrayList<Integer> casesByCriteria = new ArrayList<Integer>(cases.size());
-							
-							for (Case cs : cases) {
-								
-								casesByCriteria.add(new Integer(cs.getPrimaryKey().toString()));
-							}
-							
-							casesIds.retainAll(casesByCriteria);
-						} else
+						if (ListUtil.isEmpty(cases)) {
+							logger.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
+									.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
+									.append(", dateRange: ").append(getDateRange())
+							.toString());
 							casesIds.clear();
-					}
+						}
+						else {	
+							List<Integer> casesByCriteria = new ArrayList<Integer>(cases.size());
+							for (Case cs : cases) {
+								try {
+									casesByCriteria.add(new Integer(cs.getPrimaryKey().toString()));
+								} catch(NumberFormatException e) {
+									e.printStackTrace();
+								}
+							}
+							casesIds.retainAll(casesByCriteria);
+						}
 				}
 				
 				return casesIds;
 			}
-			
 		};
 	}
 	
@@ -139,18 +161,20 @@ public class CasesListSearchCriteriaBean {
 
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
-				if(casesIds != null && !casesIds.isEmpty()) {
+				if (ListUtil.isEmpty(casesIds)) {
+					return casesIds;
+				}
 					
-					IWContext iwc = IWContext.getCurrentInstance();
-					
-					String contact = getContact();
-
-					if (!StringUtil.isEmpty(contact)) {
-					
-						List<Integer> casesByContact = getCasesByContactQuery(iwc, contact);
-						
-						if(casesByContact != null && !casesByContact.isEmpty())
-							casesIds.retainAll(casesByContact);
+				String contact = getContact();
+				if (!StringUtil.isEmpty(contact)) {
+					List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
+				
+					if (ListUtil.isEmpty(casesByContact)) {
+						logger.log(Level.INFO, "No cases found by contact: " + contact);
+						casesIds.clear();
+					}
+					else {
+						casesIds.retainAll(casesByContact);
 					}
 				}
 				
@@ -166,27 +190,66 @@ public class CasesListSearchCriteriaBean {
 
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
-				if(casesIds != null && !casesIds.isEmpty()) {
+				if (ListUtil.isEmpty(casesIds)) {
+					return casesIds;
+				}
 					
-					String processDefinitionId = getProcessId();
+				String processDefinitionId = getProcessId();
+				if (!StringUtil.isEmpty(processDefinitionId)) {
+					List<Integer> casesByProcessDefinition = null;
+					if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
+						//	Getting ONLY none "BPM" cases
+						casesByProcessDefinition = getCasesBusiness(IWMainApplication.getDefaultIWApplicationContext()).getFilteredProcesslessCasesIds(casesIds);
+					}
+					else {
+						//	Getting "BPM" cases
+						casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId);
+					}
 					
-					if (!CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
-						
-						if (!StringUtil.isEmpty(processDefinitionId)) {
-						
-							List<Integer> casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId);
-							
-							if (!ListUtil.isEmpty(casesByProcessDefinition)) {
-							
-								casesIds.retainAll(casesByProcessDefinition);
-							}
-						}
+					if (ListUtil.isEmpty(casesByProcessDefinition)) {
+						logger.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
+						casesIds.clear();
+					}
+					else {
+						casesIds.retainAll(casesByProcessDefinition);
 					}
 				}
 				
 				return casesIds;
 			}
 		};
+	}
+	
+	private List<Integer> getGeneralCasesByNumber(String caseNumber) {
+		GeneralCaseHome caseHome = null;
+		try {
+			caseHome = (GeneralCaseHome) IDOLookup.getHome(GeneralCase.class);
+		} catch (IDOLookupException e) {
+			e.printStackTrace();
+		}
+		if (caseHome == null) {
+			return null;	//	Unable to search for general cases
+		}
+		
+		Collection<Case> casesByNumber = null;
+		try {
+			casesByNumber = caseHome.getCasesByCriteria(caseNumber, null, null, null, null, null, null, null, true);
+		} catch (FinderException e) {
+			e.printStackTrace();
+		}
+		if (ListUtil.isEmpty(casesByNumber)) {
+			return null;	//	No results
+		}
+		
+		List<Integer> generalCases = new ArrayList<Integer>(casesByNumber.size());
+		for (Case casse: casesByNumber) {
+			try {
+				generalCases.add(Integer.valueOf(casse.getId()));
+			} catch(NumberFormatException e) {
+				e.printStackTrace();
+			}
+		}
+		return generalCases;
 	}
 		
 	private List<Integer> getCasesByProcessDefinition(String processDefinitionId) {
@@ -198,7 +261,7 @@ public class CasesListSearchCriteriaBean {
 		try {
 			procDefId = Long.valueOf(processDefinitionId);
 		} catch (NumberFormatException e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Process definition id provided ("+processDefinitionId+") was incorrect", e);
+			logger.log(Level.SEVERE, "Process definition id provided ("+processDefinitionId+") was incorrect", e);
 			return null;
 		}
 		
@@ -210,7 +273,8 @@ public class CasesListSearchCriteriaBean {
 			return getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndName(processDefinitionIds, processDefinition.getName());
 			
 		} catch(Exception e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+processDefinitionId, e);
+			logger.log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
+					processDefinitionId, e);
 		}
 		
 		return null;
@@ -270,7 +334,7 @@ public class CasesListSearchCriteriaBean {
 
 	public List<CasesListSearchFilter> getFilters() {
 		
-		ArrayList<CasesListSearchFilter> filters = new ArrayList<CasesListSearchFilter>();
+		List<CasesListSearchFilter> filters = new ArrayList<CasesListSearchFilter>();
 		
 		filters.add(getCaseNumberFilter());
 		filters.add(getGeneralCasesFilter());
@@ -367,32 +431,30 @@ public class CasesListSearchCriteriaBean {
 			return null;
 		
 		Collection<User> usersByContactInfo = getUserBusiness(iwc).getUsersByNameOrEmailOrPhone(contact);
-		final List<Integer> casesByContact;
-		
-		if (!ListUtil.isEmpty(usersByContactInfo)) {
+		if (ListUtil.isEmpty(usersByContactInfo)) {
+			return null;
+		}
 
-			List<Integer> casesByContactPerson = null;
-			casesByContact = new ArrayList<Integer>();
+		List<Integer> casesByContactPerson = null;
+		final List<Integer> casesByContact;casesByContact = new ArrayList<Integer>();
 			
-			for (User contactPerson: usersByContactInfo) {
-				
-				try {
-					casesByContactPerson = getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc, contactPerson, false));
-				} catch(Exception e) {
-					Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);
-				}
-				
-				if (!ListUtil.isEmpty(casesByContactPerson)) {
-
-					for (Integer caseId: casesByContactPerson) {
-						if (!casesByContact.contains(caseId)) {
-							casesByContact.add(caseId);
-						}
+		for (User contactPerson: usersByContactInfo) {
+			
+			try {
+				casesByContactPerson = getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc, contactPerson,
+						false));
+			} catch(Exception e) {
+				logger.log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);
+			}
+			
+			if (!ListUtil.isEmpty(casesByContactPerson)) {
+				for (Integer caseId: casesByContactPerson) {
+					if (!casesByContact.contains(caseId)) {
+						casesByContact.add(caseId);
 					}
 				}
 			}
-		} else
-			casesByContact = null;
+		}
 		
 		return casesByContact;
 	}
