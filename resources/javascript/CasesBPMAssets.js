@@ -91,10 +91,14 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 		
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
-				CasesBPMAssets.initTasksGrid(caseId, piId, container, false);
-				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning);
-				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights);
-				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights);
+				var onGridInitedFunction = function() {
+					CasesBPMAssets.setTableProperties(container);
+				}
+				
+				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, onGridInitedFunction);
+				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, onGridInitedFunction);
+				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights, onGridInitedFunction);
+				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, onGridInitedFunction);
 				
 				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning);
 			}
@@ -148,7 +152,7 @@ CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
     });
 }
 
-CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights) {
+CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights, onTasksInited) {
 	
 	var identifier = 'caseTasks';
     
@@ -162,6 +166,10 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
                 CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                
+                if (onTasksInited) {
+                	onTasksInited();
+                }
             }
         });
     };
@@ -192,7 +200,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     							hasRightChangeRights);
 };
 
-CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning) {
+CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, onFormsInited) {
     var identifier = 'caseForms';
     
     var populatingFunction = function(params, callback) {
@@ -209,6 +217,10 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
                 CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                
+                if (onFormsInited) {
+                	onFormsInited();
+                }
             }
         });
     };
@@ -297,14 +309,16 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 		}
 		
 		jQuery(documentsGrid).removeAttr('col_with_classes');
-		jQuery(documentsGrid).append('<table class="caseForms" />');
+		jQuery(documentsGrid).append('<table class=\'caseForms\' border=\'0\'/>');
 	}
 	
 	var reOpenFormsGrid = function(hasRights) {
 		var usePdfDownloadColumn = CasesBPMAssets.openedCase.usePdfDownloadColumn;
 		var allowPDFSigning = CasesBPMAssets.openedCase.allowPDFSigning;
 	
-		CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRights, usePdfDownloadColumn, allowPDFSigning);
+		CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRights, usePdfDownloadColumn, allowPDFSigning, function() {
+			CasesBPMAssets.setTableProperties(container);
+		});
 	}
 	
 	var hasRightChangeRights = CasesBPMAssets.openedCase.hasRightChangeRights == null ? false : CasesBPMAssets.openedCase.hasRightChangeRights;
@@ -320,7 +334,7 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 	}
 }
 
-CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightChangeRights, allowPDFSigning) {
+CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightChangeRights, allowPDFSigning, onEmailsInited) {
     var identifier = 'caseEmails';
     
     var populatingFunction = function(params, callback) {
@@ -335,6 +349,10 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
                 CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                
+                if (onEmailsInited) {
+                	onEmailsInited();
+                }
             }
         });
     };
@@ -366,7 +384,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     							hasRightChangeRights);
 };
 
-CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights) {
+CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, onContactsInited) {
     var identifier = 'caseContacts';
     
     var populatingFunction = function(params, callback) {
@@ -379,6 +397,10 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
                 CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                
+                if (onContactsInited) {
+                	onContactsInited();
+                }
             }
         });
     };
@@ -528,7 +550,7 @@ CasesBPMAssets.getProcessRersourceView = function(caseId, taskInstanceId) {
 CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning) {
     var subgridTableId = subgridId + '_t';
     var subGridContainer = jQuery('#' + subgridId);
-	subGridContainer.html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\'></table>');
+	subGridContainer.html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\' border=\'0\'></table>');
 
     var subGridParams = new JQGridParams();
     subGridParams.rightsChanger = hasRightChangeRights;
@@ -673,7 +695,7 @@ CasesBPMAssets.setStyleClassesForGridColumns = function(elements) {
     }
 };
 
-CasesBPMAssets.openAllAttachmentsForCase = function(table) {
+ CasesBPMAssets.openAllAttachmentsForCase = function(table) {
     if (table == null) {
         return false;
     }
