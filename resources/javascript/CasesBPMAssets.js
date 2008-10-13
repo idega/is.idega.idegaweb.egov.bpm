@@ -778,7 +778,8 @@ CasesBPMAssets.openDocumentSignerWindow = function(uri, lightBoxTitle, closeLigh
 	
 	var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
 	var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
-	GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}});
+	GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}, onClose:
+								CasesBPMAssets.reloadDocumentsGrid});
 	closeAllLoadingMessages();
 }
 
