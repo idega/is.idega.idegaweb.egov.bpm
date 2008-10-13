@@ -695,7 +695,25 @@ CasesBPMAssets.setStyleClassesForGridColumns = function(elements) {
     }
 };
 
- CasesBPMAssets.openAllAttachmentsForCase = function(table) {
+CasesBPMAssets.setTableProperties = function(component) {
+	if (component == null) {
+		return false;
+	}
+	
+	var tables = jQuery('table', jQuery(component));
+	if (tables == null || tables.length == 0) {
+		return false;
+	}
+	
+	var table = null;
+	for (var i = 0; i < tables.length; i++) {
+		table = jQuery(tables[i]);
+		
+		table.attr('border', '0');
+	}
+}
+
+CasesBPMAssets.openAllAttachmentsForCase = function(table) {
     if (table == null) {
         return false;
     }
