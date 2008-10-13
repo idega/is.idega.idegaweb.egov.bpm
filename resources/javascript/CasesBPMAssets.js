@@ -188,7 +188,8 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
         CasesBPMAssets.getProcessRersourceView(caseId, rowId);
     };
     
-    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
+    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
+    							hasRightChangeRights);
 };
 
 CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning) {
@@ -247,7 +248,8 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
         CasesBPMAssets.getProcessRersourceView(caseId, rowId);
     };
     
-    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
+    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction,
+    							hasRightChangeRights);
 };
 
 CasesBPMAssets.reloadDocumentsGrid = function() {
@@ -294,6 +296,7 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 			}
 		}
 		
+		jQuery(documentsGrid).removeAttr('col_with_classes');
 		jQuery(documentsGrid).append('<table class="caseForms" />');
 	}
 	
@@ -359,7 +362,8 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
         CasesBPMAssets.getProcessRersourceView(caseId, rowId);
     };
     
-    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
+    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction,
+    							hasRightChangeRights);
 };
 
 CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights) {
@@ -401,10 +405,12 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
     var onSelectRowFunction = function(rowId) {
     }
     
-    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
+    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
+    							hasRightChangeRights);
 };
 
-CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, populatingFunction, subGridForThisGrid, namesForColumns, modelForColumns, onSelectRowFunction, rightsChanger) {
+CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, populatingFunction, subGridForThisGrid, namesForColumns, modelForColumns,
+										onSelectRowFunction, rightsChanger) {
     var params = new JQGridParams();
     
     params.identifier = tableClassName;
