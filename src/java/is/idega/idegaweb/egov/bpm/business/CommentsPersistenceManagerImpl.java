@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.HttpException;
+import org.apache.commons.httpclient.URIException;
 import org.apache.webdav.lib.WebdavResource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -147,15 +148,28 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 			return null;
 		}
 
-		SyndFeed comments = null;
+		String pathToFeed = null;
 		try {
-			comments = rss.getFeedAuthenticatedByUser(new StringBuilder(slide.getWebdavServerURL().getURI()).append(uri).toString(), currentUser);
-		} catch (Exception e) {
-			logger.log(Level.SEVERE, "Error getting comments feed", e);
+			pathToFeed = new StringBuilder(slide.getWebdavServerURL().getURI()).append(uri).toString();
+		} catch (URIException e) {
+			e.printStackTrace();
+		} catch (RemoteException e) {
+			e.printStackTrace();
 		}
-		if (comments == null) {
+		if (StringUtil.isEmpty(pathToFeed)) {
+			logger.log(Level.SEVERE, "Error creating path to comments feed!");
 			return null;
 		}
+		SyndFeed comments = rss.getFeedAuthenticatedByUser(pathToFeed, currentUser);
+		if (comments == null) {
+			logger.log(Level.WARNING, "Unable to get comments feed by current user, trying with admin user");
+			comments = rss.getFeedAuthenticatedByAdmin(pathToFeed);
+		}
+		if (comments == null) {
+			logger.log(Level.SEVERE, "Error getting comments feed!");
+			return null;
+		}
+		
 		WireFeed wireFeed = comments.createWireFeed();
 		if (wireFeed instanceof Feed) {
 			return (Feed) wireFeed;
