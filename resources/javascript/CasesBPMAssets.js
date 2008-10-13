@@ -26,6 +26,36 @@ CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
 CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS = 'casesBPMPDFGeneratorAndDownloader';
 
+CasesBPMAssets.openedCase = {
+	caseId: null,
+	piId: null,
+	container: null,
+	
+	hasRightChangeRights: false,
+	usePdfDownloadColumn: false,
+	allowPDFSigning: false
+}
+
+CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning) {
+	CasesBPMAssets.openedCase.caseId = caseId || null;
+	CasesBPMAssets.openedCase.piId = piId || null;
+	CasesBPMAssets.openedCase.container = container || null;
+	
+	CasesBPMAssets.openedCase.hasRightChangeRights = hasRightChangeRights || false;
+	CasesBPMAssets.openedCase.usePdfDownloadColumn = usePdfDownloadColumn || false;
+	CasesBPMAssets.openedCase.allowPDFSigning = allowPDFSigning || false;
+}
+
+CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning) {
+	jQuery(container).mouseover(function() {
+		if (CasesBPMAssets.openedCase.caseId == caseId) {
+			return;
+		}
+		
+		CasesBPMAssets.setOpenedCase(caseId, piId, container, null, usePdfDownloadColumn, allowPDFSigning);
+	});
+}
+
 CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning) {
 	if (container == null) {
 		return false;
@@ -57,6 +87,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 	   	}
 	   	
 	   	CasesBPMAssets.initTakeCaseSelector(container, piId);
+		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning);
 		
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
@@ -64,6 +95,8 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning);
 				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights);
 				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights);
+				
+				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning);
 			}
 		});
 	});
@@ -216,6 +249,73 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction, hasRightChangeRights);
 };
+
+CasesBPMAssets.reloadDocumentsGrid = function() {
+	if (CasesBPMAssets.openedCase == null) {
+		return false;
+	}
+	
+	var caseId = CasesBPMAssets.openedCase.caseId;
+	var container = CasesBPMAssets.openedCase.container;
+	if (caseId == null || container == null) {
+		return false;
+	}
+	
+	var piId = CasesBPMAssets.openedCase.piId;
+	if (piId == null) {
+		var inputs = jQuery('input.processInstanceIdValueHolder', container);
+		if (inputs != null && inputs.length > 0) {
+			piId = jQuery(inputs[0]).attr('value');
+		}
+	}
+	if (piId == null) {
+		return false;
+	}
+	
+	var documentsGrids = jQuery('div.caseFormsPart', jQuery(container));
+	if (documentsGrids == null || documentsGrids.length == 0) {
+		return false;
+	}
+	var documentsGrid = null;
+	for (var i = 0; i < documentsGrids.length; i++) {
+		documentsGrid = documentsGrids[i];
+		
+		var gridElements = new Array();
+		for (var j = 0; j < documentsGrid.childNodes.length; j++) {
+			gridElements.push(jQuery(documentsGrid.childNodes[j]));
+		}
+		
+		var gridElement = null;
+		for (var j = 0; j < gridElements.length; j++) {
+			gridElement = gridElements[j];
+			
+			if (!gridElement.hasClass('header')) {
+				gridElement.remove();
+			}
+		}
+		
+		jQuery(documentsGrid).append('<table class="caseForms" />');
+	}
+	
+	var reOpenFormsGrid = function(hasRights) {
+		var usePdfDownloadColumn = CasesBPMAssets.openedCase.usePdfDownloadColumn;
+		var allowPDFSigning = CasesBPMAssets.openedCase.allowPDFSigning;
+	
+		CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRights, usePdfDownloadColumn, allowPDFSigning);
+	}
+	
+	var hasRightChangeRights = CasesBPMAssets.openedCase.hasRightChangeRights == null ? false : CasesBPMAssets.openedCase.hasRightChangeRights;
+	if (hasRightChangeRights) {
+		reOpenFormsGrid(hasRightChangeRights);
+	}
+	else {
+		BPMProcessAssets.hasUserRolesEditorRights(piId, {
+			callback: function(hasRights) {
+				reOpenFormsGrid(hasRights);
+			}
+		});
+	}
+}
 
 CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightChangeRights, allowPDFSigning) {
     var identifier = 'caseEmails';

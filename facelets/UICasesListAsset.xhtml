@@ -7,6 +7,9 @@
 		xmlns:f="http://java.sun.com/jsf/core"
 >
 	<t:div styleClass="caseGrids">
+		<t:div style="display: none;" styleClass="processInstanceIdValueHolderContainer">
+			<input type="hidden" class="processInstanceIdValueHolder" value="#{casesBPMAssetsState.processInstanceId}" />
+		</t:div>
 		<t:div styleClass="caseTasksPart" style="#{casesBPMAssetsState.tasksVisibilityProperty}">
 			<t:div styleClass="header">
 				<t:div style="float: left">

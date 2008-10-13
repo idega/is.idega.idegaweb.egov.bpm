@@ -42,9 +42,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.35 $
+ * @version $Revision: 1.36 $
  *
- * Last modified: $Date: 2008/10/09 12:40:14 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/13 08:06:16 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -232,7 +232,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	}
 	
 	private void addClientResources(IWContext iwc, UIComponent container) {
-		Web2Business web2Business = getBeanInstance("web2bean");
+		Web2Business web2Business = getBeanInstance(Web2Business.SPRING_BEAN_IDENTIFIER);
 		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		
 		//	CSS sources
