@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.messages;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
+import is.idega.idegaweb.egov.message.business.MessageValue;
 
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -39,9 +40,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/10/08 13:21:03 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/13 08:38:55 $ by $Author: civilis $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -68,52 +69,66 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 		
 		final Locale defaultLocale = iwma.getDefaultLocale();
 		
-		new Thread(new Runnable() {
-
-			public void run() {
+		final ArrayList<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
+		
+		try {
+			CasesBusiness casesBusiness = getCasesBusiness(iwac);
+			
+			final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
+			Collection<User> users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
+			
+			long pid = pi.getId();
+			ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
+			
+			HashMap<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
+			MessageValueContext mvCtx = new MessageValueContext(5);
+			
+			for (User user : users) {
 				
-				try {
-					CasesBusiness casesBusiness = getCasesBusiness(iwac);
-					
-					final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-					Collection<User> users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
-					
-					long pid = pi.getId();
-					ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
-					
-					HashMap<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
-					MessageValueContext mvCtx = new MessageValueContext(5);
-					
-					for (User user : users) {
-						
-						Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
-						
-						if(preferredLocale == null)
-							preferredLocale = defaultLocale;
-						
-						mvCtx.setValue(MessageValueContext.userBean, user);
-						mvCtx.setValue(MessageValueContext.piwBean, piw);
-
-						String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
-						
-						String subject = subjNMsg[0];
-						String text = subjNMsg[1];
-						
-						System.out.println("subject="+subject);
-						System.out.println("text="+text);
-						
-						Message message = messageBusiness.createUserMessage(theCase, user, null, null, subject, text, text, null, false, null, false, true);
-						message.store();
-					}
-					
-				} catch (RemoteException e) {
-					Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
-				} catch (FinderException e) {
-					Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
-				}
+				Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
+				
+				if(preferredLocale == null)
+					preferredLocale = defaultLocale;
+				
+				mvCtx.setValue(MessageValueContext.userBean, user);
+				mvCtx.setValue(MessageValueContext.piwBean, piw);
+				
+				String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
+				
+				String subject = subjNMsg[0];
+				String text = subjNMsg[1];
+				
+				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
+				msgValsToSend.add(mv);
 			}
 			
-		}).start();
+		} catch (RemoteException e) {
+			Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
+		} catch (FinderException e) {
+			Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
+		}
+		
+		if(msgValsToSend != null && !msgValsToSend.isEmpty()) {
+			
+			new Thread(new Runnable() {
+
+				public void run() {
+					
+					try {
+						
+						for (MessageValue messageValue : msgValsToSend) {
+							
+							Message message = messageBusiness.createUserMessage(messageValue);
+							message.store();
+						}
+						
+					} catch (RemoteException e) {
+						Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
+					}
+				}
+			}).start();
+		}
+		
 	}
 	
 	protected CommuneMessageBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
