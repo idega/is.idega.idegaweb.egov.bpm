@@ -38,9 +38,9 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/08/11 13:30:51 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/14 12:47:12 $ by $Author: civilis $
  */
 public class CaseHandlerAssignmentHandler implements ActionHandler {
 
@@ -109,6 +109,8 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 			} else
 				throw new IllegalArgumentException("Illegal event type provided="+ectx.getEvent().getEventType());
 			
+			sendMessages(ectx);
+			
 		} catch (RemoteException e) {
 			throw new IBORuntimeException(e);
 		} catch (FinderException e) {
@@ -127,8 +129,6 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		}
 		
 		casesBusiness.untakeCase(genCase);
-		
-		sendMessages(ectx, false);
 	}
 	
 	private void assign(GeneralCase genCase, ProcessInstance pi, CasesBusiness casesBusiness, ExecutionContext ectx, IWApplicationContext iwac, Role caseHandlerRole) throws Exception {
@@ -159,11 +159,9 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		List<Role> roles = Arrays.asList(new Role[] {caseHandlerRole});
 		getBpmFactory().getRolesManager().createProcessRoles(pi.getProcessDefinition().getName(), roles, pi.getId());
 		getBpmFactory().getRolesManager().createIdentitiesForRoles(roles, handlerUserId.toString(), IdentityType.USER, pi.getId());
-		
-		sendMessages(ectx, true);
 	}
 	
-	private void sendMessages(ExecutionContext ectx, boolean assigned) throws Exception {
+	private void sendMessages(ExecutionContext ectx) throws Exception {
 		
 		SendCaseMessagesHandler msgHan = new SendCaseMessagesHandler();
 		msgHan.setMessageKey(getMessageKey());
