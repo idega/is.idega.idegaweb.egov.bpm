@@ -5,6 +5,8 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,6 +28,7 @@ import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.graphics.generator.business.PDFGenerator;
+import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
 import com.idega.jbpm.exe.BPMFactory;
@@ -35,6 +38,7 @@ import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.PresentationUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -67,6 +71,8 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			return null;
 		}
 		
+		addStyleSheetsForPDF(iwc);
+		
 		String xformInPDF = getXFormInPDF(iwc, taskInstanceId, formId, uploadPath, checkExistence);
 		if (StringUtil.isEmpty(xformInPDF)) {
 			logger.log(Level.SEVERE, new StringBuilder("Unable to get 'XForm' with ").append(StringUtil.isEmpty(formId) ? "task instance id: " + taskInstanceId :
@@ -74,6 +80,24 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			return null;
 		}
 		return xformInPDF;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void addStyleSheetsForPDF(IWContext iwc) {
+		IWBundle bundle = iwc.getIWMainApplication().getBundle(BPMConstants.IW_BUNDLE_STARTER);
+		String pdfCss = bundle.getVirtualPathWithFileNameString("style/pdf.css");
+		List<String> resources = null;
+		Object o = iwc.getSessionAttribute(PresentationUtil.ATTRIBUTE_CSS_SOURCE_LINE_FOR_HEADER);
+		if (o instanceof List) {
+			resources = (List) o;
+		}
+		else {
+			resources = new ArrayList<String>();
+		}
+		if (!resources.contains(pdfCss)) {
+			resources.add(pdfCss);
+			iwc.setSessionAttribute(PresentationUtil.ATTRIBUTE_CSS_SOURCE_LINE_FOR_HEADER, resources);
+		}
 	}
 	
 	public String getHashValueForGeneratedPDFFromXForm(String taskInstanceId, boolean checkExistence) {
@@ -109,6 +133,9 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		if (generator == null) {
 			return null;
 		}
+		
+		addStyleSheetsForPDF(iwc);
+		
 		UIComponent viewer = getComponentToRender(iwc, taskInstanceId, null);
 		if (viewer == null) {
 			logger.log(Level.SEVERE, "Unable to get viewer for taskInstance: " + taskInstanceId);
