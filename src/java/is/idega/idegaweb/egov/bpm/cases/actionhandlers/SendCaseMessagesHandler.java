@@ -39,9 +39,9 @@ import com.idega.webface.WFUtil;
  * @deprecated left for backwards compatibility - use is.idega.idegaweb.egov.bpm.cases.messages.SendCaseMessagesHandler
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/08/08 16:17:41 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/14 12:47:25 $ by $Author: civilis $
  */
 @Deprecated
 public class SendCaseMessagesHandler implements ActionHandler {
@@ -105,7 +105,7 @@ public class SendCaseMessagesHandler implements ActionHandler {
 			}
 			
 			if(candPI == null) {
-				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Case id not found in the process instance ("+candPI.getId()+")");
+				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Case id not found in the process instance");
 				return;
 			}
 		}
