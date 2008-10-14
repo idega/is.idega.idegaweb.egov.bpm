@@ -571,7 +571,7 @@ public class CasesListSearchCriteriaBean {
 		}
 
 		List<Integer> casesByContactPerson = null;
-		final List<Integer> casesByContact;casesByContact = new ArrayList<Integer>();
+		final List<Integer> casesByContact = new ArrayList<Integer>();
 			
 		for (User contactPerson: usersByContactInfo) {
 			
