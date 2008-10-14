@@ -12,10 +12,10 @@
 		</t:div>
 		<t:div styleClass="caseTasksPart" style="#{casesBPMAssetsState.tasksVisibilityProperty}">
 			<t:div styleClass="header">
-				<t:div style="float: left">
+				<t:div styleClass="caseTasksPartHeaderLeftLayerStyle" style="float: left">
 					<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/>
 				</t:div>
-				<t:div rendered="#{loginSession.loggedIn and caseManagerState.fullView}" style="float: right">
+				<t:div styleClass="caseTasksPartHeaderRightLayerStyle" rendered="#{loginSession.loggedIn and caseManagerState.fullView}" style="float: right">
 					<t:outputText styleClass="watchUnwatchCase" value="#{casesBPMAssetsState.watchCaseStatusLabel}"></t:outputText>
 					<h:selectOneListbox styleClass="takeCaseSelect" style="margin-left: 10px; display: none;" />
 				</t:div>
