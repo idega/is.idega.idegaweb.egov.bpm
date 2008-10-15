@@ -705,11 +705,44 @@ CasesBPMAssets.setTableProperties = function(component) {
 		return false;
 	}
 	
+	var removeWidths = function(elements) {
+		if (elements == null || elements.length == 0) {
+			return false;
+		}
+		
+		var element = null;
+		var currentStyle = null;
+		for (var i = 0; i < elements.length; i++) {
+			element = jQuery(elements[i]);
+			
+			currentStyle = element.attr('style');
+			if (currentStyle != null && currentStyle != '') {
+				var widthStart = currentStyle.indexOf('width:');
+				try {
+					if (widthStart > 0) {
+						var endIndex = widthStart;
+						while ((endIndex + 1) < currentStyle.length && currentStyle.substring(endIndex, endIndex + 1) != ';') {
+							endIndex++;
+						}
+						var widthValue = currentStyle.slice(widthStart, endIndex + 1);
+						currentStyle = currentStyle.replace(widthValue, '');
+						element.attr('style', currentStyle);
+					}
+				} catch(e) {
+					element.removeAttr('style');
+				}
+			}
+		}
+	}
+	
 	var table = null;
 	for (var i = 0; i < tables.length; i++) {
 		table = jQuery(tables[i]);
 		
 		table.attr('border', '0');
+		
+		removeWidths(jQuery('th', table));
+		removeWidths(jQuery('td', table));
 	}
 }
 
