@@ -10,12 +10,16 @@ import java.io.Serializable;
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.BPMUserImpl;
+import com.idega.jbpm.rights.Right;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
 import com.idega.webface.WFUtil;
@@ -23,9 +27,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  *
- * Last modified: $Date: 2008/10/01 14:50:15 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/15 12:47:12 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -38,6 +42,8 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	private transient CasesBPMProcessView casesBPMProcessView;
 	private transient ProcessWatch processWatcher;
+	
+	@Autowired private BPMFactory bpmFactory;
 	
 	private Integer caseId;
 	private Long processInstanceId;
@@ -227,6 +233,29 @@ public class CasesBPMAssetsState implements Serializable {
 		return "display: block";
 	}
 	
+	public String getGridStyleClasses() {
+		String styleClasses = "caseGrids";
+		
+		if (getBpmFactory() == null) {
+			return styleClasses;
+		}
+		
+		ProcessInstanceW piw = null;
+		try {
+			piw = bpmFactory.getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		if (piw == null) {
+			return styleClasses;
+		}
+		if (piw.hasRight(Right.processHandler)) {
+			styleClasses = new StringBuilder(styleClasses).append(" bpmHandler").toString();
+		}
+		
+		return styleClasses;
+	}
+	
 	public void startTask() {
 		
 		if(getViewSelected() != null) {
@@ -354,6 +383,14 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setAllowPDFSigning(Boolean allowPDFSigning) {
 		this.allowPDFSigning = allowPDFSigning;
+	}
+
+	public BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
 	}
 
 }
