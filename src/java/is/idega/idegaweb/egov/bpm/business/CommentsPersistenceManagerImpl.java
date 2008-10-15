@@ -17,6 +17,7 @@ import com.idega.block.rss.business.RSSBusiness;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.content.business.ContentConstants;
+import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.business.NotLoggedOnException;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.BPMFactory;
@@ -233,6 +234,36 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		} catch (IBOLookupException e) {
 			logger.log(Level.SEVERE, "Error getting RSSBusiness", e);
 		}
+		return null;
+	}
+
+	//	TODO: When access rights (to Slide resources) are fixed, use current user!
+	public User getUserAvailableToReadWriteCommentsFeed(IWContext iwc) {
+		User currentUser = null;
+		try {
+			currentUser = iwc.getCurrentUser();
+		} catch(NotLoggedOnException e) {
+			e.printStackTrace();
+		}
+		if (currentUser == null) {
+			return null;
+		}
+		
+		AccessController accessController = iwc.getAccessController();
+		try {
+			if (iwc.isSuperAdmin()) {
+				return currentUser;
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		try {
+			return accessController.getAdministratorUser();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
 		return null;
 	}
 	

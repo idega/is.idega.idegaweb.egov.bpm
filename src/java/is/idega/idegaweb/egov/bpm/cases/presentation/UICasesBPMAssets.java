@@ -42,9 +42,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.36 $
+ * @version $Revision: 1.37 $
  *
- * Last modified: $Date: 2008/10/13 08:06:16 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/15 14:54:38 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -115,6 +115,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
 			comments.setNewestEntriesOnTop(true);
 			comments.setShowCommentsList(false);
+			comments.setAddLoginbyUUIDOnRSSFeedLink(true);
 			div.getChildren().add(comments);
 		}
 		
