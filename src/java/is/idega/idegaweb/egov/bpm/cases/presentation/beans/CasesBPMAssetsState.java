@@ -22,14 +22,15 @@ import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.jbpm.rights.Right;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
+import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  *
- * Last modified: $Date: 2008/10/15 12:47:12 $ by $Author: valdas $
+ * Last modified: $Date: 2008/10/16 18:15:35 $ by $Author: juozas $
  *
  */
 @Scope("request")
@@ -40,10 +41,10 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	public static final String beanIdentifier = "casesBPMAssetsState";
 	
-	private transient CasesBPMProcessView casesBPMProcessView;
+	@Autowired private transient CasesBPMProcessView casesBPMProcessView;
 	private transient ProcessWatch processWatcher;
 	
-	@Autowired private BPMFactory bpmFactory;
+	@Autowired private transient BPMFactory bpmFactory;
 	
 	private Integer caseId;
 	private Long processInstanceId;
@@ -157,9 +158,9 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public CasesBPMProcessView getCasesBPMProcessView() {
 		
-		if(casesBPMProcessView == null) 
-			casesBPMProcessView = (CasesBPMProcessView)WFUtil.getBeanInstance(CasesBPMProcessView.BEAN_IDENTIFIER);
-
+		if(casesBPMProcessView == null){ 
+			ELUtil.getInstance().autowire(this);
+		}
 		return casesBPMProcessView;
 	}
 
@@ -386,6 +387,9 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public BPMFactory getBpmFactory() {
+		if(bpmFactory == null){
+			ELUtil.getInstance().autowire(this);
+		}
 		return bpmFactory;
 	}
 
