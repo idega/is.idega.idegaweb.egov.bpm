@@ -116,9 +116,9 @@ CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
         	if(handlerUsers != null && handlerUsers.length != 0) {
         		
         		var selectId = takeCaseSelect.attr("id");
-            
-	            if(selectId == null) {
-	                
+        		
+	            if(selectId == null || selectId.length == 0) {
+	            	
 	                var date = new Date();
 	                selectId = 'takeCase_' + date.getTime();
 	                takeCaseSelect.attr("id", selectId);
