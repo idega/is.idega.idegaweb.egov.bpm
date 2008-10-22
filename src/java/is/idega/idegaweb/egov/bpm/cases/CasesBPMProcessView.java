@@ -44,9 +44,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/07/31 13:18:25 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/22 15:01:44 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
@@ -68,7 +68,6 @@ public class CasesBPMProcessView {
 		
 			ProcessInstance processInstance = ctx.getProcessInstance(tInst.getProcessInstance().getId());
 			ProcessInstanceW processInstanceW = getBPMFactory().getProcessManager(processInstance.getProcessDefinition().getId()).getProcessInstance(tInst.getProcessInstance().getId());
-			@SuppressWarnings("unchecked")
 			Collection<TaskInstanceW> taskInstances = processInstanceW.getAllTaskInstances();
 			
 			TaskInstanceW ti = null;
@@ -230,7 +229,7 @@ public class CasesBPMProcessView {
 	
 	public BPMUser getBPMUser(Integer bpmUserPK, User usr) {
 		
-		BPMUser bpmUsr = getBPMFactory().getBpmUserFactory().getBPMUser(bpmUserPK, usr);
+		BPMUser bpmUsr = getBPMFactory().getBpmUserFactory().getLoggedInBPMUser(bpmUserPK, usr);
 		return bpmUsr;
 	}
 	
