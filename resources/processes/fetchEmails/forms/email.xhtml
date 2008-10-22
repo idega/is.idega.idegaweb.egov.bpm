@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:idega="http://idega.com/xforms" xmlns:xf="http://www.w3.org/2002/xforms" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:idega="http://idega.com/xforms" xmlns:xf="http://www.w3.org/2002/xforms" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" >
 
     <head>
         <title>
@@ -10,7 +10,7 @@
             <xf:instance xmlns="" id="data-instance">
                 <data>
                     <form_id>tid</form_id>
-                <Subject_fbc_5 mapping="string_subject"/>
+               <Subject_fbc_5 mapping="string_subject"/>
                <Text_fbc_6 mapping="string_text"/>
             </data>
             </xf:instance>   
@@ -29,9 +29,6 @@
 				<xf:message level="modeless" ref="instance('localized_strings')/page-1-error.label[@lang=instance('localized_strings')/current_language]"/>
 	</xf:action>
 	
-            
-        <xf:bind id="bind.fbc_5" nodeset="Subject_fbc_5" type="string" readonly="instance('control-instance')/readonly = 'true'"/>
-         <xf:bind id="bind.fbc_6" nodeset="Text_fbc_6" type="string" readonly="instance('control-instance')/readonly = 'true'"/>
       </xf:model>
         <xf:model id="data_model">
             <xf:instance xmlns="" id="localized_strings">
@@ -82,14 +79,14 @@
                         <xf:group appearance="full">
                             <xf:label model="data_model"
                             ref="instance('localized_strings')/page-1.label[@lang=instance('localized_strings')/current_language]"/>
-                            <xf:input bind="bind.fbc_5" id="fbc_5">
+                            <xf:output ref="instance('data-instance')/Subject_fbc_5" id="fbc_5">
                      <xf:label model="data_model"
                                ref="instance('localized_strings')/fbc_5.title[@lang=instance('localized_strings')/current_language]"/>
-                  </xf:input>
-                  <xf:textarea bind="bind.fbc_6" id="fbc_6">
+                  </xf:output>
+                  <xf:output ref="instance('data-instance')/Text_fbc_6"  mediatype="text/html" id="fbc_6">
                      <xf:label model="data_model"
                                ref="instance('localized_strings')/fbc_6.title[@lang=instance('localized_strings')/current_language]"/>
-                  </xf:textarea>
+                  </xf:output>
                   <div class="fbc_button_area" id="fbc_2" name="fbc_button_area">
                         
                     </div>
