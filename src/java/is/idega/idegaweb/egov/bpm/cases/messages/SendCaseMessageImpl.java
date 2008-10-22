@@ -18,6 +18,7 @@ import javax.ejb.FinderException;
 
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
+import com.idega.jbpm.process.business.messages.TypeRef;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
@@ -40,16 +42,23 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/10/13 08:38:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/22 15:02:57 $ by $Author: civilis $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
 @Service
 public class SendCaseMessageImpl extends SendMailMessageImpl {
 	
-	public void send(final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
+	public static final TypeRef caseUserBean = new TypeRef("bean", "caseUser");
+	
+	@Autowired
+	private CaseUserFactory caseUserFactory;
+	
+	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
+		
+//		System.out.println("___________SEND CASE MESSAGE");
 		
 		final Integer caseId = (Integer)context;
 	
@@ -81,7 +90,9 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
 			
 			HashMap<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
-			MessageValueContext mvCtx = new MessageValueContext(5);
+			
+			if(mvCtx == null)
+				mvCtx = new MessageValueContext(3);
 			
 			for (User user : users) {
 				
@@ -90,13 +101,21 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				if(preferredLocale == null)
 					preferredLocale = defaultLocale;
 				
+				CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(user, piw, iwc);
+				
 				mvCtx.setValue(MessageValueContext.userBean, user);
+				mvCtx.setValue(caseUserBean, caseUser);
 				mvCtx.setValue(MessageValueContext.piwBean, piw);
+				
+//				System.out.println("__user="+user.getName());
+//				System.out.println("__url to the case="+caseUser.getUrlToTheCase());
 				
 				String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
 				
 				String subject = subjNMsg[0];
 				String text = subjNMsg[1];
+				
+//				System.out.println("_____text to send="+text);
 				
 				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
 				msgValsToSend.add(mv);
@@ -179,5 +198,13 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			allUsers = new ArrayList<User>(0);
 		
 		return allUsers;
+	}
+
+	CaseUserFactory getCaseUserFactory() {
+		return caseUserFactory;
+	}
+
+	void setCaseUserFactory(CaseUserFactory caseUserFactory) {
+		this.caseUserFactory = caseUserFactory;
 	}
 }
