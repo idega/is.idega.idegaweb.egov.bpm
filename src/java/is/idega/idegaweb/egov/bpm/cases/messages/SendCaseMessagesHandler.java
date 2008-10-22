@@ -19,9 +19,9 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/09/25 11:55:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/22 15:02:44 $ by $Author: civilis $
  */
 public class SendCaseMessagesHandler extends SendMessagesHandler {
 
@@ -81,7 +81,7 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		
 		LocalizedMessages msgs = getLocalizedMessages();
 		msgs.setSendToRoles(sendToRoles);
-		getSendMessage().send(new Integer(caseIdStr), pi, msgs, tkn);
+		getSendMessage().send(null, new Integer(caseIdStr), pi, msgs, tkn);
 	}
 
 	public SendMessage getSendMessage() {
