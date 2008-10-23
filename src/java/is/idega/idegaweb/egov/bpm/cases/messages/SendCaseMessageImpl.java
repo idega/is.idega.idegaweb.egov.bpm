@@ -42,9 +42,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/10/22 15:02:57 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/23 09:39:24 $ by $Author: civilis $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -57,8 +57,6 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 	private CaseUserFactory caseUserFactory;
 	
 	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
-		
-//		System.out.println("___________SEND CASE MESSAGE");
 		
 		final Integer caseId = (Integer)context;
 	
@@ -107,15 +105,10 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				mvCtx.setValue(caseUserBean, caseUser);
 				mvCtx.setValue(MessageValueContext.piwBean, piw);
 				
-//				System.out.println("__user="+user.getName());
-//				System.out.println("__url to the case="+caseUser.getUrlToTheCase());
-				
 				String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
 				
 				String subject = subjNMsg[0];
 				String text = subjNMsg[1];
-				
-//				System.out.println("_____text to send="+text);
 				
 				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
 				msgValsToSend.add(mv);
