@@ -51,10 +51,7 @@
          
               	 <fbc_5.title lang="en">Subject</fbc_5.title>
                   <fbc_5.title lang="is_IS">Subject</fbc_5.title>
-                  
-               <fbc_6.title lang="en">Text</fbc_6.title>
-               <fbc_6.title lang="is_IS">Text</fbc_6.title>
-               
+         
                 <page-1-error.label lang="en">Submission error. Please check your form!</page-1-error.label>
         <page-1-error.label lang="is_IS"></page-1-error.label>
                
@@ -79,14 +76,11 @@
                         <xf:group appearance="full">
                             <xf:label model="data_model"
                             ref="instance('localized_strings')/page-1.label[@lang=instance('localized_strings')/current_language]"/>
-                            <xf:output ref="instance('data-instance')/Subject_fbc_5" id="fbc_5">
+                            <xf:output ref="instance('data-instance')/Subject_fbc_5" id="fbc_5" class="subject">
                      <xf:label model="data_model"
                                ref="instance('localized_strings')/fbc_5.title[@lang=instance('localized_strings')/current_language]"/>
                   </xf:output>
-                  <xf:output ref="instance('data-instance')/Text_fbc_6"  mediatype="text/html" id="fbc_6">
-                     <xf:label model="data_model"
-                               ref="instance('localized_strings')/fbc_6.title[@lang=instance('localized_strings')/current_language]"/>
-                  </xf:output>
+                  <xf:output ref="instance('data-instance')/Text_fbc_6"  mediatype="text/html" id="fbc_6" class="text"/>
                   <div class="fbc_button_area" id="fbc_2" name="fbc_button_area">
                         
                     </div>
