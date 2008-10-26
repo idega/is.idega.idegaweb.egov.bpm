@@ -2,11 +2,10 @@ package is.idega.idegaweb.egov.bpm.cases.email;
 
 import is.idega.idegaweb.egov.bpm.cases.exe.CaseIdentifier;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URI;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +22,7 @@ import javax.mail.MessagingException;
 import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMultipart;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.exe.ProcessInstance;
@@ -35,6 +35,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.email.client.business.ApplicationEmailEvent;
+import com.idega.block.process.variables.Variable;
+import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.xformsview.IXFormViewFactory;
 import com.idega.core.file.tmp.TmpFileResolver;
 import com.idega.core.file.tmp.TmpFileResolverType;
@@ -44,17 +46,17 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.artifacts.impl.ProcessArtifactsProviderImpl;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.View;
 import com.idega.util.CoreConstants;
-import com.idega.util.FileUtil;
 import com.idega.util.IWTimestamp;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/09/16 18:20:55 $ by $Author: civilis $
+ * Last modified: $Date: 2008/10/26 17:40:04 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Service
@@ -190,11 +192,11 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    	vars.put("string_fromPersonal", fromPersonal);
 				    	vars.put("string_fromAddress", fromAddress);
 
-				    	@SuppressWarnings("unchecked")
+				    	/*@SuppressWarnings("unchecked")
 				    	List<URI> filesUris = (List<URI>)msgAndAttachments[1];
 				    	
 				    	if(filesUris != null)
-				    		vars.put("files_attachments", filesUris);
+				    		vars.put("files_attachments", filesUris);*/
 				    	
 						BPMFactory bpmFactory = getBpmFactory();
 						
@@ -204,6 +206,25 @@ public class EmailMessagesAttacher implements ApplicationListener {
 						emailView.populateVariables(vars);
 						
 						bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId()).submit(emailView, false);
+						
+						
+						TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
+				    	
+						
+						Variable variable = new Variable("files_attachments", VariableDataType.FILES);
+						
+						@SuppressWarnings("unchecked")
+						Map<String, InputStream> files = (Map<String, InputStream>)msgAndAttachments[1];
+						
+						for( String fileName:files.keySet()){
+							//BinaryVariable newAttachment = null;
+							try {
+								taskInstance.addAttachment(variable, fileName, fileName, files.get(fileName));
+							} catch(Exception e) {
+								//logger.log(Level.SEVERE, "Unable to set binary variable for task instance: " + taskInstanceId, e);
+								e.printStackTrace();
+							}
+						}
 						
 						return;
 						
@@ -216,70 +237,55 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	}
 	
 	protected Object[] parseContent(Message msg, long taskID) {
-		
-//		contentType: TEXT/PLAIN; charset=UTF-8; format=flowed
-		
 		Object[] msgAndAttachments = new Object[2];
-		
 		try {
 			Object content = msg.getContent();
-			
+			Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
+			msgAndAttachments[1] = attachemntMap;
 			if (msg.isMimeType(TEXT_PLAIN_TYPE)){
 			    
 			    if (content instanceof String)
-				msgAndAttachments[0] = content;
-				
-			} else 
+			    	msgAndAttachments[0] = parsePlainTextMessage((String)content);
 			    
-			    if (msg.isMimeType(TEXT_HTML_TYPE) || msg.isMimeType(MULTI_ALTERNATIVE_TYPE)){
-			    			    			    
-				String filesfolder = taskID + CoreConstants.SLASH;
+			} else if (msg.isMimeType(TEXT_HTML_TYPE) ){
 				
-				createAttachmentFile (content, filesfolder);    
-			    			   			    
-				msgAndAttachments[1] = getFileUploadManager().getFilesUris(filesfolder, null, getUploadedResourceResolver());
- 
-			} else 	
-			      
-			    if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
+				if (content instanceof String)
+					msgAndAttachments[0] = parseHTMLMessage((String)content);
+				
+ 			} else if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
 				
 				Multipart messageMultiPart = (Multipart) content;
-				
-				String filesfolder = taskID + CoreConstants.SLASH;
-				
 				String msgText = CoreConstants.EMPTY;
 				
 				for (int i = 0; i < messageMultiPart.getCount(); i++) {
 				    
 				    Part messagePart = messageMultiPart.getBodyPart(i);
-				    
-					    
-				    if (messagePart.getContent() instanceof String) {
-					
-					if (messagePart.isMimeType(TEXT_HTML_TYPE))	
-					    createAttachmentFile (messagePart.getContent(), filesfolder);
-					else
-					    msgText = msgText + messagePart.getContent();
-				    }	    
-				    
-				    
 				    String disposition = messagePart.getDisposition();
-				
+				    //it is attachment
 				    if ((disposition != null) && ((disposition.equals(Part.ATTACHMENT) || disposition.equals(Part.INLINE)))){
-					
+			
 						InputStream input =  messagePart.getInputStream();
 						
 						String fileName = messagePart.getFileName();
 						
-						getFileUploadManager().uploadToTmpDir(filesfolder, fileName, input, getUploadedResourceResolver());
+						attachemntMap.put(fileName, input);
+					//It's a message body	
+				    }else if (messagePart.getContent() instanceof String) {
+				    	if (messagePart.isMimeType(TEXT_HTML_TYPE))	
+				    			msgText = parseHTMLMessage((String)messagePart.getContent());
+				    	else if (messagePart.isMimeType(TEXT_PLAIN_TYPE))
+				    			msgText = msgText + messagePart.getContent();
+				    	
+				    }else if (messagePart.getContent() instanceof MimeMultipart && messagePart.getContentType().startsWith(MULTI_ALTERNATIVE_TYPE)){
+				    	msgText = parseMultipartAlternative((MimeMultipart)messagePart.getContent());
+				    }else{
+				    	//TODO: what if non of these????
 				    }
-					
-				}//for end
-			    
+				}
 				msgAndAttachments[0] = msgText;
-				msgAndAttachments[1] = getFileUploadManager().getFilesUris(filesfolder, null, getUploadedResourceResolver());
-				
-			    }// else if end
+			}else if(msg.isMimeType(MULTI_ALTERNATIVE_TYPE)){
+				msgAndAttachments[0] = parseMultipartAlternative((MimeMultipart)msg.getContent());
+			}
 			
 		} catch (MessagingException e) {
 			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
@@ -306,67 +312,156 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		return pisformsgs;
 	}
 	
-	protected void createAttachmentFile (Object content, String filesfolder) {
-	    
-	    String fileName = System.currentTimeMillis() + HTML_EXTENSION;
-	    
-	    try {
+	private String parseMultipartAlternative(MimeMultipart multipart) throws MessagingException, IOException{
 		
-		if (content instanceof String) {
-		    
-		    try{
-			
-			FileUtil.createFileAndFolder(getUploadedResourceResolver().getRealBasePath() + filesfolder, fileName);
-			    
-			FileWriter fstream = new FileWriter(getUploadedResourceResolver().getRealBasePath() + filesfolder + fileName);
-			    
-			BufferedWriter out = new BufferedWriter(fstream);
-			out.write(content.toString());
-			
-			out.close();
-			    
-		    }catch (Exception e){
-			e.printStackTrace();
-		    }	    
-		    
-		} else {
-		    
-		    Multipart messageMultiPart = (Multipart)content;
-    	    		for (int i = 0; i < messageMultiPart.getCount(); i++) {
-    		    
-    	    		    Part messagePart = messageMultiPart.getBodyPart(i);
-    
-    	    		    if (messagePart.isMimeType(TEXT_HTML_TYPE)) {
-    		    					
-    	    			Object htmlContent = messagePart.getContent();
-    			
-    	    			try{
-    				    FileUtil.createFileAndFolder(getUploadedResourceResolver().getRealBasePath() + filesfolder, fileName);
-    				    
-    				    FileWriter fstream = new FileWriter(getUploadedResourceResolver().getRealBasePath() + filesfolder + fileName);
-    				    
-    				    BufferedWriter out = new BufferedWriter(fstream);
-    				    out.write(htmlContent.toString());
-    				
-    				    out.close();
-    				    
-    	    			}catch (Exception e){
-    	    			    e.printStackTrace();
-    	    			}
-    		
-    	    		    }			
-    		
-    	    		}
-    	    	
-	     }//end if	
-	    
-	    } catch (MessagingException e) {
-		Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+		String returnStr = null;
+		for (int i = 0; i<multipart.getCount();i++){
+			Part part = multipart.getBodyPart(i);
+			if(part.isMimeType(TEXT_HTML_TYPE)){
+				return parseHTMLMessage((String)part.getContent());
+			}else if(part.isMimeType(TEXT_PLAIN_TYPE)){
+				returnStr = parsePlainTextMessage((String)part.getContent());
+			}
+		}
+		
+		return returnStr;
+	}
+	
+	private String parseHTMLMessage(String message){
+		return message;// "<[!CDATA ["+ message+"]]>";
+	}
+	
+	private String parsePlainTextMessage(String message){
+		return  "<[!CDATA ["+ escapeHTMLSpecialChars(message) +"]]>";
+	}
+	
+	public String escapeHTMLSpecialChars(String aText){
+	     StringBuilder result = new StringBuilder();
+	     StringCharacterIterator iterator = new StringCharacterIterator(aText);
+	     char character =  iterator.current();
+	     while (character != CharacterIterator.DONE ){
+	       if (character == '<') {
+	         result.append("&lt;");
+	       }
+	       else if (character == '>') {
+	         result.append("&gt;");
+	       }
+	       else if (character == '&') {
+	         result.append("&amp;");
+	      }
+	       else if (character == '\"') {
+	         result.append("&quot;");
+	       }
+	       else if (character == '\t') {
+	         addCharEntity(9, result);
+	       }
+	       else if (character == '!') {
+	         addCharEntity(33, result);
+	       }
+	       else if (character == '#') {
+	         addCharEntity(35, result);
+	       }
+	       else if (character == '$') {
+	         addCharEntity(36, result);
+	       }
+	       else if (character == '%') {
+	         addCharEntity(37, result);
+	       }
+	       else if (character == '\'') {
+	         addCharEntity(39, result);
+	       }
+	       else if (character == '(') {
+	         addCharEntity(40, result);
+	       }
+	       else if (character == ')') {
+	         addCharEntity(41, result);
+	       }
+	       else if (character == '*') {
+	         addCharEntity(42, result);
+	       }
+	       else if (character == '+') {
+	         addCharEntity(43, result);
+	       }
+	       else if (character == ',') {
+	         addCharEntity(44, result);
+	       }
+	       else if (character == '-') {
+	         addCharEntity(45, result);
+	       }
+	       else if (character == '.') {
+	         addCharEntity(46, result);
+	       }
+	       else if (character == '/') {
+	         addCharEntity(47, result);
+	       }
+	       else if (character == ':') {
+	         addCharEntity(58, result);
+	       }
+	       else if (character == ';') {
+	         addCharEntity(59, result);
+	       }
+	       else if (character == '=') {
+	         addCharEntity(61, result);
+	       }
+	       else if (character == '?') {
+	         addCharEntity(63, result);
+	       }
+	       else if (character == '@') {
+	         addCharEntity(64, result);
+	       }
+	       else if (character == '[') {
+	         addCharEntity(91, result);
+	       }
+	       else if (character == '\\') {
+	         addCharEntity(92, result);
+	       }
+	       else if (character == ']') {
+	         addCharEntity(93, result);
+	       }
+	       else if (character == '^') {
+	         addCharEntity(94, result);
+	       }
+	       else if (character == '_') {
+	         addCharEntity(95, result);
+	       }
+	       else if (character == '`') {
+	         addCharEntity(96, result);
+	       }
+	       else if (character == '{') {
+	         addCharEntity(123, result);
+	       }
+	       else if (character == '|') {
+	         addCharEntity(124, result);
+	       }
+	       else if (character == '}') {
+	         addCharEntity(125, result);
+	       }
+	       else if (character == '~') {
+	         addCharEntity(126, result);
+	       }
+	       else {
+	         //the char is not a special one
+	         //add it to the result as is
+	         result.append(character);
+	       }
+	       character = iterator.next();
+	     }
+	     return result.toString();
+	  }
+	
+	private void addCharEntity(Integer aIdx, StringBuilder aBuilder){
+	    String padding = "";
+	    if( aIdx <= 9 ){
+	       padding = "00";
 	    }
-	    catch (IOException e) {
-		Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+	    else if( aIdx <= 99 ){
+	      padding = "0";
 	    }
-	    
+	    else {
+	      //no prefix
+	    }
+	    String number = padding + aIdx.toString();
+	    aBuilder.append("&#" + number + ";");
 	}
 	
 	class PISFORMSG {
@@ -465,4 +560,9 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			TmpFileResolver uploadedResourceResolver) {
 		this.uploadedResourceResolver = uploadedResourceResolver;
 	}
+	
+
+
+
+	
 }
