@@ -54,9 +54,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2008/10/26 17:40:04 $ by $Author: juozas $
+ * Last modified: $Date: 2008/10/26 17:45:04 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Service
@@ -191,12 +191,6 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    	vars.put("string_text", text);
 				    	vars.put("string_fromPersonal", fromPersonal);
 				    	vars.put("string_fromAddress", fromAddress);
-
-				    	/*@SuppressWarnings("unchecked")
-				    	List<URI> filesUris = (List<URI>)msgAndAttachments[1];
-				    	
-				    	if(filesUris != null)
-				    		vars.put("files_attachments", filesUris);*/
 				    	
 						BPMFactory bpmFactory = getBpmFactory();
 						
@@ -221,6 +215,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 							try {
 								taskInstance.addAttachment(variable, fileName, fileName, files.get(fileName));
 							} catch(Exception e) {
+								//TODO: fix this!
 								//logger.log(Level.SEVERE, "Unable to set binary variable for task instance: " + taskInstanceId, e);
 								e.printStackTrace();
 							}
@@ -266,6 +261,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 						InputStream input =  messagePart.getInputStream();
 						
+						//TODO: if attachment is has ISO-***** encoding fileName is null. Why????
 						String fileName = messagePart.getFileName();
 						
 						attachemntMap.put(fileName, input);
@@ -275,7 +271,10 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				    			msgText = parseHTMLMessage((String)messagePart.getContent());
 				    	else if (messagePart.isMimeType(TEXT_PLAIN_TYPE))
 				    			msgText = msgText + messagePart.getContent();
-				    	
+				    	else{
+				    		//TODO: what now?
+				    	}
+				    	// "multipart/Mixed" can have multipart/alternative subtipe.
 				    }else if (messagePart.getContent() instanceof MimeMultipart && messagePart.getContentType().startsWith(MULTI_ALTERNATIVE_TYPE)){
 				    	msgText = parseMultipartAlternative((MimeMultipart)messagePart.getContent());
 				    }else{
@@ -335,6 +334,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		return  "<[!CDATA ["+ escapeHTMLSpecialChars(message) +"]]>";
 	}
 	
+	//TODO: move it somewhere
 	public String escapeHTMLSpecialChars(String aText){
 	     StringBuilder result = new StringBuilder();
 	     StringCharacterIterator iterator = new StringCharacterIterator(aText);
