@@ -54,9 +54,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2008/10/26 17:45:04 $ by $Author: juozas $
+ * Last modified: $Date: 2008/10/27 10:14:36 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Service
@@ -331,7 +331,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	}
 	
 	private String parsePlainTextMessage(String message){
-		return  "<[!CDATA ["+ escapeHTMLSpecialChars(message) +"]]>";
+		return escapeHTMLSpecialChars(message);
 	}
 	
 	//TODO: move it somewhere
