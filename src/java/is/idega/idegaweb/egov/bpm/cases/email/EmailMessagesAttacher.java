@@ -23,6 +23,7 @@ import javax.mail.Multipart;
 import javax.mail.Part;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMultipart;
+import javax.mail.internet.MimeUtility;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.exe.ProcessInstance;
@@ -50,13 +51,14 @@ import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.View;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
+import com.idega.util.StringUtil;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2008/10/27 10:14:36 $ by $Author: juozas $
+ * Last modified: $Date: 2008/10/27 12:46:14 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Service
@@ -261,24 +263,30 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 						InputStream input =  messagePart.getInputStream();
 						
-						//TODO: if attachment is has ISO-***** encoding fileName is null. Why????
-						String fileName = messagePart.getFileName();
 						
+						String fileName = messagePart.getFileName();
+						if(fileName != null){
+							fileName = MimeUtility.decodeText(fileName);
+						}else if (messagePart.getContentType().indexOf("name*=") != -1){
+							//When attachments send from evolution mail client, there is errors so we do what we can.
+							fileName = messagePart.getContentType().substring(messagePart.getContentType().indexOf("name*=")+6);
+							//maybe we are lucky to decode it, if not, well better something then nothing.
+							fileName =  MimeUtility.decodeText(fileName);
+							
+						}else{
+							fileName = "UnknownFile";
+						}
 						attachemntMap.put(fileName, input);
 					//It's a message body	
 				    }else if (messagePart.getContent() instanceof String) {
 				    	if (messagePart.isMimeType(TEXT_HTML_TYPE))	
 				    			msgText = parseHTMLMessage((String)messagePart.getContent());
-				    	else if (messagePart.isMimeType(TEXT_PLAIN_TYPE))
-				    			msgText = msgText + messagePart.getContent();
-				    	else{
-				    		//TODO: what now?
-				    	}
-				    	// "multipart/Mixed" can have multipart/alternative subtipe.
+				    	//it's plain text
+				    	else msgText = (String) messagePart.getContent();
+				    	
+				    	// "multipart/Mixed" can have multipart/alternative sub type.
 				    }else if (messagePart.getContent() instanceof MimeMultipart && messagePart.getContentType().startsWith(MULTI_ALTERNATIVE_TYPE)){
 				    	msgText = parseMultipartAlternative((MimeMultipart)messagePart.getContent());
-				    }else{
-				    	//TODO: what if non of these????
 				    }
 				}
 				msgAndAttachments[0] = msgText;
