@@ -154,11 +154,11 @@ public class CasesEngine {
 		UIComponent component = null;
 		if (UserCases.TYPE.equals(criteriaBean.getCaseListType())) {
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning());
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics());
 		}
 		else {
 			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning());
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics());
 		}
 		if (component == null) {
 			return null;

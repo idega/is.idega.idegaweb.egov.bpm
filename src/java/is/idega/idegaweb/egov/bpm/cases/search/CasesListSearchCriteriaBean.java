@@ -64,6 +64,7 @@ public class CasesListSearchCriteriaBean {
 	
 	private boolean usePDFDownloadColumn = true;
 	private boolean allowPDFSigning = true;
+	private boolean showStatistics;
 	
 	public String getCaseNumber() {
 		return caseNumber;
@@ -640,6 +641,14 @@ public class CasesListSearchCriteriaBean {
 
 	public void setAllowPDFSigning(boolean allowPDFSigning) {
 		this.allowPDFSigning = allowPDFSigning;
+	}
+
+	public boolean isShowStatistics() {
+		return showStatistics;
+	}
+
+	public void setShowStatistics(boolean showStatistics) {
+		this.showStatistics = showStatistics;
 	}
 	
 }
