@@ -23,14 +23,13 @@ import com.idega.jbpm.rights.Right;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
 import com.idega.util.expression.ELUtil;
-import com.idega.webface.WFUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  *
- * Last modified: $Date: 2008/10/16 18:15:35 $ by $Author: juozas $
+ * Last modified: $Date: 2008/11/04 12:28:41 $ by $Author: valdas $
  *
  */
 @Scope("request")
