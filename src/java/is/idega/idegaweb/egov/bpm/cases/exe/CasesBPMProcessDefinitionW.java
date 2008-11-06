@@ -1,11 +1,14 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.CasesStatusVariables;
 import is.idega.idegaweb.egov.bpm.cases.manager.CasesBPMCaseManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.data.CaseStatus;
 import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
 import com.idega.bpm.xformsview.XFormsView;
 import com.idega.business.IBOLookup;
@@ -44,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/09/18 17:10:42 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/06 09:27:24 $ by $Author: arunas $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -56,7 +60,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Autowired private CaseIdentifier caseIdentifier;
 	
 	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
-	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void startProcess(View view) {
 		
@@ -96,6 +100,18 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			
 			CasesBusiness casesBusiness = getCasesBusiness(iwc);
 			
+			Collection<CaseStatus> allStatuses = null;
+			
+			try {
+				
+				allStatuses = casesBusiness.getCaseStatuses();
+				
+			} catch (RemoteException e) {
+				e.printStackTrace();
+			}
+			
+			
+			
 			GeneralCase genCase = casesBusiness.storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseManagerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
 
 			ti.getProcessInstance().setStart(new Date());
@@ -105,10 +121,12 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
 			caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
 			caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
-			caseData.put(CasesBPMProcessConstants.caseStatusReceivedVariableName, casesBusiness.getCaseStatusOpen().getStatus());
-			caseData.put(CasesBPMProcessConstants.caseStatusInProgressVariableName, casesBusiness.getCaseStatusPending().getStatus());
 			caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
+
+			for (CaseStatus caseStatus : allStatuses) 
+				caseData.put(CasesStatusVariables.evaluateStatusVariableName(caseStatus.getStatus()), caseStatus.getStatus());
 			
+
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
@@ -173,7 +191,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			
 			HashMap<String, Object> vars = new HashMap<String, Object>(1);
 			vars.put(CasesBPMProcessConstants.caseIdentifier, identifier);
-			
+			vars.put("string_ownerKennitala", "test");
 			view.populateVariables(vars);
 			
 //			--

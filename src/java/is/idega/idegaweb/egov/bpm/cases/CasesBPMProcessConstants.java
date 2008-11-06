@@ -5,9 +5,9 @@ import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/09/17 13:14:19 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/06 09:27:25 $ by $Author: arunas $
  *
  */
 public class CasesBPMProcessConstants {
@@ -30,8 +30,19 @@ public class CasesBPMProcessConstants {
 	public static final String userIdActionVariableName = "userId";
 	public static final String caseCategoryIdActionVariableName = "caseCategoryId";
 	public static final String caseTypeActionVariableName = "caseType";
-	
-	public static final String caseStatusReceivedVariableName = "string_caseStatusReceived";
-	public static final String caseStatusInProgressVariableName = "string_caseStatusInProgress";
+
 	public static final String caseStatusClosedVariableName = "string_caseStatusClosed";
+	public static final String caseStatusDenied = "string_caseStatusDenied";
+	public static final String caseStatusGranted = "string_caseStatusGranted";
+	public static final String caseStatusInactive = "string_caseStatusInactive";
+	public static final String caseStatusMoved = "string_caseStatusMoved";
+	public static final String caseStatusReceived = "string_caseStatusReceived";
+	public static final String caseStatusInProgress = "string_caseStatusInProgress";
+	public static final String caseStatusPreliminary = "string_caseStatusPreliminary";
+	public static final String caseStatusReady = "string_caseStatusReady";
+	public static final String caseStatusReview = "string_caseStatusReview";
+	public static final String caseStatusGrou = "string_caseStatusGrou";
+	public static final String caseStatusPlaced = "string_caseStatusPlaced";
+	
+	
 }
