@@ -50,8 +50,8 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 	
 	@Autowired private BPMFactory bpmFactory;
 	
-	public String getGeneratedPDFFromXForm(String taskInstanceId, String formId, String uploadPath, boolean checkExistence) {
-		if (StringUtil.isEmpty(taskInstanceId) && StringUtil.isEmpty(formId)) {
+	public String getGeneratedPDFFromXForm(String taskInstanceId, String formId, String formSubmitionId, String uploadPath, boolean checkExistence) {
+		if (StringUtil.isEmpty(taskInstanceId) && StringUtil.isEmpty(formId) && StringUtil.isEmpty(formSubmitionId)) {
 			logger.log(Level.SEVERE, "Do not know what to generate!");
 			return null;
 		}
@@ -73,7 +73,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		
 		addStyleSheetsForPDF(iwc);
 		
-		String xformInPDF = getXFormInPDF(iwc, taskInstanceId, formId, uploadPath, checkExistence);
+		String xformInPDF = getXFormInPDF(iwc, taskInstanceId, formId, formSubmitionId, uploadPath, checkExistence);
 		if (StringUtil.isEmpty(xformInPDF)) {
 			logger.log(Level.SEVERE, new StringBuilder("Unable to get 'XForm' with ").append(StringUtil.isEmpty(formId) ? "task instance id: " + taskInstanceId :
 														"form id: " + formId).toString());
@@ -136,7 +136,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		
 		addStyleSheetsForPDF(iwc);
 		
-		UIComponent viewer = getComponentToRender(iwc, taskInstanceId, null);
+		UIComponent viewer = getComponentToRender(iwc, taskInstanceId, null, null);
 		if (viewer == null) {
 			logger.log(Level.SEVERE, "Unable to get viewer for taskInstance: " + taskInstanceId);
 			return null;
@@ -187,7 +187,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		}
 	}
 	
-	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String pathInSlide, boolean checkExistence) {
+	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String formSubmitionId, String pathInSlide, boolean checkExistence) {
 		IWSlideService slide = getSlideService();
 		if (slide == null) {
 			return null;
@@ -204,7 +204,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			needToGenerate = xformInPDF == null || !xformInPDF.exists();
 		}
 		if (needToGenerate) {
-			return generatePDF(iwc, slide, taskInstanceId, formId, pathInSlide, pdfName, pathToForm);
+			return generatePDF(iwc, slide, taskInstanceId, formId, formSubmitionId, pathInSlide, pdfName, pathToForm);
 		}
 		
 		return pathToForm;
@@ -229,7 +229,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		return xformInPDF;
 	}
 	
-	private UIComponent getComponentToRender(IWContext iwc, String taskInstanceId, String formId) {
+	private UIComponent getComponentToRender(IWContext iwc, String taskInstanceId, String formId, String formSubmitionId) {
 		UIComponent viewer = null;
 		if (!StringUtil.isEmpty(taskInstanceId)) {
 			ProcessArtifacts bean = ELUtil.getInstance().getBean(CoreConstants.SPRING_BEAN_NAME_PROCESS_ARTIFACTS);
@@ -244,17 +244,23 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 				e.printStackTrace();
 			}
 		}
-		else if (!StringUtil.isEmpty(formId)) {
+		else if (!StringUtil.isEmpty(formId) || !StringUtil.isEmpty(formSubmitionId)) {
 			Application application = iwc.getApplication();
 			viewer = application.createComponent(FormViewer.COMPONENT_TYPE);
-			((FormViewer) viewer).setFormId(formId);
+		
+			if (!StringUtil.isEmpty(formId)) {
+				((FormViewer) viewer).setFormId(formId);
+			}
+			else {
+				((FormViewer) viewer).setSubmissionId(formSubmitionId);
+			}
 		}
 		
 		return viewer;
 	}
 	
-	private String generatePDF(IWContext iwc, IWSlideService slide, String taskInstanceId, String formId, String pathInSlide, String pdfName, String pathToForm) {
-		UIComponent viewer = getComponentToRender(iwc, taskInstanceId, formId);
+	private String generatePDF(IWContext iwc, IWSlideService slide, String taskInstanceId, String formId, String formSubmitionId, String pathInSlide, String pdfName, String pathToForm) {
+		UIComponent viewer = getComponentToRender(iwc, taskInstanceId, formId, formSubmitionId);
 		if (viewer == null) {
 			logger.log(Level.SEVERE, "Unable to get viewer for " + taskInstanceId == null ? "xform: " + formId : "taskInstance: " + taskInstanceId);
 			return null;
