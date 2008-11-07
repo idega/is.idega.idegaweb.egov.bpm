@@ -25,9 +25,12 @@
                      
             <xf:submission action="xformsBPM:/nouri" id="submit_data_submission" method="post" replace="none" />
             
-            <xf:action id="submission-error" ev:event="xforms-submit-error">
-				<xf:message level="modeless" ref="instance('localized_strings')/page-1-error.label[@lang=instance('localized_strings')/current_language]"/>
-	</xf:action>
+             <xf:action ev:event="xforms-submit-error" id="submission-error">
+                <xf:dispatch name="idega-submit-error" target="idega-submission-error"/>
+            </xf:action>
+            <xf:action ev:event="idega-submit-error" id="idega-submission-error">
+                <xf:message level="modeless" ref="instance('localized_strings')/submission-error_message[@lang=instance('localized_strings')/current_language]"/>
+            </xf:action>
 	
       </xf:model>
         <xf:model id="data_model">
@@ -52,8 +55,9 @@
               	 <fbc_5.title lang="en">Subject</fbc_5.title>
                   <fbc_5.title lang="is_IS">Subject</fbc_5.title>
          
-                <page-1-error.label lang="en">Submission error. Please check your form!</page-1-error.label>
-        <page-1-error.label lang="is_IS"></page-1-error.label>
+                 <submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
+                    <submission-error_message lang="is_IS">Villa varð við að senda formið vinsamlegast athugið hvort stjörnumerktir reitir hafi allir verið útfylltir og að engar villur séu í forminu.</submission-error_message>
+                 
                
             </localized_strings>
             </xf:instance>
