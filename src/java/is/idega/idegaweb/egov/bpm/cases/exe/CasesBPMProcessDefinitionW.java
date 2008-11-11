@@ -48,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/11/11 14:25:09 $ by $Author: arunas $
+ * Last modified: $Date: 2008/11/11 17:28:16 $ by $Author: arunas $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -98,19 +98,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
-			CasesBusiness casesBusiness = getCasesBusiness(iwc);
-			
-			Collection<CaseStatus> allStatuses = null;
-			
-			try {
-				
-				allStatuses = casesBusiness.getCaseStatuses();
-				
-			} catch (RemoteException e) {
-				e.printStackTrace();
-			}
-			
-			
+			CasesBusiness casesBusiness = getCasesBusiness(iwc);		
 			
 			GeneralCase genCase = casesBusiness.storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseManagerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
 
@@ -123,6 +111,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
 			caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
 
+							
+			Collection<CaseStatus>	allStatuses = casesBusiness.getCaseStatuses();
+				
 			for (CaseStatus caseStatus : allStatuses) 
 				caseData.put(CasesStatusVariables.evaluateStatusVariableName(caseStatus.getStatus()), caseStatus.getStatus());
 			
