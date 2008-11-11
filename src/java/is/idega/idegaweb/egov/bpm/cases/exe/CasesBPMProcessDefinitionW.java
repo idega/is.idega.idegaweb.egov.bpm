@@ -48,9 +48,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/11/06 09:27:24 $ by $Author: arunas $
+ * Last modified: $Date: 2008/11/11 14:25:09 $ by $Author: arunas $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -191,7 +191,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			
 			HashMap<String, Object> vars = new HashMap<String, Object>(1);
 			vars.put(CasesBPMProcessConstants.caseIdentifier, identifier);
-			vars.put("string_ownerKennitala", "test");
 			view.populateVariables(vars);
 			
 //			--
