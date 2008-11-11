@@ -5,9 +5,9 @@ import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/11/06 09:27:25 $ by $Author: arunas $
+ * Last modified: $Date: 2008/11/11 11:08:37 $ by $Author: arunas $
  *
  */
 public class CasesBPMProcessConstants {
@@ -43,6 +43,7 @@ public class CasesBPMProcessConstants {
 	public static final String caseStatusReview = "string_caseStatusReview";
 	public static final String caseStatusGrou = "string_caseStatusGrou";
 	public static final String caseStatusPlaced = "string_caseStatusPlaced";
+	public static final String caseStatusWait = "string_caseStatusWait";
 	
 	
 }
