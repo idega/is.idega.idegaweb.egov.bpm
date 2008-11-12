@@ -237,7 +237,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 				return null;
 			}
 			try {
-				return bean.getViewInUIComponent(Long.valueOf(taskInstanceId));
+				return bean.getViewInUIComponent(Long.valueOf(taskInstanceId), true);
 			} catch (NumberFormatException e) {
 				e.printStackTrace();
 			} catch (Exception e) {
