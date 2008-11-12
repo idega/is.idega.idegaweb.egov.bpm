@@ -248,6 +248,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			Application application = iwc.getApplication();
 			viewer = application.createComponent(FormViewer.COMPONENT_TYPE);
 		
+			((FormViewer) viewer).setPdfViewer(true);
 			if (!StringUtil.isEmpty(formId)) {
 				((FormViewer) viewer).setFormId(formId);
 			}
