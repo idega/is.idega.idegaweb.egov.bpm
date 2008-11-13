@@ -17,6 +17,8 @@ import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -38,10 +40,12 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/10/14 12:47:12 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/13 15:08:42 $ by $Author: juozas $
  */
+@Service("caseHandlerAssignmentHandler")
+@Scope("prototype")
 public class CaseHandlerAssignmentHandler implements ActionHandler {
 
 	private static final long serialVersionUID = -6642593190563557536L;

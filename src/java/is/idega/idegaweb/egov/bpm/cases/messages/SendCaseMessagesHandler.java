@@ -10,6 +10,8 @@ import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMessage;
@@ -19,10 +21,12 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2008/10/22 15:02:44 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/13 15:08:42 $ by $Author: juozas $
  */
+@Service("sendCaseMessagesHandler")
+@Scope("prototype")
 public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 	private static final long serialVersionUID = 1212382470685233437L;

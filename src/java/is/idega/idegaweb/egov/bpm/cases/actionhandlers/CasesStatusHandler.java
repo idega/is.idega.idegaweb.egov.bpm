@@ -9,6 +9,8 @@ import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
@@ -25,10 +27,12 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/08/28 12:02:36 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/13 15:08:42 $ by $Author: juozas $
  */
+@Service("casesStatusHandler")
+@Scope("prototype")
 public class CasesStatusHandler implements ActionHandler {
 
 	private static final long serialVersionUID = 7504445907540445936L;
@@ -45,11 +49,11 @@ public class CasesStatusHandler implements ActionHandler {
 	/**
 	 * performer, if not set, current user is used
 	 */
-	private String performerUserIdExp;
+	private Integer performerUserIdExp;
 	/**
 	 * caseId, if not set, caseId from econtext process instance id is resolved
 	 */
-	private String caseIdExp;
+	private Integer caseIdExp;
 	
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
@@ -57,10 +61,10 @@ public class CasesStatusHandler implements ActionHandler {
 	public void execute(ExecutionContext ectx) throws Exception {
 		
 		try {
-			final String status = (String)JbpmExpressionEvaluator.evaluate(getCaseStatusExp(), ectx);
-			Integer performerUserId = getPerformerUserIdExp() != null ? (Integer)JbpmExpressionEvaluator.evaluate(getPerformerUserIdExp(), ectx) : null;
-			Integer caseId = getCaseIdExp() != null ? (Integer)JbpmExpressionEvaluator.evaluate(getCaseIdExp(), ectx) : null;
-			final String ifCaseStatus = getIfCaseStatusExp() != null ? (String)JbpmExpressionEvaluator.evaluate(getIfCaseStatusExp(), ectx) : null;
+			final String status = getCaseStatusExp();//(String)JbpmExpressionEvaluator.evaluate(getCaseStatusExp(), ectx);
+			Integer performerUserId = getPerformerUserIdExp();// getPerformerUserIdExp() != null ? (Integer)JbpmExpressionEvaluator.evaluate(getPerformerUserIdExp(), ectx) : null;
+			Integer caseId = getCaseIdExp();//getCaseIdExp() != null ? (Integer)JbpmExpressionEvaluator.evaluate(getCaseIdExp(), ectx) : null;
+			final String ifCaseStatus = getIfCaseStatusExp();//getIfCaseStatusExp() != null ? (String)JbpmExpressionEvaluator.evaluate(getIfCaseStatusExp(), ectx) : null;
 			
 			if(caseId == null) {
 				
@@ -149,19 +153,19 @@ public class CasesStatusHandler implements ActionHandler {
 		this.caseStatusExp = caseStatusExp;
 	}
 
-	public String getPerformerUserIdExp() {
+	public Integer getPerformerUserIdExp() {
 		return performerUserIdExp;
 	}
 
-	public void setPerformerUserIdExp(String performerUserIdExp) {
+	public void setPerformerUserIdExp(Integer performerUserIdExp) {
 		this.performerUserIdExp = performerUserIdExp;
 	}
 
-	public String getCaseIdExp() {
+	public Integer getCaseIdExp() {
 		return caseIdExp;
 	}
 
-	public void setCaseIdExp(String caseIdExp) {
+	public void setCaseIdExp(Integer caseIdExp) {
 		this.caseIdExp = caseIdExp;
 	}
 

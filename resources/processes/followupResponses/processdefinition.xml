@@ -9,12 +9,17 @@
 
 	<node name="createTasksForAllRolesUsers">
 		<event type="node-leave">
-			<action name="createTasksForAllRolesUsersAction" class="com.idega.jbpm.invitation.AssignTasksForRolesUsers">
+		<!-- 	<action name="createTasksForAllRolesUsersAction" class="com.idega.jbpm.invitation.AssignTasksForRolesUsers">
 				<tasksExp>
 					#{followupTasks}
 				</tasksExp>
-			</action>
-			
+			</action> -->
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>assignTasksForRolesUsers</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			        	<entry><key>tasksExp</key><value>#{followupTasks}</value></entry>
+			    </propertyMap>
+		 	</action>
 			<script>
                 <expression>
                     String joinedRoles = com.idega.util.CoreConstants.EMPTY;
@@ -24,7 +29,7 @@
                     
                         StringBuilder sb = new StringBuilder();
                     
-                        for (com.idega.jbpm.invitation.AssignTasksForRolesUsersBean tb : tasksBeans) {
+                        for (com.idega.bpm.process.invitation.AssignTasksForRolesUsersBean tb : tasksBeans) {
                         
                             String[] roles = tb.getRoles();
                             
@@ -54,14 +59,50 @@
 
 	<node name="sendMessagesForAllRolesUsers">
 	   <event type="node-enter">
-	         <action name="SendFollowupMessages" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendCaseMessagesHandler">
+	     <!--     <action name="SendFollowupMessages" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendCaseMessagesHandler">
 	            <messagesBundle>is.idega.idegaweb.egov.bpm</messagesBundle>
 	            <subjectKey>cases_bpm.followup.subject</subjectKey>
 	            <messageKey>cases_bpm.followup.message</messageKey>
 	            <messageValues>{list: {mv: [{type: "bean", value: "user.name"}]}}</messageValues>
 	            <sendToRoles>#{rolesToSendMessages}</sendToRoles>
 	            <sendFromProcessInstanceExp>#{sendFromProcessInstance}</sendFromProcessInstanceExp>
-            </action>
+            </action> -->
+            
+            <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>sendCaseMessagesHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			        <entry>
+			        	<key>inlineSubject</key>
+			        	<value>
+			        		${
+			        		Map subjectMap = new HashMap();
+			        		subjectMap.put("en", "Case requires your attention");
+			        		subjectMap.put("is_IS", "Case requires your attention");
+			        		return subjectMap;
+			        		}
+			        		
+                		</value>
+                	</entry>
+                	<entry>
+			        	<key>inlineMessage</key>
+			        	<value>
+			        		${
+			        		Map messageMap = new HashMap();
+			        		messageMap.put("en", "Hello, {0}. Case handler has asked your input.");
+			        		messageMap.put("is_IS", "Hello, {0}. Case handler has asked your input.");
+			        		return messageMap;
+			        		}
+                		</value>
+                	</entry>
+                	<entry>
+			        	<key>messageValues</key>
+			        	<value>
+			        		{list: {mv: [{type: "bean", value: "user.name"}]}}
+                		</value>
+                	</entry>
+                	<entry><key>sendToRoles</key><value>#{rolesToSendMessages}</value></entry>
+			    </propertyMap>
+		 	</action>
         </event>
 		<transition to="end-state1" name="toEnd"></transition>
 	</node>
