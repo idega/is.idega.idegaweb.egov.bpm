@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.form.presentation.FormViewer;
+import com.idega.block.pdf.PDFRenderedComponent;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
@@ -129,7 +130,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		if (iwc == null) {
 			return null;
 		}
-		PDFGenerator generator = ELUtil.getInstance().getBean(CoreConstants.SPRING_BEAN_NAME_PDF_GENERATOR);
+		PDFGenerator generator = ELUtil.getInstance().getBean(PDFGenerator.SPRING_BEAN_NAME_PDF_GENERATOR);
 		if (generator == null) {
 			return null;
 		}
@@ -150,7 +151,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			return null;
 		}
 		
-		ProcessArtifacts procArtifacts = ELUtil.getInstance().getBean(CoreConstants.SPRING_BEAN_NAME_PROCESS_ARTIFACTS);
+		ProcessArtifacts procArtifacts = ELUtil.getInstance().getBean(ProcessArtifacts.SPRING_BEAN_NAME_PROCESS_ARTIFACTS);
 		String fileName = procArtifacts.getFileNameForGeneratedPDFFromTaskInstance(taskInstanceId);
 		String description = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc)
 		.getLocalizedString("auto_generated_pdf", "Generated PDF from document");
@@ -230,34 +231,42 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 	}
 	
 	private UIComponent getComponentToRender(IWContext iwc, String taskInstanceId, String formId, String formSubmitionId) {
-		UIComponent viewer = null;
+		UIComponent component = null;
 		if (!StringUtil.isEmpty(taskInstanceId)) {
-			ProcessArtifacts bean = ELUtil.getInstance().getBean(CoreConstants.SPRING_BEAN_NAME_PROCESS_ARTIFACTS);
+			ProcessArtifacts bean = ELUtil.getInstance().getBean(ProcessArtifacts.SPRING_BEAN_NAME_PROCESS_ARTIFACTS);
 			if (bean == null) {
 				return null;
 			}
+			
 			try {
-				return bean.getViewInUIComponent(Long.valueOf(taskInstanceId), true);
-			} catch (NumberFormatException e) {
-				e.printStackTrace();
+				component = bean.getViewInUIComponent(Long.valueOf(taskInstanceId), true);
 			} catch (Exception e) {
 				e.printStackTrace();
+			}
+			if (component == null) {
+				return null;
+			}
+			
+			if (component instanceof PDFRenderedComponent) {
+				((PDFRenderedComponent) component).setPdfViewer(true);
 			}
 		}
 		else if (!StringUtil.isEmpty(formId) || !StringUtil.isEmpty(formSubmitionId)) {
 			Application application = iwc.getApplication();
-			viewer = application.createComponent(FormViewer.COMPONENT_TYPE);
+			FormViewer viewer = (FormViewer) application.createComponent(FormViewer.COMPONENT_TYPE);
 		
-			((FormViewer) viewer).setPdfViewer(true);
+			viewer.setPdfViewer(true);
 			if (!StringUtil.isEmpty(formId)) {
-				((FormViewer) viewer).setFormId(formId);
+				viewer.setFormId(formId);
 			}
 			else {
-				((FormViewer) viewer).setSubmissionId(formSubmitionId);
+				viewer.setSubmissionId(formSubmitionId);
 			}
+			
+			component = viewer;
 		}
 		
-		return viewer;
+		return component;
 	}
 	
 	private String generatePDF(IWContext iwc, IWSlideService slide, String taskInstanceId, String formId, String formSubmitionId, String pathInSlide, String pdfName, String pathToForm) {
@@ -271,7 +280,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			((FormViewer) viewer).setPdfViewer(true);
 		}
 		
-		PDFGenerator generator = ELUtil.getInstance().getBean(CoreConstants.SPRING_BEAN_NAME_PDF_GENERATOR);
+		PDFGenerator generator = ELUtil.getInstance().getBean(PDFGenerator.SPRING_BEAN_NAME_PDF_GENERATOR);
 		if (generator == null) {
 			return null;
 		}
