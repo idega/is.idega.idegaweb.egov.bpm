@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
@@ -8,8 +9,10 @@ import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,16 +29,21 @@ import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWResourceBundle;
+import com.idega.jbpm.exe.ProcessManager;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
 @Scope("singleton")
@@ -150,6 +158,8 @@ public class CasesEngine {
 			return null;
 		}
 		
+		addSearchQueryToSession(iwc, criteriaBean);
+		
 		Collection<Case> cases = getCasesByQuery(iwc, criteriaBean);
 		UIComponent component = null;
 		if (UserCases.TYPE.equals(criteriaBean.getCaseListType())) {
@@ -165,6 +175,54 @@ public class CasesEngine {
 		}
 		
 		return getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, component, true);
+	}
+	
+	private void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean bean) {
+		List<AdvancedProperty> searchFields = new ArrayList<AdvancedProperty>();
+		
+		Locale locale = iwc.getCurrentLocale();
+		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+		
+		if (!StringUtil.isEmpty(bean.getCaseNumber())) {
+			searchFields.add(new AdvancedProperty("case_nr", bean.getCaseNumber()));
+		}
+		if (!StringUtil.isEmpty(bean.getDescription())) {
+			searchFields.add(new AdvancedProperty("description", bean.getDescription()));
+		}
+		if (!StringUtil.isEmpty(bean.getName())) {
+			searchFields.add(new AdvancedProperty("name", bean.getName()));
+		}
+		if (!StringUtil.isEmpty(bean.getPersonalId())) {
+			searchFields.add(new AdvancedProperty("personal_id", bean.getPersonalId()));
+		}
+		if (!StringUtil.isEmpty(bean.getContact())) {
+			searchFields.add(new AdvancedProperty("contact", bean.getContact()));
+		}
+		if (!StringUtil.isEmpty(bean.getProcessId())) {
+			String processName = null;
+			try {
+				ProcessManager processManager = ELUtil.getInstance().getBean("defaultBpmProcessManager");
+				processName = processManager.getProcessDefinition(Long.valueOf(bean.getProcessId())).getProcessName(locale);
+			} catch(Exception e) {
+				logger.log(Level.WARNING, "Error getting process name by: " + bean.getProcessId(), e);
+			}
+			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ?
+																					iwrb.getLocalizedString("unkown_process", "Unknown") : processName));
+		}
+		if (!StringUtil.isEmpty(bean.getStatusId())) {
+			String status = null;
+			try {
+				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(null, getCasesBusiness(iwc).getCaseStatus(bean.getStatusId()), locale);
+			} catch (Exception e) {
+				logger.log(Level.WARNING, "Error getting status name by: " + bean.getStatusId(), e);
+			}
+			searchFields.add(new AdvancedProperty("status", StringUtil.isEmpty(status) ? iwrb.getLocalizedString("unknown_status", "Unknown") : status));
+		}
+		if (!StringUtil.isEmpty(bean.getDateRange())) {
+			searchFields.add(new AdvancedProperty("date_range", bean.getDateRange()));
+		}
+		
+		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
 	}
 	
 	private Collection<Case> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
