@@ -204,10 +204,9 @@ public class CasesEngine {
 				ProcessManager processManager = ELUtil.getInstance().getBean("defaultBpmProcessManager");
 				processName = processManager.getProcessDefinition(Long.valueOf(bean.getProcessId())).getProcessName(locale);
 			} catch(Exception e) {
-				logger.log(Level.WARNING, "Error getting process name by: " + bean.getProcessId(), e);
+				logger.log(Level.WARNING, "Error getting process name by: " + bean.getProcessId());
 			}
-			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ?
-																					iwrb.getLocalizedString("unkown_process", "Unknown") : processName));
+			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ? "general_cases" : processName));
 		}
 		if (!StringUtil.isEmpty(bean.getStatusId())) {
 			String status = null;
