@@ -6,12 +6,12 @@ import is.idega.idegaweb.egov.bpm.cases.manager.CasesBPMCaseManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
 import com.idega.bpm.xformsview.XFormsView;
@@ -48,9 +49,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/11/11 17:28:16 $ by $Author: arunas $
+ * Last modified: $Date: 2008/11/20 11:33:10 $ by $Author: valdas $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -58,6 +59,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	
 	@Autowired private CasesBPMDAO casesBPMDAO;
 	@Autowired private CaseIdentifier caseIdentifier;
+	@Autowired private CaseManager caseManager;
 	
 	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
 	@SuppressWarnings("unchecked")
@@ -331,5 +333,23 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	public void setCaseIdentifier(CaseIdentifier caseIdentifier) {
 		this.caseIdentifier = caseIdentifier;
+	}
+	
+	public CaseManager getCaseManager() {
+		return caseManager;
+	}
+
+	public void setCaseManager(CaseManager caseManager) {
+		this.caseManager = caseManager;
+	}
+	
+	@Override
+	public String getProcessName(Locale locale) {
+	
+		if (locale == null) {
+			return null;
+		}
+		
+		return getCaseManager().getProcessName(getProcessDefinitionId(), locale);
 	}
 }
