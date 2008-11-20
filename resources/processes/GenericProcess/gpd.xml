@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root-container name="GenericProcess" width="1039" height="1001">
+  <node name="submitNewCase" x="373" y="-147" width="104" height="32">
+    <edge>
+      <label x="-16" y="-9"/>
+    </edge>
+  </node>
+  <node name="sendHandlerNewCaseArrivedMessage" x="324" y="138" width="201" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="requestAdditionalInformation" x="11" y="299" width="140" height="40">
+    <edge>
+      <label x="-14" y="-14"/>
+      <bendpoint w1="-30" h1="37" w2="-32" h2="-33"/>
+    </edge>
+  </node>
+  <node name="submitAdditionalInformation" x="10" y="505" width="140" height="40">
+    <edge>
+      <label x="-13" y="-12"/>
+    </edge>
+  </node>
+  <node name="additionalInformationEnd" x="68" y="581" width="21" height="26"/>
+  <node name="inviteParticipantFork" x="735" y="324" width="23" height="21">
+    <edge>
+      <label x="-12" y="-4"/>
+      <bendpoint w1="20" h1="-31" w2="19" h2="61"/>
+    </edge>
+    <edge>
+      <label x="-42" y="-8"/>
+    </edge>
+  </node>
+  <node name="submitCaseAnswer" x="678" y="457" width="140" height="40">
+    <edge>
+      <label x="-11" y="-11"/>
+    </edge>
+  </node>
+  <node name="caseAnswerEnd" x="740" y="525" width="22" height="24"/>
+  <node name="submitProcessRuling" x="359" y="335" width="140" height="40">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+    <edge>
+      <label x="-83" y="-7"/>
+    </edge>
+  </node>
+  <node name="sendRulingMessages" x="379" y="506" width="140" height="40">
+    <edge>
+      <label x="-54" y="-7"/>
+    </edge>
+  </node>
+  <node name="end" x="440" y="827" width="24" height="25"/>
+  <node name="emailsFetcherEnd" x="757" y="-90" width="23" height="23"/>
+  <node name="fork1" x="415" y="235" width="24" height="21">
+    <edge>
+      <label x="-84" y="-8"/>
+    </edge>
+    <edge>
+      <label x="-23" y="-12"/>
+    </edge>
+    <edge>
+      <label x="-57" y="-4"/>
+    </edge>
+  </node>
+  <node name="inviteDefandant" x="676" y="229" width="140" height="40">
+    <edge>
+      <label x="-22" y="-15"/>
+      <bendpoint w1="-15" h1="48" w2="-14" h2="-44"/>
+    </edge>
+  </node>
+  <node name="endCaseProcess" x="381" y="671" width="140" height="40">
+    <edge>
+      <label x="-30" y="-10"/>
+    </edge>
+  </node>
+  <node name="fork2" x="70" y="375" width="24" height="21">
+    <edge>
+      <label x="-13" y="-10"/>
+      <bendpoint w1="23" h1="-22" w2="24" h2="44"/>
+    </edge>
+    <edge>
+      <label x="-36" y="-6"/>
+    </edge>
+  </node>
+  <node name="endProcess" x="380" y="746" width="140" height="40">
+    <edge>
+      <label x="-31" y="-9"/>
+    </edge>
+  </node>
+  <node name="inviteParticipant" x="679" y="385" width="140" height="40">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="emailsFetcher" x="572" y="-94" width="132" height="36">
+    <edge>
+      <label x="-17" y="-11"/>
+    </edge>
+  </node>
+  <node name="fork3" x="415" y="-89" width="25" height="24">
+    <edge>
+      <label x="-40" y="-18"/>
+    </edge>
+    <edge>
+      <label x="-50" y="-16"/>
+    </edge>
+  </node>
+  <node name="sendMessage" x="16" y="431" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="completeProcess" x="385" y="599" width="132" height="36">
+    <edge>
+      <label x="-43" y="-9"/>
+    </edge>
+  </node>
+  <node name="handlerAssignsOwner" x="55" y="-96" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="anonymousOwnerAssignment" x="37" y="79" width="162" height="36">
+    <edge>
+      <label x="-89" y="-9"/>
+    </edge>
+  </node>
+  <node name="ifHandlerAssigned" x="54" y="3" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+    <edge>
+      <label x="-9" y="-9"/>
+      <bendpoint w1="305" h1="0" w2="1" h2="-135"/>
+    </edge>
+  </node>
+  <node name="sendOwnerCaseCreatedMessage" x="17" y="144" width="199" height="36">
+    <edge>
+      <label x="-66" y="-30"/>
+    </edge>
+  </node>
+  <node name="denyProcessRulling" x="474" y="433" width="132" height="36">
+    <edge>
+      <label x="-13" y="-12"/>
+    </edge>
+  </node>
+  <node name="grantProcessRulling" x="266" y="430" width="132" height="36">
+    <edge>
+      <label x="-89" y="-10"/>
+    </edge>
+  </node>
+</root-container>
