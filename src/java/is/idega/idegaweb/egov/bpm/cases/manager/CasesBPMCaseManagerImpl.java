@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
@@ -13,10 +14,10 @@ import is.idega.idegaweb.egov.cases.presentation.OpenCases;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -35,18 +36,16 @@ import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.CaseManagerState;
-import com.idega.block.text.data.LocalizedText;
-import com.idega.builder.bean.AdvancedProperty;
-import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
-import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.core.persistence.Param;
 import com.idega.data.IDOLookup;
+import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
@@ -66,9 +65,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/10/08 18:51:33 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/20 07:30:44 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -82,11 +81,6 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
-	
-//	private static final String user_assets_page_type = "bpm_user_assets";
-//	private static final String handler_assets_page_type = "bpm_handler_assets";
-//	private static final String PARAMETER_ACTION = "cbcAct";
-//	private static final String ACTION_OPEN_PROCESS = "cbcActOP";
 
 	public String getBeanIdentifier() {
 		return beanIdentifier;
@@ -199,28 +193,6 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		}
 		
 		return casesAssets;
-		
-		/*
-		UICasesListAsset casesList = (UICasesListAsset)iwc.getApplication().createComponent(UICasesListAsset.COMPONENT_TYPE);
-		UIViewRoot viewRoot = iwc.getViewRoot();
-		if (viewRoot != null) {
-			casesList.setId(viewRoot.createUniqueId());
-		}
-		
-		if (theCase != null) {
-			Integer caseId = null;
-			try {
-				caseId = Integer.valueOf(theCase.getPrimaryKey().toString());
-			} catch(NumberFormatException e) {
-				e.printStackTrace();
-			}
-			if (caseId != null) {
-				casesList.setCaseId(caseId);
-			}
-		}
-		
-		return casesList;
-		*/
 	}
 
 	public Collection<? extends Case> getCases(User user, String casesComponentType) {
@@ -389,48 +361,112 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		this.bpmFactory = bpmFactory;
 	}
 
-	public List<AdvancedProperty> getAllCaseProcesses() {
+	public Map<Long, String> getAllCaseProcessDefinitionsWithName() {
+		List<ProcessDefinition> allProcesses = getAllProcessDefinitions();
+		if (ListUtil.isEmpty(allProcesses)) {
+			return null;
+		}
+
+		Map<Long, String> processes = new HashMap<Long, String>();
 		
+		Locale locale = null;
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc != null) {
+			locale = iwc.getCurrentLocale();
+		}
+		if (locale == null) {
+			locale = Locale.ENGLISH;
+		}
+		
+		ApplicationHome appHome = null;
+		try {
+			appHome = (ApplicationHome) IDOLookup.getHome(Application.class);
+		} catch (IDOLookupException e) {
+			e.printStackTrace();
+		}
+		if (appHome == null) {
+			return null;
+		}
+		
+		String localizedName = null;
+		for (ProcessDefinition pd: allProcesses) {
+			localizedName = getProcessDefinitionLocalizedName(pd, locale, appHome);
+			localizedName = StringUtil.isEmpty(localizedName) ? pd.getName() : localizedName;
+			
+			processes.put(Long.valueOf(pd.getId()), localizedName);
+		}
+		return processes;
+	}
+	
+	public List<Long> getAllCaseProcessDefinitions() {
+		List<ProcessDefinition> allProcesses = getAllProcessDefinitions();
+		if (ListUtil.isEmpty(allProcesses)) {
+			return null;
+		}
+		
+		List<Long> ids = new ArrayList<Long>();
+		for (ProcessDefinition pd: allProcesses) {
+			ids.add(Long.valueOf(pd.getId()));
+		}
+		
+		return ids;
+	}
+	
+	private List<ProcessDefinition> getAllProcessDefinitions() {
 		List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
+		if (ListUtil.isEmpty(casesProcesses)) {
+			return null;
+		}
 		
 		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
 		
+		ProcessDefinition pd = null;
+		List<ProcessDefinition> caseProcessDefinitions = new ArrayList<ProcessDefinition>();
 		try {
-			ArrayList<AdvancedProperty> props = new ArrayList<AdvancedProperty>(casesProcesses.size());
-			
-			Locale locale = null;
-			IWContext iwc = CoreUtil.getIWContext();
-			if (iwc != null) {
-				locale = iwc.getCurrentLocale();
-			}
-			if (locale == null) {
-				locale = Locale.ENGLISH;
-			}
-			
-			ApplicationHome appHome = (ApplicationHome) IDOLookup.getHome(Application.class);
-			
-			String localizedName = null;
 			for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
+				pd = ctx.getGraphSession().findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
 				
-				ProcessDefinition pd = ctx.getGraphSession().findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
-				
-				localizedName = getProcessDefinitionLocalizedName(pd, locale, appHome);
-				
-				props.add(new AdvancedProperty(String.valueOf(pd.getId()), StringUtil.isEmpty(localizedName) ? pd.getName() : localizedName));
+				if (pd != null && !caseProcessDefinitions.contains(pd)) {
+					caseProcessDefinitions.add(pd);
+				}
 			}
-			
-			Collections.sort(props, new AdvancedPropertyComparator(locale));
-			return props;
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
 			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 		
+		return caseProcessDefinitions;
+	}
+	
+	public String getProcessName(Long processDefinitionId, Locale locale) {
+		if (processDefinitionId == null) {
+			return null;
+		}
+		
+		ProcessDefinition pd = null;
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		try {
+			pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+		
+		try {
+			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+		} catch (IDOLookupException e) {
+			e.printStackTrace();
+		}
 		return null;
 	}
 	
 	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, Locale locale, ApplicationHome appHome) {
+		if (pd == null || locale == null || appHome == null) {
+			return null;
+		}
+		
 		Collection<Application> apps = null;
 		try {
 			apps = appHome.findAllByApplicationUrl(pd.getName());
@@ -442,30 +478,17 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			return null;
 		}
 		
-		String name = null;
-		LocalizedText locText = null;
-		int localeId = ICLocaleBusiness.getLocaleId(locale);
-		for (Application app: apps) {
-			locText = app.getLocalizedText(localeId);
-			if (locText != null) {
-				name = locText.getBody();
-				if (!StringUtil.isEmpty(name)) {
-					return name;
-				}
-			}
+		ApplicationBusiness applicationBusiness = null;
+		try {
+			applicationBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
+																															ApplicationBusiness.class);
+		} catch (IBOLookupException e) {
+			e.printStackTrace();
+		}
+		if (applicationBusiness == null) {
+			return null;
 		}
 		
-		Application app = apps.iterator().next();
-		name = app.getLocalizedName(locale);
-		if (!StringUtil.isEmpty(name)) {
-			return name;
-		}
-		name = app.getNameByLocale(locale);
-		if (!StringUtil.isEmpty(name)) {
-			return name;
-		}
-		Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find localized name for process: " + pd.getName() + ", locale: " + locale.toString());
-		
-		return app.getName();
+		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
 	}
 }
