@@ -2,6 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
+import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
@@ -36,7 +37,6 @@ import com.idega.business.IBOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.jbpm.exe.ProcessManager;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -201,8 +201,9 @@ public class CasesEngine {
 		if (!StringUtil.isEmpty(bean.getProcessId())) {
 			String processName = null;
 			try {
-				ProcessManager processManager = ELUtil.getInstance().getBean("defaultBpmProcessManager");
-				processName = processManager.getProcessDefinition(Long.valueOf(bean.getProcessId())).getProcessName(locale);
+				CasesBPMProcessDefinitionW bpmCasesManager = ELUtil.getInstance().getBean("casesPDW");
+				bpmCasesManager.setProcessDefinitionId(Long.valueOf(bean.getProcessId()));
+				processName = bpmCasesManager.getProcessName(locale);
 			} catch(Exception e) {
 				logger.log(Level.WARNING, "Error getting process name by: " + bean.getProcessId());
 			}
