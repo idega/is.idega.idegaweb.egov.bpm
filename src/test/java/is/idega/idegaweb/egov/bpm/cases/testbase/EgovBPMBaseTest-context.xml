@@ -10,10 +10,8 @@
                             http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd
         ">
         
-        <bean class="com.idega.util.expression.ELUtil" />
         <bean class="com.idega.jbpm.identity.permission.PermissionsFactoryImpl" />
         <bean class="com.idega.jbpm.exe.impl.BPMFactoryImpl" />
-        <bean class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendMessageMockupImpl" />
         <bean class="com.idega.jbpm.data.dao.impl.BPMDAOImpl" />
         <bean class="com.idega.idegaweb.egov.bpm.data.dao.impl.CasesBPMDAOImpl" />
         <bean class="com.idega.jbpm.identity.RolesManagerImpl" />
@@ -22,10 +20,14 @@
         <bean class="com.idega.jbpm.variables.impl.VariablesHandlerImpl" />
         <bean class="com.idega.jbpm.variables.impl.BinaryVariablesHandlerImpl" />
         <bean class="com.idega.core.file.util.FileURIHandlerFactoryImpl" />
-        <bean id="bpmUserFactory" class="com.idega.jbpm.identity.BPMUserFactoryImpl" scope="singleton">
-            <lookup-method name="createUser" bean="BPMUser" />
-        </bean>
         
+        <bean id="BPMUser" class="com.idega.jbpm.identity.BPMUserImpl" scope="prototype" />
+        <bean id="LoggedInBPMUser" class="com.idega.jbpm.identity.BPMUserImpl" scope="session" />
+         
+        <bean id="bpmUserFactory" class="com.idega.jbpm.identity.BPMUserFactoryImpl" scope="singleton">
+            <lookup-method name="createBPMUser" bean="BPMUser" />
+            <lookup-method name="createLoggedInBPMUser" bean="LoggedInBPMUser" />
+        </bean>
         
         <bean id="jbpmConfigurationWrapper" class="org.jbpm.JbpmConfigurationW" factory-method="createJbpmConfiguration" scope="singleton">
             <constructor-arg value="com/idega/jbpm/jbpm.cfg.xml" />
