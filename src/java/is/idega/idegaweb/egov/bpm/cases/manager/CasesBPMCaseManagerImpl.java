@@ -28,6 +28,7 @@ import javax.faces.context.FacesContext;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
+import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -65,9 +66,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/11/20 07:30:44 $ by $Author: valdas $
+ * Last modified: $Date: 2008/11/25 11:13:33 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -91,24 +92,51 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	}
 	
 	public String getProcessIdentifier(Case theCase) {
+		Long piId = getProcessInstanceId(theCase);
+		if (piId == null) {
+			return null;
+		}
 		
-		Integer caseId = theCase.getPrimaryKey() instanceof Integer ? (Integer)theCase.getPrimaryKey() : new Integer(theCase.getPrimaryKey().toString());
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		try {
+			return (String)ctx.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
+		}
+	}
+	
+	public Long getProcessInstanceId(Case theCase) {
+		Integer caseId = theCase.getPrimaryKey() instanceof Integer ? (Integer)theCase.getPrimaryKey() : Integer.valueOf((theCase.getPrimaryKey().toString()));
 		
 		CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
 		
-		if(cpi != null) {
+		return cpi == null ? null : cpi.getProcInstId();
+	}
+	
+	public Long getProcessDefinitionId(Case theCase) {
+		ProcessDefinition processDefinition = getProcessDefinition(theCase);
+		return processDefinition == null ? null : processDefinition.getId();
+	}
+	
+	public String getProcessDefinitionName(Case theCase) {
+		ProcessDefinition processDefinition = getProcessDefinition(theCase);
+		return processDefinition == null ? null : processDefinition.getName();
+	}
+	
+	private ProcessDefinition getProcessDefinition(Case theCase) {
+		Long piId = getProcessInstanceId(theCase);
+		if (piId == null) {
+			return null;
+		}
 		
-			Long piId = cpi.getProcInstId();
-			
-			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-			
-			try {
-				String identifier = (String)ctx.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
-				return identifier;
-				
-			} finally {
-				getIdegaJbpmContext().closeAndCommit(ctx);
-			}
+		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+		try {
+			ProcessInstance processInstance = ctx.getProcessInstance(piId);
+			return processInstance.getProcessDefinition();
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
 		
 		return null;
@@ -412,6 +440,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		return ids;
 	}
 	
+	//	TODO: use case type!
 	private List<ProcessDefinition> getAllProcessDefinitions() {
 		List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
 		if (ListUtil.isEmpty(casesProcesses)) {
@@ -459,6 +488,20 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		} catch (IDOLookupException e) {
 			e.printStackTrace();
 		}
+		return null;
+	}
+	
+	public String getProcessName(String processName, Locale locale) {
+		JbpmContext jctx = getIdegaJbpmContext().createJbpmContext();
+		try {
+			ProcessDefinition pd = jctx.getGraphSession().findLatestProcessDefinition(processName);
+			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+		} catch(Exception e) {
+			e.printStackTrace();
+		} finally {
+			getIdegaJbpmContext().closeAndCommit(jctx);
+		}
+		
 		return null;
 	}
 	
