@@ -3,6 +3,9 @@
 <processes>
 
     <processBundle bundle="is.idega.idegaweb.egov.bpm" propsUriWithinBundle="resources/processes/fetchEmails/bundle.properties" autoload="true" version="14" />
+    
     <processDefinition bundle="is.idega.idegaweb.egov.bpm" uriWithinBundle="resources/processes/followupResponses/processdefinition.xml" autoload="true" version="1" />
-
+    
+    <processBundle bundle="is.idega.idegaweb.egov.bpm" propsUriWithinBundle="resources/processes/GenericProcess/bundle.properties" autoload="true" version="1" />
+    
 </processes>
