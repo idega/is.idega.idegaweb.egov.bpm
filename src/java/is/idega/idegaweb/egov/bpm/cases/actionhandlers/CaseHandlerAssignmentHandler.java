@@ -40,9 +40,9 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/11/13 15:08:42 $ by $Author: juozas $
+ * Last modified: $Date: 2008/11/26 16:30:57 $ by $Author: civilis $
  */
 @Service("caseHandlerAssignmentHandler")
 @Scope("prototype")
@@ -161,7 +161,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		
 //		creating case handler role and assigning handler user to this, so that 'ordinary' users could see their contacts etc (they have the permission to see caseHandler contacts)
 		List<Role> roles = Arrays.asList(new Role[] {caseHandlerRole});
-		getBpmFactory().getRolesManager().createProcessRoles(pi.getProcessDefinition().getName(), roles, pi.getId());
+		getBpmFactory().getRolesManager().createProcessActors(roles, pi);
 		getBpmFactory().getRolesManager().createIdentitiesForRoles(roles, handlerUserId.toString(), IdentityType.USER, pi.getId());
 	}
 	
