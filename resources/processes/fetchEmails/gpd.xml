@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root-container name="fetchEmails" width="1128" height="610">
+<root-container name="fetchEmails" width="1054" height="654">
   <node name="start" x="90" y="56" width="79" height="34">
     <edge>
       <label x="5" y="-10"/>

@@ -13,19 +13,13 @@
             <variable name="files_attachments" access="read,write"></variable>
 				<variable access="read,write" name="string_fromPersonal"></variable>
 				<variable access="read,write" name="string_fromAddress"></variable>
-         </controller><!--
-         <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
-            <expression>
-                variable(string_emailReadAssignmentExpression)
-            </expression>
-         </assignment>
-      -->
+         </controller>
       	  <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>jsonAssignmentHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
 				<entry><key>expression</key>
 					<value>
-		                variable(string_emailReadAssignmentExpression)
+					   #{string_emailReadAssignmentExpression}
 		            </value>
 				</entry>
 			</propertyMap>
