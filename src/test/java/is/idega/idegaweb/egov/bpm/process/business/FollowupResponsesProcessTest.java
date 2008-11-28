@@ -21,9 +21,9 @@ import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/11/25 08:10:05 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/28 05:07:18 $ by $Author: anton $
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -141,7 +141,6 @@ public final class FollowupResponsesProcessTest extends EgovBPMBaseTest {
 		    System.out.println("tokens="+pi.getRootToken());
 		    Collection<TaskInstance> tis2 = pi.getTaskMgmtInstance().getUnfinishedTasks(pi.getRootToken());
 		    System.out.println("unfinishedtis="+tis2);
-			
 		} finally {
 			bpmContext.closeAndCommit(jbpmContext);
 		}
