@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -24,9 +25,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2008/10/11 14:08:40 $ by $Author: valdas $
+ * Last modified: $Date: 2008/11/28 10:34:23 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -171,13 +172,30 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return new ArrayList<Token>(0);
 	}
 
-	public List<Long> getCaseIdsByProcessDefinitionIdsAndName(List<Long> processDefinitionIds, String processDefinitionName) {
+	public List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
+			List<AdvancedProperty> variables) {
 		if (ListUtil.isEmpty(processDefinitionIds) || StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, Long.class, new Param(CaseProcInstBind.processDefinitionIdsProp, 
-				processDefinitionIds), new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+		if (ListUtil.isEmpty(variables)) {
+			return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, Long.class, new Param(CaseProcInstBind.processDefinitionIdsProp,
+					processDefinitionIds), new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+		}
+		
+		HashSet<String> variablesNames = new HashSet<String>(variables.size());
+		HashSet<String> variablesValues = new HashSet<String>(variables.size());
+		for (AdvancedProperty variable: variables) {
+			variablesNames.add(variable.getId());
+			variablesValues.add(variable.getValue());
+		}
+		
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndVariables, Long.class,
+				new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
+				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
+				new Param(CaseProcInstBind.variablesNamesProp, variablesNames),
+				new Param(CaseProcInstBind.variablesValuesProp, variablesValues)
+		);
 	}
 
 	public List<Long> getCaseIdsByCaseNumber(String caseNumber) {
@@ -239,6 +257,24 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		
 		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class, new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
+	}
+
+	public List<String> getVariablesByProcessDefinition(String processDefinitionName) {
+		if (StringUtil.isEmpty(processDefinitionName)) {
+			return null;
+		}
+
+//		String query = 	"select var.NAME_ from JBPM_VARIABLEINSTANCE var inner join JBPM_PROCESSINSTANCE pi " +
+//						"inner join JBPM_PROCESSDEFINITION pd where pd.NAME_ =: " + CaseProcInstBind.processDefinitionNameProp +
+//						" and var.NAME_ is not null and var.CLASS_ != 'N' group by var.NAME_";
+//		return getResultListByInlineQuery(query, String.class, new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+		
+		String query = "select var.name from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd"
+					+ " where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp + " group by var.name";
+		return getResultListByInlineQuery(query, String.class, new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+		
+//		return getResultList(CaseProcInstBind.getVariablesByProcessDefinitionName, VariableInstance.class,
+//																					new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 	}
 	
 }

@@ -1,0 +1,29 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<div
+		xmlns:ui="http://java.sun.com/jsf/facelets"
+		xmlns:h="http://java.sun.com/jsf/html"
+		xmlns:t="http://myfaces.apache.org/tomahawk"
+		xmlns:f="http://java.sun.com/jsf/core"
+>
+	<t:div styleClass="processVariablesWindowContentStyle">
+		<t:div styleClass="processVariablesWindowVariablesTable" rendered="#{bpmProcessVariablesBean.displayVariables}" immediate="true">
+			<label for="availableVariablesForProcess">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_search.select_variable']}:</label>
+			<h:selectOneMenu id="availableVariablesForProcess" value="select" onchange="CasesListHelper.addVariableInput('availableVariablesForProcess');">
+				<f:selectItems value="#{bpmProcessVariablesBean.processVariables}" />
+			</h:selectOneMenu>
+			<t:div id="variableInputsContainer" forceId="true" />
+		</t:div>
+		<t:div styleClass="processVariablesWindowNoVariablesText" rendered="#{bpmProcessVariablesBean.displayNoVariablesText}" immediate="true">
+			<h3>#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_search.there_are_no_variables_for_selected_process']}</h3>
+		</t:div>
+		<t:div styleClass="processVariablesWindowMainButtonsContainer">
+			<t:div styleClass="processVariablesWindowButtonsContainer" rendered="#{bpmProcessVariablesBean.displayVariables}" immediate="true">
+				<a href="javascript:void(0);" onclick="CasesListHelper.addVariablesAndSearch();">#{localizedStrings['is.idega.idegaweb.egov.bpm']['search_for_cases']}</a>
+			</t:div>
+			<t:div styleClass="processVariablesWindowButtonsContainer">
+				<a href="javascript:void(0);" onclick="CasesListHelper.closeVariablesWindow();">#{localizedStrings['is.idega.idegaweb.egov.bpm']['close']}</a>
+			</t:div>
+		</t:div>
+	</t:div>
+</div>

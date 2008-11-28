@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseHome;
 import com.idega.block.process.presentation.UserCases;
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -58,6 +59,8 @@ public class CasesListSearchCriteriaBean {
 	private IWTimestamp dateFrom;
 	private IWTimestamp dateTo;
 	private String[] statuses;
+	private List<AdvancedProperty> processVariables;
+	
 	@Autowired private CasesBPMDAO casesBPMDAO;
 	@Autowired private RolesManager rolesManager;
 	@Autowired private BPMFactory bpmFactory;
@@ -241,7 +244,7 @@ public class CasesListSearchCriteriaBean {
 				}
 				else {
 					//	Getting "BPM" cases
-					casesByProcessDefinition = getConvertedFromLongs(getCasesByProcessDefinition(processDefinitionId));
+					casesByProcessDefinition = getConvertedFromLongs(getCasesByProcessDefinition(processDefinitionId, getProcessVariables()));
 				}
 				
 				if (ListUtil.isEmpty(casesByProcessDefinition)) {
@@ -388,7 +391,7 @@ public class CasesListSearchCriteriaBean {
 		return generalCases;
 	}
 		
-	private List<Long> getCasesByProcessDefinition(String processDefinitionId) {
+	private List<Long> getCasesByProcessDefinition(String processDefinitionId, List<AdvancedProperty> variables) {
 		
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
@@ -406,7 +409,7 @@ public class CasesListSearchCriteriaBean {
 		
 		try {
 			final ProcessDefinition processDefinition = getBpmFactory().getProcessManager(procDefId).getProcessDefinition(procDefId).getProcessDefinition();
-			return getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndName(processDefinitionIds, processDefinition.getName());
+			return getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndNameAndVariables(processDefinitionIds, processDefinition.getName(), variables);
 			
 		} catch(Exception e) {
 			logger.log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
@@ -649,6 +652,14 @@ public class CasesListSearchCriteriaBean {
 
 	public void setShowStatistics(boolean showStatistics) {
 		this.showStatistics = showStatistics;
+	}
+
+	public List<AdvancedProperty> getProcessVariables() {
+		return processVariables;
+	}
+
+	public void setProcessVariables(List<AdvancedProperty> processVariables) {
+		this.processVariables = processVariables;
 	}
 	
 }

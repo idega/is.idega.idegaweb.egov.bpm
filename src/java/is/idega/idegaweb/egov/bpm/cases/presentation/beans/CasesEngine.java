@@ -3,13 +3,13 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
+import is.idega.idegaweb.egov.bpm.cases.presentation.UIProcessVariables;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -17,7 +17,6 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 
 import org.jdom.Document;
@@ -29,11 +28,13 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
+import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.core.component.bean.RenderedComponent;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
@@ -116,7 +117,7 @@ public class CasesEngine {
 		try {
 			caseBusiness = (CaseBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
 		} catch (IBOLookupException e) {
-			e.printStackTrace();
+			logger.log(Level.SEVERE, "Error getting CaseBusiness", e);
 		}
 		if (caseBusiness == null) {
 			return false;
@@ -125,10 +126,8 @@ public class CasesEngine {
 		Case theCase = null;
 		try {
 			theCase = caseBusiness.getCase(caseId);
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (FinderException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			logger.log(Level.SEVERE, "Unable to get case by ID: " + caseId, e);
 		}
 		if (theCase == null) {
 			return false;
@@ -150,7 +149,8 @@ public class CasesEngine {
 				.append(criteriaBean.getDescription()).append(", name: ").append(criteriaBean.getName()).append(", personalId: ")
 				.append(criteriaBean.getPersonalId()).append(", processId: ").append(criteriaBean.getProcessId()).append(", statusId: ")
 				.append(criteriaBean.getStatusId()).append(", dateRange: ").append(criteriaBean.getDateRange()).append(", casesListType: ")
-				.append(criteriaBean.getCaseListType()).append(", contact: ").append(criteriaBean.getContact())
+				.append(criteriaBean.getCaseListType()).append(", contact: ").append(criteriaBean.getContact()).append(", variables provided: ")
+				.append(ListUtil.isEmpty(criteriaBean.getProcessVariables()) ? "none" : criteriaBean.getProcessVariables().size())
 		.toString());
 		
 		IWContext iwc = CoreUtil.getIWContext();
@@ -221,6 +221,9 @@ public class CasesEngine {
 		if (!StringUtil.isEmpty(bean.getDateRange())) {
 			searchFields.add(new AdvancedProperty("date_range", bean.getDateRange()));
 		}
+		if (!ListUtil.isEmpty(bean.getProcessVariables())) {
+			searchFields.addAll(bean.getProcessVariables());
+		}
 		
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
 	}
@@ -286,7 +289,7 @@ public class CasesEngine {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		}
 		catch (IBOLookupException ile) {
-			ile.printStackTrace();
+			logger.log(Level.SEVERE, "Error getting CasesBusiness", ile);
 		}
 		
 		return null;
@@ -299,6 +302,58 @@ public class CasesEngine {
 	@Autowired
 	public void setCasesBPMProcessView(CasesBPMProcessView casesBPMProcessView) {
 		this.casesBPMProcessView = casesBPMProcessView;
+	}
+	
+	public RenderedComponent getVariablesWindow(String processDefinitionId) {
+		RenderedComponent fake = new RenderedComponent();
+		fake.setErrorMessage("There are no variables for selected process!");
+		
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null) {
+			return fake;
+		}
+		
+		Web2Business web2 = ELUtil.getInstance().getBean(Web2Business.SPRING_BEAN_IDENTIFIER);
+		List<String> resources = new ArrayList<String>();
+		resources.add(web2.getBundleUriToHumanizedMessagesStyleSheet());
+		resources.add(web2.getBundleURIToJQueryLib());
+		resources.add(web2.getBundleUriToHumanizedMessagesScript());
+		fake.setResources(resources);
+		
+		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+		fake.setErrorMessage(iwrb.getLocalizedString("cases_search.there_are_no_variables_for_selected_process", fake.getErrorMessage()));
+		
+		if (!iwc.isLoggedOn()) {
+			logger.warning("User must be logged!");
+			return fake;
+		}
+		
+		if (StringUtil.isEmpty(processDefinitionId)) {
+			return fake;
+		}
+		Long pdId = null;
+		try {
+			pdId = Long.valueOf(processDefinitionId);
+		} catch(NumberFormatException e) {
+			logger.severe("Unable to convert to Long: " + processDefinitionId);
+		}
+		if (pdId == null) {
+			return fake;
+		}
+		
+		BPMProcessVariablesBean variablesBean = null;
+		try {
+			variablesBean = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
+		} catch(Exception e) {
+			logger.log(Level.SEVERE, "Error getting bean: " + BPMProcessVariablesBean.class.getName(), e);
+		}
+		if (variablesBean == null) {
+			return fake;
+		}
+		
+		variablesBean.setProcessDefinitionId(pdId);
+		
+		return getBuilderLogic().getBuilderService(iwc).getRenderedComponentByClassName(UIProcessVariables.class.getName(), null);
 	}
 
 }

@@ -10,6 +10,7 @@
 	    	<include method="getProcessInstanceId" />
 	    	<include method="setCaseSubject" />
 	    	<include method="getCasesListByUserQuery" />
+	    	<include method="getVariablesWindow" />
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">

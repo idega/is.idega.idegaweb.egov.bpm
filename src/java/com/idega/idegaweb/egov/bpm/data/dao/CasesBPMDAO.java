@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.jbpm.graph.exe.Token;
 
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.persistence.GenericDao;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
@@ -14,9 +15,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  *
- * Last modified: $Date: 2008/10/11 14:08:40 $ by $Author: valdas $
+ * Last modified: $Date: 2008/11/28 10:34:24 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -38,7 +39,8 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
 	
-	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndName(List<Long> processDefinitionIds, String processDefinitionName);
+	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
+			List<AdvancedProperty> variables);
 	
 	public abstract List<Long> getCaseIdsByCaseNumber(String caseNumber);
 	
@@ -51,4 +53,6 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
 	
 	public abstract List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
+	
+	public abstract List<String> getVariablesByProcessDefinition(String processDefinitionName);
 }

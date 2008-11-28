@@ -51,3 +51,4 @@ cases_bpm.process_is_being_watched=Current case was added to your watch list
 cases_bpm.process_was_removed_from_watch_list=Current case was removed from your watch list
 cases_bpm.followup.subject=Case requires your attention
 cases_bpm.followup.message=Hello, {0}. Case handler has asked your input.
+search_for_cases=Leit
