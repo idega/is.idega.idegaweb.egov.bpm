@@ -7,7 +7,6 @@ import java.util.logging.Logger;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
-import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -23,13 +22,12 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
-import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2008/11/13 15:08:42 $ by $Author: juozas $
+ * Last modified: $Date: 2008/11/30 08:22:36 $ by $Author: civilis $
  */
 @Service("casesStatusHandler")
 @Scope("prototype")
@@ -40,20 +38,20 @@ public class CasesStatusHandler implements ActionHandler {
 	/**
 	 * variable which contains string representation of case status to set
 	 */
-	private String caseStatusExp;
+	private String caseStatus;
 	
 	/**
 	 * if set, then it's checked, if the current status matches, and only then the status is changed (for instance, if status specified by ifCaseStatusExp is received, then it may change to in progress) 
 	 */
-	private String ifCaseStatusExp;
+	private String ifCaseStatus;
 	/**
 	 * performer, if not set, current user is used
 	 */
-	private Integer performerUserIdExp;
+	private Integer performerUserId;
 	/**
 	 * caseId, if not set, caseId from econtext process instance id is resolved
 	 */
-	private Integer caseIdExp;
+	private Integer caseId;
 	
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
@@ -61,14 +59,12 @@ public class CasesStatusHandler implements ActionHandler {
 	public void execute(ExecutionContext ectx) throws Exception {
 		
 		try {
-			final String status = getCaseStatusExp();//(String)JbpmExpressionEvaluator.evaluate(getCaseStatusExp(), ectx);
-			Integer performerUserId = getPerformerUserIdExp();// getPerformerUserIdExp() != null ? (Integer)JbpmExpressionEvaluator.evaluate(getPerformerUserIdExp(), ectx) : null;
-			Integer caseId = getCaseIdExp();//getCaseIdExp() != null ? (Integer)JbpmExpressionEvaluator.evaluate(getCaseIdExp(), ectx) : null;
-			final String ifCaseStatus = getIfCaseStatusExp();//getIfCaseStatusExp() != null ? (String)JbpmExpressionEvaluator.evaluate(getIfCaseStatusExp(), ectx) : null;
+			final String status = getCaseStatus();
+			Integer performerUserId = getPerformerUserId();
+			Integer caseId = getCaseId();
+			final String ifCaseStatus = getIfCaseStatus();
 			
 			if(caseId == null) {
-				
-				ELUtil.getInstance().autowire(this);
 				
 				CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, ectx.getProcessInstance().getId());
 				
@@ -145,30 +141,6 @@ public class CasesStatusHandler implements ActionHandler {
 		}
 	}
 
-	public String getCaseStatusExp() {
-		return caseStatusExp;
-	}
-
-	public void setCaseStatusExp(String caseStatusExp) {
-		this.caseStatusExp = caseStatusExp;
-	}
-
-	public Integer getPerformerUserIdExp() {
-		return performerUserIdExp;
-	}
-
-	public void setPerformerUserIdExp(Integer performerUserIdExp) {
-		this.performerUserIdExp = performerUserIdExp;
-	}
-
-	public Integer getCaseIdExp() {
-		return caseIdExp;
-	}
-
-	public void setCaseIdExp(Integer caseIdExp) {
-		this.caseIdExp = caseIdExp;
-	}
-
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
@@ -177,11 +149,35 @@ public class CasesStatusHandler implements ActionHandler {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
-	public String getIfCaseStatusExp() {
-		return ifCaseStatusExp;
+	public String getCaseStatus() {
+		return caseStatus;
 	}
 
-	public void setIfCaseStatusExp(String ifCaseStatusExp) {
-		this.ifCaseStatusExp = ifCaseStatusExp;
+	public void setCaseStatus(String caseStatus) {
+		this.caseStatus = caseStatus;
+	}
+
+	public String getIfCaseStatus() {
+		return ifCaseStatus;
+	}
+
+	public void setIfCaseStatus(String ifCaseStatus) {
+		this.ifCaseStatus = ifCaseStatus;
+	}
+
+	public Integer getPerformerUserId() {
+		return performerUserId;
+	}
+
+	public void setPerformerUserId(Integer performerUserId) {
+		this.performerUserId = performerUserId;
+	}
+
+	public Integer getCaseId() {
+		return caseId;
+	}
+
+	public void setCaseId(Integer caseId) {
+		this.caseId = caseId;
 	}
 }

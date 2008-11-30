@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
-import org.jbpm.jpdl.el.impl.JbpmExpressionEvaluator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -17,13 +16,12 @@ import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMessage;
 import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.bpm.process.messages.SendMessagesHandler;
-import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/11/13 15:08:42 $ by $Author: juozas $
+ * Last modified: $Date: 2008/11/30 08:23:29 $ by $Author: civilis $
  */
 @Service("sendCaseMessagesHandler")
 @Scope("prototype")
@@ -32,20 +30,19 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	private static final long serialVersionUID = 1212382470685233437L;
 
 	private SendMessage sendMessage;
+	private Long processInstanceId;
 	
 	public void execute(ExecutionContext ectx) throws Exception {
 	
-		ELUtil.getInstance().autowire(this);
-		
-		final String sendToRoles = (String)JbpmExpressionEvaluator.evaluate(getSendToRoles(), ectx);
+		final String sendToRoles = getSendToRoles();
 		
 		ProcessInstance candPI;
 		String caseIdStr;
 		
-		if(getSendFromProcessInstanceExp() != null) {
+		if(getProcessInstanceId() != null) {
 
 //			resolving candidate process instance from expression, if present
-			candPI = (ProcessInstance)JbpmExpressionEvaluator.evaluate(getSendFromProcessInstanceExp(), ectx);
+			candPI = ectx.getJbpmContext().getProcessInstance(getProcessInstanceId());
 			caseIdStr = (String)candPI.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdVariableName);
 			
 		} else {
@@ -95,5 +92,13 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	@Autowired
 	public void setSendMessage(@SendMessageType("caseMessage") SendMessage sendMessage) {
 		this.sendMessage = sendMessage;
+	}
+
+	public Long getProcessInstanceId() {
+		return processInstanceId;
+	}
+
+	public void setProcessInstanceId(Long processInstanceId) {
+		this.processInstanceId = processInstanceId;
 	}
 }
