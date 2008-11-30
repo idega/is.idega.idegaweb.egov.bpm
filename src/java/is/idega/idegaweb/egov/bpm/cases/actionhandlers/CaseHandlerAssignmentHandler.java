@@ -36,13 +36,12 @@ import com.idega.jbpm.identity.Role;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
-import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/11/26 16:30:57 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/30 08:21:04 $ by $Author: civilis $
  */
 @Service("caseHandlerAssignmentHandler")
 @Scope("prototype")
@@ -73,8 +72,6 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	public static final String performerUserIdVarName = 		"performerUserId";
 	
 	public void execute(ExecutionContext ectx) throws Exception {
-		
-		ELUtil.getInstance().autowire(this);
 		
 		ProcessInstance pi = ectx.getProcessInstance();
 		Long processInstanceId = pi.getId();
