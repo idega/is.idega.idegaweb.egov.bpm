@@ -39,9 +39,9 @@ import com.idega.user.data.User;
  * TODO: we could create abstract class for some generic methods, like getPeopleConntectedToTheProcess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2008/10/13 09:25:01 $ by $Author: civilis $
+ * Last modified: $Date: 2008/11/30 08:23:13 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
@@ -108,10 +108,12 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 		}
 	}
 	
+	private static final String caseDescriptionVariableName = "string_caseDescription";
+	
 	@Override
 	public String getProcessDescription() {
 
-		String description = (String) getProcessInstance().getContextInstance().getVariable(CasesBPMProcessConstants.caseDescription);
+		String description = (String) getProcessInstance().getContextInstance().getVariable(caseDescriptionVariableName);
 		
 		return description;
 	}

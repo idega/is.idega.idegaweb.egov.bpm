@@ -49,9 +49,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2008/11/20 11:33:10 $ by $Author: valdas $
+ * Last modified: $Date: 2008/11/30 08:23:13 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -98,13 +98,16 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			else
 				user = null;
 			
+			ProcessInstance pi = ti.getProcessInstance();
+			
 			IWMainApplication iwma = iwc.getApplicationContext().getIWMainApplication();
 			
 			CasesBusiness casesBusiness = getCasesBusiness(iwc);		
 			
 			GeneralCase genCase = casesBusiness.storeGeneralCase(user, caseCatId, caseTypeId, /*attachment pk*/null, "This is simple cases-jbpm-formbuilder integration example.", null, CasesBPMCaseManagerImpl.caseHandlerType, /*isPrivate*/false, getCasesBusiness(iwc).getIWResourceBundleForUser(user, iwc, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)), false);
+			logger.log(Level.INFO, "Case (id="+genCase.getPrimaryKey()+") created for process instance "+pi.getId());
 
-			ti.getProcessInstance().setStart(new Date());
+			pi.setStart(new Date());
 			
 			Map<String, Object> caseData = new HashMap<String, Object>();
 			caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
@@ -261,45 +264,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		Integer appId = new Integer(context.toString());
 		def.updateRolesCanStartProcess(appId, roles);
 	}
-	
-	/*
-	protected void submitVariablesAndProceedProcess(TaskInstance ti, Map<String, Object> variables, boolean proceed) {
-		
-		getVariablesHandler().submitVariables(variables, ti.getId(), true);
-		
-		if(proceed) {
-		
-			String actionTaken = (String)ti.getVariable(CasesBPMProcessConstants.actionTakenVariableName);
-	    	
-	    	if(actionTaken != null && !CoreConstants.EMPTY.equals(actionTaken) && false)
-	    		ti.end(actionTaken);
-	    	else
-	    		ti.end();
-		} else {
-			ti.setEnd(new Date());
-		}
-    	
-//		TODO: perhaps some bpm user, and then later bind it to real user if that's created etc
-		Integer usrId = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getIdToUse();
-		
-		if(usrId != null)
-			ti.setActorId(usrId.toString());
-	}
-	*/
-	
-	/*
-	public String getStartTaskName() {
-		
-		List<String> preferred = new ArrayList<String>(1);
-		preferred.add(XFormsView.VIEW_TYPE);
-		
-		Long taskId = getProcessDefinition().getTaskMgmtDefinition().getStartTask().getId();
-		
-		View view = getBpmFactory().getViewByTask(taskId, false, preferred);
-		
-		return view.getDisplayName(new Locale("is","IS"));
-	}
-	*/
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
