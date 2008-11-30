@@ -56,7 +56,9 @@
       </task>
       <transition name="toFork" to="fork3"></transition>
 		<event type="node-leave">
-			<action name="setProcessDescription" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SetProcessDescription"/>
+		  <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>setProcessDescriptionHandler</handlerName>
+          </action>
 		</event>
    </start-state>
    <node name="sendHandlerNewCaseArrivedMessage">
@@ -102,13 +104,6 @@
    </node>
    <task-node name="requestAdditionalInformation">
       <task name="Request Additional Information">
-        <!-- <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
-            <expression>
-                {taskAssignment: {roles: {role: [
-                   {roleName: "bpm_genericProcess_handler", accesses: {access: [read, write]}}
-                ]} }}
-            </expression>
-         </assignment> -->
           <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>jsonAssignmentHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -140,14 +135,6 @@
    </task-node>
    <task-node name="submitAdditionalInformation">
       <task name="Submit Additional Information">
-       <!--   <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
-            <expression>
-                {taskAssignment: {roles: {role: [
-                   {roleName: "bpm_genericProcess_handler", accesses: {access: [read]}},
-                   {roleName: "bpm_genericProcess_owner", accesses: {access: [read, write]}, scope: PI} 
-                ]} }}
-            </expression>
-         </assignment> -->
          <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>jsonAssignmentHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -176,14 +163,6 @@
    </fork>
    <task-node name="submitCaseAnswer">
       <task name="Submit invited case answer">
-        <!--  <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
-            <expression>
-                {taskAssignment: {roles: {role: [
-                   {roleName: "bpm_genericProcess_handler", accesses: {access: [read]}},
-                   {roleName: "bpm_genericProcess_invited", accesses: {access: [read, write]}, scope: PI}
-                ]} }}
-            </expression>
-         </assignment> -->
          <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>jsonAssignmentHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -211,13 +190,6 @@
          <controller>
             <variable name="string_rulingText" access="read,write,required"></variable>
          </controller>
-         <!-- <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
-            <expression>
-                {taskAssignment: {roles: {role: [
-                   {roleName: "bpm_genericProcess_handler", accesses: {access: [read, write]}}
-                ]} }}
-            </expression>
-         </assignment> -->
          <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>jsonAssignmentHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -379,8 +351,8 @@
         <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>casesStatusHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-			   	<entry><key>caseStatusExp</key><value>#{string_caseStatusInProgress}</value></entry>
-			  	<entry><key>ifCaseStatusExp</key><value>#{string_caseStatusReceived}</value></entry>
+			   	<entry><key>caseStatus</key><value>#{string_caseStatusInProgress}</value></entry>
+			  	<entry><key>ifCaseStatus</key><value>#{string_caseStatusReceived}</value></entry>
 			</propertyMap>
 		</action>
     </event>
@@ -397,14 +369,6 @@
 		    <variable name="string_participantName" access="read,write,required"></variable>
 				<variable access="read,write" name="files_inviteParticipantAttachments"></variable>
          </controller>
-      <!--    <assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
-            <expression>
-                {taskAssignment: {roles: {role: [
-                   {roleName: "bpm_genericProcess_handler", accesses: {access: [read, write]}},
-                   {roleName: "bpm_genericProcess_invited", accesses: {access: [read]}, scope: PI}
-                ]} }}
-            </expression>
-         </assignment> -->
          <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>jsonAssignmentHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -423,7 +387,9 @@
    </task-node>
    <node name="endCaseProcess">
       <event type="node-leave">
-         <action name="endCase" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.EndCaseProcessHandler" config-type="constructor"></action>
+          <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>endCaseProcessHandler</handlerName>
+          </action>
       </event>
       <transition name="toEndProcess" to="endProcess"></transition>
    </node>
@@ -433,7 +399,9 @@
    </fork>
    <node name="endProcess">
       <event type="node-leave">
-         <action name="endProcess" class="com.idega.jbpm.process.business.EndProcessHandler" config-type="constructor"></action>
+         <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>endProcessHandler</handlerName>
+          </action>
       </event>
       <transition name="toProcessEnd" to="end"></transition>
    </node>
@@ -536,16 +504,6 @@
 
 	<task-node name="completeProcess">
 		<task name="Complete process">
-            <!--<assignment class="com.idega.jbpm.identity.JSONAssignmentHandler">
-                <expression>
-                    {taskAssignment: {roles: {role: [
-	                    {roleName: "bpm_genericProcess_handler", accesses: {access: [read, write]}},
-	                    {roleName: "bpm_genericProcess_owner", accesses: {access: [read]}, scope: PI},
-	                    {roleName: "bpm_genericProcess_invited", accesses: {access: [read]}, scope: PI}
-                    ]} }}
-                </expression>
-            </assignment>
-			-->
 			<assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>jsonAssignmentHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -712,7 +670,7 @@
 		<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>casesStatusHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-			   	<entry><key>caseStatusExp</key><value>#{string_caseStatusDenied}</value></entry>
+			   	<entry><key>caseStatus</key><value>#{string_caseStatusDenied}</value></entry>
 			</propertyMap>
 		</action>
 		</event>
@@ -724,7 +682,7 @@
 			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>casesStatusHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-				   	<entry><key>caseStatusExp</key><value>#{string_caseStatusGranted}</value></entry>
+				   	<entry><key>caseStatus</key><value>#{string_caseStatusGranted}</value></entry>
 				</propertyMap>
 			</action>
         </event>

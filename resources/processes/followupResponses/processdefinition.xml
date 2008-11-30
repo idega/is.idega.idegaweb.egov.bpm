@@ -9,15 +9,10 @@
 
 	<node name="createTasksForAllRolesUsers">
 		<event type="node-leave">
-		<!-- 	<action name="createTasksForAllRolesUsersAction" class="com.idega.jbpm.invitation.AssignTasksForRolesUsers">
-				<tasksExp>
-					#{followupTasks}
-				</tasksExp>
-			</action> -->
 			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>assignTasksForRolesUsers</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-			        	<entry><key>tasksExp</key><value>#{followupTasks}</value></entry>
+			        	<entry><key>assignableTasks</key><value>#{followupTasks}</value></entry>
 			    </propertyMap>
 		 	</action>
 			<script>
@@ -59,15 +54,6 @@
 
 	<node name="sendMessagesForAllRolesUsers">
 	   <event type="node-enter">
-	     <!--     <action name="SendFollowupMessages" class="is.idega.idegaweb.egov.bpm.cases.actionhandlers.SendCaseMessagesHandler">
-	            <messagesBundle>is.idega.idegaweb.egov.bpm</messagesBundle>
-	            <subjectKey>cases_bpm.followup.subject</subjectKey>
-	            <messageKey>cases_bpm.followup.message</messageKey>
-	            <messageValues>{list: {mv: [{type: "bean", value: "user.name"}]}}</messageValues>
-	            <sendToRoles>#{rolesToSendMessages}</sendToRoles>
-	            <sendFromProcessInstanceExp>#{sendFromProcessInstance}</sendFromProcessInstanceExp>
-            </action> -->
-            
             <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>sendCaseMessagesHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>

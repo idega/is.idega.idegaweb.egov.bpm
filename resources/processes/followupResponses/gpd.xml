@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root-container name="followupResponses" width="703" height="593">
+<root-container name="followupResponses" width="1054" height="654">
   <node name="start-state1" x="329" y="39" width="21" height="22">
     <edge>
       <label x="5" y="-10"/>
