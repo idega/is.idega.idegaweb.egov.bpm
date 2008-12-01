@@ -9,7 +9,7 @@
 	<t:div styleClass="processVariablesWindowContentStyle">
 		<t:div styleClass="processVariablesWindowVariablesTable" rendered="#{bpmProcessVariablesBean.displayVariables}" immediate="true">
 			<label for="availableVariablesForProcess">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_search.select_variable']}:</label>
-			<h:selectOneMenu id="availableVariablesForProcess" value="select" onchange="CasesListHelper.addVariableInput('availableVariablesForProcess');">
+			<h:selectOneMenu id="availableVariablesForProcess" value="select" onchange="CasesListHelper.addVariableInput();">
 				<f:selectItems value="#{bpmProcessVariablesBean.processVariables}" />
 			</h:selectOneMenu>
 			<t:div id="variableInputsContainer" forceId="true" />
