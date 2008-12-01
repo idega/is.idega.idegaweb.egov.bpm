@@ -25,9 +25,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  *
- * Last modified: $Date: 2008/11/28 10:34:23 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/01 02:24:04 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -263,18 +263,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
-
-//		String query = 	"select var.NAME_ from JBPM_VARIABLEINSTANCE var inner join JBPM_PROCESSINSTANCE pi " +
-//						"inner join JBPM_PROCESSDEFINITION pd where pd.NAME_ =: " + CaseProcInstBind.processDefinitionNameProp +
-//						" and var.NAME_ is not null and var.CLASS_ != 'N' group by var.NAME_";
-//		return getResultListByInlineQuery(query, String.class, new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 		
-		String query = "select var.name from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd"
-					+ " where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp + " group by var.name";
-		return getResultListByInlineQuery(query, String.class, new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
-		
-//		return getResultList(CaseProcInstBind.getVariablesByProcessDefinitionName, VariableInstance.class,
-//																					new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+		return getResultList(CaseProcInstBind.getVariablesByProcessDefinitionName, String.class,
+				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName)
+		);
 	}
 	
 }
