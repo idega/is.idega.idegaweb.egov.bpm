@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.search;
 
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
@@ -21,7 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseHome;
 import com.idega.block.process.presentation.UserCases;
-import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -59,7 +59,7 @@ public class CasesListSearchCriteriaBean {
 	private IWTimestamp dateFrom;
 	private IWTimestamp dateTo;
 	private String[] statuses;
-	private List<AdvancedProperty> processVariables;
+	private List<BPMProcessVariable> processVariables;
 	
 	@Autowired private CasesBPMDAO casesBPMDAO;
 	@Autowired private RolesManager rolesManager;
@@ -391,7 +391,7 @@ public class CasesListSearchCriteriaBean {
 		return generalCases;
 	}
 		
-	private List<Long> getCasesByProcessDefinition(String processDefinitionId, List<AdvancedProperty> variables) {
+	private List<Long> getCasesByProcessDefinition(String processDefinitionId, List<BPMProcessVariable> variables) {
 		
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
@@ -654,11 +654,11 @@ public class CasesListSearchCriteriaBean {
 		this.showStatistics = showStatistics;
 	}
 
-	public List<AdvancedProperty> getProcessVariables() {
+	public List<BPMProcessVariable> getProcessVariables() {
 		return processVariables;
 	}
 
-	public void setProcessVariables(List<AdvancedProperty> processVariables) {
+	public void setProcessVariables(List<BPMProcessVariable> processVariables) {
 		this.processVariables = processVariables;
 	}
 	

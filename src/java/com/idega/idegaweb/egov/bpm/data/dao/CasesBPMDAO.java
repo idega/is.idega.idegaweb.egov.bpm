@@ -1,12 +1,14 @@
 package com.idega.idegaweb.egov.bpm.data.dao;
 
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable;
+
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
+import org.jbpm.context.exe.VariableInstance;
 import org.jbpm.graph.exe.Token;
 
-import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.persistence.GenericDao;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
@@ -15,9 +17,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  *
- * Last modified: $Date: 2008/11/28 10:34:24 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/02 06:42:45 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -40,7 +42,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
 	
 	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
-			List<AdvancedProperty> variables);
+			List<BPMProcessVariable> variables);
 	
 	public abstract List<Long> getCaseIdsByCaseNumber(String caseNumber);
 	
@@ -54,5 +56,5 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
 	
-	public abstract List<String> getVariablesByProcessDefinition(String processDefinitionName);
+	public abstract List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName);
 }

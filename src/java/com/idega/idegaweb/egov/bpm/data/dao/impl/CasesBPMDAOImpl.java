@@ -1,23 +1,29 @@
 package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+import org.jbpm.context.exe.VariableInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
@@ -25,9 +31,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  *
- * Last modified: $Date: 2008/12/01 02:24:04 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/02 06:42:45 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -173,7 +179,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	public List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
-			List<AdvancedProperty> variables) {
+			List<BPMProcessVariable> variables) {
 		if (ListUtil.isEmpty(processDefinitionIds) || StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
@@ -183,19 +189,110 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					processDefinitionIds), new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 		}
 		
-		HashSet<String> variablesNames = new HashSet<String>(variables.size());
-		HashSet<String> variablesValues = new HashSet<String>(variables.size());
-		for (AdvancedProperty variable: variables) {
-			variablesNames.add(variable.getId());
-			variablesValues.add(variable.getValue());
+		List<Long> results = new ArrayList<Long>();
+		
+		//	Date
+		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, processDefinitionIds, processDefinitionName, variables,
+				BPMProcessVariable.DATE_TYPES, results);
+		
+		//	Double
+		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, processDefinitionIds, processDefinitionName, variables,
+				BPMProcessVariable.DOUBLE_TYPES, results);
+		
+		//	Long
+		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, processDefinitionIds, processDefinitionName, variables,
+				BPMProcessVariable.LONG_TYPES, results);
+		
+		//	String
+		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, processDefinitionIds, processDefinitionName, variables,
+				BPMProcessVariable.STRING_TYPES, results);
+		
+		return ListUtil.isEmpty(results) ? null : results;
+	}
+	
+	private void addCaseIdsByVariables(String queryName, List<Long> processDefinitionIds, String processDefinitionName, List<BPMProcessVariable> variables,
+			List<String> types, List<Long> results) {
+		List<BPMProcessVariable> variablesByTypes = getVariablesByType(variables, types);
+		if (ListUtil.isEmpty(variablesByTypes)) {
+			return;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndVariables, Long.class,
+		Object value = null;
+		Set<String> variablesNames = new HashSet<String>();
+		Set<Object> variablesValues = new HashSet<Object>();
+		for (BPMProcessVariable variable: variables) {
+			value = getVariableValue(variable);
+			
+			if (value != null) {
+				variablesNames.add(variable.getName());
+				variablesValues.add(value);
+			}
+		}
+		
+		if (ListUtil.isEmpty(variablesNames) || ListUtil.isEmpty(variablesValues)) {
+			return;
+		}
+		
+		List<Long> resultsByVariables = getResultList(queryName, Long.class,
 				new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
 				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
 				new Param(CaseProcInstBind.variablesNamesProp, variablesNames),
-				new Param(CaseProcInstBind.variablesValuesProp, variablesValues)
+				new Param(CaseProcInstBind.variablesValuesProp, variablesValues),
+				new Param(CaseProcInstBind.variablesTypesProp, new HashSet<String>(types))
 		);
+		
+		if (ListUtil.isEmpty(resultsByVariables)) {
+			return;
+		}
+		
+		for (Long id: resultsByVariables) {
+			if (!results.contains(id)) {
+				results.add(id);
+			}
+		}
+	}
+	
+	private Object getVariableValue(BPMProcessVariable variable) {
+		if (variable.isStringType()) {
+			return variable.getValue();
+		}
+		
+		if (variable.isDateType()) {
+			return IWDatePickerHandler.getParsedDateByCurrentLocale(variable.getValue());
+		}
+		
+		if (variable.isDoubleType()) {
+			try {
+				return Double.valueOf(variable.getValue());
+			} catch(NumberFormatException e) {
+				Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error converting string to double: " + variable.getValue(), e);
+			}
+		}
+		
+		if (variable.isLongType()) {
+			try {
+				return Long.valueOf(variable.getValue());
+			} catch (Exception e) {
+				Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error converting string to long: " + variable.getValue(), e);
+			}
+		}
+		
+		return null;
+	}
+	
+	private List<BPMProcessVariable> getVariablesByType(List<BPMProcessVariable> variables, List<String> types) {
+		if (ListUtil.isEmpty(variables)) {
+			return null;
+		}
+		
+		List<BPMProcessVariable> filteredVariables = new ArrayList<BPMProcessVariable>();
+		for (BPMProcessVariable variable: variables) {
+			if (variable.isTypeOf(types)) {
+				filteredVariables.add(variable);
+			}
+		}
+		
+		return filteredVariables;
 	}
 
 	public List<Long> getCaseIdsByCaseNumber(String caseNumber) {
@@ -259,12 +356,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class, new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
 	}
 
-	public List<String> getVariablesByProcessDefinition(String processDefinitionName) {
+	public List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName) {
 		if (StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getVariablesByProcessDefinitionName, String.class,
+		return getResultList(CaseProcInstBind.getVariablesByProcessDefinitionName, VariableInstance.class,
 				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName)
 		);
 	}

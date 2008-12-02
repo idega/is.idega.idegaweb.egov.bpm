@@ -10,9 +10,18 @@ import java.util.logging.Logger;
 
 import javax.faces.model.SelectItem;
 
+import org.jbpm.context.exe.VariableInstance;
+import org.jbpm.context.exe.variableinstance.DateInstance;
+import org.jbpm.context.exe.variableinstance.DoubleInstance;
+import org.jbpm.context.exe.variableinstance.HibernateLongInstance;
+import org.jbpm.context.exe.variableinstance.HibernateStringInstance;
+import org.jbpm.context.exe.variableinstance.LongInstance;
+import org.jbpm.context.exe.variableinstance.NullInstance;
+import org.jbpm.context.exe.variableinstance.StringInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
@@ -43,6 +52,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
+	@Transactional(readOnly=true)
 	public List<SelectItem> getProcessVariables() {
 		if (!ListUtil.isEmpty(processVariables)) {
 			return processVariables;
@@ -62,7 +72,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			return null;
 		}
 		
-		List<String> variables = null;
+		List<VariableInstance> variables = null;
 		try {
 			variables = getCasesBPMDAO().getVariablesByProcessDefinition(procDef.getProcessDefinition().getName());
 		} catch(Exception e) {
@@ -79,14 +89,24 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		
 		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 		
+		String at = "@";
+		String name = null;
+		String type = null;
 		String localizedName = null;
 		String key = "bpm_variable.";
 		boolean isAdmin = iwc.isSuperAdmin();
 		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
-		for (String variableName: variables) {
-			localizedName = iwrb.getLocalizedString(new StringBuilder(key).append(variableName).toString(), isAdmin ? variableName : null);
-			if (!StringUtil.isEmpty(localizedName)) {
-				availableVariables.add(new AdvancedProperty(variableName, localizedName));
+		for (VariableInstance variable: variables) {
+			if (!(variable instanceof NullInstance)) {
+				name = variable.getName();
+				type = getVariableValueType(variable);
+				
+				if (!StringUtil.isEmpty(type)) {
+					localizedName = iwrb.getLocalizedString(new StringBuilder(key).append(name).toString(), isAdmin ? name : null);
+					if (!StringUtil.isEmpty(localizedName)) {
+						availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
+					}
+				}
 			}
 		}
 		if (ListUtil.isEmpty(availableVariables)) {
@@ -102,6 +122,23 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		}
 		
 		return processVariables;
+	}
+	
+	private String getVariableValueType(VariableInstance variable) {
+		if (variable instanceof DateInstance) {
+			return BPMProcessVariable.DATE_TYPES.get(0);
+		}
+		if (variable instanceof DoubleInstance) {
+			return BPMProcessVariable.DOUBLE_TYPES.get(0);
+		}
+		if (variable instanceof LongInstance || variable instanceof HibernateLongInstance) {
+			return BPMProcessVariable.LONG_TYPES.get(0);
+		}
+		if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
+			return BPMProcessVariable.STRING_TYPES.get(0);
+		}
+		
+		return null;	//	We do not support other types
 	}
 	
 	public Long getProcessDefinitionId() {

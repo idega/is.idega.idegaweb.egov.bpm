@@ -222,7 +222,9 @@ public class CasesEngine {
 			searchFields.add(new AdvancedProperty("date_range", bean.getDateRange()));
 		}
 		if (!ListUtil.isEmpty(bean.getProcessVariables())) {
-			searchFields.addAll(bean.getProcessVariables());
+			for (BPMProcessVariable variable: bean.getProcessVariables()) {
+				searchFields.add(new AdvancedProperty(variable.getName(), variable.getValue()));
+			}
 		}
 		
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
