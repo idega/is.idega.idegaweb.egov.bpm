@@ -49,9 +49,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/11/30 08:23:13 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/02 09:34:45 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -115,18 +115,17 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
 			caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
 			caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
-
 							
 			Collection<CaseStatus>	allStatuses = casesBusiness.getCaseStatuses();
 				
 			for (CaseStatus caseStatus : allStatuses) 
 				caseData.put(CasesStatusVariables.evaluateStatusVariableName(caseStatus.getStatus()), caseStatus.getStatus());
 			
-
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
 			getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
+			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
@@ -134,8 +133,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			bind.setCaseIdentierID(identifierNumber);
 			bind.setDateCreated(created.getDate());
 			getCasesBPMDAO().persist(bind);
-			
-			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
