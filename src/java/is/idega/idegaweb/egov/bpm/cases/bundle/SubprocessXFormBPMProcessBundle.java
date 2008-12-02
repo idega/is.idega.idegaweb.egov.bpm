@@ -11,11 +11,12 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 /**
+ * TODO: what's the point of this class, and why it is called generically, though does something very specific
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * 
- * Last modified: $Date: 2008/06/01 17:02:19 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/02 09:29:59 $ by $Author: civilis $
  * 
  */
 @Scope("prototype")
