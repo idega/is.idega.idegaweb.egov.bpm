@@ -27,6 +27,7 @@
         </create>
     	
     	<convert match="is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean" converter="bean" />
+    	<convert match="is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable" converter="bean" />
 	</allow>
 	<signatures>
 		<![CDATA[
