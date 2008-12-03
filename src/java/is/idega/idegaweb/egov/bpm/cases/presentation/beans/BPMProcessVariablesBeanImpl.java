@@ -109,6 +109,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 					if (!StringUtil.isEmpty(type)) {
 						localizedName = iwrb.getLocalizedString(new StringBuilder(key).append(name).toString(), isAdmin ? name : null);
 						if (!StringUtil.isEmpty(localizedName) && !"null".equals(localizedName) && isAdmin ? true : !localizedName.equals(name)) {
+							LOGGER.info("Adding variable: '"+name+"' with localized name: '"+localizedName+"', user is admin: " + isAdmin);
 							availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
 							addedVariables.add(name);
 						}
@@ -117,6 +118,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			}
 		}
 		if (ListUtil.isEmpty(availableVariables)) {
+			LOGGER.info("No variables found for process: " + procDef.getProcessDefinition().getName());
 			return null;
 		}
 		
