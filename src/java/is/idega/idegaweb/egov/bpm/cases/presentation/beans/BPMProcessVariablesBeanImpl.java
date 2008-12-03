@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
@@ -106,7 +107,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 					
 					if (!StringUtil.isEmpty(type)) {
 						localizedName = iwrb.getLocalizedString(new StringBuilder(key).append(name).toString(), isAdmin ? name : null);
-						if (!StringUtil.isEmpty(localizedName)) {
+						if (!StringUtil.isEmpty(localizedName) && !"null".equals(localizedName)) {
 							availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
 							addedVariables.add(name);
 						}
@@ -176,6 +177,10 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 
 	public boolean isDisplayNoVariablesText() {
 		return ListUtil.isEmpty(getProcessVariables());
+	}
+
+	public String getDeleteImagePath() {
+		return IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getVirtualPathWithFileNameString("images/delete.png");
 	}
 	
 }

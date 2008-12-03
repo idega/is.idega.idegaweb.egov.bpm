@@ -7,6 +7,7 @@
 		xmlns:f="http://java.sun.com/jsf/core"
 >
 	<t:div styleClass="processVariablesWindowContentStyle">
+		<input type="hidden" class="deleteBPMVariableImagePath" value="#{bpmProcessVariablesBean.deleteImagePath}" />
 		<t:div styleClass="processVariablesWindowVariablesTable" rendered="#{bpmProcessVariablesBean.displayVariables}" immediate="true">
 			<label for="availableVariablesForProcess">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_search.select_variable']}:</label>
 			<h:selectOneMenu id="availableVariablesForProcess" value="select" onchange="CasesListHelper.addVariableInput();">

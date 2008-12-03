@@ -19,4 +19,6 @@ public interface BPMProcessVariablesBean extends Serializable {
 	
 	public boolean isDisplayNoVariablesText();
 	
+	public String getDeleteImagePath();
+	
 }
