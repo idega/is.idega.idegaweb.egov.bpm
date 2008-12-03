@@ -99,6 +99,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 			resources.add(pdfCss);
 			iwc.setSessionAttribute(PresentationUtil.ATTRIBUTE_CSS_SOURCE_LINE_FOR_HEADER, resources);
 		}
+		iwc.setSessionAttribute(PresentationUtil.ATTRIBUTE_ADD_CSS_DIRECTLY, Boolean.TRUE);
 	}
 	
 	public String getHashValueForGeneratedPDFFromXForm(String taskInstanceId, boolean checkExistence) {
