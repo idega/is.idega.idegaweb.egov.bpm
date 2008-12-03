@@ -21,9 +21,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/12/02 06:42:45 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/03 01:27:41 $ by $Author: valdas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -38,7 +38,9 @@ import javax.persistence.TemporalType;
 //			@NamedQuery(name=CaseProcInstBind.getSubprocessByName, query="select pi.version from org.jbpm.graph.exe.ProcessInstance pi, org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and pi.version = tkn.subProcessInstance and :"+CaseProcInstBind.subProcessNameParam+" = (select epd.name from org.jbpm.graph.def.ProcessDefinition epd where epd.id = pi.processDefinition)")
 			
 			@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null"),
-			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessDefinitionName, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp + " group by var.name")
+			
+			//	Query to get variables for a process
+			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessDefinitionName, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp)
 		}
 )
 			/*
@@ -97,6 +99,9 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pi.PROCESSDEFINITION_ in (:" + 
 				CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " group by cp.case_id"
 			),
+			
+			/** Variable queries start **/
+			//	Query to case ids by STRING variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
@@ -105,6 +110,7 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ in (:" +
 				CaseProcInstBind.variablesNamesProp + ") and var.STRINGVALUE_ in (:" + CaseProcInstBind.variablesValuesProp + ") group by cp.case_id"
 			),
+			//	Query to case ids by DATE variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
@@ -113,6 +119,7 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ in (:" +
 				CaseProcInstBind.variablesNamesProp + ") and var.DATEVALUE_ in (:" + CaseProcInstBind.variablesValuesProp + ") group by cp.case_id"
 			),
+			//	Query to case ids by DOUBLE variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
@@ -121,6 +128,7 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ in (:" +
 				CaseProcInstBind.variablesNamesProp + ") and var.DOUBLEVALUE_ in (:" + CaseProcInstBind.variablesValuesProp + ") group by cp.case_id"
 			),
+			//	Query to case ids by LONG variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
@@ -129,6 +137,8 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ in (:" +
 				CaseProcInstBind.variablesNamesProp + ") and var.LONGVALUE_ in (:" + CaseProcInstBind.variablesValuesProp + ") group by cp.case_id"
 			),
+			/** Variable queries end **/
+			
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumber, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE pv on cp." +
