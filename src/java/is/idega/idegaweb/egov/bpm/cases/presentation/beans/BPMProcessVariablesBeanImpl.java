@@ -25,6 +25,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
+import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -88,7 +89,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			return null;
 		}
 		
-		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+		IWResourceBundle iwrb = getBundle().getResourceBundle(iwc);
 		
 		String at = "@";
 		String name = null;
@@ -179,8 +180,21 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		return ListUtil.isEmpty(getProcessVariables());
 	}
 
+	private IWBundle getBundle() {
+		return IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
+	}
+	
 	public String getDeleteImagePath() {
-		return IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getVirtualPathWithFileNameString("images/delete.png");
+		return getBundle().getVirtualPathWithFileNameString("images/delete.png");
+	}
+
+	public String getLoadingMessage() {
+		try {
+			return getBundle().getLocalizedString("loading", "Loading...");
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting localized string", e);
+		}
+		return "Loading...";
 	}
 	
 }

@@ -21,4 +21,6 @@ public interface BPMProcessVariablesBean extends Serializable {
 	
 	public String getDeleteImagePath();
 	
+	public String getLoadingMessage();
+	
 }
