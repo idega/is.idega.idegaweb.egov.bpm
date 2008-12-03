@@ -19,9 +19,9 @@ import com.idega.bpm.process.messages.SendMessagesHandler;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
- *
- * Last modified: $Date: 2008/11/30 08:23:29 $ by $Author: civilis $
+ * @version $Revision: 1.9 $
+ * 
+ *          Last modified: $Date: 2008/12/03 10:06:17 $ by $Author: civilis $
  */
 @Service("sendCaseMessagesHandler")
 @Scope("prototype")
@@ -30,56 +30,71 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	private static final long serialVersionUID = 1212382470685233437L;
 
 	private SendMessage sendMessage;
+	/**
+	 * defines the process instance, from which the message is sent. The case id
+	 * is resolved by this process instance
+	 */
 	private Long processInstanceId;
-	
+
 	public void execute(ExecutionContext ectx) throws Exception {
-	
+
 		final String sendToRoles = getSendToRoles();
-		
+
 		ProcessInstance candPI;
 		String caseIdStr;
-		
-		if(getProcessInstanceId() != null) {
 
-//			resolving candidate process instance from expression, if present
-			candPI = ectx.getJbpmContext().getProcessInstance(getProcessInstanceId());
-			caseIdStr = (String)candPI.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdVariableName);
-			
+		if (getProcessInstanceId() != null) {
+
+			// resolving candidate process instance from expression, if present
+			candPI = ectx.getJbpmContext().getProcessInstance(
+					getProcessInstanceId());
+			caseIdStr = (String) candPI.getContextInstance().getVariable(
+					CasesBPMProcessConstants.caseIdVariableName);
+
 		} else {
-			
-//			using current process instance candidate process instance
+
+			// using current process instance candidate process instance
 			candPI = ectx.getProcessInstance();
-			caseIdStr = (String)ectx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
+			caseIdStr = (String) ectx
+					.getVariable(CasesBPMProcessConstants.caseIdVariableName);
 		}
-		
-		if(caseIdStr == null) {
-			
-//			no case id variable found, trying to get it from super process
+
+		if (caseIdStr == null) {
+
+			// no case id variable found, trying to get it from super process
 
 			Token superToken = candPI.getSuperProcessToken();
-//			TODO: propagate searching to the last super token
-			
-			if(superToken != null) {
-				
-//				found super process, trying to get variable from there
+			// TODO: propagate searching to the last super token
+
+			if (superToken != null) {
+
+				// found super process, trying to get variable from there
 				candPI = superToken.getProcessInstance();
-				caseIdStr = (String)candPI.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdVariableName);
-				
+				caseIdStr = (String) candPI.getContextInstance().getVariable(
+						CasesBPMProcessConstants.caseIdVariableName);
+
 			} else {
-				
-				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Case id not found in the process instance ("+candPI.getId()+"), and no superprocess found");
+
+				Logger.getLogger(getClass().getName()).log(
+						Level.WARNING,
+						"Case id not found in the process instance ("
+								+ candPI.getId()
+								+ "), and no superprocess found");
 				return;
 			}
-			
-			if(caseIdStr == null) {
-				Logger.getLogger(getClass().getName()).log(Level.WARNING, "Case id not found in the process instance ("+candPI.getId()+")");
+
+			if (caseIdStr == null) {
+				Logger.getLogger(getClass().getName()).log(
+						Level.WARNING,
+						"Case id not found in the process instance ("
+								+ candPI.getId() + ")");
 				return;
 			}
 		}
-		
+
 		final ProcessInstance pi = candPI;
 		final Token tkn = ectx.getToken();
-		
+
 		LocalizedMessages msgs = getLocalizedMessages();
 		msgs.setSendToRoles(sendToRoles);
 		getSendMessage().send(null, new Integer(caseIdStr), pi, msgs, tkn);
@@ -90,7 +105,8 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	}
 
 	@Autowired
-	public void setSendMessage(@SendMessageType("caseMessage") SendMessage sendMessage) {
+	public void setSendMessage(
+			@SendMessageType("caseMessage") SendMessage sendMessage) {
 		this.sendMessage = sendMessage;
 	}
 
