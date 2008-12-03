@@ -95,16 +95,21 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		String localizedName = null;
 		String key = "bpm_variable.";
 		boolean isAdmin = iwc.isSuperAdmin();
+		List<String> addedVariables = new ArrayList<String>();
 		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
 		for (VariableInstance variable: variables) {
 			if (!(variable instanceof NullInstance)) {
 				name = variable.getName();
-				type = getVariableValueType(variable);
 				
-				if (!StringUtil.isEmpty(type)) {
-					localizedName = iwrb.getLocalizedString(new StringBuilder(key).append(name).toString(), isAdmin ? name : null);
-					if (!StringUtil.isEmpty(localizedName)) {
-						availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
+				if (!addedVariables.contains(name)) {
+					type = getVariableValueType(variable);
+					
+					if (!StringUtil.isEmpty(type)) {
+						localizedName = iwrb.getLocalizedString(new StringBuilder(key).append(name).toString(), isAdmin ? name : null);
+						if (!StringUtil.isEmpty(localizedName)) {
+							availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
+							addedVariables.add(name);
+						}
 					}
 				}
 			}
