@@ -66,9 +66,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  *
- * Last modified: $Date: 2008/11/25 11:13:33 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/03 01:27:27 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -517,8 +517,8 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			e.printStackTrace();
 		}
 		if (ListUtil.isEmpty(apps)) {
-			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName());
-			return null;
+			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName() + ", returning standard name!");
+			return pd.getName();
 		}
 		
 		ApplicationBusiness applicationBusiness = null;
@@ -529,7 +529,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			e.printStackTrace();
 		}
 		if (applicationBusiness == null) {
-			return null;
+			return pd.getName();
 		}
 		
 		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
