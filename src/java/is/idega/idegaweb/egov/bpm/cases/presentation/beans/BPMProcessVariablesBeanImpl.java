@@ -99,7 +99,6 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		String name = null;
 		String type = null;
 		String localizedName = null;
-		String key = "bpm_variable.";
 		boolean isAdmin = iwc.isSuperAdmin();
 		List<String> addedVariables = new ArrayList<String>();
 		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
@@ -111,8 +110,8 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 					type = getVariableValueType(variable);
 					
 					if (!StringUtil.isEmpty(type)) {
-						localizedName = iwrb.getLocalizedString(new StringBuilder(key).append(name).toString(), isAdmin ? name : null);
-						if (!StringUtil.isEmpty(localizedName) && !"null".equals(localizedName) && isAdmin ? true : !localizedName.equals(name)) {
+						localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
+						if (!StringUtil.isEmpty(localizedName)) {
 							LOGGER.info("Adding variable: '"+name+"' with localized name: '"+localizedName+"', user is admin: " + isAdmin);
 							availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
 							addedVariables.add(name);
@@ -136,6 +135,24 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		}
 		
 		return processVariables;
+	}
+	
+	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
+		String localizedName = iwrb.getLocalizedString(new StringBuilder("bpm_variable.").append(name).toString(), isAdmin ? name : null);
+		
+		if (StringUtil.isEmpty(localizedName)) {
+			return isAdmin ? name : null;	//	No translation found
+		}
+		
+		if ("null".equals(localizedName) || localizedName.startsWith("null")) {
+			return isAdmin ? name : null;	//	Checks because localizer bugs
+		}
+		
+		if (localizedName.equals(name)) {
+			return isAdmin ? localizedName : null;	//	Administrator can see not localized variables
+		}
+		
+		return localizedName;
 	}
 	
 	private String getVariableValueType(VariableInstance variable) {
