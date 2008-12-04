@@ -138,7 +138,13 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	}
 	
 	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
+		//	TODO: remove it
+		LOGGER.info("**********************Trying to get localized name for variable: '" + name + "'");
+		long start = System.currentTimeMillis();
 		String localizedName = iwrb.getLocalizedString(new StringBuilder("bpm_variable.").append(name).toString(), isAdmin ? name : null);
+		LOGGER.info("Localizer response for variable with name: '" + name + "': '" + localizedName + "'");
+		long end = System.currentTimeMillis();
+		LOGGER.info("Took time to get localized string: " + (end - start) / 1000 + "s, ms: " + (end - start));
 		
 		if (StringUtil.isEmpty(localizedName)) {
 			return isAdmin ? name : null;	//	No translation found
