@@ -49,9 +49,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2008/12/04 05:14:18 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/04 05:45:55 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -124,15 +124,17 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			IWTimestamp created = new IWTimestamp(genCase.getCreated());
 			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(iwc.getCurrentLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 			
-			getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
-			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
-			
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
 			bind.setProcInstId(pi.getId());
 			bind.setCaseIdentierID(identifierNumber);
 			bind.setDateCreated(created.getDate());
 			getCasesBPMDAO().persist(bind);
+			
+//			TODO: if variables submission and process execution fails here, rollback case proc inst bind
+			
+			getVariablesHandler().submitVariables(caseData, startTaskInstanceId, false);
+			submitVariablesAndProceedProcess(ti, view.resolveVariables(), true);
 			
 		} catch (Exception e) {
 			throw new RuntimeException(e);
