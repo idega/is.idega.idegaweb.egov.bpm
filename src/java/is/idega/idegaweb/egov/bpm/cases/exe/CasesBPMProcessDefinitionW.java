@@ -49,9 +49,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  *
- * Last modified: $Date: 2008/12/02 09:34:45 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/04 05:14:18 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -129,7 +129,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			
 			CaseProcInstBind bind = new CaseProcInstBind();
 			bind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
-			bind.setProcInstId(ti.getProcessInstance().getId());
+			bind.setProcInstId(pi.getId());
 			bind.setCaseIdentierID(identifierNumber);
 			bind.setDateCreated(created.getDate());
 			getCasesBPMDAO().persist(bind);
