@@ -60,7 +60,7 @@ public class SchedulerTest extends EgovBPMBaseTest {
 	public void close() {
     }
   }
-
+  
   @SuppressWarnings("unchecked")
   public static class TestSchedulerService implements SchedulerService {
 	List createdTimers = new ArrayList();
@@ -112,7 +112,7 @@ public class SchedulerTest extends EgovBPMBaseTest {
       "  </start-state>" +
       "  <state name='catch crooks'>" +
       "    <timer name='reminder' " +
-      "           duedate='3 business hours' " +
+      "           duedate='5 seconds' " +
       "           transition='time-out-transition' >" +
       "      <action class='the-remainder-action-class-name' />" +
       "    </timer>" +
@@ -136,7 +136,7 @@ public class SchedulerTest extends EgovBPMBaseTest {
       assertEquals("the-remainder-action-class-name", scheduledTimer.getAction().getActionDelegation().getClassName());
       assertSame(processInstance.getRootToken(), scheduledTimer.getToken());
       assertEquals("time-out-transition", scheduledTimer.getTransitionName());
-    } finally {
+	} finally {
       jbpmContext.close();
     }
   }

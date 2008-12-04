@@ -197,8 +197,7 @@ public abstract class AbstractDbTestCase extends EgovBPMBaseTest {
 
 		try {
 			while (getNbrOfJobsAvailable() > 0) {
-				log
-						.debug("going to sleep for 200 millis, waiting for the job executor to process more jobs");
+				log.debug("going to sleep for 200 millis, waiting for the job executor to process more jobs");
 				Thread.sleep(200);
 			}
 		} catch (InterruptedException e) {

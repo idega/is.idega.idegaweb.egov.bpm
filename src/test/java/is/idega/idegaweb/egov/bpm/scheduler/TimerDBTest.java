@@ -61,8 +61,9 @@ public class TimerDBTest extends AbstractDbTestCase {
   public void setUp() throws Exception {
     super.setUp();
     isNoOpExecuted = false;
+    jbpmContext.getJbpmConfiguration().startJobExecutor();
   }
-
+  
   @Test
   public void testSaveTimer() {
     final Date now = Calendar.getInstance().getTime();
@@ -113,8 +114,8 @@ public class TimerDBTest extends AbstractDbTestCase {
         + "    <transition to='catch crooks' />"
         + "  </start-state>"
         + "  <state name='catch crooks'>"
-        + "    <timer name='reminder' duedate='5 seconds' />"
-        + "    <transition to='end'/>"
+        + "    <timer name='reminder' duedate='5 seconds' transition='toEnd'/>"
+        + "    <transition name='toEnd' to='end'/>"
         + "  </state>"
         + "  <end-state name='end'/>"
         + "</process-definition>");
@@ -122,20 +123,17 @@ public class TimerDBTest extends AbstractDbTestCase {
     graphSession.saveProcessDefinition(processDefinition);
     try {
       ProcessInstance processInstance = new ProcessInstance(processDefinition);
-      // long before = System.currentTimeMillis();
       processInstance.signal();
-      // long after = System.currentTimeMillis();
+
       jbpmContext.save(processInstance);
 
       newTransaction();
+      
+      Thread.sleep(3000);
 
       Timer timer = (Timer) session.createQuery("from org.jbpm.job.Timer").uniqueResult();
-      assertNotNull("Timer is null", timer);
+      assertNotNull("Timer is not null", timer);
       assertEquals("reminder", timer.getName());
-      // Commented out because of timer latency is changing between time
-      // required to connect to the database
-      // assertTrue((before + 5000) <= timer.getDueDate().getTime());
-      // assertTrue(timer.getDueDate().getTime() <= (after + 5000));
       assertEquals("catch crooks", timer.getGraphElement().getName());
     }
     finally {
@@ -484,7 +482,7 @@ public class TimerDBTest extends AbstractDbTestCase {
 	      List<Token> tokens = executionContext.getProcessInstance().getRootToken().getChildrenAtNode(executionContext.getNode());
 	      for(Token tok : tokens) {
 	    	  if(!tok.equals(executionContext.getToken())) {
-	    		  schedulerService.deleteTimersByName("reminder", tok);
+	    		  schedulerService.deleteTimersByName(executionContext.getNode().getName(), tok);
 	    	  }
 	      }
 	    }
@@ -507,9 +505,7 @@ public class TimerDBTest extends AbstractDbTestCase {
         + "    <event type='node-enter'>"
         + "      <action class='is.idega.idegaweb.egov.bpm.scheduler.TimerDBTest$EnsureSingleTimerOnNode' />"
         + "    </event>"
-        + "    <timer name='reminder' "
-        + "           duedate='100 seconds'"
-        + "           repeat='5 seconds' >"
+        + "    <timer duedate='5 seconds'>"
         + "      <action class='is.idega.idegaweb.egov.bpm.scheduler.TimerDBTest$NoOp' />"
         + "    </timer>"
         + "    <transition to='b'/>"
@@ -538,15 +534,12 @@ public class TimerDBTest extends AbstractDbTestCase {
       
       assertEquals(1, getTimerCount());
       
-      timer.signal();
       preTimer.signal();
-      
       assertEquals(0, getTimerCount());
       log.debug(processInstance.getRootToken().getName());
     }
     finally {
       jbpmContext.getGraphSession().deleteProcessDefinition(processDefinition.getId());
     }
-
   }
 }

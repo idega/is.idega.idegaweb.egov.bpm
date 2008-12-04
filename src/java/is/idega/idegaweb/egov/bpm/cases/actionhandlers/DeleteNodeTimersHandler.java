@@ -6,6 +6,8 @@ import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.scheduler.SchedulerService;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
 
 /**
  * 
@@ -17,9 +19,11 @@ import org.jbpm.scheduler.SchedulerService;
  * 
  */
 
-public class EnsureSingleTimerOnNode implements ActionHandler {
+@Service("deleteNodeTimersHandler")
+@Scope("prototype")
+public class DeleteNodeTimersHandler implements ActionHandler {
 
-	private static final long serialVersionUID = 1L;
+	private static final long serialVersionUID = -8838368363278394618L;
 
 	@SuppressWarnings("unchecked")
 	public void execute(ExecutionContext executionContext) throws Exception {
@@ -30,7 +34,7 @@ public class EnsureSingleTimerOnNode implements ActionHandler {
 				.getRootToken().getChildrenAtNode(executionContext.getNode());
 		for (Token tok : tokens) {
 			if (!tok.equals(executionContext.getToken())) {
-				schedulerService.deleteTimersByName("reminder", tok);
+				schedulerService.deleteTimersByName(executionContext.getNode().getName(), tok);	
 			}
 		}
 	}
