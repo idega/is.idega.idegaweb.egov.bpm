@@ -60,6 +60,10 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			return processVariables;
 		}
 		
+		if (processVariables != null) {
+			return processVariables;
+		}
+		
 		if (processDefinitionId == null) {
 			return null;
 		}
@@ -119,6 +123,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		}
 		if (ListUtil.isEmpty(availableVariables)) {
 			LOGGER.info("No variables found for process: " + procDef.getProcessDefinition().getName());
+			processVariables = new ArrayList<SelectItem>();
 			return null;
 		}
 		
