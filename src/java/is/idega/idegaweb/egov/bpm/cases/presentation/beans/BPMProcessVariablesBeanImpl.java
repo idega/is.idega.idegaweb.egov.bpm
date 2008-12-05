@@ -112,7 +112,6 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 					if (!StringUtil.isEmpty(type)) {
 						localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
 						if (!StringUtil.isEmpty(localizedName)) {
-							LOGGER.info("Adding variable: '"+name+"' with localized name: '"+localizedName+"', user is admin: " + isAdmin);
 							availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
 							addedVariables.add(name);
 						}
@@ -138,13 +137,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	}
 	
 	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
-		//	TODO: remove it
-		LOGGER.info("**********************Trying to get localized name for variable: '" + name + "'");
-		long start = System.currentTimeMillis();
 		String localizedName = iwrb.getLocalizedString(new StringBuilder("bpm_variable.").append(name).toString(), isAdmin ? name : null);
-		LOGGER.info("Localizer response for variable with name: '" + name + "': '" + localizedName + "'");
-		long end = System.currentTimeMillis();
-		LOGGER.info("Took time to get localized string: " + (end - start) / 1000 + "s, ms: " + (end - start));
 		
 		if (StringUtil.isEmpty(localizedName)) {
 			return isAdmin ? name : null;	//	No translation found
@@ -225,6 +218,10 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			LOGGER.log(Level.WARNING, "Error getting localized string", e);
 		}
 		return "Loading...";
+	}
+
+	public String getAddVariableImage() {
+		return getBundle().getVirtualPathWithFileNameString("images/add.png");
 	}
 	
 }

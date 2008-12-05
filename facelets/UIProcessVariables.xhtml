@@ -14,6 +14,7 @@
 			<h:selectOneMenu id="availableVariablesForProcess" value="select" onchange="CasesListHelper.addVariableInput();">
 				<f:selectItems value="#{bpmProcessVariablesBean.processVariables}" />
 			</h:selectOneMenu>
+			<img class ="addProcessVariableImageStyle" src="#{bpmProcessVariablesBean.addVariableImage}" onclick="CasesListHelper.resetVariablesAndAddNewOne();"/>
 			<t:div id="variableInputsContainer" forceId="true" />
 		</t:div>
 		<t:div styleClass="processVariablesWindowNoVariablesText" rendered="#{bpmProcessVariablesBean.displayNoVariablesText}" immediate="true">

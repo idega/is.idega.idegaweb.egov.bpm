@@ -23,4 +23,6 @@ public interface BPMProcessVariablesBean extends Serializable {
 	
 	public String getLoadingMessage();
 	
+	public String getAddVariableImage();
+	
 }
