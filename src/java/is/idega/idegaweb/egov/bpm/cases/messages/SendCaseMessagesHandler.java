@@ -19,9 +19,9 @@ import com.idega.bpm.process.messages.SendMessagesHandler;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  * 
- *          Last modified: $Date: 2008/12/03 10:06:17 $ by $Author: civilis $
+ *          Last modified: $Date: 2008/12/05 05:45:47 $ by $Author: civilis $
  */
 @Service("sendCaseMessagesHandler")
 @Scope("prototype")
@@ -104,6 +104,7 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		return sendMessage;
 	}
 
+	@Override
 	@Autowired
 	public void setSendMessage(
 			@SendMessageType("caseMessage") SendMessage sendMessage) {
