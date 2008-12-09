@@ -11,10 +11,12 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 /**
+ * TODO: should relate process name!
+ * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/09/02 12:55:32 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/09 02:49:13 $ by $Author: civilis $
  */
 @Entity
 @Table(name="BPM_APPLICATIONS_SUPPORTS")
