@@ -41,6 +41,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.view.View;
+import com.idega.jbpm.view.ViewSubmission;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.user.business.UserBusiness;
@@ -49,9 +50,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  *
- * Last modified: $Date: 2008/12/05 06:25:26 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/09 02:49:28 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -64,7 +65,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	private static final Logger logger = Logger.getLogger(CasesBPMProcessDefinitionW.class.getName());
 	@SuppressWarnings("unchecked")
 	@Override
-	public void startProcess(View view) {
+	public void startProcess(ViewSubmission view) {
 		
 		Long startTaskInstanceId = view.getTaskInstanceId();
 		

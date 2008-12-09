@@ -4,8 +4,6 @@ import is.idega.idegaweb.egov.bpm.cases.exe.CaseIdentifier;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.text.CharacterIterator;
-import java.text.StringCharacterIterator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -48,7 +46,7 @@ import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.artifacts.impl.ProcessArtifactsProviderImpl;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.TaskInstanceW;
-import com.idega.jbpm.view.View;
+import com.idega.jbpm.view.ViewSubmission;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
 import com.idega.util.StringUtil;
@@ -56,9 +54,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  *
- * Last modified: $Date: 2008/10/27 14:21:11 $ by $Author: juozas $
+ * Last modified: $Date: 2008/12/09 02:49:28 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -75,7 +73,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	private static final String MULTIPART_MIXED_TYPE = "multipart/Mixed";
 	private static final String TEXT_HTML_TYPE = "text/html";
 	private static final String MULTI_ALTERNATIVE_TYPE = "multipart/alternative";
-	private static final String HTML_EXTENSION = ".html";
+//	private static final String HTML_EXTENSION = ".html";
 
 	public void onApplicationEvent(ApplicationEvent ae) {
 		
@@ -197,12 +195,11 @@ public class EmailMessagesAttacher implements ApplicationListener {
 						BPMFactory bpmFactory = getBpmFactory();
 						
 						long pdId = ti.getProcessInstance().getProcessDefinition().getId();
-						View emailView = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId()).loadView();
-						emailView.setTaskInstanceId(ti.getId());
-						emailView.populateVariables(vars);
 						
-						bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId()).submit(emailView, false);
+						ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
+						emailViewSubmission.populateVariables(vars);
 						
+						bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId()).submit(emailViewSubmission, false);
 						
 						TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
 				    	
