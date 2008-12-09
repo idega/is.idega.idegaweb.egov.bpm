@@ -34,6 +34,8 @@ import com.idega.presentation.IWContext;
 public class SetProcessDescriptionHandler implements ActionHandler {
 	private static final long serialVersionUID = -4735864635886588195L;
 
+	private String description;
+
 	@Autowired
 	private BPMDAO bpmBindsDAO;
 	@Autowired
@@ -46,7 +48,13 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 		ProcessInstanceW piw = getBpmFactory()
 				.getProcessManagerByProcessInstanceId(pi.getId())
 				.getProcessInstance(pi.getId());
-		String processDescription = piw.getProcessDescription();
+
+		final String processDescription;
+		if (getDescription() != null) {
+			processDescription = getDescription();
+		} else {
+			processDescription = piw.getProcessDescription();
+		}
 
 		CaseProcInstBind cpi = getBpmBindsDAO().find(CaseProcInstBind.class,
 				pi.getId());
@@ -101,5 +109,13 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
+	}
+
+	public String getDescription() {
+		return description;
+	}
+
+	public void setDescription(String description) {
+		this.description = description;
 	}
 }
