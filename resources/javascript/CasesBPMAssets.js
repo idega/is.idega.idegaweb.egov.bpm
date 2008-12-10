@@ -787,6 +787,9 @@ CasesBPMAssets.setCurrentWindowToDownloadCaseResource = function(uri, styleClass
     
     linkHref += uri;
     window.location.href = linkHref;
+    
+    closeAllLoadingMessages();
+    
     return true;
 };
 
@@ -812,6 +815,7 @@ CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, variableHash, 
 			}  
 		});
 	} catch(e) {
+		closeAllLoadingMessages();
 		CasesBPMAssets.CasesBPMAssets.showHumanizedMessage(errorMessage);
 	}
 	
@@ -833,6 +837,7 @@ CasesBPMAssets.signCaseAttachment = function(event, taskInstanceId, variableHash
 			} 
 		});
 	} catch(e) {
+		closeAllLoadingMessages();
 		CasesBPMAssets.showHumanizedMessage(errorMessage);
 	}
 	
