@@ -223,7 +223,8 @@ public class CasesEngine {
 		}
 		if (!ListUtil.isEmpty(bean.getProcessVariables())) {
 			for (BPMProcessVariable variable: bean.getProcessVariables()) {
-				searchFields.add(new AdvancedProperty(variable.getName(), variable.getValue()));
+				searchFields.add(new AdvancedProperty(iwrb.getLocalizedString(new StringBuilder("bpm_variable.").append(variable.getName()).toString(),
+																												variable.getName()), variable.getValue()));
 			}
 		}
 		
