@@ -42,9 +42,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2008/10/23 09:39:24 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/11 14:48:45 $ by $Author: civilis $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -109,6 +109,8 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				
 				String subject = subjNMsg[0];
 				String text = subjNMsg[1];
+				
+				Logger.getLogger(getClass().getName()).log(Level.FINER, "Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+") name="+user.getName());
 				
 				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
 				msgValsToSend.add(mv);
