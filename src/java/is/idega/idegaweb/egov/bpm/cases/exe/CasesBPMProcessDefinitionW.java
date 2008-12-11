@@ -50,9 +50,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  *
- * Last modified: $Date: 2008/12/09 02:49:28 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/11 19:24:46 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -237,35 +237,40 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		ProcessDefinition pd = getProcessDefinition();
 		AppProcBindDefinition def = (AppProcBindDefinition)pd.getDefinition(AppProcBindDefinition.class);
 		
-		if(def == null) {
+		if(def != null || !roles.isEmpty()) {
 			
-			def = new AppProcBindDefinition();
-			
-			JbpmContext ctx = getBpmContext().createJbpmContext();
-			
-			try {
-				getBpmContext().saveProcessEntity(def);
-				
-				pd = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
-				pd.addDefinition(def);
-				
-			} finally {
-				getBpmContext().closeAndCommit(ctx);
-			}
-			
-			ctx = getBpmContext().createJbpmContext();
-			
-			try {
-				pd = ctx.getGraphSession().loadProcessDefinition(getProcessDefinitionId());
-				def = (AppProcBindDefinition)pd.getDefinition(AppProcBindDefinition.class);
-				
-			} finally {
-				getBpmContext().closeAndCommit(ctx);
-			}
-		}
+			logger.finer("Will set roles, that can start process for the process (id="+getProcessDefinitionId()+") name = "+getProcessDefinition().getName());
 		
-		Integer appId = new Integer(context.toString());
-		def.updateRolesCanStartProcess(appId, roles);
+			if(def == null) {
+				
+				def = new AppProcBindDefinition();
+				
+				JbpmContext ctx = getBpmContext().createJbpmContext();
+				
+				try {
+					getBpmContext().saveProcessEntity(def);
+					
+					pd = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+					pd.addDefinition(def);
+					
+				} finally {
+					getBpmContext().closeAndCommit(ctx);
+				}
+				
+				ctx = getBpmContext().createJbpmContext();
+				
+				try {
+					pd = ctx.getGraphSession().loadProcessDefinition(getProcessDefinitionId());
+					def = (AppProcBindDefinition)pd.getDefinition(AppProcBindDefinition.class);
+					
+				} finally {
+					getBpmContext().closeAndCommit(ctx);
+				}
+			}
+			
+			Integer appId = new Integer(context.toString());
+			def.updateRolesCanStartProcess(appId, roles);
+		}
 	}
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
