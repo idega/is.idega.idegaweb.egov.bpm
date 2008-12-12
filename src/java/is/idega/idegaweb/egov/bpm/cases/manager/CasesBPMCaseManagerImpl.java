@@ -66,9 +66,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2008/12/03 01:27:27 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/12 11:00:24 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -492,10 +492,28 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	}
 	
 	public String getProcessName(String processName, Locale locale) {
+		ProcessDefinition pd = getLatestProcessDefinitionByName(processName);
+		if (pd == null) {
+			return null;
+		}
+		
+		try {
+			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+		} catch (IDOLookupException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
+	}
+	
+	private ProcessDefinition getLatestProcessDefinitionByName(String name) {
+		if (StringUtil.isEmpty(name)) {
+			return null;
+		}
+		
 		JbpmContext jctx = getIdegaJbpmContext().createJbpmContext();
 		try {
-			ProcessDefinition pd = jctx.getGraphSession().findLatestProcessDefinition(processName);
-			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+			return jctx.getGraphSession().findLatestProcessDefinition(name);
 		} catch(Exception e) {
 			e.printStackTrace();
 		} finally {
@@ -533,5 +551,10 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		}
 		
 		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
+	}
+
+	public Long getLatestProcessDefinitionIdByProcessName(String name) {
+		ProcessDefinition pd = getLatestProcessDefinitionByName(name);
+		return pd == null ? null : pd.getId();
 	}
 }
