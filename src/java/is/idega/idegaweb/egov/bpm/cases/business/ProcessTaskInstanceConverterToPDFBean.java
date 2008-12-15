@@ -51,7 +51,8 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 	
 	@Autowired private BPMFactory bpmFactory;
 	
-	public String getGeneratedPDFFromXForm(String taskInstanceId, String formId, String formSubmitionId, String uploadPath, boolean checkExistence) {
+	public String getGeneratedPDFFromXForm(String taskInstanceId, String formId, String formSubmitionId, String uploadPath, String pdfName,
+			boolean checkExistence) {
 		if (StringUtil.isEmpty(taskInstanceId) && StringUtil.isEmpty(formId) && StringUtil.isEmpty(formSubmitionId)) {
 			logger.log(Level.SEVERE, "Do not know what to generate!");
 			return null;
@@ -74,7 +75,7 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		
 		addStyleSheetsForPDF(iwc);
 		
-		String xformInPDF = getXFormInPDF(iwc, taskInstanceId, formId, formSubmitionId, uploadPath, checkExistence);
+		String xformInPDF = getXFormInPDF(iwc, taskInstanceId, formId, formSubmitionId, uploadPath, pdfName, checkExistence);
 		if (StringUtil.isEmpty(xformInPDF)) {
 			logger.log(Level.SEVERE, new StringBuilder("Unable to get 'XForm' with ").append(StringUtil.isEmpty(formId) ? "task instance id: " + taskInstanceId :
 														"form id: " + formId).toString());
@@ -189,7 +190,8 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		}
 	}
 	
-	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String formSubmitionId, String pathInSlide, boolean checkExistence) {
+	private String getXFormInPDF(IWContext iwc, String taskInstanceId, String formId, String formSubmitionId, String pathInSlide, String pdfName,
+			boolean checkExistence) {
 		IWSlideService slide = getSlideService();
 		if (slide == null) {
 			return null;
@@ -197,8 +199,11 @@ public class ProcessTaskInstanceConverterToPDFBean implements ProcessTaskInstanc
 		
 		String prefix = formId == null ? taskInstanceId : formId;
 		prefix = prefix == null ? String.valueOf(System.currentTimeMillis()) : prefix;
-		String pdfName = new StringBuilder("Form_").append(prefix).append(".pdf").toString();
-		String pathToForm = pathInSlide + pdfName;
+		pdfName = StringUtil.isEmpty(pdfName) ? new StringBuilder("Form_").append(prefix).toString() : pdfName;
+		if (!pdfName.endsWith(".pdf")) {
+			pdfName = new StringBuilder(pdfName).append(".pdf").toString();
+		}
+		String pathToForm = new StringBuilder(pathInSlide).append(pdfName).toString();
 		
 		boolean needToGenerate = true;
 		if (checkExistence) {
