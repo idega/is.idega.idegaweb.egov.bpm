@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -42,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.37 $
+ * @version $Revision: 1.38 $
  *
- * Last modified: $Date: 2008/10/15 14:54:38 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/15 09:05:47 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -243,6 +244,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		if (isAllowPDFSigning()) {
 			cssFiles.add(web2Business.getBundleUtiToGreyBoxStyleSheet());
 		}
+		cssFiles.add(iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getVirtualPathWithFileNameString("style/case.css"));
 		PresentationUtil.addStyleSheetsToHeader(iwc, cssFiles);
 		
 		boolean isSingle = CoreUtil.isSingleComponentRenderingProcess(iwc);
