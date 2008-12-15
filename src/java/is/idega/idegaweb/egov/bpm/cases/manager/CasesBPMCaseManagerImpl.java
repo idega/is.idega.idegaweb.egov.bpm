@@ -66,9 +66,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $
+ * @version $Revision: 1.19 $
  *
- * Last modified: $Date: 2008/12/12 11:00:24 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/15 14:54:32 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -190,7 +190,8 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 
 	public UIComponent getView(IWContext iwc, Case theCase, String caseProcessorType) {
 		CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
-		stateBean.setDisplayPropertyForStyleAttribute(false);	//	TODO:	is it always not visible?
+		stateBean.setDisplayPropertyForStyleAttribute(Boolean.FALSE);
+		stateBean.setStandAloneComponent(Boolean.FALSE);
 		
 		CaseManagerState managerState = ELUtil.getInstance().getBean(CaseManagerState.beanIdentifier);
 		

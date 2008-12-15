@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
+import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessWatch;
@@ -27,11 +29,12 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  *
- * Last modified: $Date: 2008/11/04 12:28:41 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/15 14:54:32 $ by $Author: valdas $
  *
  */
+@SuppressWarnings("deprecation")
 @Scope("request")
 @Service(CasesBPMAssetsState.beanIdentifier)
 public class CasesBPMAssetsState implements Serializable {
@@ -45,6 +48,8 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	@Autowired private transient BPMFactory bpmFactory;
 	
+	@Autowired private GeneralCasesListBuilder casesListBuilder;
+	
 	private Integer caseId;
 	private Long processInstanceId;
 	private Long viewSelected;
@@ -54,6 +59,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private String displayPropertyForStyleAttribute = "block";
 	private Boolean usePDFDownloadColumn = Boolean.TRUE;
 	private Boolean allowPDFSigning = Boolean.TRUE;
+	private Boolean standAloneComponent = Boolean.TRUE;
 	
 //	private enum FacetRendered {
 //		
@@ -240,12 +246,7 @@ public class CasesBPMAssetsState implements Serializable {
 			return styleClasses;
 		}
 		
-		ProcessInstanceW piw = null;
-		try {
-			piw = bpmFactory.getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
+		ProcessInstanceW piw = getProcessInstance(processInstanceId);
 		if (piw == null) {
 			return styleClasses;
 		}
@@ -256,6 +257,15 @@ public class CasesBPMAssetsState implements Serializable {
 		return styleClasses;
 	}
 	
+	private ProcessInstanceW getProcessInstance(Long processInstanceId) {
+		try {
+			return bpmFactory.getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+		
 	public void startTask() {
 		
 		if(getViewSelected() != null) {
@@ -395,5 +405,50 @@ public class CasesBPMAssetsState implements Serializable {
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
+	
+	public GeneralCasesListBuilder getCasesListBuilder() {
+		if (casesListBuilder == null) {
+			try {
+				ELUtil.getInstance().autowire(this);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return casesListBuilder;
+	}
 
+	public void setCasesListBuilder(GeneralCasesListBuilder casesListBuilder) {
+		this.casesListBuilder = casesListBuilder;
+	}
+
+	public String getSendEmailImage() {
+		return getCasesListBuilder().getSendEmailImage();
+	}
+
+	public String getCaseEmailSubject() {
+		Object identifier = null;
+		try {
+			identifier = getProcessInstance(getProcessInstanceId()).getProcessInstance().getContextInstance()
+																										.getVariable(ProcessArtifactsProvider.CASE_IDENTIFIER);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		return getCasesListBuilder().getEmailAddressMailtoFormattedWithSubject(identifier instanceof String ? identifier.toString() : null);
+	}
+	
+	public String getSendEmailTitle() {
+		return getCasesListBuilder().getTitleSendEmail();
+	}
+	
+	public Boolean getStandAloneComponent() {
+		return standAloneComponent;
+	}
+
+	public void setStandAloneComponent(Boolean standAloneComponent) {
+		this.standAloneComponent = standAloneComponent;
+	}
+
+	public boolean getRenderCaseEmailContainer() {
+		return getStandAloneComponent();
+	}
 }

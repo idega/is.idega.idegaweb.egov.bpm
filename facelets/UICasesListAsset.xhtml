@@ -10,6 +10,11 @@
 		<t:div style="display: none;" styleClass="processInstanceIdValueHolderContainer">
 			<input type="hidden" class="processInstanceIdValueHolder" value="#{casesBPMAssetsState.processInstanceId}" />
 		</t:div>
+		<t:div styleClass="sendCaseEmailStyleInBPMCaseViewer" rendered="#{casesBPMAssetsState.renderCaseEmailContainer}">
+			<a href="#{casesBPMAssetsState.caseEmailSubject}" title="#{casesBPMAssetsState.sendEmailTitle}">
+				<img src="#{casesBPMAssetsState.sendEmailImage}">#{casesBPMAssetsState.sendEmailTitle}</img>
+			</a>
+		</t:div>
 		<t:div styleClass="caseTasksPart" style="#{casesBPMAssetsState.tasksVisibilityProperty}">
 			<t:div styleClass="header">
 				<t:div styleClass="caseTasksPartHeaderLeftLayerStyle" style="float: left">
