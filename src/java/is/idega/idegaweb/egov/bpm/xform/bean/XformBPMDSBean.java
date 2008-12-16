@@ -17,9 +17,9 @@ import com.idega.util.text.Item;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/12/16 07:02:10 $ by $Author: arunas $
+ * Last modified: $Date: 2008/12/16 17:33:30 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -49,7 +49,7 @@ public class XformBPMDSBean implements XformBPM{
 		return usersItem;
 	}
 	
-	public List<User> getUsersConnecetedList(Long pid) {
+	private List<User> getUsersConnecetedList(Long pid) {
 		
 		ProcessInstanceW piw = getBpmFactory()
 		.getProcessManagerByProcessInstanceId(pid)
