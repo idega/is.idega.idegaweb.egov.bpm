@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-definition
+  xmlns=""  name="AssignmentAssist">
+  
+	<start-state name="start-state1">
+		<transition to="isCurrentUserAssistant"></transition>
+	</start-state>
+
+	<decision name="isCurrentUserAssistant">
+		<handler class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>belongsToRoleDecisionHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			        <entry><key>roleExpression</key><value>#{assistantRoleExpression}</value></entry>
+			        <entry><key>processInstanceId</key><value>#{assignFromProcessInstanceId}</value></entry>
+			    </propertyMap>
+		</handler>
+		<transition to="locateAssignee" name="true"></transition>
+		<transition to="setNotAssigned" name="false"></transition>
+	</decision>
+
+	<node name="locateAssignee">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>locateUserHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			        <entry><key>userData</key><value>#{assigneeData}</value></entry>
+			    </propertyMap>
+			</action>
+		</event>
+		<transition to="assigneeFound"></transition>
+	</node>
+
+	<node name="assignToRole">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>assignUserToRoleHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			        <entry><key>processInstanceId</key><value>#{assignFromProcessInstanceId}</value></entry>
+			        <entry><key>roleExpression</key><value>#{assigneeRoleExpression}</value></entry>
+			        <entry><key>userId</key><value>#{assigneeData.userId}</value></entry>
+			    </propertyMap>
+			</action>
+		</event>
+		<transition to="sendInvitationToAssignee"></transition>
+	</node>
+
+	<decision name="assigneeFound" expression="#{assigneeData.userId != null}">
+		<transition to="createUser" name="false"></transition>
+		<transition to="assignToRole" name="true"></transition>
+	</decision>
+
+	<node name="createUser">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>createUserHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			        <entry><key>userData</key><value>#{assigneeData}</value></entry>
+			    </propertyMap>
+			</action>
+		</event>
+		<transition to="assignToRole"></transition>
+	</node>
+
+	<process-state name="sendInvitationToAssignee">
+		<sub-process name="participantInvitation" binding="late" />
+      
+	      <variable name="assignFromProcessInstanceId" access="read" mapped-name="sendFromProcessInstanceId" />
+	      <variable name="assigneeData" access="read" mapped-name="participantUserData" />
+	      <variable name="assigneeRoleExpression" access="read" mapped-name="participantRoleExpression" />
+		<transition to="assignNewCaseOwner"></transition>
+	</process-state>
+
+	<node name="setAssigned">
+		<event type="node-enter">
+			<script>
+			     <expression>
+			         assigned = true;
+			     </expression>
+			     <variable name='assigned' access='write' mapped-name='assigned' />
+			</script>
+		</event>
+		<transition to="end-state1"></transition>
+	</node>
+
+	<node name="setNotAssigned">
+	   <event type="node-enter">
+            <script>
+                 <expression>
+                     assigned = false;
+                 </expression>
+                 <variable name='assigned' access='write' mapped-name='assigned' />
+            </script>
+        </event>
+		<transition to="end-state1"></transition>
+	</node>
+
+	<node name="assignNewCaseOwner">
+	   <event type="node-enter">
+            <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>assignCaseOwnerHandler</handlerName>
+                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                    <entry><key>ownerUserId</key><value>#{assigneeData.userId}</value></entry>
+                    <entry><key>processInstanceId</key><value>#{assignFromProcessInstanceId}</value></entry>
+                </propertyMap>
+            </action>
+        </event>
+		<transition to="setAssigned"></transition>
+	</node>
+	<end-state name="end-state1"></end-state>
+
+
+</process-definition>

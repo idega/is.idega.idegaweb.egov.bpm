@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root-container name="AnonAssignment" width="754" height="520">
+  <node name="start-state1" x="278" y="39" width="21" height="22">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="isCurrentUserLoggedIn" x="221" y="118" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+      <bendpoint w1="188" h1="10" w2="-1" h2="-73"/>
+    </edge>
+    <edge>
+      <label x="5" y="-10"/>
+      <bendpoint w1="-201" h1="16" w2="1" h2="-147"/>
+    </edge>
+  </node>
+  <node name="locateAssignee" x="410" y="201" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="assignToRole" x="245" y="341" width="132" height="36">
+    <edge>
+      <label x="-88" y="-9"/>
+    </edge>
+  </node>
+  <node name="assigneeFound" x="424" y="273" width="103" height="32">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="createUser" x="561" y="341" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="assignUserAsFirstTaskSubmitter" x="208" y="406" width="208" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="assignNewCaseOwner" x="20" y="406" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="end-complete-process" x="5" y="283" width="160" height="32"/>
+</root-container>
