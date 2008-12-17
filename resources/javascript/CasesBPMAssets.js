@@ -18,7 +18,8 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
     CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS: 'Change access rights',
     CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF: 'Download document',
     CASE_GRID_STRING_FILE_SIZE: 'File size',
-    CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by'
+    CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by',
+    CASE_GRID_STRING_GENERATING_PDF: 'Downloading PDF'
 };
 
 CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
@@ -794,6 +795,8 @@ CasesBPMAssets.setCurrentWindowToDownloadCaseResource = function(uri, styleClass
 };
 
 CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
+	CasesBPMAssets.showHumanizedMessage(CasesBPMAssets.Loc.CASE_GRID_STRING_GENERATING_PDF);
+	
 	var uri = '&taskInstanceId=' + taskId;
 	CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS);
 	
@@ -816,7 +819,7 @@ CasesBPMAssets.signCaseDocument = function(event, taskInstanceId, variableHash, 
 		});
 	} catch(e) {
 		closeAllLoadingMessages();
-		CasesBPMAssets.CasesBPMAssets.showHumanizedMessage(errorMessage);
+		CasesBPMAssets.showHumanizedMessage(errorMessage);
 	}
 	
 	if (event) {

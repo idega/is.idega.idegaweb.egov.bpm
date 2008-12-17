@@ -37,6 +37,7 @@ cases_bpm.forms=A\u00F0ger\u00F0ir
 cases_bpm.change_access_rights=Stilla a\u00F0gang
 cases_bpm.human_name=Nafn
 cases_bpm.submitted_by=Sendandi
+cases_bpm.generating_pdf=S\u00E6ki skjal
 date=Dags
 sender=Sendandi
 email_address=T\u00F6lvup\u00F3stur

@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.38 $
+ * @version $Revision: 1.39 $
  *
- * Last modified: $Date: 2008/12/15 09:05:47 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/17 14:26:21 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -185,7 +185,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	
 	protected Long resolveProcessInstanceId(FacesContext fctx) {
 		
-		String piIdParam = (String)fctx.getExternalContext().getRequestParameterMap().get("piId");
+		String piIdParam = fctx.getExternalContext().getRequestParameterMap().get("piId");
 		Long piId;
 		
 		if(piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
@@ -287,6 +287,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF = '")	.append(iwrb.getLocalizedString("cases_bpm.get_document_as_pdf", "Download document")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_SIZE = '")				.append(iwrb.getLocalizedString("cases_bpm.file_size", "File size")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SUBMITTED_BY = '")				.append(iwrb.getLocalizedString("cases_bpm.submitted_by", "Submitted by")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_GENERATING_PDF = '")			.append(iwrb.getLocalizedString("cases_bpm.generating_pdf", "Downloading PDF")).append("';\n")
 			
 			.append("CasesBPMAssets.Loc.inited = true; }\n")
 			
