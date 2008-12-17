@@ -30,9 +30,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  *
- * Last modified: $Date: 2008/12/17 09:28:51 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/17 12:18:03 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -237,6 +237,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 			else {
 				allResults.retainAll(variableResults);
+			}
+			
+			if (ListUtil.isEmpty(allResults)) {
+				return null;
 			}
 		}
 		
