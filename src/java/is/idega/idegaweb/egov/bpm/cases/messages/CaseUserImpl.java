@@ -29,9 +29,9 @@ import com.idega.util.URIUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
- *          Last modified: $Date: 2008/10/22 15:02:00 $ by $Author: civilis $
+ *          Last modified: $Date: 2008/12/17 15:57:36 $ by $Author: civilis $
  */
 public class CaseUserImpl {
 
@@ -129,7 +129,7 @@ public class CaseUserImpl {
 				
 				User bpmUser = getBpmUserFactory().createBPMUser(upd, role, getProcessInstanceW().getProcessInstanceId());
 
-				fullUrl = getAssetsUrl(iwc);
+				fullUrl = getAssetsUrl(user, iwc);
 				
 				final URIUtil uriUtil = new URIUtil(fullUrl);
 				
@@ -174,9 +174,9 @@ public class CaseUserImpl {
 		}
 	}
 	
-	private String getAssetsUrl(IWContext iwc) {
+	private String getAssetsUrl(User user, IWContext iwc) {
 		
-		return getBuilderService(iwc).getFullPageUrlByPageType(iwc, BPMUser.defaultAssetsViewPageType, true);
+		return getBuilderService(iwc).getFullPageUrlByPageType(user, iwc, BPMUser.defaultAssetsViewPageType, true);
 	}
 	
 	private String getOpenCasesUrl(IWContext iwc) {
