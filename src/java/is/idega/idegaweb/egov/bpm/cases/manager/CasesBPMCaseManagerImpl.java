@@ -66,9 +66,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  *
- * Last modified: $Date: 2008/12/15 14:54:32 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/17 16:10:40 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -208,6 +208,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		
 		casesAssets.setUsePdfDownloadColumn(stateBean.getUsePDFDownloadColumn() == null ? false : stateBean.getUsePDFDownloadColumn());
 		casesAssets.setAllowPDFSigning(stateBean.getAllowPDFSigning() == null ? false : stateBean.getAllowPDFSigning());
+		casesAssets.setHideEmptySection(stateBean.getHideEmptySection() == null ? false : stateBean.getHideEmptySection());
 		
 		if (theCase != null) {
 			Integer caseId = null;

@@ -29,9 +29,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.31 $
+ * @version $Revision: 1.32 $
  *
- * Last modified: $Date: 2008/12/17 11:20:06 $ by $Author: juozas $
+ * Last modified: $Date: 2008/12/17 16:10:40 $ by $Author: valdas $
  *
  */
 @SuppressWarnings("deprecation")
@@ -60,6 +60,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean usePDFDownloadColumn = Boolean.TRUE;
 	private Boolean allowPDFSigning = Boolean.TRUE;
 	private Boolean standAloneComponent = Boolean.TRUE;
+	private Boolean hideEmptySection = Boolean.FALSE;
 	
 //	private enum FacetRendered {
 //		
@@ -79,7 +80,7 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	protected Long resolveTaskInstanceId() {
 		
-		String tiIdParam = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("tiId");
+		String tiIdParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("tiId");
 		Long tiId;
 		
 		if(tiIdParam != null && !CoreConstants.EMPTY.equals(tiIdParam)) {
@@ -114,7 +115,7 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	protected Long resolveProcessInstanceId() {
 		
-		String piIdParam = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("piId");
+		String piIdParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("piId");
 		Long piId;
 		
 		if(piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
@@ -192,7 +193,7 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	protected Integer resolveCaseId() {
 		
-		String caseIdParam = (String)FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(CasesProcessor.PARAMETER_CASE_PK);
+		String caseIdParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(CasesProcessor.PARAMETER_CASE_PK);
 		Integer caseId;
 		
 		if(caseIdParam != null && !CoreConstants.EMPTY.equals(caseIdParam)) {
@@ -355,7 +356,7 @@ public class CasesBPMAssetsState implements Serializable {
 		
 		FacesContext fctx = FacesContext.getCurrentInstance();
 		
-		String bpmUsrIdStr = (String)fctx.getExternalContext().getRequestParameterMap().get(BPMUserImpl.bpmUsrParam);
+		String bpmUsrIdStr = fctx.getExternalContext().getRequestParameterMap().get(BPMUserImpl.bpmUsrParam);
 		Integer bpmUsrId = bpmUsrIdStr != null && !CoreConstants.EMPTY.equals(bpmUsrIdStr) ? new Integer(bpmUsrIdStr) : null;
 		
 		BPMUser bpmUsr = getCasesBPMProcessView().getBPMUser(bpmUsrId, null);
@@ -451,4 +452,13 @@ public class CasesBPMAssetsState implements Serializable {
 	public boolean getRenderCaseEmailContainer() {
 		return getStandAloneComponent();
 	}
+
+	public Boolean getHideEmptySection() {
+		return hideEmptySection;
+	}
+
+	public void setHideEmptySection(Boolean hideEmptySection) {
+		this.hideEmptySection = hideEmptySection;
+	}
+	
 }

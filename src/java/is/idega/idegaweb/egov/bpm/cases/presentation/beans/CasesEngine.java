@@ -92,6 +92,7 @@ public class CasesEngine {
 			if (stateBean != null) {
 				stateBean.setUsePDFDownloadColumn(properties.isUsePDFDownloadColumn());
 				stateBean.setAllowPDFSigning(properties.isAllowPDFSigning());
+				stateBean.setHideEmptySection(properties.isHideEmptySection());
 			}
 			
 			Integer caseId = new Integer(caseIdStr);
@@ -164,11 +165,11 @@ public class CasesEngine {
 		UIComponent component = null;
 		if (UserCases.TYPE.equals(criteriaBean.getCaseListType())) {
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics());
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection());
 		}
 		else {
 			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics());
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection());
 		}
 		if (component == null) {
 			return null;

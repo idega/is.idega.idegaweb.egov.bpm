@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.39 $
+ * @version $Revision: 1.40 $
  *
- * Last modified: $Date: 2008/12/17 14:26:21 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/17 16:10:40 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -59,12 +59,12 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private boolean inCasesComponent = false;
 	private boolean usePdfDownloadColumn = true;
 	private boolean allowPDFSigning = true;
+	private boolean hideEmptySection;
 	
 	private Long processInstanceId;
 	private Integer caseId;
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
 
@@ -305,7 +305,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		String mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
 			.append(processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ").append(isUsePdfDownloadColumn()).append(", ")
-			.append(isAllowPDFSigning()).append(");").toString();
+			.append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(");").toString();
 		
 		if (!isSingle) {
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction).append("\n});").toString();
@@ -328,6 +328,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setAllowPDFSigning(boolean allowPDFSigning) {
 		this.allowPDFSigning = allowPDFSigning;
+	}
+
+	public boolean isHideEmptySection() {
+		return hideEmptySection;
+	}
+
+	public void setHideEmptySection(boolean hideEmptySection) {
+		this.hideEmptySection = hideEmptySection;
 	}
 	
 }

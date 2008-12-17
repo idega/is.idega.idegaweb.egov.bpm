@@ -37,7 +37,7 @@ CasesBPMAssets.openedCase = {
 	allowPDFSigning: false
 }
 
-CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning) {
+CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection) {
 	CasesBPMAssets.openedCase.caseId = caseId || null;
 	CasesBPMAssets.openedCase.piId = piId || null;
 	CasesBPMAssets.openedCase.container = container || null;
@@ -45,19 +45,20 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeR
 	CasesBPMAssets.openedCase.hasRightChangeRights = hasRightChangeRights || false;
 	CasesBPMAssets.openedCase.usePdfDownloadColumn = usePdfDownloadColumn || false;
 	CasesBPMAssets.openedCase.allowPDFSigning = allowPDFSigning || false;
+	CasesBPMAssets.openedCase.hideEmptySection = hideEmptySection || false;
 }
 
-CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning) {
+CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection) {
 	jQuery(container).mouseover(function() {
 		if (CasesBPMAssets.openedCase.caseId == caseId) {
 			return;
 		}
 		
-		CasesBPMAssets.setOpenedCase(caseId, piId, container, null, usePdfDownloadColumn, allowPDFSigning);
+		CasesBPMAssets.setOpenedCase(caseId, piId, container, null, usePdfDownloadColumn, allowPDFSigning, hideEmptySection);
 	});
 }
 
-CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning) {
+CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection) {
 	if (container == null) {
 		return false;
 	}
@@ -88,7 +89,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 	   	}
 	   	
 	   	CasesBPMAssets.initTakeCaseSelector(container, piId);
-		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning);
+		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection);
 		
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
@@ -96,12 +97,13 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 					CasesBPMAssets.setTableProperties(container);
 				}
 				
-				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, onGridInitedFunction);
-				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, onGridInitedFunction);
-				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights, onGridInitedFunction);
-				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, onGridInitedFunction);
+				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection, onGridInitedFunction);
+				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
+												onGridInitedFunction);
+				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights, allowPDFSigning, hideEmptySection, onGridInitedFunction);
+				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, hideEmptySection, onGridInitedFunction);
 				
-				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning);
+				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection);
 			}
 		});
 	});
@@ -153,7 +155,7 @@ CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
     });
 }
 
-CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights, onTasksInited) {
+CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights, hideEmptySection, onTasksInited) {
 	
 	var identifier = 'caseTasks';
     
@@ -166,7 +168,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
-                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
                 
                 if (onTasksInited) {
                 	onTasksInited();
@@ -201,7 +203,8 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     							hasRightChangeRights);
 };
 
-CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, onFormsInited) {
+CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
+										onFormsInited) {
     var identifier = 'caseForms';
     
     var populatingFunction = function(params, callback) {
@@ -217,7 +220,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
-                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
                 
                 if (onFormsInited) {
                 	onFormsInited();
@@ -316,8 +319,9 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 	var reOpenFormsGrid = function(hasRights) {
 		var usePdfDownloadColumn = CasesBPMAssets.openedCase.usePdfDownloadColumn;
 		var allowPDFSigning = CasesBPMAssets.openedCase.allowPDFSigning;
+		var hideEmptySection = CasesBPMAssets.openedCase.hideEmptySection;
 	
-		CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRights, usePdfDownloadColumn, allowPDFSigning, function() {
+		CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, function() {
 			CasesBPMAssets.setTableProperties(container);
 		});
 	}
@@ -335,8 +339,8 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 	}
 }
 
-CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightChangeRights, allowPDFSigning, onEmailsInited) {
-    var identifier = 'caseEmails';
+CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightChangeRights, allowPDFSigning, hideEmptySection, onEmailsInited) {
+	var identifier = 'caseEmails';
     
     var populatingFunction = function(params, callback) {
         params.piId = piId;
@@ -349,7 +353,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
-                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
                 
                 if (onEmailsInited) {
                 	onEmailsInited();
@@ -385,7 +389,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     							hasRightChangeRights);
 };
 
-CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, onContactsInited) {
+CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, hideEmptySection, onContactsInited) {
     var identifier = 'caseContacts';
     
     var populatingFunction = function(params, callback) {
@@ -397,7 +401,7 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
-                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)));
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
                 
                 if (onContactsInited) {
                 	onContactsInited();
@@ -471,7 +475,7 @@ CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, popul
     jQuery(table).attr('cellspacing', 0);
 }
 
-CasesBPMAssets.hideHeaderTableIfNoContent = function(container) {
+CasesBPMAssets.hideHeaderTableIfNoContent = function(container, fullyHide) {
 	container = jQuery(container);
 	
 	var hideHeader = false;
@@ -509,29 +513,39 @@ CasesBPMAssets.hideHeaderTableIfNoContent = function(container) {
 	if (hideHeader) {
 		var headers = jQuery('div.gridHeadersTableContainer', container);
 		for (var i = 0; i < headers.length; i++) {
-			jQuery(headers[i]).css('display', 'none');
+			if (fullyHide) {
+				jQuery(headers[i]).parent().css('display', 'none');
+			}
+			else {
+				jQuery(headers[i]).css('display', 'none');
+			}
 		}
 	}
 	if (changeBody) {
 		var bodies = jQuery('div.gridBodyTableContainer', container);
 		var gridBody = null;
 		for (var i = 0; i < bodies.length; i++) {
-			gridBody =  jQuery(bodies[i]);
+			gridBody = jQuery(bodies[i]);
 			
-			gridBody.empty();
-			gridBody.addClass('noContentInCasesListGridBody');
-			if (textFromRows != null) {
-				var allText = '';
-				for (var j = 0; j < textFromRows.length; j++) {
-					allText += textFromRows[j];
-					if ((j + 1) < textFromRows.length) {
-						allText += ' ';
+			if (fullyHide) {
+				gridBody.parent().css('display', 'none');
+			}
+			else {
+				gridBody.empty();
+				gridBody.addClass('noContentInCasesListGridBody');
+				if (textFromRows != null) {
+					var allText = '';
+					for (var j = 0; j < textFromRows.length; j++) {
+						allText += textFromRows[j];
+						if ((j + 1) < textFromRows.length) {
+							allText += ' ';
+						}
 					}
+					if (allText == '') {
+						allText = '-';
+					}
+					gridBody.text(allText);
 				}
-				if (allText == '') {
-					allText = '-';
-				}
-				gridBody.text(allText);
 			}
 		}
 	}
