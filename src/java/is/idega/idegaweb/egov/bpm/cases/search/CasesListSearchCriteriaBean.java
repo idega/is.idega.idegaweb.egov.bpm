@@ -68,6 +68,7 @@ public class CasesListSearchCriteriaBean {
 	private boolean usePDFDownloadColumn = true;
 	private boolean allowPDFSigning = true;
 	private boolean showStatistics;
+	private boolean hideEmptySection;
 	
 	public String getCaseNumber() {
 		return caseNumber;
@@ -660,6 +661,14 @@ public class CasesListSearchCriteriaBean {
 
 	public void setProcessVariables(List<BPMProcessVariable> processVariables) {
 		this.processVariables = processVariables;
+	}
+
+	public boolean isHideEmptySection() {
+		return hideEmptySection;
+	}
+
+	public void setHideEmptySection(boolean hideEmptySection) {
+		this.hideEmptySection = hideEmptySection;
 	}
 	
 }
