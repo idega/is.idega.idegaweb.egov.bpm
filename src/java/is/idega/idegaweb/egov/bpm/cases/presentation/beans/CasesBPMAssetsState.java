@@ -29,9 +29,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.30 $
+ * @version $Revision: 1.31 $
  *
- * Last modified: $Date: 2008/12/15 14:54:32 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/17 11:20:06 $ by $Author: juozas $
  *
  */
 @SuppressWarnings("deprecation")
@@ -47,8 +47,8 @@ public class CasesBPMAssetsState implements Serializable {
 	private transient ProcessWatch processWatcher;
 	
 	@Autowired private transient BPMFactory bpmFactory;
-	
-	@Autowired private GeneralCasesListBuilder casesListBuilder;
+				
+	@Autowired private transient GeneralCasesListBuilder casesListBuilder;
 	
 	private Integer caseId;
 	private Long processInstanceId;
