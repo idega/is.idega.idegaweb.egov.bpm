@@ -57,4 +57,9 @@ public class BPMProcessVariable {
 	public boolean isStringType() {
 		return isTypeOf(STRING_TYPES);
 	}
+	
+	@Override
+	public String toString() {
+		return new StringBuilder("Name: " ).append(getName()).append(", type: ").append(getType()).append(", value: ").append(getValue()).toString();
+	}
 }

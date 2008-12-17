@@ -85,7 +85,7 @@ public class CasesListSearchCriteriaBean {
 				
 				String caseNumber = getCaseNumber();
 				if (StringUtil.isEmpty(caseNumber)) {
-					logger.log(Level.WARNING, "Case number is undefined, not filtering by it!");
+					logger.log(Level.INFO, "Case number is undefined, not filtering by it!");
 					return casesIds;
 				}
 				
@@ -148,7 +148,7 @@ public class CasesListSearchCriteriaBean {
 				
 				if (StringUtil.isEmpty(getDescription()) && StringUtil.isEmpty(getName()) && StringUtil.isEmpty(getPersonalId()) &&
 						ArrayUtil.isEmpty(getStatuses()) && getDateFrom() == null && getDateTo() == null) {
-					logger.log(Level.WARNING, "None of criterias are defined, not filtering by it!");
+					logger.log(Level.INFO, "None of criterias are defined, not filtering by it!");
 					return casesIds;
 				}
 				
@@ -195,7 +195,7 @@ public class CasesListSearchCriteriaBean {
 				}
 				String contact = getContact();
 				if (StringUtil.isEmpty(contact)) {
-					logger.log(Level.WARNING, "Contact is undefined, not filtering by it!");
+					logger.log(Level.INFO, "Contact is undefined, not filtering by it!");
 					return casesIds;
 				}
 				
@@ -231,7 +231,7 @@ public class CasesListSearchCriteriaBean {
 					
 				String processDefinitionId = getProcessId();
 				if (StringUtil.isEmpty(processDefinitionId)) {
-					logger.log(Level.WARNING, "Process definition id is undefined, not filtering by it!");
+					logger.log(Level.INFO, "Process definition id is undefined, not filtering by it!");
 					return casesIds;
 				}
 				

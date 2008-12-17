@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -31,15 +30,17 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  *
- * Last modified: $Date: 2008/12/02 06:42:45 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/17 09:28:51 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
 @Transactional(readOnly=true)
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
+	private static final Logger LOGGER = Logger.getLogger(CasesBPMDAOImpl.class.getName());
+	
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
 		
 		@SuppressWarnings("unchecked")
@@ -189,67 +190,68 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					processDefinitionIds), new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 		}
 		
-		List<Long> results = new ArrayList<Long>();
+		List<Long> allResults = null;
+		List<Long> variableResults = null;
+		for (BPMProcessVariable variable: variables) {
+			variableResults = null;
+			Object value = getVariableValue(variable);
+			
+			//	Date
+			if (variable.isDateType()) {
+				if (value instanceof Date) {
+					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, processDefinitionIds,
+							processDefinitionName, variable.getName(), value, BPMProcessVariable.DATE_TYPES);
+				}
+			//	Double
+			} else if (variable.isDoubleType()) {
+				if (value instanceof Double) {
+					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, processDefinitionIds,
+							processDefinitionName, variable.getName(), value, BPMProcessVariable.DOUBLE_TYPES);
+				}
+			//	Long
+			} else if (variable.isLongType()) {
+				if (value instanceof Long) {
+					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, processDefinitionIds,
+							processDefinitionName, variable.getName(), value, BPMProcessVariable.LONG_TYPES);
+				}
+			//	String
+			} else if (variable.isStringType()) {
+				if (value instanceof String) {
+					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, processDefinitionIds,
+							processDefinitionName, variable.getName(), value, BPMProcessVariable.STRING_TYPES);
+				}
+			//	Unsupported variable
+			} else {
+				LOGGER.warning(new StringBuilder("Unsupported variable: ").append(variable).append(", terminating search!").toString());
+				return null;	//	Unsupported variable!
+			}
+			
+			
+			if (ListUtil.isEmpty(variableResults)) {
+				LOGGER.warning(new StringBuilder("No results by variable: ").append(variable).append(", terminating search!").toString());
+				return null;	//	To keep AND
+			}
+			
+			if (ListUtil.isEmpty(allResults)) {
+				allResults = new ArrayList<Long>(variableResults);
+			}
+			else {
+				allResults.retainAll(variableResults);
+			}
+		}
 		
-		//	Date
-		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, processDefinitionIds, processDefinitionName, variables,
-				BPMProcessVariable.DATE_TYPES, results);
-		
-		//	Double
-		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, processDefinitionIds, processDefinitionName, variables,
-				BPMProcessVariable.DOUBLE_TYPES, results);
-		
-		//	Long
-		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, processDefinitionIds, processDefinitionName, variables,
-				BPMProcessVariable.LONG_TYPES, results);
-		
-		//	String
-		addCaseIdsByVariables(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, processDefinitionIds, processDefinitionName, variables,
-				BPMProcessVariable.STRING_TYPES, results);
-		
-		return ListUtil.isEmpty(results) ? null : results;
+		return allResults;
 	}
 	
-	private void addCaseIdsByVariables(String queryName, List<Long> processDefinitionIds, String processDefinitionName, List<BPMProcessVariable> variables,
-			List<String> types, List<Long> results) {
-		List<BPMProcessVariable> variablesByTypes = getVariablesByType(variables, types);
-		if (ListUtil.isEmpty(variablesByTypes)) {
-			return;
-		}
-		
-		Object value = null;
-		Set<String> variablesNames = new HashSet<String>();
-		Set<Object> variablesValues = new HashSet<Object>();
-		for (BPMProcessVariable variable: variables) {
-			value = getVariableValue(variable);
-			
-			if (value != null) {
-				variablesNames.add(variable.getName());
-				variablesValues.add(value);
-			}
-		}
-		
-		if (ListUtil.isEmpty(variablesNames) || ListUtil.isEmpty(variablesValues)) {
-			return;
-		}
-		
-		List<Long> resultsByVariables = getResultList(queryName, Long.class,
+	private List<Long> getCaseIdsByVariable(String queryName, List<Long> processDefinitionIds, String processDefinitionName, String variableName, Object value,
+			List<String> types) {		
+		return getResultList(queryName, Long.class,
 				new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
 				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
-				new Param(CaseProcInstBind.variablesNamesProp, variablesNames),
-				new Param(CaseProcInstBind.variablesValuesProp, variablesValues),
+				new Param(CaseProcInstBind.variablesNamesProp, variableName),
+				new Param(CaseProcInstBind.variablesValuesProp, value),
 				new Param(CaseProcInstBind.variablesTypesProp, new HashSet<String>(types))
 		);
-		
-		if (ListUtil.isEmpty(resultsByVariables)) {
-			return;
-		}
-		
-		for (Long id: resultsByVariables) {
-			if (!results.contains(id)) {
-				results.add(id);
-			}
-		}
 	}
 	
 	private Object getVariableValue(BPMProcessVariable variable) {
@@ -265,7 +267,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			try {
 				return Double.valueOf(variable.getValue());
 			} catch(NumberFormatException e) {
-				Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error converting string to double: " + variable.getValue(), e);
+				LOGGER.log(Level.WARNING, "Error converting string to double: " + variable.getValue(), e);
 			}
 		}
 		
@@ -273,26 +275,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			try {
 				return Long.valueOf(variable.getValue());
 			} catch (Exception e) {
-				Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Error converting string to long: " + variable.getValue(), e);
+				LOGGER.log(Level.WARNING, "Error converting string to long: " + variable.getValue(), e);
 			}
 		}
 		
 		return null;
-	}
-	
-	private List<BPMProcessVariable> getVariablesByType(List<BPMProcessVariable> variables, List<String> types) {
-		if (ListUtil.isEmpty(variables)) {
-			return null;
-		}
-		
-		List<BPMProcessVariable> filteredVariables = new ArrayList<BPMProcessVariable>();
-		for (BPMProcessVariable variable: variables) {
-			if (variable.isTypeOf(types)) {
-				filteredVariables.add(variable);
-			}
-		}
-		
-		return filteredVariables;
 	}
 
 	public List<Long> getCaseIdsByCaseNumber(String caseNumber) {
