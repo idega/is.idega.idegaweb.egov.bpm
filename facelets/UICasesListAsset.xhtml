@@ -10,14 +10,14 @@
 		<t:div style="display: none;" styleClass="processInstanceIdValueHolderContainer">
 			<input type="hidden" class="processInstanceIdValueHolder" value="#{casesBPMAssetsState.processInstanceId}" />
 		</t:div>
-		<t:div styleClass="sendCaseEmailStyleInBPMCaseViewer" rendered="#{casesBPMAssetsState.renderCaseEmailContainer}">
+		<t:div styleClass="sendCaseEmailStyleInBPMCaseViewer" rendered="#{casesBPMAssetsState.renderCaseEmailContainer}" style="display: none;">
 			<a href="#{casesBPMAssetsState.caseEmailSubject}" title="#{casesBPMAssetsState.sendEmailTitle}">
 				<t:outputText styleClass="sendCaseEmailTextStyleInBPMCaseViewer" value="#{casesBPMAssetsState.sendEmailTitle}">
 					<img src="#{casesBPMAssetsState.sendEmailImage}" />
 				</t:outputText>
 			</a>
 		</t:div>
-		<t:div styleClass="caseTasksPart" style="#{casesBPMAssetsState.tasksVisibilityProperty}">
+		<t:div styleClass="caseTasksPart #{casesBPMAssetsState.tasksVisibilityProperty}" style="display: none;">
 			<t:div styleClass="header">
 				<t:div styleClass="caseTasksPartHeaderLeftLayerStyle" style="float: left">
 					<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['tasks']}"/>
@@ -31,15 +31,15 @@
 			</t:div>
 			<table class="caseTasks" border="0" />
 		</t:div>
-		<t:div styleClass="caseFormsPart">
+		<t:div styleClass="caseFormsPart caseListTasksSectionVisibleStyleClass" style="display: none;">
 			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['forms']}"/></t:div>
 			<table class="caseForms" border="0" />
 		</t:div>
-		<t:div styleClass="caseEmailsPart">
+		<t:div styleClass="caseEmailsPart caseListTasksSectionVisibleStyleClass" style="display: none;">
 			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['emails']}"/></t:div>
 			<table class="caseEmails" border="0" />
 		</t:div>
-		<t:div styleClass="caseContactsPart">
+		<t:div styleClass="caseContactsPart caseListTasksSectionVisibleStyleClass" style="display: none;">
 			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['contacts']}"/></t:div>
 			<table class="caseContacts" border="0" />
 		</t:div>

@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.41 $
+ * @version $Revision: 1.42 $
  *
- * Last modified: $Date: 2008/12/18 08:02:10 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/18 09:24:57 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -117,6 +117,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			comments.setNewestEntriesOnTop(true);
 			comments.setShowCommentsList(false);
 			comments.setAddLoginbyUUIDOnRSSFeedLink(true);
+			comments.setStyleClass("commentsViewerForTaskViewerInCasesList");
 			div.getChildren().add(comments);
 		}
 		

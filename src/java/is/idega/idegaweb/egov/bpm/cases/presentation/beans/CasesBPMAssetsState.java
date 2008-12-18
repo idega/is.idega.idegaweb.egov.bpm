@@ -29,9 +29,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.32 $
+ * @version $Revision: 1.33 $
  *
- * Last modified: $Date: 2008/12/17 16:10:40 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/18 09:24:56 $ by $Author: valdas $
  *
  */
 @SuppressWarnings("deprecation")
@@ -234,10 +234,10 @@ public class CasesBPMAssetsState implements Serializable {
 	public String getTasksVisibilityProperty() {
 		Boolean processHasEnded = getProcessView().getEnded();
 		if (processHasEnded != null && processHasEnded) {
-			return "display: none";
+			return "caseListTasksSectionNotVisibleStyleClass";
 		}
 		
-		return "display: block";
+		return "caseListTasksSectionVisibleStyleClass";
 	}
 	
 	public String getGridStyleClasses() {

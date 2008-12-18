@@ -66,7 +66,6 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 	if ('true' == jQuery(container).attr('inited')) {
 		return false;
 	}
-	
 	jQuery(container).attr('inited', 'true');
 	
 	var jQGridInclude = new JQGridInclude();
@@ -87,21 +86,47 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 	    		CasesBPMAssets.setWatchOrUnwatchTask(watcher, processInstanceId);
 	    	});
 	   	}
-	   	
-	   	CasesBPMAssets.initTakeCaseSelector(container, piId);
+
+		CasesBPMAssets.initTakeCaseSelector(container, piId);
 		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection);
 		
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
-				var onGridInitedFunction = function() {
+				var onGridInitedFunction = function(identifier, needToShow) {
 					CasesBPMAssets.setTableProperties(container);
+					
+					if (needToShow) {
+						jQuery('div.' + identifier, container).show('slow');
+						
+						if (!jQuery('div.commentsViewerForTaskViewerInCasesList', container).hasClass('caseListTasksSectionVisibleStyleClass')) {
+							jQuery('div.commentsViewerForTaskViewerInCasesList', container).addClass('caseListTasksSectionVisibleStyleClass').show('slow');
+						}
+						if (!jQuery('div.sendCaseEmailStyleInBPMCaseViewer', container).hasClass('caseListTasksSectionVisibleStyleClass')) {
+							jQuery('div.sendCaseEmailStyleInBPMCaseViewer', container).addClass('caseListTasksSectionVisibleStyleClass').show('slow');
+						}
+					}
 				}
 				
-				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection, onGridInitedFunction);
+				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection,
+					function() {
+						onGridInitedFunction('caseTasksPart', jQuery('div.caseTasksPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
+					}
+				);
 				CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-												onGridInitedFunction);
-				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights, allowPDFSigning, hideEmptySection, onGridInitedFunction);
-				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, hideEmptySection, onGridInitedFunction);
+					function() {
+						onGridInitedFunction('caseFormsPart', jQuery('div.caseFormsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
+					}
+				);
+				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights, allowPDFSigning, hideEmptySection,
+					function() {
+						onGridInitedFunction('caseEmailsPart', jQuery('div.caseEmailsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
+					}
+				);
+				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, hideEmptySection,
+					function() {
+						onGridInitedFunction('caseContactsPart', jQuery('div.caseContactsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
+					}
+				);
 				
 				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection);
 			}
@@ -511,7 +536,8 @@ CasesBPMAssets.hideHeaderTableIfNoContent = function(container, fullyHide) {
 		var headers = jQuery('div.gridHeadersTableContainer', container);
 		for (var i = 0; i < headers.length; i++) {
 			if (fullyHide) {
-				jQuery(headers[i]).parent().css('display', 'none');
+				jQuery(headers[i]).parent().css('display', 'none').removeClass('caseListTasksSectionVisibleStyleClass')
+																	.addClass('caseListTasksSectionNotVisibleStyleClass');
 			}
 			else {
 				jQuery(headers[i]).css('display', 'none');
@@ -525,7 +551,8 @@ CasesBPMAssets.hideHeaderTableIfNoContent = function(container, fullyHide) {
 			gridBody = jQuery(bodies[i]);
 			
 			if (fullyHide) {
-				gridBody.parent().css('display', 'none');
+				gridBody.parent().css('display', 'none').removeClass('caseListTasksSectionVisibleStyleClass')
+																	.addClass('caseListTasksSectionNotVisibleStyleClass');
 			}
 			else {
 				gridBody.empty();
