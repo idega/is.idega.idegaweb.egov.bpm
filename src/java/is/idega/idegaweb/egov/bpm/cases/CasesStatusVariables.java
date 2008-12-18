@@ -4,9 +4,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/11/11 12:44:44 $ by $Author: arunas $
+ * Last modified: $Date: 2008/12/18 09:54:42 $ by $Author: arunas $
  */
 public class CasesStatusVariables {
 	
@@ -22,6 +22,7 @@ public class CasesStatusVariables {
 	private static final String CASE_STATUS_IN_PROGRESS = "PEND";
 	private static final String CASE_STATUS_PLACED_KEY = "PLAC";
 	private static final String CASE_STATUS_WAIT = "WAIT";
+	private static final String CASE_STATUS_IN_PROCESS = "INPR";
 	private static final String STATUS_EXP = "string_caseStatus_";
 
 	
@@ -53,6 +54,8 @@ public class CasesStatusVariables {
 			result = CasesBPMProcessConstants.caseStatusPlaced;
 		else if (CASE_STATUS_WAIT.equals(status))
 			result = CasesBPMProcessConstants.caseStatusWait;
+		else if (CASE_STATUS_IN_PROCESS.equals(status))
+			result = CasesBPMProcessConstants.caseStatusInProcess;
 		
 		return result.equals(CoreConstants.EMPTY) ? STATUS_EXP + status : result;
 	     
