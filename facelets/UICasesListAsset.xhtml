@@ -12,7 +12,9 @@
 		</t:div>
 		<t:div styleClass="sendCaseEmailStyleInBPMCaseViewer" rendered="#{casesBPMAssetsState.renderCaseEmailContainer}">
 			<a href="#{casesBPMAssetsState.caseEmailSubject}" title="#{casesBPMAssetsState.sendEmailTitle}">
-				<img src="#{casesBPMAssetsState.sendEmailImage}">#{casesBPMAssetsState.sendEmailTitle}</img>
+				<t:outputText styleClass="sendCaseEmailTextStyleInBPMCaseViewer" value="#{casesBPMAssetsState.sendEmailTitle}">
+					<img src="#{casesBPMAssetsState.sendEmailImage}" />
+				</t:outputText>
 			</a>
 		</t:div>
 		<t:div styleClass="caseTasksPart" style="#{casesBPMAssetsState.tasksVisibilityProperty}">

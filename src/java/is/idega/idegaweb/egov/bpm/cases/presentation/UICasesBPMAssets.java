@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.40 $
+ * @version $Revision: 1.41 $
  *
- * Last modified: $Date: 2008/12/17 16:10:40 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/18 08:02:10 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -59,7 +59,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private boolean inCasesComponent = false;
 	private boolean usePdfDownloadColumn = true;
 	private boolean allowPDFSigning = true;
-	private boolean hideEmptySection;
+	private boolean hideEmptySection = true;
 	
 	private Long processInstanceId;
 	private Integer caseId;

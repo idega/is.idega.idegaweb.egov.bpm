@@ -414,17 +414,14 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CONTACT_NAME);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_EMAIL_ADDRESS);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_PHONE_NUMBER);
-    
     if (hasRightChangeRights) {
         namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
     }
-    
-    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_ADDRESS);
+	
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
     modelForColumns.push({name:'emailAddress',index:'emailAddress'});
     modelForColumns.push({name:'phoneNumber',index:'phoneNumber'});
-   	modelForColumns.push({name:'address',index:'address'});
    	if (hasRightChangeRights) {
         modelForColumns.push({name:'rightsForContact',index:'rightsForContact'});
     }
