@@ -51,84 +51,95 @@ import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
 import com.idega.util.StringUtil;
 
-
 /**
+ * refactor this, now it's total mess
+ * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
- *
- * Last modified: $Date: 2008/12/09 02:49:28 $ by $Author: civilis $
+ * @version $Revision: 1.15 $
+ * 
+ *          Last modified: $Date: 2008/12/18 11:04:32 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
 public class EmailMessagesAttacher implements ApplicationListener {
-	
+
 	private CasesBPMDAO casesBPMDAO;
 	private BPMContext idegaJbpmContext;
 	private BPMFactory bpmFactory;
 	private IXFormViewFactory xfvFact;
 	private TmpFilesManager fileUploadManager;
 	private TmpFileResolver uploadedResourceResolver;
-	
+
 	private static final String TEXT_PLAIN_TYPE = "text/plain";
 	private static final String MULTIPART_MIXED_TYPE = "multipart/Mixed";
 	private static final String TEXT_HTML_TYPE = "text/html";
 	private static final String MULTI_ALTERNATIVE_TYPE = "multipart/alternative";
-//	private static final String HTML_EXTENSION = ".html";
+
+	// private static final String HTML_EXTENSION = ".html";
 
 	public void onApplicationEvent(ApplicationEvent ae) {
-		
-		if(ae instanceof ApplicationEmailEvent) {
-			
-			ApplicationEmailEvent ev = (ApplicationEmailEvent)ae;
+
+		if (ae instanceof ApplicationEmailEvent) {
+
+			ApplicationEmailEvent ev = (ApplicationEmailEvent) ae;
 			Map<String, Message> msgs = ev.getMessages();
 			HashSet<Date> dates = new HashSet<Date>(msgs.size());
 			HashSet<Integer> identifierIDs = new HashSet<Integer>(msgs.size());
-			HashMap<PISFORMSG, Message> PISFORMSGMessage = new HashMap<PISFORMSG, Message>(msgs.size()); 
-			
+			HashMap<PISFORMSG, Message> PISFORMSGMessage = new HashMap<PISFORMSG, Message>(
+					msgs.size());
+
 			for (Entry<String, Message> entry : msgs.entrySet()) {
-				
-				if(entry.getKey().startsWith(CaseIdentifier.IDENTIFIER_PREFIX)) {
-					
+
+				if (entry.getKey().startsWith(CaseIdentifier.IDENTIFIER_PREFIX)) {
+
 					try {
-						String[] keyParts = entry.getKey().split(CoreConstants.MINUS);
-						
+						String[] keyParts = entry.getKey().split(
+								CoreConstants.MINUS);
+
 						String yearStr = keyParts[1];
 						String monthStr = keyParts[2];
 						String dayStr = keyParts[3];
 						String identifierIDStr = keyParts[4];
-						
-						IWTimestamp iwt = new IWTimestamp(new Integer(yearStr), new Integer(monthStr), new Integer(dayStr));
+
+						IWTimestamp iwt = new IWTimestamp(new Integer(yearStr),
+								new Integer(monthStr), new Integer(dayStr));
 						iwt.setYear(new Integer(yearStr));
 						iwt.setMonth(new Integer(monthStr));
 						iwt.setDay(new Integer(dayStr));
-						
+
 						Date date = iwt.getDate();
 						Integer identifierID = new Integer(identifierIDStr);
-						
+
 						dates.add(date);
 						identifierIDs.add(identifierID);
-						
-						PISFORMSGMessage.put(new PISFORMSG(date, identifierID, null), entry.getValue());
-						
+
+						PISFORMSGMessage.put(new PISFORMSG(date, identifierID,
+								null), entry.getValue());
+
 					} catch (Exception e) {
-						Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while parsing identifier: "+entry, e);
+						Logger.getLogger(getClass().getName()).log(
+								Level.SEVERE,
+								"Exception while parsing identifier: " + entry,
+								e);
 					}
 				}
 			}
-			
-			if(!dates.isEmpty() && !identifierIDs.isEmpty()) {
-				
-				Set<PISFORMSG> pisformsgs = resolveProcessInstances(dates, identifierIDs);
-				
-				if(!pisformsgs.isEmpty()) {
-					
+
+			if (!dates.isEmpty() && !identifierIDs.isEmpty()) {
+
+				Set<PISFORMSG> pisformsgs = resolveProcessInstances(dates,
+						identifierIDs);
+
+				if (!pisformsgs.isEmpty()) {
+
 					JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-					
+
 					try {
 						for (PISFORMSG pisformsg : pisformsgs) {
-							
-							if(PISFORMSGMessage.containsKey(pisformsg))
-								attachEmailMsg(ctx, PISFORMSGMessage.get(pisformsg), pisformsg.pi);
+
+							if (PISFORMSGMessage.containsKey(pisformsg))
+								attachEmailMsg(ctx, PISFORMSGMessage
+										.get(pisformsg), pisformsg.pi);
 						}
 					} finally {
 						getIdegaJbpmContext().closeAndCommit(ctx);
@@ -137,249 +148,288 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			}
 		}
 	}
-	
-	protected void attachEmailMsg(JbpmContext ctx, Message msg, ProcessInstance prin) {
-	
-//		TODO: if attaching fails (exception or email subprocess not found), keep msg somewhere for later try
-		
-		//List<Token> tkns = getCasesBPMDAO().getCaseProcInstBindSubprocessBySubprocessName(prin.getId());
-		
+
+	protected void attachEmailMsg(JbpmContext ctx, Message msg,
+			ProcessInstance prin) {
+
+		// TODO: if attaching fails (exception or email subprocess not found),
+		// keep msg somewhere for later try
+
+		// List<Token> tkns =
+		// getCasesBPMDAO().getCaseProcInstBindSubprocessBySubprocessName(prin.getId());
+
 		ProcessInstance pi = ctx.getProcessInstance(prin.getId());
 		@SuppressWarnings("unchecked")
 		List<Token> tkns = pi.findAllTokens();
-		
-		if(tkns != null) {
-			
+
+		if (tkns != null) {
+
 			for (Token tkn : tkns) {
-				
+
 				ProcessInstance subPI = tkn.getSubProcessInstance();
-				
-				if(subPI != null && ProcessArtifactsProviderImpl.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
+
+				if (subPI != null
+						&& ProcessArtifactsProviderImpl.email_fetch_process_name
+								.equals(subPI.getProcessDefinition().getName())) {
 
 					try {
-						TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
-						
-				    	String subject = msg.getSubject();
-				    	ti.setName(subject);
-				    	
-				    	Object[] msgAndAttachments = parseContent(msg, ti.getId());
-				    	
-				    	String text = (String)msgAndAttachments[0];
-				    	
-				    	if(text == null)
-				    		text = CoreConstants.EMPTY;
-				    	
-				    	HashMap<String, Object> vars = new HashMap<String, Object>(2);
-				    	
-				    	Address[] froms = msg.getFrom();
-				    	
-				    	String fromPersonal = null;
-				    	String fromAddress = null;
-				    	
-				    	for (Address address : froms) {
-							
-				    		if(address instanceof InternetAddress) {
-				    			
-				    			InternetAddress iaddr = (InternetAddress)address;
-				    			fromAddress = iaddr.getAddress();
-				    			fromPersonal = iaddr.getPersonal();
-				    			break;
-				    		}
+						TaskInstance ti = subPI.getTaskMgmtInstance()
+								.createStartTaskInstance();
+
+						String subject = msg.getSubject();
+						ti.setName(subject);
+
+						Object[] msgAndAttachments = parseContent(msg);
+
+						String text = (String) msgAndAttachments[0];
+
+						if (text == null)
+							text = CoreConstants.EMPTY;
+
+						HashMap<String, Object> vars = new HashMap<String, Object>(
+								2);
+
+						Address[] froms = msg.getFrom();
+
+						String fromPersonal = null;
+						String fromAddress = null;
+
+						for (Address address : froms) {
+
+							if (address instanceof InternetAddress) {
+
+								InternetAddress iaddr = (InternetAddress) address;
+								fromAddress = iaddr.getAddress();
+								fromPersonal = iaddr.getPersonal();
+								break;
+							}
 						}
-				    	
-				    	vars.put("string_subject", subject);
-				    	vars.put("string_text", text);
-				    	vars.put("string_fromPersonal", fromPersonal);
-				    	vars.put("string_fromAddress", fromAddress);
-				    	
+
+						vars.put("string_subject", subject);
+						vars.put("string_text", text);
+						vars.put("string_fromPersonal", fromPersonal);
+						vars.put("string_fromAddress", fromAddress);
+
 						BPMFactory bpmFactory = getBpmFactory();
-						
-						long pdId = ti.getProcessInstance().getProcessDefinition().getId();
-						
-						ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
+
+						// taking here view for new task instance
+						getBpmFactory().takeView(ti.getId(), false, null);
+
+						long pdId = ti.getProcessInstance()
+								.getProcessDefinition().getId();
+
+						ViewSubmission emailViewSubmission = getBpmFactory()
+								.getViewSubmission();
 						emailViewSubmission.populateVariables(vars);
-						
-						bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId()).submit(emailViewSubmission, false);
-						
-						TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
-				    	
-						
-						Variable variable = new Variable("files_attachments", VariableDataType.FILES);
-						
+
+						TaskInstanceW taskInstance = bpmFactory
+								.getProcessManager(pdId).getTaskInstance(
+										ti.getId());
+						taskInstance.submit(emailViewSubmission, false);
+
+						Variable variable = new Variable("attachments",
+								VariableDataType.FILES);
+
 						@SuppressWarnings("unchecked")
-						Map<String, InputStream> files = (Map<String, InputStream>)msgAndAttachments[1];
-						
-						for( String fileName:files.keySet()){
-							//BinaryVariable newAttachment = null;
+						Map<String, InputStream> files = (Map<String, InputStream>) msgAndAttachments[1];
+
+						for (String fileName : files.keySet()) {
+							// BinaryVariable newAttachment = null;
 							try {
-								taskInstance.addAttachment(variable, fileName, fileName, files.get(fileName));
-							} catch(Exception e) {
-								//TODO: fix this!
-								//logger.log(Level.SEVERE, "Unable to set binary variable for task instance: " + taskInstanceId, e);
+								taskInstance.addAttachment(variable, fileName,
+										fileName, files.get(fileName));
+							} catch (Exception e) {
+								// TODO: fix this!
+								// logger.log(Level.SEVERE,
+								// "Unable to set binary variable for task instance: "
+								// + taskInstanceId, e);
 								e.printStackTrace();
 							}
 						}
-						
+
 						return;
-						
+
 					} catch (MessagingException e) {
-						Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while reading email msg", e);
+						Logger.getLogger(getClass().getName()).log(
+								Level.SEVERE,
+								"Exception while reading email msg", e);
 					}
 				}
 			}
 		}
 	}
-	
-	protected Object[] parseContent(Message msg, long taskID) {
+
+	protected Object[] parseContent(Message msg) {
+
 		Object[] msgAndAttachments = new Object[2];
 		try {
 			Object content = msg.getContent();
 			Map<String, InputStream> attachemntMap = new HashMap<String, InputStream>();
 			msgAndAttachments[1] = attachemntMap;
-			if (msg.isMimeType(TEXT_PLAIN_TYPE)){
-			    
-			    if (content instanceof String)
-			    	msgAndAttachments[0] = parsePlainTextMessage((String)content);
-			    
-			} else if (msg.isMimeType(TEXT_HTML_TYPE) ){
-				
+			if (msg.isMimeType(TEXT_PLAIN_TYPE)) {
+
 				if (content instanceof String)
-					msgAndAttachments[0] = parseHTMLMessage((String)content);
-				
- 			} else if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
-				
+					msgAndAttachments[0] = parsePlainTextMessage((String) content);
+
+			} else if (msg.isMimeType(TEXT_HTML_TYPE)) {
+
+				if (content instanceof String)
+					msgAndAttachments[0] = parseHTMLMessage((String) content);
+
+			} else if (msg.isMimeType(MULTIPART_MIXED_TYPE)) {
+
 				Multipart messageMultiPart = (Multipart) content;
 				String msgText = CoreConstants.EMPTY;
-				
+
 				for (int i = 0; i < messageMultiPart.getCount(); i++) {
-				    
-				    Part messagePart = messageMultiPart.getBodyPart(i);
-				    String disposition = messagePart.getDisposition();
-				    //it is attachment
-				    if ((disposition != null) && ((disposition.equals(Part.ATTACHMENT) || disposition.equals(Part.INLINE)))){
-			
-						InputStream input =  messagePart.getInputStream();
-						
-						
+
+					Part messagePart = messageMultiPart.getBodyPart(i);
+					String disposition = messagePart.getDisposition();
+					// it is attachment
+					if ((disposition != null)
+							&& ((disposition.equals(Part.ATTACHMENT) || disposition
+									.equals(Part.INLINE)))) {
+
+						InputStream input = messagePart.getInputStream();
+
 						String fileName = messagePart.getFileName();
-						if(fileName != null){
+						if (fileName != null) {
 							fileName = MimeUtility.decodeText(fileName);
-						}else if (messagePart.getContentType().indexOf("name*=") != -1){
-							//When attachments send from evolution mail client, there is errors so we do what we can.
-							fileName = messagePart.getContentType().substring(messagePart.getContentType().indexOf("name*=")+6);
-							//maybe we are lucky to decode it, if not, well better something then nothing.
-							fileName =  MimeUtility.decodeText(fileName);
-							
-						}else{
-							//well not much can be done then can it?:)
+						} else if (messagePart.getContentType().indexOf(
+								"name*=") != -1) {
+							// When attachments send from evolution mail client,
+							// there is errors so we do what we can.
+							fileName = messagePart.getContentType().substring(
+									messagePart.getContentType().indexOf(
+											"name*=") + 6);
+							// maybe we are lucky to decode it, if not, well
+							// better something then nothing.
+							fileName = MimeUtility.decodeText(fileName);
+
+						} else {
+							// well not much can be done then can it?:)
 							fileName = "UnknownFile";
 						}
 						attachemntMap.put(fileName, input);
-					//It's a message body	
-				    }else if (messagePart.getContent() instanceof String) {
-				    	if (messagePart.isMimeType(TEXT_HTML_TYPE))	
-				    			msgText = parseHTMLMessage((String)messagePart.getContent());
-				    	//it's plain text
-				    	else msgText = (String) messagePart.getContent();
-				    	
-				    	// "multipart/Mixed" can have multipart/alternative sub type.
-				    }else if (messagePart.getContent() instanceof MimeMultipart && messagePart.getContentType().startsWith(MULTI_ALTERNATIVE_TYPE)){
-				    	msgText = parseMultipartAlternative((MimeMultipart)messagePart.getContent());
-				    }
+						// It's a message body
+					} else if (messagePart.getContent() instanceof String) {
+						if (messagePart.isMimeType(TEXT_HTML_TYPE))
+							msgText = parseHTMLMessage((String) messagePart
+									.getContent());
+						// it's plain text
+						else
+							msgText = (String) messagePart.getContent();
+
+						// "multipart/Mixed" can have multipart/alternative sub
+						// type.
+					} else if (messagePart.getContent() instanceof MimeMultipart
+							&& messagePart.getContentType().startsWith(
+									MULTI_ALTERNATIVE_TYPE)) {
+						msgText = parseMultipartAlternative((MimeMultipart) messagePart
+								.getContent());
+					}
 				}
 				msgAndAttachments[0] = msgText;
-			}else if(msg.isMimeType(MULTI_ALTERNATIVE_TYPE)){
-				msgAndAttachments[0] = parseMultipartAlternative((MimeMultipart)msg.getContent());
+			} else if (msg.isMimeType(MULTI_ALTERNATIVE_TYPE)) {
+				msgAndAttachments[0] = parseMultipartAlternative((MimeMultipart) msg
+						.getContent());
 			}
-			
+
 		} catch (MessagingException e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+					"Exception while resolving content text from email msg", e);
 		} catch (IOException e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while resolving content text from email msg", e);
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+					"Exception while resolving content text from email msg", e);
 		}
 		return msgAndAttachments;
 	}
-	
-	protected Set<PISFORMSG> resolveProcessInstances(Set<Date> dates, Set<Integer> identifierIDs) {
-		
-		List<Object[]> cps = getCasesBPMDAO().getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(dates, identifierIDs);
+
+	protected Set<PISFORMSG> resolveProcessInstances(Set<Date> dates,
+			Set<Integer> identifierIDs) {
+
+		List<Object[]> cps = getCasesBPMDAO()
+				.getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
+						dates, identifierIDs);
 		HashSet<PISFORMSG> pisformsgs = new HashSet<PISFORMSG>(cps.size());
-		
+
 		for (Object[] objects : cps) {
-			
-			CaseProcInstBind cp = (CaseProcInstBind)objects[0];
-			ProcessInstance pi = (ProcessInstance)objects[1];
-			
-			PISFORMSG pisformsg = new PISFORMSG(cp.getDateCreated(), cp.getCaseIdentierID(), pi);
+
+			CaseProcInstBind cp = (CaseProcInstBind) objects[0];
+			ProcessInstance pi = (ProcessInstance) objects[1];
+
+			PISFORMSG pisformsg = new PISFORMSG(cp.getDateCreated(), cp
+					.getCaseIdentierID(), pi);
 			pisformsgs.add(pisformsg);
 		}
-		
+
 		return pisformsgs;
 	}
-	
-	private String parseMultipartAlternative(MimeMultipart multipart) throws MessagingException, IOException{
-		
+
+	private String parseMultipartAlternative(MimeMultipart multipart)
+			throws MessagingException, IOException {
+
 		String returnStr = null;
-		for (int i = 0; i<multipart.getCount();i++){
+		for (int i = 0; i < multipart.getCount(); i++) {
 			Part part = multipart.getBodyPart(i);
-			if(part.isMimeType(TEXT_HTML_TYPE)){
-				return parseHTMLMessage((String)part.getContent());
-			}else if(part.isMimeType(TEXT_PLAIN_TYPE)){
-				returnStr = parsePlainTextMessage((String)part.getContent());
+			if (part.isMimeType(TEXT_HTML_TYPE)) {
+				return parseHTMLMessage((String) part.getContent());
+			} else if (part.isMimeType(TEXT_PLAIN_TYPE)) {
+				returnStr = parsePlainTextMessage((String) part.getContent());
 			}
 		}
-		
+
 		return returnStr;
 	}
-	
-	private String parseHTMLMessage(String message){
+
+	private String parseHTMLMessage(String message) {
 		return message;// "<[!CDATA ["+ message+"]]>";
 	}
-	
-	private String parsePlainTextMessage(String message){
+
+	private String parsePlainTextMessage(String message) {
 		return StringUtil.escapeHTMLSpecialChars(message);
 	}
-	
-	
-	
+
 	class PISFORMSG {
 
 		Date date;
 		Integer identifierID;
 		ProcessInstance pi;
-		
+
 		public PISFORMSG(Date date, Integer identifierID, ProcessInstance pi) {
 			this.date = date;
 			this.identifierID = identifierID;
 			this.pi = pi;
 		}
-		
+
 		@Override
 		public boolean equals(Object obj) {
-			
-			if(!super.equals(obj)) {
-				
-				if(date != null && identifierID != null && obj instanceof PISFORMSG) {
-					
-					PISFORMSG another = (PISFORMSG)obj;
-					return date.equals(another.date) && identifierID.equals(another.identifierID);
+
+			if (!super.equals(obj)) {
+
+				if (date != null && identifierID != null
+						&& obj instanceof PISFORMSG) {
+
+					PISFORMSG another = (PISFORMSG) obj;
+					return date.equals(another.date)
+							&& identifierID.equals(another.identifierID);
 				}
 			} else
 				return true;
-			
+
 			return false;
 		}
-		
+
 		@Override
 		public int hashCode() {
 
 			int hashCode;
-			
-			if(date == null || identifierID == null)
+
+			if (date == null || identifierID == null)
 				hashCode = super.hashCode();
 			else
 				hashCode = identifierID.hashCode() + date.hashCode();
-			
+
 			return hashCode;
 		}
 	}
@@ -392,7 +442,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
-	
+
 	public BPMContext getIdegaJbpmContext() {
 		return idegaJbpmContext;
 	}
@@ -434,13 +484,9 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	}
 
 	@Autowired
-	public void setUploadedResourceResolver(@TmpFileResolverType("defaultResolver")
-			TmpFileResolver uploadedResourceResolver) {
+	public void setUploadedResourceResolver(
+			@TmpFileResolverType("defaultResolver") TmpFileResolver uploadedResourceResolver) {
 		this.uploadedResourceResolver = uploadedResourceResolver;
 	}
-	
 
-
-
-	
 }
