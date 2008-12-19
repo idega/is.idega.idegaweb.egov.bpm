@@ -645,7 +645,7 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
                     if (subGridOpener == null || subGridOpener.length == 0) {
                         return false;
                     }
-                    subGridOpener.empty();
+					subGridOpener.empty().html('&nbsp;');
                     subGridOpener.unbind('click');
                 }
             }
