@@ -23,39 +23,39 @@
 			<t:inputHidden name="prm_case_pk" value="#{casesBPMAssetsState.caseId}" id="prm_case_pk_id" forceId="true" />
 		</div>
 	
-		<div class="assetsView">
-				<div class="assetSection">
-					<div class="assetHeader">
-						#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_summary']}
+		<t:div styleClass="assetsView" rendered="false">
+			<div class="assetSection">
+				<div class="assetHeader">
+					#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_summary']}
+				</div>
+				<div class="assetContent">
+					<div class="assetEntry">
+						<div class="assetEntryLeft">
+							#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_name']}
+						</div>
+						<div class="assetEntryRight">
+							#{casesBPMAssetsState.taskView.taskName}
+						</div>
 					</div>
-					<div class="assetContent">
-						<div class="assetEntry">
-							<div class="assetEntryLeft">
-								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_name']}
-							</div>
-							<div class="assetEntryRight">
-								#{casesBPMAssetsState.taskView.taskName}
-							</div>
+					<div class="assetEntry">
+						<div class="assetEntryLeft">
+							#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_identifier']}
 						</div>
-						<div class="assetEntry">
-							<div class="assetEntryLeft">
-								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_identifier']}
-							</div>
-							<div class="assetEntryRight">
-								#{casesBPMAssetsState.processView.caseIdentifier}
-							</div>
+						<div class="assetEntryRight">
+							#{casesBPMAssetsState.processView.caseIdentifier}
 						</div>
-						<div class="assetEntry">
-							<div class="assetEntryLeft">
-								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.time_created']}
-							</div>
-							<div class="assetEntryRight">
-								#{casesBPMAssetsState.taskView.createdDate}
-							</div>
+					</div>
+					<div class="assetEntry">
+						<div class="assetEntryLeft">
+							#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.time_created']}
+						</div>
+						<div class="assetEntryRight">
+							#{casesBPMAssetsState.taskView.createdDate}
 						</div>
 					</div>
 				</div>
-		</div>
+			</div>
+		</t:div>
 	</ui:define>
 	<ui:define name="chibaform">
 		<t:div styleClass="formView">

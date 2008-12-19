@@ -22,7 +22,7 @@
 		</t:div>
 		<t:inputHidden id="state_processInstanceId" value="#{casesBPMAssetsState.processInstanceId}" forceId="true" />
 		
-		<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="caseInfo">
+		<t:div style="#{casesBPMAssetsState.displayPropertyForStyleAttribute}" styleClass="caseInfo" rendered="false">
 			<div class="caseInfoEntry">
 				<div class="caseInfoEntryLeft">
 					#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_name']}
