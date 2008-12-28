@@ -15,7 +15,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
-import com.idega.jbpm.artifacts.ProcessArtifactsProvider;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessWatch;
@@ -29,12 +28,11 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.33 $
+ * @version $Revision: 1.34 $
  *
- * Last modified: $Date: 2008/12/18 09:24:56 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/28 11:56:59 $ by $Author: civilis $
  *
  */
-@SuppressWarnings("deprecation")
 @Scope("request")
 @Service(CasesBPMAssetsState.beanIdentifier)
 public class CasesBPMAssetsState implements Serializable {
@@ -427,14 +425,15 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public String getCaseEmailSubject() {
-		Object identifier = null;
-		try {
-			identifier = getProcessInstance(getProcessInstanceId()).getProcessInstance().getContextInstance()
-																										.getVariable(ProcessArtifactsProvider.CASE_IDENTIFIER);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		return getCasesListBuilder().getEmailAddressMailtoFormattedWithSubject(identifier instanceof String ? identifier.toString() : null);
+		
+		Long processInstanceId = getProcessInstanceId();
+		String processIdentifier = 
+			getBpmFactory()
+			.getProcessManagerByProcessInstanceId(processInstanceId)
+			.getProcessInstance(processInstanceId)
+			.getProcessIdentifier();
+		
+		return getCasesListBuilder().getEmailAddressMailtoFormattedWithSubject(processIdentifier);
 	}
 	
 	public String getSendEmailTitle() {
