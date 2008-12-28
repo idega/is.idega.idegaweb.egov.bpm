@@ -15,6 +15,7 @@ import javax.faces.event.ValueChangeEvent;
 import javax.faces.model.SelectItem;
 
 import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -28,6 +29,7 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bundle.ProcessBundle;
 import com.idega.jbpm.bundle.ProcessBundleManager;
 import com.idega.util.CoreConstants;
@@ -35,15 +37,15 @@ import com.idega.util.CoreConstants;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
- *
- * Last modified: $Date: 2008/06/15 16:03:31 $ by $Author: civilis $
- *
+ * @version $Revision: 1.7 $
+ * 
+ *          Last modified: $Date: 2008/12/28 11:58:47 $ by $Author: civilis $
+ * 
  */
 @Scope("request")
 @Service("CasesBPMProcessMgmt")
 public class CasesBPMProcessMgmtBean {
-	
+
 	private String message;
 	private String caseCategory;
 	private String caseType;
@@ -53,63 +55,70 @@ public class CasesBPMProcessMgmtBean {
 	private CasesBPMDAO casesBPMDAO;
 	private ProcessBundle processBundle;
 	private BPMContext idegaJbpmContext;
-	
+
 	private List<SelectItem> casesTypes = new ArrayList<SelectItem>();
 	private List<SelectItem> casesCategories = new ArrayList<SelectItem>();
 	private List<SelectItem> processesDefinitions = new ArrayList<SelectItem>();
 
 	public String assignProcessToCaseMeta() {
-		
-		if(getProcessDefinitionId() == null) {
+
+		if (getProcessDefinitionId() == null) {
 			setMessage("Process definition not chosen");
 			return null;
 		}
-		
-		if(getCaseCategory() == null || CoreConstants.EMPTY.equals(getCaseCategory())) {
+
+		if (getCaseCategory() == null
+				|| CoreConstants.EMPTY.equals(getCaseCategory())) {
 			setMessage("Case category not chosen");
 			return null;
 		}
-		
-		if(getCaseType() == null || CoreConstants.EMPTY.equals(getCaseType())) {
+
+		if (getCaseType() == null || CoreConstants.EMPTY.equals(getCaseType())) {
 			setMessage("Case type not chosen");
 			return null;
 		}
-		
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-			
+
 		try {
-			Long caseCategoryId = new Long(getCaseCategory());
-			Long caseTypeId = new Long(getCaseType());
-			Long pdId = getProcessDefinitionId();
-			
-			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(pdId);
-			CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
-			
-			if(ctpd != null) {
-				
-				ctpd.setCasesCategoryId(caseCategoryId);
-				ctpd.setCasesTypeId(caseTypeId);
-				getCasesBPMDAO().updateCaseTypesProcDefBind(ctpd);
-				
-			} else {
-			
-				CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
-				bind.setCasesCategoryId(caseCategoryId);
-				bind.setCasesTypeId(caseTypeId);
-				bind.setProcessDefinitionName(pd.getName());
-				getCasesBPMDAO().persist(bind);
-			}
-			
+			getIdegaJbpmContext().execute(new JbpmCallback() {
+
+				public Object doInJbpm(JbpmContext context)
+						throws JbpmException {
+
+					Long caseCategoryId = new Long(getCaseCategory());
+					Long caseTypeId = new Long(getCaseType());
+					Long pdId = getProcessDefinitionId();
+
+					ProcessDefinition pd = context.getGraphSession()
+							.getProcessDefinition(pdId);
+					CaseTypesProcDefBind ctpd = getCasesBPMDAO()
+							.getCaseTypesProcDefBindByPDName(pd.getName());
+
+					if (ctpd != null) {
+
+						ctpd.setCasesCategoryId(caseCategoryId);
+						ctpd.setCasesTypeId(caseTypeId);
+						getCasesBPMDAO().updateCaseTypesProcDefBind(ctpd);
+
+					} else {
+
+						CaseTypesProcDefBind bind = new CaseTypesProcDefBind();
+						bind.setCasesCategoryId(caseCategoryId);
+						bind.setCasesTypeId(caseTypeId);
+						bind.setProcessDefinitionName(pd.getName());
+						getCasesBPMDAO().persist(bind);
+					}
+					return null;
+				}
+			});
+
 		} catch (Exception e) {
 			setMessage("Exception occured");
 			e.printStackTrace();
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
-		
+
 		return null;
 	}
-	
+
 	public String getMessage() {
 		return message == null ? CoreConstants.EMPTY : message;
 	}
@@ -119,27 +128,30 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	public List<SelectItem> getCasesTypes() {
-		
+
 		casesTypes.clear();
-		
+
 		try {
-			
+
 			@SuppressWarnings("unchecked")
-			Collection<CaseType> types = getCasesBusiness(IWMainApplication.getIWMainApplication(FacesContext.getCurrentInstance()).getIWApplicationContext())
-			.getCaseTypes();
-			
+			Collection<CaseType> types = getCasesBusiness(
+					IWMainApplication.getIWMainApplication(
+							FacesContext.getCurrentInstance())
+							.getIWApplicationContext()).getCaseTypes();
+
 			for (CaseType caseType : types) {
-				
+
 				SelectItem item = new SelectItem();
-				
-//				it is done in the same manner (toString for primary key), so anyway.. :\ 
+
+				// it is done in the same manner (toString for primary key), so
+				// anyway.. :\
 				item.setValue(caseType.getPrimaryKey().toString());
 				item.setLabel(caseType.getName());
 				casesTypes.add(item);
 			}
-			
+
 			return casesTypes;
-			
+
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -150,27 +162,30 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	public List<SelectItem> getCasesCategories() {
-		
+
 		casesCategories.clear();
-		
+
 		try {
-			
+
 			@SuppressWarnings("unchecked")
-			Collection<CaseCategory> categories = getCasesBusiness(IWMainApplication.getIWMainApplication(FacesContext.getCurrentInstance()).getIWApplicationContext())
-			.getCaseCategories();
-			
+			Collection<CaseCategory> categories = getCasesBusiness(
+					IWMainApplication.getIWMainApplication(
+							FacesContext.getCurrentInstance())
+							.getIWApplicationContext()).getCaseCategories();
+
 			for (CaseCategory caseCategory : categories) {
-				
+
 				SelectItem item = new SelectItem();
-				
-//				it is done in the same manner (toString for primary key), so anyway.. :\ 
+
+				// it is done in the same manner (toString for primary key), so
+				// anyway.. :\
 				item.setValue(caseCategory.getPrimaryKey().toString());
 				item.setLabel(caseCategory.getName());
 				casesCategories.add(item);
 			}
-			
+
 			return casesCategories;
-			
+
 		} catch (RemoteException e) {
 			throw new RuntimeException(e);
 		}
@@ -179,35 +194,39 @@ public class CasesBPMProcessMgmtBean {
 	public void setCasesCategories(List<SelectItem> casesCategories) {
 		this.casesCategories = casesCategories;
 	}
-	
+
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+					CasesBusiness.class);
+		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
 
 	public String getCaseCategory() {
-		
-		if(caseCategory == null && getProcessDefinitionId() != null) {
-			
-			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-			
-			try {
-				ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
-				CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
-				
-				if(ctpd != null) {
-					
-					setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
-					setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+
+		if (caseCategory == null && getProcessDefinitionId() != null) {
+
+			getIdegaJbpmContext().execute(new JbpmCallback() {
+
+				public Object doInJbpm(JbpmContext context)
+						throws JbpmException {
+
+					ProcessDefinition pd = context.getGraphSession()
+							.getProcessDefinition(getProcessDefinitionId());
+					CaseTypesProcDefBind ctpd = getCasesBPMDAO()
+							.getCaseTypesProcDefBindByPDName(pd.getName());
+
+					if (ctpd != null) {
+
+						setCaseCategory(String.valueOf(ctpd
+								.getCasesCategoryId()));
+						setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+					}
+					return null;
 				}
-				
-			} finally {
-				getIdegaJbpmContext().closeAndCommit(ctx);
-			}
+			});
 		}
 		return caseCategory;
 	}
@@ -217,23 +236,28 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	public String getCaseType() {
-		
-		if(caseType == null && getProcessDefinitionId() != null) {
-			
-			JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-			
-			try {
-				ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(getProcessDefinitionId());
-				CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
-				
-				if(ctpd != null) {
-					
-					setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
-					setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+
+		if (caseType == null && getProcessDefinitionId() != null) {
+
+			getIdegaJbpmContext().execute(new JbpmCallback() {
+
+				public Object doInJbpm(JbpmContext context)
+						throws JbpmException {
+
+					ProcessDefinition pd = context.getGraphSession()
+							.getProcessDefinition(getProcessDefinitionId());
+					CaseTypesProcDefBind ctpd = getCasesBPMDAO()
+							.getCaseTypesProcDefBindByPDName(pd.getName());
+
+					if (ctpd != null) {
+
+						setCaseCategory(String.valueOf(ctpd
+								.getCasesCategoryId()));
+						setCaseType(String.valueOf(ctpd.getCasesTypeId()));
+					}
+					return null;
 				}
-			} finally {
-				getIdegaJbpmContext().closeAndCommit(ctx);
-			}
+			});
 		}
 		return caseType;
 	}
@@ -241,36 +265,39 @@ public class CasesBPMProcessMgmtBean {
 	public void setCaseType(String caseType) {
 		this.caseType = caseType;
 	}
-	
-//	rename to getLatestProcessDefinitions
+
+	// rename to getLatestProcessDefinitions
 	public List<SelectItem> getCasesProcessesDefinitions() {
 
 		processesDefinitions.clear();
-		
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-		
+
 		try {
-			@SuppressWarnings("unchecked")
-			List<ProcessDefinition> pds = ctx.getGraphSession().findLatestProcessDefinitions();
-			
-			for (ProcessDefinition processDefinition : pds) {
-				
-				SelectItem item = new SelectItem();
-				
-				item.setValue(processDefinition.getId());
-				item.setLabel(processDefinition.getName());
-				processesDefinitions.add(item);
-			}
-			
+			getIdegaJbpmContext().execute(new JbpmCallback() {
+
+				public Object doInJbpm(JbpmContext context)
+						throws JbpmException {
+					@SuppressWarnings("unchecked")
+					List<ProcessDefinition> pds = context.getGraphSession()
+							.findLatestProcessDefinitions();
+
+					for (ProcessDefinition processDefinition : pds) {
+
+						SelectItem item = new SelectItem();
+
+						item.setValue(processDefinition.getId());
+						item.setLabel(processDefinition.getName());
+						processesDefinitions.add(item);
+					}
+					return null;
+				}
+			});
+
 		} catch (Exception e) {
 			setMessage("Exception occured");
 			e.printStackTrace();
 			processesDefinitions.clear();
-			
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
 		}
-		
+
 		return processesDefinitions;
 	}
 
@@ -279,7 +306,8 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	@Autowired
-	public void setProcessBundleManager(ProcessBundleManager processBundleManager) {
+	public void setProcessBundleManager(
+			ProcessBundleManager processBundleManager) {
 		this.processBundleManager = processBundleManager;
 	}
 
@@ -317,24 +345,25 @@ public class CasesBPMProcessMgmtBean {
 	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
 	}
-	
+
 	public void selectedProcessChanged(ValueChangeEvent event) {
-		
+
 		PhaseId phaseId = event.getPhaseId();
-		
+
 		if (phaseId.equals(PhaseId.ANY_PHASE)) {
-			
+
 			event.setPhaseId(PhaseId.UPDATE_MODEL_VALUES);
 			event.queue();
-			
+
 		} else if (phaseId.equals(PhaseId.UPDATE_MODEL_VALUES)) {
-			
-			if(event.getNewValue() != null && event.getOldValue() != null && !event.getNewValue().equals(event.getOldValue())) {
+
+			if (event.getNewValue() != null && event.getOldValue() != null
+					&& !event.getNewValue().equals(event.getOldValue())) {
 				caseCategory = null;
 				caseType = null;
 			}
-			
-			processDefinitionId = (Long)event.getNewValue();
+
+			processDefinitionId = (Long) event.getNewValue();
 		}
 	}
 }

@@ -24,14 +24,15 @@ import java.util.logging.Logger;
 import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;
-import javax.faces.context.FacesContext;
 
 import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
+import org.jbpm.db.GraphSession;
 import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
@@ -52,6 +53,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
@@ -66,19 +68,20 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2008/12/17 16:10:40 $ by $Author: valdas $
+ * Last modified: $Date: 2008/12/28 11:58:49 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
+@Transactional(readOnly = true)
 public class CasesBPMCaseManagerImpl implements CaseManager {
 
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
 	
-	private CasesBPMDAO casesBPMDAO;
-	private BPMContext idegaJbpmContext;
-	private BPMFactory bpmFactory;
+	@Autowired private CasesBPMDAO casesBPMDAO;
+	@Autowired private BPMContext bpmContext;
+	@Autowired private BPMFactory bpmFactory;
 	
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
@@ -92,17 +95,19 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	}
 	
 	public String getProcessIdentifier(Case theCase) {
-		Long piId = getProcessInstanceId(theCase);
+		final Long piId = getProcessInstanceId(theCase);
 		if (piId == null) {
 			return null;
 		}
 		
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-		try {
-			return (String)ctx.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
-		}
+		System.out.println("_________PROCESS INSTANCE ID++++="+piId);
+		
+		return getBpmContext().execute(new JbpmCallback() {
+
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
+				return (String)context.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+			}
+		});
 	}
 	
 	public Long getProcessInstanceId(Case theCase) {
@@ -124,22 +129,17 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	}
 	
 	private ProcessDefinition getProcessDefinition(Case theCase) {
-		Long piId = getProcessInstanceId(theCase);
+		final Long piId = getProcessInstanceId(theCase);
 		if (piId == null) {
 			return null;
 		}
 		
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-		try {
-			ProcessInstance processInstance = ctx.getProcessInstance(piId);
-			return processInstance.getProcessDefinition();
-		} catch(Exception e) {
-			e.printStackTrace();
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
-		}
-		
-		return null;
+		return getBpmContext().execute(new JbpmCallback() {
+
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
+				return context.getProcessInstance(piId).getProcessDefinition();
+			}
+		});
 	}
 
 	public List<Link> getCaseLinks(Case theCase, String casesComponentType) {
@@ -227,10 +227,12 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 
 	public Collection<? extends Case> getCases(User user, String casesComponentType) {
 		
-		IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
+		IWContext iwc = IWContext.getCurrentInstance();
 		
 		RolesManager rolesManager = getBpmFactory().getRolesManager();
-		List<Long> processInstancesIds = rolesManager.getProcessInstancesIdsForCurrentUser();
+		
+//		TODO: couldn't we optimize this?
+		List<Long> processInstancesIds = rolesManager.getProcessInstancesIdsForUser(iwc, user, true);
 		
 		Collection<GeneralCase> cases;
 		
@@ -302,7 +304,6 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		return casesBPMDAO;
 	}
 
-	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
@@ -373,20 +374,18 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 		}
 	}
 
-	public BPMContext getIdegaJbpmContext() {
-		return idegaJbpmContext;
+	public BPMContext getBpmContext() {
+		return bpmContext;
 	}
 
-	@Autowired
-	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
-		this.idegaJbpmContext = idegaJbpmContext;
+	public void setBpmContext(BPMContext bpmContext) {
+		this.bpmContext = bpmContext;
 	}
 
 	public BPMFactory getBpmFactory() {
 		return bpmFactory;
 	}
 
-	@Autowired
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
@@ -444,57 +443,58 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	
 	//	TODO: use case type!
 	private List<ProcessDefinition> getAllProcessDefinitions() {
-		List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
+		final List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
 		if (ListUtil.isEmpty(casesProcesses)) {
 			return null;
 		}
 		
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-		
-		ProcessDefinition pd = null;
-		List<ProcessDefinition> caseProcessDefinitions = new ArrayList<ProcessDefinition>();
-		try {
-			for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
-				pd = ctx.getGraphSession().findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
+		return getBpmContext().execute(new JbpmCallback() {
+
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				
-				if (pd != null && !caseProcessDefinitions.contains(pd)) {
-					caseProcessDefinitions.add(pd);
+				ProcessDefinition pd = null;
+				List<ProcessDefinition> caseProcessDefinitions = new ArrayList<ProcessDefinition>();
+				
+				GraphSession graphSession = context.getGraphSession();
+				
+				for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
+					pd = graphSession.findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
+					
+					if (pd != null && !caseProcessDefinitions.contains(pd)) {
+						caseProcessDefinitions.add(pd);
+					}
 				}
+					
+				return caseProcessDefinitions;
 			}
-		} catch(Exception e) {
-			e.printStackTrace();
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
-		}
-		
-		return caseProcessDefinitions;
+		});
 	}
 	
-	public String getProcessName(Long processDefinitionId, Locale locale) {
+//	TODO: move this code to processdefinition wrapper
+	public String getProcessName(final Long processDefinitionId, final Locale locale) {
+		
 		if (processDefinitionId == null) {
 			return null;
 		}
 		
-		ProcessDefinition pd = null;
-		JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
-		try {
-			pd = ctx.getGraphSession().getProcessDefinition(processDefinitionId);
-		} catch(Exception e) {
-			e.printStackTrace();
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(ctx);
-		}
-		
-		try {
-			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
-		} catch (IDOLookupException e) {
-			e.printStackTrace();
-		}
-		return null;
+		return getBpmContext().execute(new JbpmCallback() {
+
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
+				
+				ProcessDefinition pd = context.getGraphSession().getProcessDefinition(processDefinitionId);
+				try {
+					return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+					
+				} catch (IDOLookupException e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+		});
 	}
 	
 	public String getProcessName(String processName, Locale locale) {
-		ProcessDefinition pd = getLatestProcessDefinitionByName(processName);
+		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(processName);
 		if (pd == null) {
 			return null;
 		}
@@ -503,23 +503,6 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
 		} catch (IDOLookupException e) {
 			e.printStackTrace();
-		}
-		
-		return null;
-	}
-	
-	private ProcessDefinition getLatestProcessDefinitionByName(String name) {
-		if (StringUtil.isEmpty(name)) {
-			return null;
-		}
-		
-		JbpmContext jctx = getIdegaJbpmContext().createJbpmContext();
-		try {
-			return jctx.getGraphSession().findLatestProcessDefinition(name);
-		} catch(Exception e) {
-			e.printStackTrace();
-		} finally {
-			getIdegaJbpmContext().closeAndCommit(jctx);
 		}
 		
 		return null;
@@ -556,7 +539,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 	}
 
 	public Long getLatestProcessDefinitionIdByProcessName(String name) {
-		ProcessDefinition pd = getLatestProcessDefinitionByName(name);
+		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(name);
 		return pd == null ? null : pd.getId();
 	}
 }

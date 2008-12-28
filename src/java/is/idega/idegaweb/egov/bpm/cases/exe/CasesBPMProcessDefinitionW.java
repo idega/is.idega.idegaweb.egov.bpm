@@ -14,15 +14,16 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.CaseStatus;
@@ -37,6 +38,7 @@ import com.idega.idegaweb.egov.bpm.data.AppProcBindDefinition;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
@@ -48,12 +50,13 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  * 
- *          Last modified: $Date: 2008/12/16 19:55:17 $ by $Author: civilis $
+ *          Last modified: $Date: 2008/12/28 11:58:48 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPDW")
+@Transactional(readOnly = true)
 public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	@Autowired
@@ -63,14 +66,16 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Autowired
 	private CaseManager caseManager;
 
-	private static final Logger logger = Logger
-			.getLogger(CasesBPMProcessDefinitionW.class.getName());
-
 	@SuppressWarnings("unchecked")
+	@Transactional(readOnly = false)
 	@Override
-	public void startProcess(ViewSubmission viewSubmission) {
+	public void startProcess(final ViewSubmission viewSubmission) {
 
-		Long processDefinitionId = viewSubmission.getProcessDefinitionId();
+		final Long processDefinitionId = viewSubmission.getProcessDefinitionId();
+		
+		if(!processDefinitionId.equals(getProcessDefinitionId())) {
+			throw new IllegalArgumentException("View submission was for different process definition id than tried to submit to");
+		}
 
 		logger.finer("Starting process for process definition id = "
 				+ processDefinitionId);
@@ -87,218 +92,242 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		else
 			userId = null;
 
-		Integer caseIdentifierNumber = Integer.parseInt(parameters
+		final Integer caseIdentifierNumber = Integer.parseInt(parameters
 				.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
-		String caseIdentifier = parameters
+		final String caseIdentifier = parameters
 				.get(CasesBPMProcessConstants.caseIdentifier);
+		
+		getBpmContext().execute(new JbpmCallback() {
 
-		JbpmContext ctx = getBpmContext().createJbpmContext();
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
+				
+				try {
+					ProcessDefinition pd = getProcessDefinition();
+					ProcessInstance pi = new ProcessInstance(pd);
+					TaskInstance ti = pi.getTaskMgmtInstance()
+							.createStartTaskInstance();
 
-		try {
-			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(
-					processDefinitionId);
-			ProcessInstance pi = new ProcessInstance(pd);
-			TaskInstance ti = pi.getTaskMgmtInstance()
-					.createStartTaskInstance();
+					View view = getBpmFactory().getView(viewSubmission.getViewId(),
+							viewSubmission.getViewType(), false);
 
-			View view = getBpmFactory().getView(viewSubmission.getViewId(),
-					viewSubmission.getViewType(), false);
+					// binding view to task instance
+					view.getViewToTask().bind(view, ti);
 
-			// binding view to task instance
-			view.getViewToTask().bind(view, ti);
+					logger.log(Level.INFO,
+							"New process instance created for the process "
+									+ pd.getName());
 
-			logger.log(Level.INFO,
-					"New process instance created for the process "
-							+ pd.getName());
-			
-			pi.setStart(new Date());
+					pi.setStart(new Date());
 
-			IWApplicationContext iwac = getIWAC();
-			UserBusiness userBusiness = getUserBusiness(iwac);
+					IWApplicationContext iwac = getIWAC();
+					UserBusiness userBusiness = getUserBusiness(iwac);
 
-			final User user;
-			if (userId != null)
-				user = userBusiness.getUser(userId);
-			else
-				user = null;
+					final User user;
+					if (userId != null)
+						user = userBusiness.getUser(userId);
+					else
+						user = null;
 
-			IWMainApplication iwma = iwac.getIWMainApplication();
+					IWMainApplication iwma = iwac.getIWMainApplication();
 
-			CasesBusiness casesBusiness = getCasesBusiness(iwac);
+					CasesBusiness casesBusiness = getCasesBusiness(iwac);
 
-			CaseTypesProcDefBind bind = getCasesBPMDAO().find(
-					CaseTypesProcDefBind.class, pd.getName());
-			Long caseCategoryId = bind.getCasesCategoryId();
-			Long caseTypeId = bind.getCasesTypeId();
+					CaseTypesProcDefBind bind = getCasesBPMDAO().find(
+							CaseTypesProcDefBind.class, pd.getName());
+					Long caseCategoryId = bind.getCasesCategoryId();
+					Long caseTypeId = bind.getCasesTypeId();
 
-			GeneralCase genCase = casesBusiness
-					.storeGeneralCase(
-							user,
-							caseCategoryId,
-							caseTypeId,
-							null,
-							"This is simple cases-jbpm-formbuilder integration example.",
-							null,
-							CasesBPMCaseManagerImpl.caseHandlerType,
-							false,
-							casesBusiness
-									.getIWResourceBundleForUser(
-											user,
-											null,
-											iwma
-													.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)),
-							false);
+					GeneralCase genCase = casesBusiness
+							.storeGeneralCase(
+									user,
+									caseCategoryId,
+									caseTypeId,
+									null,
+									"This is simple cases-jbpm-formbuilder integration example.",
+									null,
+									CasesBPMCaseManagerImpl.caseHandlerType,
+									false,
+									casesBusiness
+											.getIWResourceBundleForUser(
+													user,
+													null,
+													iwma
+															.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)),
+									false);
 
-			logger.log(Level.INFO, "Case (id=" + genCase.getPrimaryKey()
-					+ ") created for process instance " + pi.getId());
+					logger.log(Level.INFO, "Case (id=" + genCase.getPrimaryKey()
+							+ ") created for process instance " + pi.getId());
 
-			pi.setStart(new Date());
+					pi.setStart(new Date());
 
-			Map<String, Object> caseData = new HashMap<String, Object>();
-			caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase
-					.getPrimaryKey().toString());
-			caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName,
-					genCase.getCaseType().getName());
-			caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName,
-					genCase.getCaseCategory().getName());
-			caseData.put(CasesBPMProcessConstants.caseStatusVariableName,
-					genCase.getCaseStatus().getStatus());
-			caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName,
-					casesBusiness.getCaseStatusReady().getStatus());
-			caseData.put(CasesBPMProcessConstants.caseIdentifier,
-					caseIdentifier);
+					Map<String, Object> caseData = new HashMap<String, Object>();
+					caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase
+							.getPrimaryKey().toString());
+					caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName,
+							genCase.getCaseType().getName());
+					caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName,
+							genCase.getCaseCategory().getName());
+					caseData.put(CasesBPMProcessConstants.caseStatusVariableName,
+							genCase.getCaseStatus().getStatus());
+					caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName,
+							casesBusiness.getCaseStatusReady().getStatus());
+					caseData.put(CasesBPMProcessConstants.caseIdentifier,
+							caseIdentifier);
 
-			Collection<CaseStatus> allStatuses = casesBusiness
-					.getCaseStatuses();
+					Collection<CaseStatus> allStatuses = casesBusiness
+							.getCaseStatuses();
 
-			for (CaseStatus caseStatus : allStatuses)
-				caseData.put(CasesStatusVariables
-						.evaluateStatusVariableName(caseStatus.getStatus()),
-						caseStatus.getStatus());
+					for (CaseStatus caseStatus : allStatuses)
+						caseData.put(CasesStatusVariables
+								.evaluateStatusVariableName(caseStatus.getStatus()),
+								caseStatus.getStatus());
 
-			final Locale dateLocale;
+					final Locale dateLocale;
 
-			IWContext iwc = IWContext.getCurrentInstance();
+					IWContext iwc = IWContext.getCurrentInstance();
 
-			if (iwc != null)
-				dateLocale = iwc.getCurrentLocale();
-			else {
-				dateLocale = userBusiness.getUsersPreferredLocale(user);
+					if (iwc != null)
+						dateLocale = iwc.getCurrentLocale();
+					else {
+						dateLocale = userBusiness.getUsersPreferredLocale(user);
+					}
+
+					IWTimestamp created = new IWTimestamp(genCase.getCreated());
+					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName,
+							created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT,
+									IWTimestamp.SHORT));
+
+					CaseProcInstBind piBind = new CaseProcInstBind();
+					piBind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
+					piBind.setProcInstId(pi.getId());
+					piBind.setCaseIdentierID(caseIdentifierNumber);
+					piBind.setDateCreated(created.getDate());
+					getCasesBPMDAO().persist(piBind);
+
+					// TODO: if variables submission and process execution fails here,
+					// rollback case proc inst bind
+
+					getVariablesHandler().submitVariables(caseData, ti.getId(), false);
+					submitVariablesAndProceedProcess(ti, viewSubmission
+							.resolveVariables(), true);
+					
+					return null;
+				
+				} catch (JbpmException e) {
+					throw e;
+				} catch (RuntimeException e) {
+					throw e;
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
 			}
-
-			IWTimestamp created = new IWTimestamp(genCase.getCreated());
-			caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName,
-					created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT,
-							IWTimestamp.SHORT));
-
-			CaseProcInstBind piBind = new CaseProcInstBind();
-			piBind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
-			piBind.setProcInstId(pi.getId());
-			piBind.setCaseIdentierID(caseIdentifierNumber);
-			piBind.setDateCreated(created.getDate());
-			getCasesBPMDAO().persist(piBind);
-
-			// TODO: if variables submission and process execution fails here,
-			// rollback case proc inst bind
-
-			getVariablesHandler().submitVariables(caseData, ti.getId(), false);
-			submitVariablesAndProceedProcess(ti, viewSubmission
-					.resolveVariables(), true);
-
-		} catch (Exception e) {
-			throw new RuntimeException(e);
-		} finally {
-			getBpmContext().closeAndCommit(ctx);
-		}
+			
+		});
 	}
 
 	@Override
-	public View loadInitView(Integer initiatorId) {
-
-		JbpmContext ctx = getBpmContext().createJbpmContext();
+	public View loadInitView(final Integer initiatorId) {
 
 		try {
-			Long processDefinitionId = getProcessDefinitionId();
-			ProcessDefinition pd = ctx.getGraphSession().getProcessDefinition(
-					processDefinitionId);
+			return getBpmContext().execute(new JbpmCallback() {
 
-			Long startTaskId = pd.getTaskMgmtDefinition().getStartTask()
-					.getId();
+				public Object doInJbpm(JbpmContext context)
+						throws JbpmException {
 
-			List<String> preferred = new ArrayList<String>(1);
-			preferred.add(XFormsView.VIEW_TYPE);
-			View view = getBpmFactory().getViewByTask(startTaskId, true,
-					preferred);
-			view.takeView();
+					Long processDefinitionId = getProcessDefinitionId();
+					ProcessDefinition pd = getProcessDefinition();
 
-			// we don't know yet the task instance id, so we store the view id
-			// and type, to resolve later in start process. Only then we will
-			// bind view with task instance
+					Long startTaskId = pd.getTaskMgmtDefinition()
+							.getStartTask().getId();
 
-			Object[] identifiers = getCaseIdentifier()
-					.generateNewCaseIdentifier();
-			Integer identifierNumber = (Integer) identifiers[0];
-			String identifier = (String) identifiers[1];
+					List<String> preferred = new ArrayList<String>(1);
+					preferred.add(XFormsView.VIEW_TYPE);
+					View view = getBpmFactory().getViewByTask(startTaskId,
+							true, preferred);
+					view.takeView();
 
-			Map<String, String> parameters = new HashMap<String, String>(7);
+					// we don't know yet the task instance id, so we store the
+					// view id
+					// and type, to resolve later in start process. Only then we
+					// will
+					// bind view with task instance
 
-			parameters.put(ProcessConstants.START_PROCESS,
-					ProcessConstants.START_PROCESS);
-			parameters.put(ProcessConstants.PROCESS_DEFINITION_ID, String
-					.valueOf(processDefinitionId));
-			parameters.put(ProcessConstants.VIEW_ID, view.getViewId());
-			parameters.put(ProcessConstants.VIEW_TYPE, view.getViewType());
+					Object[] identifiers = getCaseIdentifier()
+							.generateNewCaseIdentifier();
+					Integer identifierNumber = (Integer) identifiers[0];
+					String identifier = (String) identifiers[1];
 
-			if (initiatorId != null)
-				parameters.put(
-						CasesBPMProcessConstants.userIdActionVariableName,
-						initiatorId.toString());
+					Map<String, String> parameters = new HashMap<String, String>(
+							7);
 
-			parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam,
-					String.valueOf(identifierNumber));
-			parameters.put(CasesBPMProcessConstants.caseIdentifier, String
-					.valueOf(identifier));
+					parameters.put(ProcessConstants.START_PROCESS,
+							ProcessConstants.START_PROCESS);
+					parameters.put(ProcessConstants.PROCESS_DEFINITION_ID,
+							String.valueOf(processDefinitionId));
+					parameters.put(ProcessConstants.VIEW_ID, view.getViewId());
+					parameters.put(ProcessConstants.VIEW_TYPE, view
+							.getViewType());
 
-			view.populateParameters(parameters);
+					if (initiatorId != null)
+						parameters
+								.put(
+										CasesBPMProcessConstants.userIdActionVariableName,
+										initiatorId.toString());
 
-			HashMap<String, Object> vars = new HashMap<String, Object>(1);
-			vars.put(CasesBPMProcessConstants.caseIdentifier, identifier);
+					parameters.put(
+							CasesBPMProcessConstants.caseIdentifierNumberParam,
+							String.valueOf(identifierNumber));
+					parameters.put(CasesBPMProcessConstants.caseIdentifier,
+							String.valueOf(identifier));
 
-			view.populateVariables(vars);
+					view.populateParameters(parameters);
 
-			// --
+					HashMap<String, Object> vars = new HashMap<String, Object>(
+							1);
+					vars.put(CasesBPMProcessConstants.caseIdentifier,
+							identifier);
 
-			return view;
+					view.populateVariables(vars);
+
+					// --
+
+					return view;
+				}
+			});
 
 		} catch (RuntimeException e) {
 			throw e;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
-
-		} finally {
-
-			getBpmContext().closeAndCommit(ctx);
 		}
 	}
 
 	@Override
 	public List<String> getRolesCanStartProcess(Object context) {
 
-		Integer appId = new Integer(context.toString());
+		final Integer appId = new Integer(context.toString());
 
-		ProcessDefinition pd = getProcessDefinition();
-		AppProcBindDefinition def = (AppProcBindDefinition) pd
-				.getDefinition(AppProcBindDefinition.class);
+		return getBpmContext().execute(new JbpmCallback() {
 
-		final List<String> rolesCanStart;
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
 
-		if (def != null) {
+				ProcessDefinition pd = getProcessDefinition();
 
-			rolesCanStart = def.getRolesCanStartProcess(appId);
-		} else
-			rolesCanStart = null;
+				AppProcBindDefinition def = (AppProcBindDefinition) pd
+						.getDefinition(AppProcBindDefinition.class);
 
-		return rolesCanStart;
+				final List<String> rolesCanStart;
+
+				if (def != null) {
+
+					rolesCanStart = def.getRolesCanStartProcess(appId);
+				} else
+					rolesCanStart = null;
+
+				return rolesCanStart;
+			}
+
+		});
 	}
 
 	/**

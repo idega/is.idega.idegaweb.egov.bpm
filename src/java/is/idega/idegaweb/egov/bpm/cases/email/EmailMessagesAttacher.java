@@ -24,6 +24,7 @@ import javax.mail.internet.MimeMultipart;
 import javax.mail.internet.MimeUtility;
 
 import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.taskmgmt.exe.TaskInstance;
@@ -43,7 +44,7 @@ import com.idega.core.file.tmp.TmpFilesManager;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.artifacts.impl.ProcessArtifactsProviderImpl;
+import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.ViewSubmission;
@@ -55,9 +56,9 @@ import com.idega.util.StringUtil;
  * refactor this, now it's total mess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.15 $
+ * @version $Revision: 1.16 $
  * 
- *          Last modified: $Date: 2008/12/18 11:04:32 $ by $Author: civilis $
+ *          Last modified: $Date: 2008/12/28 11:58:47 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service
@@ -75,6 +76,8 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	private static final String TEXT_HTML_TYPE = "text/html";
 	private static final String MULTI_ALTERNATIVE_TYPE = "multipart/alternative";
 
+	private static final String email_fetch_process_name = "fetchEmails";
+
 	// private static final String HTML_EXTENSION = ".html";
 
 	public void onApplicationEvent(ApplicationEvent ae) {
@@ -85,7 +88,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			Map<String, Message> msgs = ev.getMessages();
 			HashSet<Date> dates = new HashSet<Date>(msgs.size());
 			HashSet<Integer> identifierIDs = new HashSet<Integer>(msgs.size());
-			HashMap<PISFORMSG, Message> PISFORMSGMessage = new HashMap<PISFORMSG, Message>(
+			final HashMap<PISFORMSG, Message> PISFORMSGMessage = new HashMap<PISFORMSG, Message>(
 					msgs.size());
 
 			for (Entry<String, Message> entry : msgs.entrySet()) {
@@ -127,23 +130,25 @@ public class EmailMessagesAttacher implements ApplicationListener {
 
 			if (!dates.isEmpty() && !identifierIDs.isEmpty()) {
 
-				Set<PISFORMSG> pisformsgs = resolveProcessInstances(dates,
-						identifierIDs);
+				final Set<PISFORMSG> pisformsgs = resolveProcessInstances(
+						dates, identifierIDs);
 
 				if (!pisformsgs.isEmpty()) {
 
-					JbpmContext ctx = getIdegaJbpmContext().createJbpmContext();
+					getIdegaJbpmContext().execute(new JbpmCallback() {
 
-					try {
-						for (PISFORMSG pisformsg : pisformsgs) {
+						public Object doInJbpm(JbpmContext context)
+								throws JbpmException {
+							for (PISFORMSG pisformsg : pisformsgs) {
 
-							if (PISFORMSGMessage.containsKey(pisformsg))
-								attachEmailMsg(ctx, PISFORMSGMessage
-										.get(pisformsg), pisformsg.pi);
+								if (PISFORMSGMessage.containsKey(pisformsg))
+									attachEmailMsg(context, PISFORMSGMessage
+											.get(pisformsg), pisformsg.pi);
+							}
+
+							return null;
 						}
-					} finally {
-						getIdegaJbpmContext().closeAndCommit(ctx);
-					}
+					});
 				}
 			}
 		}
@@ -169,8 +174,8 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				ProcessInstance subPI = tkn.getSubProcessInstance();
 
 				if (subPI != null
-						&& ProcessArtifactsProviderImpl.email_fetch_process_name
-								.equals(subPI.getProcessDefinition().getName())) {
+						&& email_fetch_process_name.equals(subPI
+								.getProcessDefinition().getName())) {
 
 					try {
 						TaskInstance ti = subPI.getTaskMgmtInstance()
