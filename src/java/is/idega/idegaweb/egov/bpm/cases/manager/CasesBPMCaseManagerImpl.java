@@ -68,9 +68,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  *
- * Last modified: $Date: 2008/12/28 11:58:49 $ by $Author: civilis $
+ * Last modified: $Date: 2008/12/29 03:27:09 $ by $Author: arunas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -100,7 +100,7 @@ public class CasesBPMCaseManagerImpl implements CaseManager {
 			return null;
 		}
 		
-		System.out.println("_________PROCESS INSTANCE ID++++="+piId);
+	//	System.out.println("_________PROCESS INSTANCE ID++++="+piId);
 		
 		return getBpmContext().execute(new JbpmCallback() {
 
