@@ -17,9 +17,9 @@ import com.idega.util.text.Item;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/12/16 17:33:30 $ by $Author: arunas $
+ * Last modified: $Date: 2008/12/30 11:33:37 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -74,7 +74,7 @@ public class XformBPMDSBean implements XformBPM{
 		StringBuilder userEmails = new StringBuilder();
 		
 		for (Email email : emails) 
-			userEmails.append(email).append(CoreConstants.SPACE);
+			userEmails.append(email.getEmailAddress()).append(CoreConstants.SPACE);
 		
 		return userEmails.toString();
 		
