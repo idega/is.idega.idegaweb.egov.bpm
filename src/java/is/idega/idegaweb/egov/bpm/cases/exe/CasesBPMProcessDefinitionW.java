@@ -47,12 +47,13 @@ import com.idega.presentation.PresentationObject;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.IWTimestamp;
+import com.idega.util.ListUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  * 
- *          Last modified: $Date: 2008/12/28 11:58:48 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/01/05 04:35:35 $ by $Author: valdas $
  */
 @Scope("prototype")
 @Service("casesPDW")
@@ -347,7 +348,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		AppProcBindDefinition def = (AppProcBindDefinition) pd
 				.getDefinition(AppProcBindDefinition.class);
 
-		if (def != null || !roles.isEmpty()) {
+		if (def != null || !ListUtil.isEmpty(roles)) {
 
 			logger
 					.finer("Will set roles, that can start process for the process (id="

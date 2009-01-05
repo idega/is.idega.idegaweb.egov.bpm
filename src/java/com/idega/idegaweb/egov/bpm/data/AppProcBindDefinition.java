@@ -10,15 +10,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.core.persistence.Param;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.utils.JBPMConstants;
+import com.idega.util.ListUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
  * TODO: it would be very good if this would be jpa entity
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * 
- *          Last modified: $Date: 2008/12/11 19:24:46 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/01/05 04:35:35 $ by $Author: valdas $
  */
 public class AppProcBindDefinition extends ModuleDefinition {
 
@@ -64,7 +65,7 @@ public class AppProcBindDefinition extends ModuleDefinition {
 
 		List<AppSupports> sups = getAppSupports(applicationId);
 
-		if (rolesKeys != null && !rolesKeys.isEmpty()) {
+		if (!ListUtil.isEmpty(rolesKeys)) {
 
 			JBPMConstants.bpmLogger
 					.finer("Updating roles, that can start process for application="
@@ -112,6 +113,7 @@ public class AppProcBindDefinition extends ModuleDefinition {
 		}
 	}
 
+	@Override
 	public ModuleInstance createInstance() {
 		return null;
 	}
