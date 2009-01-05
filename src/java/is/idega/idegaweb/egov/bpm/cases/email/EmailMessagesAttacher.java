@@ -33,6 +33,7 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.process.variables.Variable;
@@ -56,9 +57,9 @@ import com.idega.util.StringUtil;
  * refactor this, now it's total mess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  * 
- *          Last modified: $Date: 2008/12/28 11:58:47 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/01/05 04:33:14 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Service
@@ -79,7 +80,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	private static final String email_fetch_process_name = "fetchEmails";
 
 	// private static final String HTML_EXTENSION = ".html";
-
+	@Transactional
 	public void onApplicationEvent(ApplicationEvent ae) {
 
 		if (ae instanceof ApplicationEmailEvent) {
