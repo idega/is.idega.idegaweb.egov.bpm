@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UIProcessVariables;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
+import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
@@ -38,6 +39,8 @@ import com.idega.core.component.bean.RenderedComponent;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.io.MediaWritable;
+import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -162,6 +165,8 @@ public class CasesEngine {
 		addSearchQueryToSession(iwc, criteriaBean);
 		
 		Collection<Case> cases = getCasesByQuery(iwc, criteriaBean);
+		setSearchResults(iwc, cases);
+		
 		UIComponent component = null;
 		if (UserCases.TYPE.equals(criteriaBean.getCaseListType())) {
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
@@ -178,11 +183,15 @@ public class CasesEngine {
 		return getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, component, true);
 	}
 	
+	private IWResourceBundle getResourceBundle(IWContext iwc) {
+		return iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+	}
+	
 	private void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean bean) {
 		List<AdvancedProperty> searchFields = new ArrayList<AdvancedProperty>();
 		
 		Locale locale = iwc.getCurrentLocale();
-		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+		IWResourceBundle iwrb = getResourceBundle(iwc);
 		
 		if (!StringUtil.isEmpty(bean.getCaseNumber())) {
 			searchFields.add(new AdvancedProperty("case_nr", bean.getCaseNumber()));
@@ -202,7 +211,7 @@ public class CasesEngine {
 		if (!StringUtil.isEmpty(bean.getProcessId())) {
 			String processName = null;
 			try {
-				CasesBPMProcessDefinitionW bpmCasesManager = ELUtil.getInstance().getBean("casesPDW");
+				ProcessDefinitionW bpmCasesManager = ELUtil.getInstance().getBean(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER);
 				bpmCasesManager.setProcessDefinitionId(Long.valueOf(bean.getProcessId()));
 				processName = bpmCasesManager.getProcessName(locale);
 			} catch(Exception e) {
@@ -324,7 +333,7 @@ public class CasesEngine {
 		resources.add(web2.getBundleUriToHumanizedMessagesScript());
 		fake.setResources(resources);
 		
-		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+		IWResourceBundle iwrb = getResourceBundle(iwc);
 		fake.setErrorMessage(iwrb.getLocalizedString("cases_search.there_are_no_variables_for_selected_process", fake.getErrorMessage()));
 		
 		if (!iwc.isLoggedOn()) {
@@ -358,6 +367,65 @@ public class CasesEngine {
 		variablesBean.setProcessDefinitionId(pdId);
 		
 		return getBuilderLogic().getBuilderService(iwc).getRenderedComponentByClassName(UIProcessVariables.class.getName(), null);
+	}
+	
+	private CasesSearchResultsHolder getSearchResultsHolder() throws NullPointerException {
+		CasesSearchResultsHolder resultsHolder = null;
+		try {
+			resultsHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error getting bean for search results holder: " + CasesSearchResultsHolder.class.getName(), e);
+		}
+		
+		if (resultsHolder == null) {
+			throw new NullPointerException();
+		}
+		
+		return resultsHolder;
+	}
+	
+	private boolean setSearchResults(IWContext iwc, Collection<Case> cases) {
+		CasesSearchResultsHolder resultsHolder = null;
+		try {
+			resultsHolder = getSearchResultsHolder();
+		} catch(NullPointerException e) {
+			return false;
+		}
+		
+		resultsHolder.setSearchResults(cases);
+		return true;
+	}
+	
+	public AdvancedProperty getExportedSearchResults() {
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null) {
+			return null;
+		}
+		
+		AdvancedProperty result = new AdvancedProperty(Boolean.FALSE.toString());
+		
+		CasesSearchResultsHolder resultsHolder = null;
+		try {
+			resultsHolder = getSearchResultsHolder();
+		} catch(NullPointerException e) {
+			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search resutls to Excel"));
+			return result;
+		}
+		
+		if (!resultsHolder.isSearchResultStored()) {
+			result.setValue(getResourceBundle(iwc).getLocalizedString("no_search_results_to_export", "There are no search results to export!"));
+			return result;
+		}
+		
+		if (!resultsHolder.doExport()) {
+			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search resutls to Excel"));
+			return result;
+		}
+		
+		result.setId(Boolean.TRUE.toString());
+		result.setValue(new StringBuilder(iwc.getIWMainApplication().getMediaServletURI()).append("?").append(MediaWritable.PRM_WRITABLE_CLASS).append("=")
+				.append(IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class)).toString());
+		return result;
 	}
 
 }
