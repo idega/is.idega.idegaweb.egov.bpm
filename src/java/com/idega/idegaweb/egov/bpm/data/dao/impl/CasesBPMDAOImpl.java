@@ -30,9 +30,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  *
- * Last modified: $Date: 2008/12/17 12:18:03 $ by $Author: valdas $
+ * Last modified: $Date: 2009/01/08 16:43:58 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -354,6 +354,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		return getResultList(CaseProcInstBind.getVariablesByProcessDefinitionName, VariableInstance.class,
 				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName)
+		);
+	}
+
+	public List<VariableInstance> getVariablesByProcessInstanceId(Long processInstanceId) {
+		if (processInstanceId == null) {
+			return null;
+		}
+		
+		return getResultList(CaseProcInstBind.getVariablesByProcessInstanceId, VariableInstance.class,
+				new Param(CaseProcInstBind.processInstanceIdProp, processInstanceId)
 		);
 	}
 	

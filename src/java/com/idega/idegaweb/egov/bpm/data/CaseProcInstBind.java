@@ -21,9 +21,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2008/12/17 09:28:51 $ by $Author: valdas $
+ * Last modified: $Date: 2009/01/08 16:43:45 $ by $Author: valdas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -40,7 +40,9 @@ import javax.persistence.TemporalType;
 			@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null"),
 			
 			//	Query to get variables for a process
-			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessDefinitionName, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp)
+			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessDefinitionName, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp),
+			//	Query to get variables by process instance id
+			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstanceId, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where var.name is not null and pi.id = :" + CaseProcInstBind.processInstanceIdProp)
 		}
 )
 			/*
@@ -189,6 +191,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByUserIds = "CaseProcInstBind.getCaseIdsByUserIds";
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
 	public static final String getVariablesByProcessDefinitionName = "CaseProcInstBind.getVariablesByProcessDefinitionName";
+	public static final String getVariablesByProcessInstanceId = "CaseProcInstBind.getVariablesByProcessInstanceId";
 	
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
@@ -222,6 +225,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String caseStartDateProp = "caseStartDateProp";
 	public static final String caseEndDateProp = "caseEndDateProp";
 	public static final String processInstanceIdsProp = "processInstanceIdsProp";
+	public static final String processInstanceIdProp = "processInstanceIdProp";
 	public static final String variablesNamesProp = "variablesSelectProp";
 	public static final String variablesValuesProp = "variablesValuesProp";
 	public static final String variablesTypesProp = "variablesTypesProp";
