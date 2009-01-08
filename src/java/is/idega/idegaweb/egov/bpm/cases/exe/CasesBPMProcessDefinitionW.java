@@ -51,15 +51,17 @@ import com.idega.util.ListUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  * 
- *          Last modified: $Date: 2009/01/05 04:35:35 $ by $Author: valdas $
+ *          Last modified: $Date: 2009/01/08 16:44:16 $ by $Author: valdas $
  */
 @Scope("prototype")
-@Service("casesPDW")
+@Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
 @Transactional(readOnly = true)
 public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
+	public static final String SPRING_BEAN_IDENTIFIER = "casesPDW";
+	
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 	@Autowired
