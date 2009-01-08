@@ -2,9 +2,12 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -33,6 +36,7 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreUtil;
+import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
@@ -54,6 +58,57 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
+	public List<AdvancedProperty> getAvailableVariables(List<VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
+		IWResourceBundle iwrb = getBundle().getResourceBundle(locale);
+		return getAvailableVariables(variables, iwrb, locale, isAdmin, useRealValue);
+	}
+	
+	@Transactional(readOnly=true)
+	private List<AdvancedProperty> getAvailableVariables(List<VariableInstance> variables, IWResourceBundle iwrb, Locale locale, boolean isAdmin,
+			boolean useRealValue) {
+		if (ListUtil.isEmpty(variables)) {
+			return null;
+		}
+		
+		String at = "@";
+		String name = null;
+		String type = null;
+		String localizedName = null;
+		List<String> addedVariables = new ArrayList<String>();
+		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
+		for (VariableInstance variable: variables) {
+			if (!(variable instanceof NullInstance)) {
+				name = variable.getName();
+				
+				if (!addedVariables.contains(name)) {
+					type = getVariableValueType(variable);
+					
+					if (!StringUtil.isEmpty(type)) {
+						localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
+						if (!StringUtil.isEmpty(localizedName)) {
+							String realValue = null;
+							if (useRealValue) {
+								realValue = getVariableRealValue(variable, locale);
+							}
+							
+							if (!useRealValue || !StringUtil.isEmpty(realValue)) {
+								availableVariables.add(new AdvancedProperty(useRealValue ? realValue : new StringBuilder(name).append(at).append(type).toString(),
+																										localizedName));
+								addedVariables.add(name);
+							}
+						}
+					}
+				}
+			}
+		}
+		if (ListUtil.isEmpty(availableVariables)) {
+			return null;
+		}
+		
+		Collections.sort(availableVariables, new AdvancedPropertyComparator(locale));
+		return availableVariables;
+	}
+	
 	@Transactional(readOnly=true)
 	public List<SelectItem> getProcessVariables() {
 		if (!ListUtil.isEmpty(processVariables)) {
@@ -92,40 +147,14 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		if (iwc == null) {
 			return null;
 		}
-		
 		IWResourceBundle iwrb = getBundle().getResourceBundle(iwc);
-		
-		String at = "@";
-		String name = null;
-		String type = null;
-		String localizedName = null;
 		boolean isAdmin = iwc.isSuperAdmin();
-		List<String> addedVariables = new ArrayList<String>();
-		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
-		for (VariableInstance variable: variables) {
-			if (!(variable instanceof NullInstance)) {
-				name = variable.getName();
-				
-				if (!addedVariables.contains(name)) {
-					type = getVariableValueType(variable);
-					
-					if (!StringUtil.isEmpty(type)) {
-						localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
-						if (!StringUtil.isEmpty(localizedName)) {
-							availableVariables.add(new AdvancedProperty(new StringBuilder(name).append(at).append(type).toString(), localizedName));
-							addedVariables.add(name);
-						}
-					}
-				}
-			}
-		}
+		List<AdvancedProperty> availableVariables = getAvailableVariables(variables, iwrb, iwc.getCurrentLocale(), isAdmin, false);
 		if (ListUtil.isEmpty(availableVariables)) {
 			LOGGER.info("No variables found for process: " + procDef.getProcessDefinition().getName());
 			processVariables = new ArrayList<SelectItem>();
 			return null;
 		}
-		
-		Collections.sort(availableVariables, new AdvancedPropertyComparator(iwc.getCurrentLocale()));
 		availableVariables.add(0, new AdvancedProperty(String.valueOf(-1), iwrb.getLocalizedString("cases_search.select_variable", "Select variable")));
 		
 		processVariables = new ArrayList<SelectItem>();
@@ -166,6 +195,24 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		}
 		if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
 			return BPMProcessVariable.STRING_TYPES.get(0);
+		}
+		
+		return null;	//	We do not support other types
+	}
+	
+	private String getVariableRealValue(VariableInstance variable, Locale locale) {
+		if (variable instanceof DateInstance) {
+			IWTimestamp date = new IWTimestamp((Date) variable.getValue());
+			return date.getLocaleDate(locale, DateFormat.SHORT);
+		}
+		if (variable instanceof DoubleInstance) {
+			return variable.getValue().toString();	//	TODO: is this OK?
+		}
+		if (variable instanceof LongInstance || variable instanceof HibernateLongInstance) {
+			return variable.getValue().toString();
+		}
+		if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
+			return variable.getValue().toString();
 		}
 		
 		return null;	//	We do not support other types

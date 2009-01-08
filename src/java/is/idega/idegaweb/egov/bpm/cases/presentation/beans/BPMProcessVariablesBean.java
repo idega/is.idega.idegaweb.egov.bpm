@@ -2,8 +2,13 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Locale;
 
 import javax.faces.model.SelectItem;
+
+import org.jbpm.context.exe.VariableInstance;
+
+import com.idega.builder.bean.AdvancedProperty;
 
 public interface BPMProcessVariablesBean extends Serializable {
 
@@ -24,5 +29,7 @@ public interface BPMProcessVariablesBean extends Serializable {
 	public String getLoadingMessage();
 	
 	public String getAddVariableImage();
+	
+	public List<AdvancedProperty> getAvailableVariables(List<VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue);
 	
 }
