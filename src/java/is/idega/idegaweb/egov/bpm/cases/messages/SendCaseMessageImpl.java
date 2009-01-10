@@ -9,7 +9,6 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -37,14 +36,13 @@ import com.idega.jbpm.process.business.messages.TypeRef;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.8 $
+ * @version $Revision: 1.9 $
  *
- * Last modified: $Date: 2008/12/11 14:48:45 $ by $Author: civilis $
+ * Last modified: $Date: 2009/01/10 12:29:21 $ by $Author: civilis $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -56,6 +54,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 	@Autowired
 	private CaseUserFactory caseUserFactory;
 	
+	@Override
 	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
 		
 		final Integer caseId = (Integer)context;
@@ -170,31 +169,6 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 		}
 	}
 	
-	public String getFormattedMessage(String unformattedMessage, String messageValues, Token tkn, MessageValueContext mvCtx) {
-		
-		return getMessageValueHandler().getFormattedMessage(unformattedMessage, messageValues, tkn, mvCtx);
-	}
-	
-	public Collection<User> getUsersToSendMessageTo(String rolesNamesAggr, ProcessInstance pi) {
-		
-		Collection<User> allUsers;
-		
-		if(rolesNamesAggr != null) {
-		
-			String[] rolesNames = rolesNamesAggr.trim().split(CoreConstants.SPACE);
-			
-			HashSet<String> rolesNamesSet = new HashSet<String>(rolesNames.length);
-			
-			for (int i = 0; i < rolesNames.length; i++)
-				rolesNamesSet.add(rolesNames[i]);
-			
-			allUsers = getBpmFactory().getRolesManager().getAllUsersForRoles(rolesNamesSet, pi.getId());
-		} else
-			allUsers = new ArrayList<User>(0);
-		
-		return allUsers;
-	}
-
 	CaseUserFactory getCaseUserFactory() {
 		return caseUserFactory;
 	}
