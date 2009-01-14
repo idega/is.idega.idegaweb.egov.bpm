@@ -357,7 +357,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		for (String categoryId: casesByCategories.keySet()) {
 			cases = casesByCategories.get(categoryId);
 			
-			HSSFSheet sheet = workBook.createSheet(StringHandler.shortenToLength(getSheetName(locale, categoryId), 40));
+			HSSFSheet sheet = workBook.createSheet(StringHandler.shortenToLength(getSheetName(locale, categoryId), 30));
 			List<AdvancedProperty> variablesByProcessDefinition = createHeaders(sheet, bigStyle, locale, categoryId, isAdmin);
 			List<Integer> fileCellsIndexes = null;
 			int rowNumber = 1;
