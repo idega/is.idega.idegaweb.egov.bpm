@@ -8,6 +8,8 @@ import java.util.logging.Logger;
 import org.apache.commons.httpclient.HttpException;
 import org.apache.commons.httpclient.URIException;
 import org.apache.webdav.lib.WebdavResource;
+import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -20,6 +22,8 @@ import com.idega.content.business.ContentConstants;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.business.NotLoggedOnException;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.rights.Right;
@@ -37,24 +41,49 @@ import com.sun.syndication.io.WireFeedOutput;
 
 @Scope("singleton")
 @Service(CommentsPersistenceManagerImpl.SPRING_BEAN_IDENTIFIER)
-public class CommentsPersistenceManagerImpl implements CommentsPersistenceManager {
-
-	private static final Logger logger = Logger.getLogger(CommentsPersistenceManagerImpl.class.getName());
+public class CommentsPersistenceManagerImpl implements
+        CommentsPersistenceManager {
+	
+	private static final Logger logger = Logger
+	        .getLogger(CommentsPersistenceManagerImpl.class.getName());
 	
 	public static final String SPRING_BEAN_IDENTIFIER = "bpmCommentsPersistenceManagerImpl";
 	
-	@Autowired private BPMFactory bpmFactory;
+	@Autowired
+	private BPMFactory bpmFactory;
+	@Autowired
+	private BPMContext bpmContext;
 	
 	private WireFeedOutput wfo = new WireFeedOutput();
-
-	public String getLinkToCommentsXML(String processInstanceId) {
-		if (StringUtil.isEmpty(processInstanceId)) {
+	
+	public String getLinkToCommentsXML(final String processInstanceIdStr) {
+		
+		if (StringUtil.isEmpty(processInstanceIdStr)) {
 			return null;
 		}
-
-		return new StringBuilder(JBPMConstants.BPM_PATH).append(CoreConstants.SLASH).append(processInstanceId).append("/comment.xml").toString();
+		
+		final Long processInstanceId = new Long(processInstanceIdStr);
+		final String storePath = getBpmContext().execute(new JbpmCallback() {
+			
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
+				
+				String processName = context.getProcessInstance(
+				    processInstanceId).getProcessDefinition().getName();
+				
+				String storePath = new StringBuilder(JBPMConstants.BPM_PATH)
+				        .append(CoreConstants.SLASH).append(processName)
+				        .append("/processComments/").append(
+				            processInstanceIdStr).append("/comments.xml")
+				        .toString();
+				
+				return storePath;
+			}
+			
+		});
+		
+		return storePath;
 	}
-
+	
 	public boolean hasRightsToViewComments(String processInstanceId) {
 		if (StringUtil.isEmpty(processInstanceId)) {
 			return false;
@@ -62,7 +91,7 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		
 		return hasRightsToViewComments(getConvertedValue(processInstanceId));
 	}
-
+	
 	public boolean hasRightsToViewComments(Long processInstanceId) {
 		
 		if (processInstanceId == null) {
@@ -70,8 +99,8 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		}
 		
 		ProcessInstanceW piw = getBpmFactory()
-		.getProcessManagerByProcessInstanceId(processInstanceId)
-		.getProcessInstance(processInstanceId);
+		        .getProcessManagerByProcessInstanceId(processInstanceId)
+		        .getProcessInstance(processInstanceId);
 		
 		return piw.hasRight(Right.processHandler);
 	}
@@ -83,31 +112,31 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		
 		try {
 			return Long.valueOf(value);
-		} catch(NumberFormatException e) {
+		} catch (NumberFormatException e) {
 			e.printStackTrace();
 		}
 		
 		return null;
 	}
-
+	
 	public BPMFactory getBpmFactory() {
 		return bpmFactory;
 	}
-
+	
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
-
+	
 	public String getFeedTitle(IWContext iwc, String processInstanceId) {
-		//	TODO: return application (BPM process name)?
+		// TODO: return application (BPM process name)?
 		return "Comments of process";
 	}
-
+	
 	public String getFeedSubtitle(IWContext iwc, String processInstanceId) {
-		//	TODO: return more precise explanation
+		// TODO: return more precise explanation
 		return "All process comments";
 	}
-
+	
 	public Feed getCommentsFeed(IWContext iwc, String processInstanceId) {
 		if (iwc == null) {
 			return null;
@@ -142,16 +171,17 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		User currentUser = null;
 		try {
 			currentUser = iwc.getCurrentUser();
-		} catch(NotLoggedOnException e) {
+		} catch (NotLoggedOnException e) {
 			logger.log(Level.SEVERE, "User must be logged!", e);
 		}
 		if (currentUser == null) {
 			return null;
 		}
-
+		
 		String pathToFeed = null;
 		try {
-			pathToFeed = new StringBuilder(slide.getWebdavServerURL().getURI()).append(uri).toString();
+			pathToFeed = new StringBuilder(slide.getWebdavServerURL().getURI())
+			        .append(uri).toString();
 		} catch (URIException e) {
 			e.printStackTrace();
 		} catch (RemoteException e) {
@@ -161,9 +191,12 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 			logger.log(Level.SEVERE, "Error creating path to comments feed!");
 			return null;
 		}
-		SyndFeed comments = rss.getFeedAuthenticatedByUser(pathToFeed, currentUser);
+		SyndFeed comments = rss.getFeedAuthenticatedByUser(pathToFeed,
+		    currentUser);
 		if (comments == null) {
-			logger.log(Level.WARNING, "Unable to get comments feed by current user, trying with admin user");
+			logger
+			        .log(Level.WARNING,
+			            "Unable to get comments feed by current user, trying with admin user");
 			comments = rss.getFeedAuthenticatedByAdmin(pathToFeed);
 		}
 		if (comments == null) {
@@ -177,7 +210,7 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		}
 		return null;
 	}
-
+	
 	public boolean storeFeed(String processInstanceId, Feed comments) {
 		if (comments == null) {
 			return false;
@@ -211,7 +244,10 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 			fileName = url.substring(index + 1);
 		}
 		try {
-			return service.uploadFileAndCreateFoldersFromStringAsRoot(fileBase, fileName, commentsContent, ContentConstants.XML_MIME_TYPE, true);
+			return service
+			        .uploadFileAndCreateFoldersFromStringAsRoot(fileBase,
+			            fileName, commentsContent,
+			            ContentConstants.XML_MIME_TYPE, true);
 		} catch (RemoteException e) {
 			logger.log(Level.SEVERE, "Error storing comments feed", e);
 		}
@@ -221,7 +257,9 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 	
 	private IWSlideService getRepository() {
 		try {
-			return (IWSlideService) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
+			return (IWSlideService) IBOLookup.getServiceInstance(
+			    IWMainApplication.getDefaultIWApplicationContext(),
+			    IWSlideService.class);
 		} catch (IBOLookupException e) {
 			logger.log(Level.SEVERE, "Error getting repository", e);
 		}
@@ -230,19 +268,20 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 	
 	private RSSBusiness getRSSBusiness() {
 		try {
-			return (RSSBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), RSSBusiness.class);
+			return (RSSBusiness) IBOLookup.getServiceInstance(IWMainApplication
+			        .getDefaultIWApplicationContext(), RSSBusiness.class);
 		} catch (IBOLookupException e) {
 			logger.log(Level.SEVERE, "Error getting RSSBusiness", e);
 		}
 		return null;
 	}
-
-	//	TODO: When access rights (to Slide resources) are fixed, use current user!
+	
+	// TODO: When access rights (to Slide resources) are fixed, use current user!
 	public User getUserAvailableToReadWriteCommentsFeed(IWContext iwc) {
 		User currentUser = null;
 		try {
 			currentUser = iwc.getCurrentUser();
-		} catch(NotLoggedOnException e) {
+		} catch (NotLoggedOnException e) {
 			e.printStackTrace();
 		}
 		if (currentUser == null) {
@@ -265,6 +304,10 @@ public class CommentsPersistenceManagerImpl implements CommentsPersistenceManage
 		}
 		
 		return null;
+	}
+	
+	BPMContext getBpmContext() {
+		return bpmContext;
 	}
 	
 }
