@@ -42,9 +42,9 @@ import com.idega.util.URIUtil;
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  * 
- *          Last modified: $Date: 2008/12/28 11:58:48 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/01/15 08:24:41 $ by $Author: donatas $
  * 
  */
 @Scope("singleton")
@@ -286,6 +286,12 @@ public class ApplicationTypeBPM implements ApplicationType {
 	 */
 	public boolean isVisible(Application app) {
 
+		IWContext iwc = IWContext.getCurrentInstance();
+
+		if (iwc!= null && iwc.isSuperAdmin()) {
+			return true;
+		}
+		
 		final Long pdId = new Long(getSelectedElement(app));
 
 		final ProcessDefinitionW pdw = getBpmFactory().getProcessManager(pdId)
@@ -296,12 +302,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 
 		if (rolesCanStart != null && !rolesCanStart.isEmpty()) {
 
-			IWContext iwc = IWContext.getCurrentInstance();
-
 			if (iwc != null && iwc.isLoggedOn()) {
-
-				if (iwc.isSuperAdmin())
-					return true;
 
 				User usr = iwc.getCurrentUser();
 
