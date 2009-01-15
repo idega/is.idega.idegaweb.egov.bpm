@@ -51,9 +51,9 @@ import com.idega.util.ListUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  * 
- *          Last modified: $Date: 2009/01/09 16:10:16 $ by $Author: donatas $
+ *          Last modified: $Date: 2009/01/15 15:27:23 $ by $Author: donatas $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -338,59 +338,46 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	 * 
 	 * @param roles
 	 *            - idega roles keys (<b>not</b> process roles)
-	 * @param context
+	 * @param processContext
 	 *            - some context depending implementation, e.g., roles can start
 	 *            process using applications - then context will be application
 	 *            id
 	 */
 	@Override
-	public void setRolesCanStartProcess(List<String> roles, Object context) {
+	public void setRolesCanStartProcess(final List<String> roles,
+			Object processContext) {
 
-		ProcessDefinition pd = getProcessDefinition();
-		AppProcBindDefinition def = (AppProcBindDefinition) pd
-				.getDefinition(AppProcBindDefinition.class);
+		final Integer appId = new Integer(processContext.toString());
 
-		if (def != null || !ListUtil.isEmpty(roles)) {
+		getBpmContext().execute(new JbpmCallback() {
 
-			logger
-					.finer("Will set roles, that can start process for the process (id="
-							+ getProcessDefinitionId()
-							+ ") name = "
-							+ getProcessDefinition().getName());
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
 
-			if (def == null) {
+				ProcessDefinition pd = getProcessDefinition();
+				AppProcBindDefinition def = (AppProcBindDefinition) pd
+						.getDefinition(AppProcBindDefinition.class);
 
-				def = new AppProcBindDefinition();
+				if (def != null || !ListUtil.isEmpty(roles)) {
 
-				JbpmContext ctx = getBpmContext().createJbpmContext();
+					logger.finer("Will set roles, that can start process for the process (id=" + getProcessDefinitionId() + ") name = " 	+ getProcessDefinition().getName());
 
-				try {
-					getBpmContext().saveProcessEntity(def);
+					if (def == null) {
 
-					pd = ctx.getGraphSession().getProcessDefinition(
-							getProcessDefinitionId());
-					pd.addDefinition(def);
+						def = new AppProcBindDefinition();
+						context.getSession().merge(def);
 
-				} finally {
-					getBpmContext().closeAndCommit(ctx);
+						pd = context.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+						pd.addDefinition(def);
+
+						pd = context.getGraphSession().loadProcessDefinition(getProcessDefinitionId());
+						def = (AppProcBindDefinition) pd.getDefinition(AppProcBindDefinition.class);
+
+					}
 				}
-
-				ctx = getBpmContext().createJbpmContext();
-
-				try {
-					pd = ctx.getGraphSession().loadProcessDefinition(
-							getProcessDefinitionId());
-					def = (AppProcBindDefinition) pd
-							.getDefinition(AppProcBindDefinition.class);
-
-				} finally {
-					getBpmContext().closeAndCommit(ctx);
-				}
+				def.updateRolesCanStartProcess(appId, roles);
+				return null;
 			}
-
-			Integer appId = new Integer(context.toString());
-			def.updateRolesCanStartProcess(appId, roles);
-		}
+		});
 	}
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
