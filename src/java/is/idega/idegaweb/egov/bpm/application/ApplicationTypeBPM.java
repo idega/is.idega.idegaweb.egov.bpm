@@ -42,9 +42,9 @@ import com.idega.util.URIUtil;
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  * 
- *          Last modified: $Date: 2009/01/15 08:24:41 $ by $Author: donatas $
+ *          Last modified: $Date: 2009/01/15 16:34:52 $ by $Author: civilis $
  * 
  */
 @Scope("singleton")
@@ -285,6 +285,9 @@ public class ApplicationTypeBPM implements ApplicationType {
 	 * open the form (and submit)
 	 */
 	public boolean isVisible(Application app) {
+		
+		if(true)
+			return true;
 
 		IWContext iwc = IWContext.getCurrentInstance();
 
