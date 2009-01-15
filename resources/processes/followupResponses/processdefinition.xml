@@ -74,8 +74,8 @@
 			        	<value>
 			        		${
 			        		Map messageMap = new HashMap();
-			        		messageMap.put("en", "Hello, {0}. Case handler has asked your input.");
-			        		messageMap.put("is_IS", "Hello, {0}. Case handler has asked your input.");
+			        		messageMap.put("en", "Hello, {0}. Case handler has asked your input.{1}");
+			        		messageMap.put("is_IS", "Hello, {0}. Case handler has asked your input.{1}");
 			        		return messageMap;
 			        		}
                 		</value>
@@ -83,7 +83,7 @@
                 	<entry>
 			        	<key>messageValues</key>
 			        	<value>
-			        		{list: {mv: [{type: "bean", value: "user.name"}]}}
+			        		{list: {mv: [{type: "bean", value: "user.name"},{type: "bean", value: "caseUser.urlToTheCase"}]}}
                 		</value>
                 	</entry>
                 	<entry><key>sendToRoles</key><value>#{rolesToSendMessages}</value></entry>
