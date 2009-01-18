@@ -42,15 +42,12 @@ import com.idega.util.URIUtil;
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.21 $
- * 
- *          Last modified: $Date: 2009/01/15 16:34:52 $ by $Author: civilis $
- * 
+ * @version $Revision: 1.22 $ Last modified: $Date: 2009/01/18 16:52:15 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(ApplicationTypeBPM.beanIdentifier)
 public class ApplicationTypeBPM implements ApplicationType {
-
+	
 	@Autowired
 	private BPMFactory bpmFactory;
 	@Autowired
@@ -61,152 +58,152 @@ public class ApplicationTypeBPM implements ApplicationType {
 	private BPMContext bpmContext;
 	@Autowired
 	private PermissionsFactory permissionsFactory;
-
+	
 	static final String beanIdentifier = "appTypeBPM";
 	private static final String appType = "EGOV_BPM";
 	private static final String egovBPMPageType = "bpm_app_starter";
-
+	
 	public ApplicationTypeHandlerComponent getHandlerComponent() {
 		UIApplicationTypeBPMHandler h = new UIApplicationTypeBPMHandler();
 		return h;
 	}
-
+	
 	public String getLabel(IWContext iwc) {
 		return "EGOV BPM";
 	}
-
+	
 	public String getType() {
 		return appType;
 	}
-
+	
 	public String getBeanIdentifier() {
 		return beanIdentifier;
 	}
-
+	
 	public void beforeStore(IWContext iwc, Application app) {
-
+		
 		String procDef = iwc
-				.getParameter(UIApplicationTypeBPMHandler.MENU_PARAM);
-
+		        .getParameter(UIApplicationTypeBPMHandler.MENU_PARAM);
+		
 		try {
 			Long pdId = new Long(procDef);
 			String processName = getBpmFactory().getProcessManager(pdId)
-					.getProcessDefinition(pdId).getProcessDefinition()
-					.getName();
+			        .getProcessDefinition(pdId).getProcessDefinition()
+			        .getName();
 			app.setUrl(processName);
-
+			
 		} catch (Exception exp) {
 			iwc.addMessage(null, new FacesMessage("Exception:"
-					+ exp.getMessage()));
+			        + exp.getMessage()));
 		}
-
+		
 		app.setElectronic(true);
 	}
-
+	
 	public boolean afterStore(IWContext iwc, Application app) {
-
+		
 		String procDef = iwc
-				.getParameter(UIApplicationTypeBPMHandler.MENU_PARAM);
-
+		        .getParameter(UIApplicationTypeBPMHandler.MENU_PARAM);
+		
 		try {
 			Long pdId = new Long(procDef);
-
+			
 			ProcessDefinitionW pdw = getBpmFactory().getProcessManager(pdId)
-					.getProcessDefinition(pdId);
-
+			        .getProcessDefinition(pdId);
+			
 			if (iwc
-					.isParameterSet(UIApplicationTypeBPMHandler.rolesToStartCaseNeedToBeCheckedParam)
-					&& iwc
-							.getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam) != null
-					&& iwc
-							.getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam).length != 0) {
-
+			        .isParameterSet(UIApplicationTypeBPMHandler.rolesToStartCaseNeedToBeCheckedParam)
+			        && iwc
+			                .getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam) != null
+			        && iwc
+			                .getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam).length != 0) {
+				
 				// setting roles, that can start process
 				List<String> vals = Arrays
-						.asList(iwc
-								.getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam));
+				        .asList(iwc
+				                .getParameterValues(UIApplicationTypeBPMHandler.rolesToStartCaseParam));
 				pdw.setRolesCanStartProcess(vals, app.getPrimaryKey());
-
+				
 			} else {
-
+				
 				pdw.setRolesCanStartProcess(null, app.getPrimaryKey());
 			}
-
+			
 		} catch (Exception exp) {
 			iwc.addMessage(null, new FacesMessage("Exception:"
-					+ exp.getMessage()));
+			        + exp.getMessage()));
 			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "", exp);
 		}
-
+		
 		return false;
 	}
-
+	
 	public BPMDAO getBpmBindsDAO() {
 		return bpmBindsDAO;
 	}
-
+	
 	public void setBpmBindsDAO(BPMDAO bpmBindsDAO) {
 		this.bpmBindsDAO = bpmBindsDAO;
 	}
-
+	
 	public void fillMenu(DropdownMenu menu) {
-
+		
 		List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO()
-				.getAllCaseTypes();
-
+		        .getAllCaseTypes();
+		
 		BPMDAO bpmDAO = getBpmFactory().getBPMDAO();
-
+		
 		for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
-
+			
 			ProcessDefinition pd = bpmDAO
-					.findLatestProcessDefinition(caseTypesProcDefBind
-							.getProcessDefinitionName());
+			        .findLatestProcessDefinition(caseTypesProcDefBind
+			                .getProcessDefinitionName());
 			menu.addMenuElement(String.valueOf(pd.getId()), pd.getName());
 		}
 	}
-
+	
 	public String getSelectedElement(Application app) {
-
+		
 		final String pdName = app.getUrl();
-
+		
 		if (pdName != null) {
-
+			
 			long latestPDId = getBpmFactory().getBPMDAO()
-					.findLatestProcessDefinition(pdName).getId();
+			        .findLatestProcessDefinition(pdName).getId();
 			return String.valueOf(latestPDId);
 		}
-
+		
 		return "-1";
 	}
-
+	
 	public List<String> getRolesCanStartProcessDWR(Long pdId,
-			String applicationId) {
-
+	        String applicationId) {
+		
 		return getRolesCanStartProcess(pdId, applicationId);
 	}
-
+	
 	public List<String> getRolesCanStartProcess(Long pdId, Object applicationId) {
-
+		
 		return getBpmFactory().getProcessManager(pdId).getProcessDefinition(
-				pdId).getRolesCanStartProcess(applicationId);
+		    pdId).getRolesCanStartProcess(applicationId);
 	}
-
+	
 	protected BuilderService getBuilderService(IWApplicationContext iwac) {
-
+		
 		try {
 			return BuilderServiceFactory.getBuilderService(iwac);
 		} catch (RemoteException e) {
 			throw new RuntimeException("Failed to resolve builder service", e);
 		}
 	}
-
+	
 	public String getUrl(IWContext iwc, Application app) {
-
+		
 		String pdName = app.getUrl();
-
+		
 		if (pdName == null)
 			return "#";
-
+		
 		/*
 		 * Collection<ICPage> icpages = getPages(egovBPMPageType);
 		 * 
@@ -225,120 +222,116 @@ public class ApplicationTypeBPM implements ApplicationType {
 		 */
 
 		String uri = getBuilderService(iwc).getFullPageUrlByPageType(iwc,
-				egovBPMPageType, true);
-
+		    egovBPMPageType, true);
+		
 		long pdId = getBpmFactory().getBPMDAO().findLatestProcessDefinition(
-				pdName).getId();
-
+		    pdName).getId();
+		
 		URIUtil uriUtil = new URIUtil(uri);
 		uriUtil.setParameter(BPMTaskViewer.PROCESS_DEFINITION_PROPERTY, String
-				.valueOf(pdId));
+		        .valueOf(pdId));
 		uri = uriUtil.getUri();
 		return iwc.getIWMainApplication().getTranslatedURIWithContext(uri);
 	}
-
+	
 	public Collection<ICPage> getPages(String pageSubType) {
-
+		
 		try {
-
+			
 			ICPageHome home = (ICPageHome) IDOLookup.getHome(ICPage.class);
 			@SuppressWarnings("unchecked")
 			Collection<ICPage> icpages = home.findBySubType(pageSubType, false);
-
+			
 			return icpages;
-
+			
 		} catch (Exception e) {
 			throw new RuntimeException(
-					"Exception while resolving icpages by subType: "
-							+ pageSubType, e);
+			        "Exception while resolving icpages by subType: "
+			                + pageSubType, e);
 		}
 	}
-
+	
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
-
+	
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
-
+	
 	public BPMContext getBpmContext() {
 		return bpmContext;
 	}
-
+	
 	public void setBpmContext(BPMContext idegaJbpmContext) {
 		this.bpmContext = idegaJbpmContext;
 	}
-
+	
 	public BPMFactory getBpmFactory() {
 		return bpmFactory;
 	}
-
+	
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
-
+	
 	/**
-	 * checks, if the application is visible for current user This is
-	 * implemented only for applications category list. In other words, if the
-	 * link of the start form is given to anyone, then that user will be able to
-	 * open the form (and submit)
+	 * checks, if the application is visible for current user This is implemented only for
+	 * applications category list. In other words, if the link of the start form is given to anyone,
+	 * then that user will be able to open the form (and submit)
 	 */
 	public boolean isVisible(Application app) {
 		
-		if(true)
-			return true;
-
 		IWContext iwc = IWContext.getCurrentInstance();
-
-		if (iwc!= null && iwc.isSuperAdmin()) {
+		
+		if (iwc != null && iwc.isSuperAdmin()) {
 			return true;
 		}
 		
 		final Long pdId = new Long(getSelectedElement(app));
-
+		
 		final ProcessDefinitionW pdw = getBpmFactory().getProcessManager(pdId)
-				.getProcessDefinition(pdId);
-
+		        .getProcessDefinition(pdId);
+		
 		final List<String> rolesCanStart = pdw.getRolesCanStartProcess(app
-				.getPrimaryKey());
-
+		        .getPrimaryKey());
+		
 		if (rolesCanStart != null && !rolesCanStart.isEmpty()) {
-
+			
 			if (iwc != null && iwc.isLoggedOn()) {
-
+				
 				User usr = iwc.getCurrentUser();
-
+				
 				BPMTypedPermission permission = getPermissionsFactory()
-						.getTypedPermission(
-								NativeRolesPermissionsHandler.handlerType);
+				        .getTypedPermission(
+				            NativeRolesPermissionsHandler.handlerType);
 				permission.setAttribute(NativeRolesPermissionsHandler.userAtt,
-						usr);
+				    usr);
 				permission.setAttribute(NativeRolesPermissionsHandler.rolesAtt,
-						rolesCanStart);
-
+				    rolesCanStart);
+				
 				try {
 					getBpmFactory().getRolesManager().checkPermission(
-							(Permission) permission);
+					    (Permission) permission);
 					return true;
-
+					
 				} catch (AccessControlException e) {
 					return false;
 				}
 			}
-
+			
 			return false;
-
+			
 		} else {
-
+			
 			return true;
 		}
 	}
-
+	
 	public PermissionsFactory getPermissionsFactory() {
 		return permissionsFactory;
 	}
-
+	
 	public void setPermissionsFactory(PermissionsFactory permissionsFactory) {
 		this.permissionsFactory = permissionsFactory;
 	}
