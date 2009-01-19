@@ -15,6 +15,7 @@ import com.idega.core.builder.business.BuilderService;
 import com.idega.core.builder.business.BuilderServiceFactory;
 import com.idega.core.contact.data.Email;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.identity.BPMUser;
@@ -29,9 +30,9 @@ import com.idega.util.URIUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  * 
- *          Last modified: $Date: 2008/12/17 15:57:36 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/01/19 13:13:46 $ by $Author: anton $
  */
 public class CaseUserImpl {
 
@@ -66,8 +67,14 @@ public class CaseUserImpl {
 	 * @return
 	 */
 	public String getUrlToTheCase() {
+		IWContext context;
+		try {
+			context = getIwc();
+		} catch(IllegalArgumentException e) {
+			context = null;
+		}
+		final IWApplicationContext iwc = (context == null) ? IWMainApplication.getDefaultIWApplicationContext() : getIwc();
 
-		final IWContext iwc = getIwc();
 		UserBusiness userBusiness = getUserBusiness(iwc);
 		User user = getUser();
 		
@@ -86,13 +93,16 @@ public class CaseUserImpl {
 			
 			if (getProcessInstanceW().hasRight(Right.processHandler, user)) {
 //				handler, get link to opencases
-				
-				fullUrl = getOpenCasesUrl(iwc);
-
+				if(context == null)
+					fullUrl = getOpenCasesUrl(iwc, user);
+				else 
+					fullUrl = getOpenCasesUrl(context);
 			} else {
 //				not handler, get link to usercases
-				
-				fullUrl = getUserCasesUrl(iwc);
+				if(context == null)
+					fullUrl = getUserCasesUrl(iwc, user);
+				else
+					fullUrl = getUserCasesUrl(context);
 			}
 			
 			final URIUtil uriUtil = new URIUtil(fullUrl);
@@ -128,8 +138,11 @@ public class CaseUserImpl {
             	Role role = roles.iterator().next();
 				
 				User bpmUser = getBpmUserFactory().createBPMUser(upd, role, getProcessInstanceW().getProcessInstanceId());
-
-				fullUrl = getAssetsUrl(user, iwc);
+				
+				if(context == null) 
+					fullUrl = getAssetsUrl(iwc, user);
+				else
+					fullUrl = getAssetsUrl(user, context);
 				
 				final URIUtil uriUtil = new URIUtil(fullUrl);
 				
@@ -175,8 +188,11 @@ public class CaseUserImpl {
 	}
 	
 	private String getAssetsUrl(User user, IWContext iwc) {
-		
 		return getBuilderService(iwc).getFullPageUrlByPageType(user, iwc, BPMUser.defaultAssetsViewPageType, true);
+	}
+	
+	private String getAssetsUrl(IWApplicationContext iwac, User currentUser) {
+		return getBuilderService(iwac).getFullPageUrlByPageType(currentUser, BPMUser.defaultAssetsViewPageType, true);
 	}
 	
 	private String getOpenCasesUrl(IWContext iwc) {
@@ -184,9 +200,16 @@ public class CaseUserImpl {
 		return getBuilderService(iwc).getFullPageUrlByPageType(iwc, OpenCases.pageType, true);
 	}
 	
+	private String getOpenCasesUrl(IWApplicationContext iwac, User currentUser) {
+		return getBuilderService(iwac).getFullPageUrlByPageType(currentUser, OpenCases.pageType, true);
+	}
+	
 	private String getUserCasesUrl(IWContext iwc) {
-		
 		return getBuilderService(iwc).getFullPageUrlByPageType(iwc, UserCases.pageType, true);
+	}
+	
+	private String getUserCasesUrl(IWApplicationContext iwac, User currentUser) {
+		return getBuilderService(iwac).getFullPageUrlByPageType(currentUser, UserCases.pageType, true);
 	}
 	
 	private BuilderService getBuilderService(IWApplicationContext iwc) {

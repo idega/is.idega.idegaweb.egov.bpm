@@ -40,9 +40,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2009/01/10 12:29:21 $ by $Author: civilis $
+ * Last modified: $Date: 2009/01/19 13:13:46 $ by $Author: anton $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -50,7 +50,7 @@ import com.idega.user.data.User;
 public class SendCaseMessageImpl extends SendMailMessageImpl {
 	
 	public static final TypeRef caseUserBean = new TypeRef("bean", "caseUser");
-	
+
 	@Autowired
 	private CaseUserFactory caseUserFactory;
 	
@@ -99,7 +99,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 					preferredLocale = defaultLocale;
 				
 				CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(user, piw, iwc);
-				
+
 				mvCtx.setValue(MessageValueContext.userBean, user);
 				mvCtx.setValue(caseUserBean, caseUser);
 				mvCtx.setValue(MessageValueContext.piwBean, piw);
@@ -152,6 +152,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 		}
 	}
 	
+	@Override
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
 			return (UserBusiness)IBOLookup.getServiceInstance(iwac, UserBusiness.class);
