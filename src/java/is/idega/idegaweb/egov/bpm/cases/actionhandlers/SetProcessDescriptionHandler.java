@@ -98,7 +98,6 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 		return bpmBindsDAO;
 	}
 
-	@Autowired
 	public void setBpmBindsDAO(BPMDAO bpmBindsDAO) {
 		this.bpmBindsDAO = bpmBindsDAO;
 	}
