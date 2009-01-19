@@ -62,8 +62,8 @@
 			        	<value>
 			        		${
 			        		Map subjectMap = new HashMap();
-			        		subjectMap.put("en", "Case requires your attention");
-			        		subjectMap.put("is_IS", "Case requires your attention");
+			        		subjectMap.put("en", "Follow up on case {0}");
+			        		subjectMap.put("is_IS", "Eftirfylgni vegna máls {0}");
 			        		return subjectMap;
 			        		}
 			        		
@@ -74,8 +74,8 @@
 			        	<value>
 			        		${
 			        		Map messageMap = new HashMap();
-			        		messageMap.put("en", "Hello, {0}. Case handler has asked your input.{1}");
-			        		messageMap.put("is_IS", "Hello, {0}. Case handler has asked your input.{1}");
+			        		messageMap.put("en", "Hello. \n\nYou have been invited to the case, you may follow the link to the case: {0}");
+			        		messageMap.put("is_IS", "Opna\u00F0u eftirfarandi sl\u00F3\u00F0 til a\u00F0 sko\u00F0a m\u00E1li\u00F0 sem a\u00F0 um r\u00E6\u00F0ir: {0}");
 			        		return messageMap;
 			        		}
                 		</value>
@@ -83,9 +83,16 @@
                 	<entry>
 			        	<key>messageValues</key>
 			        	<value>
-			        		{list: {mv: [{type: "bean", value: "user.name"},{type: "bean", value: "caseUser.urlToTheCase"}]}}
+			        		{list: {mv: [{type: "bean", value: "caseUser.urlToTheCase"}]}}
                 		</value>
                 	</entry>
+                	<entry>
+			        	<key>subjectValues</key>
+			        	<value>
+                            {list: {mv: [{type: "bean", value: "piw.processIdentifier"}]}}
+                		</value>
+                	</entry>
+                	
                 	<entry><key>sendToRoles</key><value>#{rolesToSendMessages}</value></entry>
 			    </propertyMap>
 		 	</action>
