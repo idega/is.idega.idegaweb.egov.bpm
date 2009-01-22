@@ -40,9 +40,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2009/01/22 11:18:19 $ by $Author: civilis $
+ * Last modified: $Date: 2009/01/22 16:50:11 $ by $Author: juozas $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -91,8 +91,6 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			if(mvCtx == null)
 				mvCtx = new MessageValueContext(3);
 			
-			System.out.println("will send to="+users);
-			
 			for (User user : users) {
 				
 				Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
@@ -110,9 +108,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				
 				String subject = subjNMsg[0];
 				String text = subjNMsg[1];
-				
-				System.out.println("________TEXT="+text);
-				
+					
 				Logger.getLogger(getClass().getName()).log(Level.FINER, "Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+") name="+user.getName());
 				
 				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
