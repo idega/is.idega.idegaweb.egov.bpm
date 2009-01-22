@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:idega="http://idega.com/xforms" xmlns:xf="http://www.w3.org/2002/xforms" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <head>
         <title>
-<xf:output model="data_model" ref="instance('localized_strings')/form.title[@lang=instance('localized_strings')/current_language]"/>
+<xf:output model="data_model" ref="instance('localized_strings')/form-title[@lang=instance('localized_strings')/current_language]"/>
 </title>
 
         <xf:model id="submission_model" schema="#fb-schema">
@@ -55,47 +55,52 @@
                 <xf:message level="modeless" ref="instance('localized_strings')/submission-error_message[@lang=instance('localized_strings')/current_language]"/>
             </xf:action>
 			
-            <xf:bind id="bind.fbc_8" nodeset="Multi_file_upload_with_description_fbc_8/group" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'">
-                <xf:bind id="bind.fbc_8-entries" nodeset="../entry[position() != last()]" type="xs:anyURI"/>
+            <xf:bind id="fbc_8_bind" nodeset="Multi_file_upload_with_description_fbc_8/group" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'">
+                <xf:bind id="fbc_8-entries" nodeset="../entry[position() != last()]" type="xs:anyURI"/>
             </xf:bind>
             	  
                <xf:bind id="bind-submissionButton" idega:shared="true" nodeset="submissionButton" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'" />
         	
 				
-        	<xf:bind id="bind.fbc_5" nodeset="Ruling_text_fbc_5" readonly="instance('control-instance')/readonly = 'true'"/>
+        	<xf:bind id="fbc_5_bind" nodeset="Ruling_text_fbc_5" readonly="instance('control-instance')/readonly = 'true'"/>
 		</xf:model>
         <xf:model id="data_model">
 	        <xf:instance id="localized_strings" xmlns="">
 		        <localized_strings>
 			        <default_language>en</default_language>
 	         		<current_language>is_IS</current_language>
-	         	   <submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
+	         	    <submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
                     <submission-error_message lang="is_IS">Villa varð við að senda formið vinsamlegast athugið hvort stjörnumerktir reitir hafi allir verið útfylltir og að engar villur séu í forminu.</submission-error_message>
-                 	<form.title lang="en">Submit process ruling</form.title>
-	         		<form.title lang="is_IS">Senda niðurstöðu málsins</form.title>
-	         	
-	         		<page-2.label lang="en">Submitted</page-2.label>
-	         		<page-2.label lang="is_IS">Sent</page-2.label>
-	         		<page-1-grant.label lang="en">Grant</page-1-grant.label>
-	         		<page-1-grant.label lang="is_IS">Samþykkja</page-1-grant.label>
-	         		<page-1-deny.label lang="en">Deny</page-1-deny.label>
-	         		<page-1-deny.label lang="is_IS">Hafna</page-1-deny.label>
-	         		<page-2.info lang="en">Form submitted, thank You!</page-2.info>
-	         		<page-2.info lang="is_IS">Niðurstaða málsins hefur verið vistuð og skilaboð send málsaðilum. Málinu telst nú lokið en þó ekki lokað. Nú bætist við eftirfylgnimöguleiki þar sem hægt er að senda öllum málsaðilum fyrirspurn.</page-2.info>
-	         		<fbc_5.title lang="is_IS">Niðurstaða</fbc_5.title>
-					<fbc_5.title lang="en">Ruling text</fbc_5.title>
-					<fbc_8.title lang="is_IS">Viðhengi</fbc_8.title>
-					<fbc_8.title lang="en">Attachements</fbc_8.title>
-					<fbc_8.label lang="is_IS">Bæta við viðhengi</fbc_8.label> 
-					<fbc_8.remove lang="is_IS">Fjarlægja viðhengi</fbc_8.remove>
-					<fbc_8.text lang="is_IS">Lýsandi nafn skjals</fbc_8.text> 
-					<fbc_8.label lang="en">Add attachement</fbc_8.label> 
-					<fbc_8.text lang="en">Descriptive name</fbc_8.text> 
-					<fbc_8.info lang="is_IS">Það þarf að setja lýsandi nafn á skjalið</fbc_8.info>
-					<fbc_8.info lang="en">Please enter file description</fbc_8.info>
-					<fbc_8.remove lang="en">Remove</fbc_8.remove> 
-				 	<fbc_8.custom lang="is_IS">Það þarf að setja lýsandi nafn á skjalið</fbc_8.custom>
-                   <fbc_8.custom lang="en">Uploaded file description can not be empty</fbc_8.custom>
+                 	<form-title lang="en">Submit process ruling</form-title>
+	         		<form-title lang="is_IS">Senda niðurstöðu umsóknar</form-title>
+	         		<page-2-label lang="en">Submitted</page-2-label>
+	         		<page-2-label lang="is_IS">Niðurstaða umsóknar send</page-2-label>
+	         		<page-1-grant-label lang="en">Grant</page-1-grant-label>
+	         		<page-1-grant-label lang="is_IS">Samþykkja umsókn</page-1-grant-label>
+	         		<page-1-deny-label lang="en">Deny</page-1-deny-label>
+	         		<page-1-deny-label lang="is_IS">Hafna umsókn</page-1-deny-label>
+	         		<page-2-info lang="en">Form submitted, thank You!</page-2-info>
+	         		<page-2-info lang="is_IS">Niðurstaða umsóknarinnar hefur verið vistuð og skilaboð send á umsækjandann. Umsóknarferlinu telst nú lokið en þó ekki lokað sem þýðir að enn má bæta inn skjölum og tölvupóstum.</page-2-info>
+	         		<fbc_5-title lang="is_IS">Niðurstaða</fbc_5-title>
+					<fbc_5-title lang="en">Ruling text</fbc_5-title>
+					
+					<fbc_8-title lang="is_IS">Viðhengi</fbc_8-title>
+	                <fbc_8-title lang="en">Attachements</fbc_8-title>
+	                <fbc_8-label lang="is_IS">Bæta við viðhengi</fbc_8-label> 
+                    <fbc_8-remove lang="is_IS">Fjarlægja viðhengi</fbc_8-remove>
+                    <fbc_8-text lang="is_IS">Lýsandi nafn skjals</fbc_8-text> 
+                    <fbc_8-label lang="en">Add attachement</fbc_8-label> 
+                    <fbc_8-text lang="en">Descriptive name</fbc_8-text> 
+                    <fbc_8-info lang="is_IS">Það þarf að setja lýsandi nafn á skjalið</fbc_8-info>
+                    <fbc_8-info lang="en">Please enter file description</fbc_8-info>
+                    <fbc_8-remove lang="en">Remove</fbc_8-remove> 
+                    <fbc_8-custom lang="is_IS">Það þarf að setja lýsandi nafn á skjalið</fbc_8-custom>
+                    <fbc_8-custom lang="en">Uploaded file description can not be empty</fbc_8-custom>
+					<fbc_8-paragraph-text lang="is_IS">Mögulegt er að senda viðbótarupplýsingar í viðhengi</fbc_8-paragraph-text>
+                	<fbc_8-paragraph-text lang="en">Additional information can be sent with the form as attachments</fbc_8-paragraph-text>   
+                	<fbc_8-filename-label lang="is_IS">Skráarnafn</fbc_8-filename-label>
+					<fbc_8-filename-label lang="en">Uploaded file name</fbc_8-filename-label>
+					
 				</localized_strings>
 	        </xf:instance>
 	         	
@@ -119,45 +124,49 @@
 	        <idega:switch>
 		        <idega:case id="fbc_1" show="instance('control-instance')/generatePdf='true'">
 			   	  <xf:group appearance="full">
-			   	  	<xf:textarea bind="bind.fbc_5" id="fbc_5">
-					<xf:label model="data_model" ref="instance('localized_strings')/fbc_5.title[@lang=instance('localized_strings')/current_language]"/>
+			   	  	<xf:textarea bind="fbc_5_bind" id="fbc_5">
+					<xf:label model="data_model" ref="instance('localized_strings')/fbc_5-title[@lang=instance('localized_strings')/current_language]"/>
 					</xf:textarea>
 								   	  	
-			   	   		 <!-- upload -->          
-             			<xf:group appearance="full" bind="bind.fbc_8" id="fbc_8" type="fbc_multiupload">
+			   	   		  <!-- upload -->
+             			<xf:group appearance="full" bind="fbc_8_bind" id="fbc_8" type="fbc_multiupload">
 
                 <idega:dispatch ev:event="idega-xforms-ready" name="idega-validate" target="//*[@id='fbc_8']//xf:upload" stopOnError="true"/>
                             
-                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_8.title[@lang=instance('localized_strings')/current_language]"/>
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-title[@lang=instance('localized_strings')/current_language]"/>
+                            
+                            <div class="fbc_simple_text">
+								<xf:output model="data_model" ref="instance('localized_strings')/fbc_8-paragraph-text[@lang=instance('localized_strings')/current_language]"/>
+							</div>
+                            
                             <xf:trigger>
-                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_8.label[@lang=instance('localized_strings')/current_language]"/>
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-label[@lang=instance('localized_strings')/current_language]"/>
                                 <xf:action>
                                     <xf:insert at="last()" nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_8/entry" position="before"/>
                                 </xf:action>
                             </xf:trigger>
-                            <xf:repeat appearance="group" bind="bind.fbc_8-entries" id="upload_entries_fbc_8">
+                            <xf:repeat appearance="group" bind="fbc_8-entries" id="upload_entries_fbc_8">
                             <xf:group>
                                     <xf:input ref="./description" id="fbc_description">
-                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8.text[@lang=instance('localized_strings')/current_language]"/>
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-text[@lang=instance('localized_strings')/current_language]"/>
                                            <idega:dispatch ev:event="xforms-value-changed" name="idega-validate" target="//*[@id='fbc_8']//xf:upload" stopOnError="true"/>
-                                           <xf:alert ref="instance('error-instance')/error[@fbc_8]"/>
                                     </xf:input>
                                      <xf:group ref=".[. !='' and ./description ='']" appearance="minimal" class="error">
-                                    	<xf:output model="data_model" value="instance('localized_strings')/fbc_8.info[@lang=instance('localized_strings')/current_language]"/>
+                                    	<xf:output model="data_model" value="instance('localized_strings')/fbc_8-info[@lang=instance('localized_strings')/current_language]"/>
                                     </xf:group>
                                   <xf:output ref="@filename">
-                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8.name[@lang=instance('localized_strings')/current_language]"/>
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-filename-label[@lang=instance('localized_strings')/current_language]"/>
                                     </xf:output>
                                     <xf:upload ref=".">
                                     <xf:filename ref="@filename"/>
                                     <xf:mediatype ref="@mediatype"/>
                                         <idega:dispatch ev:event="xforms-value-changed" name="idega-validate" target="//*[@id='fbc_8']//xf:upload" stopOnError="true"/>
                                          <idega:validator ev:event="idega-validate" validateif="(.!='' and ./description !='') or (.='' and ./description ='')" componentId="fbc_8">
-                                      		 <idega:message errorType="custom" model="data_model" value="instance('localized_strings')/fbc_8.custom[@lang=instance('localized_strings')/current_language]"/>
+                                      		 <idega:message errorType="custom" model="data_model" value="instance('localized_strings')/fbc_8-custom[@lang=instance('localized_strings')/current_language]"/>
                                 		</idega:validator>
                                     </xf:upload>
                                     <xf:trigger>
-                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8.remove[@lang=instance('localized_strings')/current_language]"/>
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-remove[@lang=instance('localized_strings')/current_language]"/>
                                     <xf:action>
                                     <xf:delete at="index('upload_entries_fbc_8')" nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_8/entry"/>
                                     </xf:action>
@@ -165,10 +174,11 @@
                                    </xf:group> 
                             </xf:repeat>
                         </xf:group>
+                              
                         
 			   	  	<div class="fbc_button_area" id="fbc_2" type="fbc_button_area">
 				   	      <xf:trigger class="fbc_button_submit" id="fbc_3" type="fbc_button_submit" bind="bind-submissionButton">
-					   	  	            <xf:label model="data_model" ref="instance('localized_strings')/page-1-grant.label[@lang=instance('localized_strings')/current_language]"/>
+					   	  	            <xf:label model="data_model" ref="instance('localized_strings')/page-1-grant-label[@lang=instance('localized_strings')/current_language]"/>
 					   	  	           <xf:action ev:event="DOMActivate">
                                     <xf:setvalue ref="instance('control-instance')/submission" value="'true'"/>
                                     <xf:setvalue bind="actionTaken">toGrantProcessRulling</xf:setvalue>
@@ -186,7 +196,7 @@
                         </xf:trigger>
                         
                           <xf:trigger id="fbc_9" class="fbc_button_submit" type="fbc_button_submit" bind="bind-submissionButton">
-					   	  	            <xf:label model="data_model" ref="instance('localized_strings')/page-1-deny.label[@lang=instance('localized_strings')/current_language]"/>
+					   	  	            <xf:label model="data_model" ref="instance('localized_strings')/page-1-deny-label[@lang=instance('localized_strings')/current_language]"/>
 					   	  	         <xf:action ev:event="DOMActivate">
                                     <xf:setvalue ref="instance('control-instance')/submission" value="'true'"/>
                                     <xf:setvalue bind="actionTaken">toDenyProcessRulling</xf:setvalue>
@@ -208,8 +218,8 @@
 		   	  </idega:case>
 		   	  <idega:case id="fbc_4" type="thx_page">
 			   	  <xf:group appearance="full">
-			   	  	<xf:label model="data_model" ref="instance('localized_strings')/page-2.label[@lang=instance('localized_strings')/current_language]"/>
-			   	  	<xf:output model="data_model" ref="instance('localized_strings')/page-2.info[@lang=instance('localized_strings')/current_language]"/>
+			   	  	<xf:label model="data_model" ref="instance('localized_strings')/page-2-label[@lang=instance('localized_strings')/current_language]"/>
+			   	  	<xf:output model="data_model" ref="instance('localized_strings')/page-2-info[@lang=instance('localized_strings')/current_language]"/>
 			   	  </xf:group>
 		   	  </idega:case>
 	   	  </idega:switch>

@@ -54,7 +54,7 @@
 			
          </controller>
       </task>
-      <transition name="toFork" to="fork3"></transition>
+      <transition to="fork3"></transition>
 		<event type="node-leave">
 		  <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
                 <handlerName>setProcessDescriptionHandler</handlerName>
@@ -100,10 +100,10 @@
 		 </action>
         
       </event>
-   	  <transition name="toFork" to="fork1"></transition>
+   	  <transition to="fork1"></transition>
    </node>
    <task-node name="requestAdditionalInformation">
-      <task name="Request Additional Information">
+      <task name="Request Additional Information" priority="-1">
           <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>jsonAssignmentHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -131,7 +131,7 @@
             <variable name="files_additionalAttachments"></variable>
          </controller>
       </task>
-      <transition name="toFork" to="fork2"></transition>
+		<transition to="sendMessage"></transition>
    </task-node>
    <task-node name="submitAdditionalInformation">
       <task name="Submit Additional Information">
@@ -154,14 +154,10 @@
             <variable name="files_additionalAttachments"></variable>
          </controller>
       </task>
-      <transition name="toEnd" to="additionalInformationEnd"></transition>
+      <transition to="additionalInformationEnd"></transition>
    </task-node>
    <end-state name="additionalInformationEnd"></end-state>
-   <fork name="inviteParticipantFork">
-      <transition name="repeat" to="inviteDefandant"></transition>
-      <transition name="toInviteParticipant" to="inviteParticipant"></transition>
-   </fork>
-   <task-node name="submitCaseAnswer">
+   <task-node name="submitCaseAnswer" priority="-1">
       <task name="Submit invited case answer">
          <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>jsonAssignmentHandler</handlerName>
@@ -182,7 +178,7 @@
             <variable name="files_participantAttachments"></variable>
          </controller>
       </task>
-      <transition name="toEnd" to="caseAnswerEnd"></transition>
+      <transition to="caseAnswerEnd"></transition>
    </task-node>
    <end-state name="caseAnswerEnd"></end-state>
    <task-node name="submitProcessRuling">
@@ -244,7 +240,7 @@
 			    </propertyMap>
 		 </action>
       </event>
-		<transition to="completeProcess" name="toCompleteProcess"></transition>
+		<transition to="completeProcess"></transition>
    </node>
    <end-state name="end">
    
@@ -383,7 +379,7 @@
 			</propertyMap>
 		 </assignment>
       </task>
-      <transition name="toFork" to="inviteParticipantFork"></transition>
+		<transition to="inviteParticipant"></transition>
    </task-node>
    <node name="endCaseProcess">
       <event type="node-leave">
@@ -391,19 +387,15 @@
                 <handlerName>endCaseProcessHandler</handlerName>
           </action>
       </event>
-      <transition name="toEndProcess" to="endProcess"></transition>
+      <transition to="endProcess"></transition>
    </node>
-   <fork name="fork2">
-      <transition name="repeat" to="requestAdditionalInformation"></transition>
-      <transition name="toSendMessage" to="sendMessage"></transition>
-   </fork>
    <node name="endProcess">
       <event type="node-leave">
          <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
                 <handlerName>endProcessHandler</handlerName>
           </action>
       </event>
-      <transition name="toProcessEnd" to="end"></transition>
+      <transition to="end"></transition>
    </node>
    <process-state name="inviteParticipant">
       <sub-process name="participantInvitation" binding="late" />
@@ -413,7 +405,7 @@
       <variable name="participantInviteRoleExp" access="read" mapped-name="participantRoleExpression" />
       <variable name="participantInviteMsg" access="read" mapped-name="participantInvitationMessage" />
       
-      <transition name="toSubmitCaseAnswer" to="submitCaseAnswer"></transition>
+      <transition to="submitCaseAnswer"></transition>
       <event type="node-enter">
          <script>
             <expression>
@@ -453,7 +445,7 @@
             <variable name='string_emailReadAssignmentExpression' access='write' mapped-name='emailReadAssignmentExpression' />
          </script>
       </event>
-		<transition to="emailsFetcherEnd" name="toEnd"></transition>
+		<transition to="emailsFetcherEnd"></transition>
    
    </process-state>
    <fork name="fork3">
@@ -499,7 +491,7 @@
 			    </propertyMap>
 		</action>
       </event>
-      <transition name="toSubmitAdditionalInformation" to="submitAdditionalInformation"></transition>
+      <transition to="submitAdditionalInformation"></transition>
    </node>
 
 	<task-node name="completeProcess">
@@ -519,12 +511,11 @@
 				</propertyMap>
 			</assignment>
 			<controller>
-				<variable access="read,write,required" name="string_processEndFinalStatement"></variable>
 				<variable access="read,write" name="string_processEndFinalSummary"></variable>
 				<variable access="read,write" name="files_processEndAttachments"></variable>
 			</controller>
 		</task>
-		<transition to="endCaseProcess" name="toEndCaseProcess"></transition>
+		<transition to="endCaseProcess"></transition>
 	</task-node>
 
 	<process-state name="handlerAssignsOwner">
@@ -572,7 +563,7 @@
             
          </script>
       </event>
-		<transition to="ifHandlerAssigned" name="toIfHandlerAssigned"></transition>
+		<transition to="ifHandlerAssigned"></transition>
 	</process-state>
 
 	<process-state name="anonymousOwnerAssignment">
@@ -616,7 +607,7 @@
             
          </script>
       </event>
-		<transition to="sendOwnerCaseCreatedMessage" name="toSendOwnerCaseCreatedMessage"></transition>
+		<transition to="sendOwnerCaseCreatedMessage" name=""></transition>
 	</process-state>
 
 	<decision name="ifHandlerAssigned" expression="#{handlerAssignedOwner != null &amp;&amp; handlerAssignedOwner}">
@@ -662,7 +653,7 @@
 			    </propertyMap>
 		 </action>
 		</event>
-		<transition to="sendHandlerNewCaseArrivedMessage" name="toSendHandlerNewCaseArrivedMessage"></transition>
+		<transition to="sendHandlerNewCaseArrivedMessage" name=""></transition>
 	</node>
 
 	<node name="denyProcessRulling">
@@ -674,7 +665,7 @@
 			</propertyMap>
 		</action>
 		</event>
-		<transition to="sendRulingMessages" name="toSendRullingMessages"></transition>
+		<transition to="sendRulingMessages"></transition>
 	</node>
 
 	<node name="grantProcessRulling">
@@ -686,7 +677,7 @@
 				</propertyMap>
 			</action>
         </event>
-		<transition to="sendRulingMessages" name="toSendRullingMessages"></transition>
+		<transition to="sendRulingMessages"></transition>
 	</node>
 	<roles-localization xmlns="http://idega.com/bpm">
 		<role name="bpm_genericProcess_caseHandler">
