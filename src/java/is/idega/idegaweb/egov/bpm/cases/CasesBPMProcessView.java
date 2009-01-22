@@ -37,34 +37,31 @@ import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
-import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
- * 
- *          Last modified: $Date: 2008/12/28 11:58:49 $ by $Author: civilis $
+ * @version $Revision: 1.21 $ Last modified: $Date: 2009/01/22 11:18:19 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
 public class CasesBPMProcessView {
-
+	
 	public static final String BEAN_IDENTIFIER = "casesBPMProcessView";
-
+	
 	private BPMContext idegaJbpmContext;
 	private BPMFactory BPMFactory;
 	private CasesBPMDAO casesBPMDAO;
 	private CaseManagersProvider caseManagersProvider;
-
+	
 	public CasesBPMTaskViewBean getTaskView(final long taskInstanceId) {
-
+		
 		return getIdegaJbpmContext().execute(new JbpmCallback() {
-
+			
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
-
+				
 				// ProcessInstanceW processInstanceW = getBPMFactory()
 				// .getProcessManagerByProcessInstanceId(processInstanceId)
 				// .getProcessInstance(processInstanceId);
@@ -78,176 +75,175 @@ public class CasesBPMProcessView {
 				// ti = task;
 				// }
 				// }
-
+				
 				// TODO: changed the way tiw is resolved, test if it works!
-
+				
 				TaskInstanceW tiw = getBPMFactory()
-						.getProcessManagerByTaskInstanceId(taskInstanceId)
-						.getTaskInstance(taskInstanceId);
-
+				        .getProcessManagerByTaskInstanceId(taskInstanceId)
+				        .getTaskInstance(taskInstanceId);
+				
 				if (tiw == null) {
 					Logger.getLogger(getClass().getName()).log(
-							Level.WARNING,
-							"No task instance found for task instance id provided: "
-									+ taskInstanceId);
+					    Level.WARNING,
+					    "No task instance found for task instance id provided: "
+					            + taskInstanceId);
 					return new CasesBPMTaskViewBean();
 				}
-
+				
 				TaskInstance ti = tiw.getTaskInstance();
-
+				
 				IWContext iwc = IWContext.getInstance();
-
+				
 				IWTimestamp createTime = new IWTimestamp(ti.getCreate());
 				String taskStatus = getTaskStatus(ti);
 				String assignedTo = getTaskAssignedTo(ti);
-
+				
 				CasesBPMTaskViewBean bean = new CasesBPMTaskViewBean();
 				bean.setTaskName(tiw.getName(iwc.getCurrentLocale()));
 				bean.setTaskStatus(taskStatus);
 				bean.setAssignedTo(assignedTo);
 				bean.setCreatedDate(createTime.getLocaleDateAndTime(iwc
-						.getLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
+				        .getLocale(), IWTimestamp.SHORT, IWTimestamp.SHORT));
 				return bean;
 			}
 		});
 	}
-
+	
 	protected String getTaskStatus(TaskInstance taskInstance) {
-
+		
 		if (taskInstance.hasEnded())
 			return "Ended";
 		if (taskInstance.getStart() != null)
 			return "In progress";
-
+		
 		return "Not started";
 	}
-
+	
 	protected String getTaskAssignedTo(TaskInstance taskInstance) {
-
+		
 		String actorId = taskInstance.getActorId();
-
+		
 		if (actorId != null) {
-
+			
 			try {
 				int assignedTo = Integer.parseInt(actorId);
 				return getUserBusiness().getUser(assignedTo).getName();
-
+				
 			} catch (Exception e) {
 				Logger.getLogger(getClass().getName()).log(
-						Level.SEVERE,
-						"Exception while resolving assigned user name for actor id: "
-								+ actorId, e);
+				    Level.SEVERE,
+				    "Exception while resolving assigned user name for actor id: "
+				            + actorId, e);
 			}
 		}
-
+		
 		return "No one";
 	}
-
+	
 	public void startTask(long taskInstanceId, int actorUserId) {
-
+		
 		ProcessManager processManager = getBPMFactory()
-				.getProcessManagerByTaskInstanceId(taskInstanceId);
+		        .getProcessManagerByTaskInstanceId(taskInstanceId);
 		processManager.getTaskInstance(taskInstanceId).start(actorUserId);
 	}
-
+	
 	public void assignTask(long taskInstanceId, int actorUserId) {
-
+		
 		ProcessManager processManager = getBPMFactory()
-				.getProcessManagerByTaskInstanceId(taskInstanceId);
+		        .getProcessManagerByTaskInstanceId(taskInstanceId);
 		processManager.getTaskInstance(taskInstanceId).assign(actorUserId);
 	}
-
+	
 	/**
-	 * 
 	 * @param taskInstanceId
 	 * @param userId
 	 * @return null if task can be started, err message otherwise
 	 */
 	public String getCanStartTask(long taskInstanceId, int userId) {
-
+		
 		try {
 			RolesManager rolesManager = getBPMFactory().getRolesManager();
 			rolesManager.hasRightsToStartTask(taskInstanceId, userId);
-
+			
 		} catch (BPMAccessControlException e) {
 			return e.getUserFriendlyMessage();
 		}
-
+		
 		return null;
 	}
-
+	
 	public String getCanTakeTask(long taskInstanceId, int userId) {
-
+		
 		try {
 			RolesManager rolesManager = getBPMFactory().getRolesManager();
 			rolesManager.hasRightsToAssignTask(taskInstanceId, userId);
-
+			
 		} catch (BPMAccessControlException e) {
 			return e.getUserFriendlyMessage();
 		}
-
+		
 		return null;
 	}
-
+	
 	public CasesBPMProcessViewBean getProcessView(final long processInstanceId,
-			final int caseId) {
-
+	        final int caseId) {
+		
 		return getIdegaJbpmContext().execute(new JbpmCallback() {
-
+			
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				ProcessInstance pi = context
-						.getProcessInstance(processInstanceId);
-
+				        .getProcessInstance(processInstanceId);
+				
 				if (pi == null) {
 					Logger.getLogger(getClass().getName()).log(
-							Level.WARNING,
-							"No process instance found for process instance id provided: "
-									+ processInstanceId);
+					    Level.WARNING,
+					    "No process instance found for process instance id provided: "
+					            + processInstanceId);
 					return new CasesBPMProcessViewBean();
 				}
-
+				
 				String ownerFirstName = (String) pi
-						.getContextInstance()
-						.getVariable(
-								CasesBPMProcessConstants.caseOwnerFirstNameVariableName);
+				        .getContextInstance()
+				        .getVariable(
+				            CasesBPMProcessConstants.caseOwnerFirstNameVariableName);
 				String ownerLastName = (String) pi
-						.getContextInstance()
-						.getVariable(
-								CasesBPMProcessConstants.caseOwnerLastNameVariableName);
+				        .getContextInstance()
+				        .getVariable(
+				            CasesBPMProcessConstants.caseOwnerLastNameVariableName);
 				String ownerName = new StringBuffer(
-						ownerFirstName == null ? CoreConstants.EMPTY
-								: ownerFirstName)
-						.append(
-								ownerFirstName != null && ownerLastName != null ? CoreConstants.SPACE
-										: CoreConstants.EMPTY).append(
-								ownerLastName == null ? CoreConstants.EMPTY
-										: ownerLastName).toString();
-
+				        ownerFirstName == null ? CoreConstants.EMPTY
+				                : ownerFirstName)
+				        .append(
+				            ownerFirstName != null && ownerLastName != null ? CoreConstants.SPACE
+				                    : CoreConstants.EMPTY).append(
+				            ownerLastName == null ? CoreConstants.EMPTY
+				                    : ownerLastName).toString();
+				
 				IWContext iwc = IWContext.getIWContext(FacesContext
-						.getCurrentInstance());
-
+				        .getCurrentInstance());
+				
 				String processStatus = pi.hasEnded() ? "Ended" : "In progress";
 				IWTimestamp time = new IWTimestamp(pi.getStart());
 				String createDate = time.getLocaleDate(iwc.getLocale());
-
+				
 				String caseIdentifier = (String) pi.getContextInstance()
-						.getVariable(CasesBPMProcessConstants.caseIdentifier);
-
+				        .getVariable(CasesBPMProcessConstants.caseIdentifier);
+				
 				String caseCategory;
 				String caseType;
-
+				
 				try {
 					GeneralCase genCase = getCaseBusiness(iwc).getGeneralCase(
-							new Integer(caseId));
+					    new Integer(caseId));
 					caseCategory = genCase.getCaseCategory()
-							.getLocalizedCategoryName(iwc.getLocale());
+					        .getLocalizedCategoryName(iwc.getLocale());
 					caseType = genCase.getCaseType().getName();
-
+					
 				} catch (Exception e) {
 					caseCategory = null;
 					caseType = null;
 				}
-
+				
 				CasesBPMProcessViewBean bean = new CasesBPMProcessViewBean();
 				bean.setProcessName(pi.getProcessDefinition().getName());
 				bean.setProcessStatus(processStatus);
@@ -257,49 +253,47 @@ public class CasesBPMProcessView {
 				bean.setCaseCategory(caseCategory);
 				bean.setCaseType(caseType);
 				bean.setCaseIdentifier(caseIdentifier);
-
+				
 				return bean;
 			}
 		});
 	}
-
-	public BPMUser getBPMUser(Integer bpmUserPK, User usr) {
-
-		BPMUser bpmUsr = getBPMFactory().getBpmUserFactory()
-				.getLoggedInBPMUser(bpmUserPK, usr);
-		return bpmUsr;
+	
+	public BPMUser getCurrentBPMUser() {
+		
+		return getBPMFactory().getBpmUserFactory().getCurrentBPMUser();
 	}
-
+	
 	public Long getProcessInstanceId(Object casePK) {
-
+		
 		if (casePK != null) {
-
+			
 			Integer caseId;
-
+			
 			if (casePK instanceof Integer)
 				caseId = (Integer) casePK;
 			else
 				caseId = new Integer(String.valueOf(casePK));
-
+			
 			CaseProcInstBind cpi = getCPIBind(caseId, null);
-
+			
 			if (cpi != null)
 				return cpi.getProcInstId();
 		}
-
+		
 		return null;
 	}
-
+	
 	public Integer getCaseId(Long processInstanceId) {
-
+		
 		CaseProcInstBind cpi = getCPIBind(null, processInstanceId);
-
+		
 		if (cpi != null)
 			return cpi.getCaseId();
-
+		
 		return null;
 	}
-
+	
 	/**
 	 * either of parameters should be not null
 	 * 
@@ -308,103 +302,103 @@ public class CasesBPMProcessView {
 	 * @return
 	 */
 	public UIComponent getCaseManagerView(IWContext iwc,
-			Long processInstanceId, Integer caseId, String caseProcessorType) {
-
+	        Long processInstanceId, Integer caseId, String caseProcessorType) {
+		
 		if (iwc == null)
 			iwc = IWContext.getInstance();
-
+		
 		if (processInstanceId == null && caseId == null)
 			throw new IllegalArgumentException(
-					"Neither processInstanceId, nor caseId provided");
-
+			        "Neither processInstanceId, nor caseId provided");
+		
 		caseId = caseId != null ? caseId : getCaseId(processInstanceId);
-
+		
 		try {
 			Case theCase = getCasesBusiness(iwc).getCase(caseId);
-
+			
 			CaseManager caseManager;
-
+			
 			if (theCase.getCaseManagerType() != null)
 				caseManager = getCaseManagersProvider().getCaseManager(
-						theCase.getCaseManagerType());
+				    theCase.getCaseManagerType());
 			else
 				caseManager = null;
-
+			
 			if (caseManager != null) {
-
+				
 				UIComponent caseAssets = caseManager.getView(iwc, theCase,
-						caseProcessorType);
-
+				    caseProcessorType);
+				
 				if (caseAssets != null)
 					return caseAssets;
 				else
 					Logger.getLogger(getClass().getName()).log(
-							Level.WARNING,
-							"No case assets component resolved from case manager: "
-									+ caseManager.getType() + " by case pk: "
-									+ theCase.getPrimaryKey().toString());
+					    Level.WARNING,
+					    "No case assets component resolved from case manager: "
+					            + caseManager.getType() + " by case pk: "
+					            + theCase.getPrimaryKey().toString());
 			} else
 				Logger.getLogger(getClass().getName()).log(
-						Level.WARNING,
-						"No case manager resolved by type="
-								+ theCase.getCaseManagerType());
-
+				    Level.WARNING,
+				    "No case manager resolved by type="
+				            + theCase.getCaseManagerType());
+			
 		} catch (Exception e) {
 			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
-					"Exception while resolving case manager view", e);
+			    "Exception while resolving case manager view", e);
 		}
-
+		
 		return null;
 	}
-
+	
 	protected CaseProcInstBind getCPIBind(Integer caseId, Long processInstanceId) {
-
+		
 		if (caseId != null) {
-
+			
 			CaseProcInstBind bind = getCasesBPMDAO()
-					.getCaseProcInstBindByCaseId(caseId);
-
+			        .getCaseProcInstBindByCaseId(caseId);
+			
 			if (bind != null) {
-
+				
 				return bind;
-
+				
 			} else {
 				Logger.getLogger(getClass().getName()).log(
-						Level.SEVERE,
-						"No case process instance bind found for caseId provided: "
-								+ caseId);
+				    Level.SEVERE,
+				    "No case process instance bind found for caseId provided: "
+				            + caseId);
 			}
-
+			
 		} else if (processInstanceId != null) {
-
+			
 			CaseProcInstBind bind;
 			try {
 				bind = getCasesBPMDAO().find(CaseProcInstBind.class,
-						processInstanceId);
-
+				    processInstanceId);
+				
 			} catch (Exception e) {
 				bind = null;
 			}
-
+			
 			if (bind != null) {
-
+				
 				return bind;
-
+				
 			} else {
 				Logger.getLogger(getClass().getName()).log(
-						Level.SEVERE,
-						"No case process instance bind found for process instanceid provided: "
-								+ processInstanceId);
+				    Level.SEVERE,
+				    "No case process instance bind found for process instanceid provided: "
+				            + processInstanceId);
 			}
 		}
-
+		
 		return null;
 	}
-
+	
 	public class CasesBPMProcessViewBean implements Serializable {
-
+		
 		private static final long serialVersionUID = -1209671586005809408L;
-
+		
 		private Boolean ended;
 		private String processName;
 		private String processStatus;
@@ -413,176 +407,176 @@ public class CasesBPMProcessView {
 		private String caseCategory;
 		private String caseType;
 		private String caseIdentifier;
-
+		
 		public String getProcessOwner() {
 			return processOwner;
 		}
-
+		
 		public void setProcessOwner(String processOwner) {
 			this.processOwner = processOwner;
 		}
-
+		
 		public String getProcessCreateDate() {
 			return processCreateDate;
 		}
-
+		
 		public void setProcessCreateDate(String processCreateDate) {
 			this.processCreateDate = processCreateDate;
 		}
-
+		
 		public String getProcessName() {
 			return processName;
 		}
-
+		
 		public void setProcessName(String processName) {
 			this.processName = processName;
 		}
-
+		
 		public String getProcessStatus() {
 			return processStatus;
 		}
-
+		
 		public void setProcessStatus(String processStatus) {
 			this.processStatus = processStatus;
 		}
-
+		
 		public String getCaseCategory() {
 			return caseCategory;
 		}
-
+		
 		public void setCaseCategory(String caseCategory) {
 			this.caseCategory = caseCategory;
 		}
-
+		
 		public String getCaseType() {
 			return caseType;
 		}
-
+		
 		public void setCaseType(String caseType) {
 			this.caseType = caseType;
 		}
-
+		
 		public String getCaseIdentifier() {
 			return caseIdentifier;
 		}
-
+		
 		public void setCaseIdentifier(String caseIdentifier) {
 			this.caseIdentifier = caseIdentifier;
 		}
-
+		
 		public Boolean getEnded() {
 			return ended == null ? false : ended;
 		}
-
+		
 		public void setEnded(Boolean ended) {
 			this.ended = ended;
 		}
 	}
-
+	
 	public class CasesBPMTaskViewBean implements Serializable {
-
+		
 		private static final long serialVersionUID = -6402627297789228878L;
-
+		
 		private String taskName;
 		private String taskStatus;
 		private String assignedTo;
 		private String createdDate;
-
+		
 		public String getTaskName() {
 			return taskName;
 		}
-
+		
 		public void setTaskName(String taskName) {
 			this.taskName = taskName;
 		}
-
+		
 		public String getTaskStatus() {
 			return taskStatus;
 		}
-
+		
 		public void setTaskStatus(String taskStatus) {
 			this.taskStatus = taskStatus;
 		}
-
+		
 		public String getAssignedTo() {
 			return assignedTo;
 		}
-
+		
 		public void setAssignedTo(String assignedTo) {
 			this.assignedTo = assignedTo;
 		}
-
+		
 		public String getCreatedDate() {
 			return createdDate;
 		}
-
+		
 		public void setCreatedDate(String createdDate) {
 			this.createdDate = createdDate;
 		}
 	}
-
+	
 	public BPMContext getIdegaJbpmContext() {
 		return idegaJbpmContext;
 	}
-
+	
 	@Autowired
 	public void setIdegaJbpmContext(BPMContext idegaJbpmContext) {
 		this.idegaJbpmContext = idegaJbpmContext;
 	}
-
+	
 	protected CasesBusiness getCaseBusiness(IWContext iwc) {
-
+		
 		try {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwc,
-					CasesBusiness.class);
+			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
-
+	
 	protected UserBusiness getUserBusiness() {
 		try {
 			return (UserBusiness) IBOLookup.getServiceInstance(CoreUtil
-					.getIWContext(), UserBusiness.class);
+			        .getIWContext(), UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
-
+	
 	public BPMFactory getBPMFactory() {
 		return BPMFactory;
 	}
-
+	
 	@Autowired
 	public void setBPMFactory(BPMFactory factory) {
 		BPMFactory = factory;
 	}
-
+	
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
-
+	
 	@Autowired
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
-
+	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
-					CasesBusiness.class);
+			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
-
+	
 	public CaseManagersProvider getCaseManagersProvider() {
 		return caseManagersProvider;
 	}
-
+	
 	@Autowired
 	public void setCaseManagersProvider(
-			CaseManagersProvider caseManagersProvider) {
+	        CaseManagersProvider caseManagersProvider) {
 		this.caseManagersProvider = caseManagersProvider;
 	}
 }

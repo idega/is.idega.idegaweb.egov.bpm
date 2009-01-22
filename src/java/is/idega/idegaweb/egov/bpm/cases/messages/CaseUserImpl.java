@@ -26,13 +26,14 @@ import com.idega.jbpm.rights.Right;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.URIParam;
 import com.idega.util.URIUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  * 
- *          Last modified: $Date: 2009/01/21 14:34:24 $ by $Author: anton $
+ *          Last modified: $Date: 2009/01/22 11:18:19 $ by $Author: civilis $
  */
 public class CaseUserImpl {
 
@@ -126,14 +127,17 @@ public class CaseUserImpl {
 //            	here we could find the most permissive role of the user, or add all roles for the bpm user (better way)
             	Role role = roles.iterator().next();
 				
-				User bpmUser = getBpmUserFactory().createBPMUser(upd, role, getProcessInstanceW().getProcessInstanceId());
-				
+				BPMUser bpmUser = getBpmUserFactory().createBPMUser(upd, role, getProcessInstanceW().getProcessInstanceId());
+
 				fullUrl = getAssetsUrl(iwac, user);
 				
 				final URIUtil uriUtil = new URIUtil(fullUrl);
+				List<URIParam> params = bpmUser.getParamsForBPMUserLink();
 				
-				uriUtil.setParameter(BPMUser.processInstanceIdParam, String.valueOf(getProcessInstanceW().getProcessInstanceId()));
-				uriUtil.setParameter(BPMUser.bpmUsrParam, bpmUser.getPrimaryKey().toString());
+				for (URIParam param : params) {
+	                uriUtil.setParameter(param.getParamName(), param.getParamValue());
+                }
+				
 				fullUrl = uriUtil.getUri();
             } else {
             	fullUrl = null;

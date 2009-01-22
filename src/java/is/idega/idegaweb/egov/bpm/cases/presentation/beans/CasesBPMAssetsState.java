@@ -19,19 +19,17 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.identity.BPMUser;
-import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.jbpm.rights.Right;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
-import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.35 $
+ * @version $Revision: 1.36 $
  *
- * Last modified: $Date: 2009/01/21 11:27:25 $ by $Author: civilis $
+ * Last modified: $Date: 2009/01/22 11:18:33 $ by $Author: civilis $
  *
  */
 @Scope("request")
@@ -353,13 +351,7 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	public BPMUser getCurrentBPMUser() {
 		
-		FacesContext fctx = FacesContext.getCurrentInstance();
-		
-		String bpmUsrIdStr = fctx.getExternalContext().getRequestParameterMap().get(BPMUserImpl.bpmUsrParam);
-		Integer bpmUsrId = !StringUtil.isEmpty(bpmUsrIdStr) ? new Integer(bpmUsrIdStr) : null;
-		
-		BPMUser bpmUsr = getCasesBPMProcessView().getBPMUser(bpmUsrId, null);
-		return bpmUsr;
+		return getCasesBPMProcessView().getCurrentBPMUser();
 	}
 
 	public String getDisplayPropertyForStyleAttribute() {
