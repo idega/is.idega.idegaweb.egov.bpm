@@ -7,15 +7,14 @@ import org.springframework.stereotype.Service;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.identity.BPMUserFactory;
-import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2008/10/22 15:02:00 $ by $Author: civilis $
+ * Last modified: $Date: 2009/01/22 17:29:22 $ by $Author: anton $
  */
 @Scope("singleton")
 @Service
@@ -27,17 +26,12 @@ public class CaseUserFactory {
 	public CaseUserImpl getCaseUser(User user, ProcessInstanceW piw) {
 		
 //		TODO: use some caching or smth
-		return createCaseUser(user, piw, IWContext.getCurrentInstance());
+		return createCaseUser(user, piw);
 	}
 	
-	public CaseUserImpl getCaseUser(User user, ProcessInstanceW piw, IWContext iwc) {
+	private CaseUserImpl createCaseUser(User user, ProcessInstanceW piw) {
 		
-		return createCaseUser(user, piw, iwc);
-	}
-	
-	private CaseUserImpl createCaseUser(User user, ProcessInstanceW piw, IWContext iwc) {
-		
-		CaseUserImpl caseUser = new CaseUserImpl(user, piw, iwc);
+		CaseUserImpl caseUser = new CaseUserImpl(user, piw);
 		caseUser.setBpmFactory(getBpmFactory());
 		caseUser.setBpmUserFactory(getBpmUserFactory());
 		return caseUser;

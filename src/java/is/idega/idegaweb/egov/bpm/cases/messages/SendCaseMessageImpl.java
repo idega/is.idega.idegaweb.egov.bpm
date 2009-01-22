@@ -40,9 +40,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2009/01/22 16:50:11 $ by $Author: juozas $
+ * Last modified: $Date: 2009/01/22 17:29:22 $ by $Author: anton $
  */
 @Scope("singleton")
 @SendMessageType("caseMessage")
@@ -98,7 +98,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				if(preferredLocale == null)
 					preferredLocale = defaultLocale;
 				
-				CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(user, piw, iwc);
+				CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(user, piw);
 
 				mvCtx.setValue(MessageValueContext.userBean, user);
 				mvCtx.setValue(caseUserBean, caseUser);

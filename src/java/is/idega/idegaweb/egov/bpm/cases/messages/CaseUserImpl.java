@@ -23,7 +23,6 @@ import com.idega.jbpm.identity.BPMUserFactory;
 import com.idega.jbpm.identity.Role;
 import com.idega.jbpm.identity.UserPersonalData;
 import com.idega.jbpm.rights.Right;
-import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.URIParam;
@@ -31,14 +30,13 @@ import com.idega.util.URIUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  * 
- *          Last modified: $Date: 2009/01/22 11:18:19 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/01/22 17:29:22 $ by $Author: anton $
  */
 public class CaseUserImpl {
 
 	private User user;
-	private IWContext iwc;
 	private ProcessInstanceW processInstanceW;
 	private BPMUserFactory bpmUserFactory;
 	private BPMFactory bpmFactory;
@@ -46,13 +44,6 @@ public class CaseUserImpl {
 	public CaseUserImpl(User user, ProcessInstanceW processInstanceW) {
 		this.user = user;
 		this.processInstanceW = processInstanceW;
-	}
-
-	public CaseUserImpl(User user, ProcessInstanceW processInstanceW,
-			IWContext iwc) {
-		this.user = user;
-		this.processInstanceW = processInstanceW;
-		this.iwc = iwc;
 	}
 
 	public User getUser() {
@@ -150,10 +141,6 @@ public class CaseUserImpl {
 
 	ProcessInstanceW getProcessInstanceW() {
 		return processInstanceW;
-	}
-
-	public void setIwc(IWContext iwc) {
-		this.iwc = iwc;
 	}
 
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
