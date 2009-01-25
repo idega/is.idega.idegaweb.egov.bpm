@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<processBundle-config>
+
+    <processBundle beanIdentifier="casesBPMProcessBundle" processManagerType="cases" />
+    
+    <tasks>
+        <task name="Submit New Case" initial="true">
+            <viewResource resourceIdentifier="forms/enterApplication.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="Request Additional Information">
+            <viewResource resourceIdentifier="forms/requestAdditionalInformation.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="Submit Additional Information">
+            <viewResource resourceIdentifier="forms/submitAdditionalInformation.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="Invite participant">
+            <viewResource resourceIdentifier="forms/inviteParticipant.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="Submit Process Ruling">
+            <viewResource resourceIdentifier="forms/submitProcessRuling.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="Submit invited case answer">
+            <viewResource resourceIdentifier="forms/submitInvitedCaseAnswer.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="Complete process">
+            <viewResource resourceIdentifier="forms/completeProcess.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+    </tasks>
+    
+</processBundle-config>

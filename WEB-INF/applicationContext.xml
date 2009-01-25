@@ -4,7 +4,10 @@
         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
         xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-2.5.xsd">
 
-    <bean id="casesBpmProcessManager" class="com.idega.bpm.exe.DefaultBPMProcessManager" scope="singleton">
+    <bean id="casesBpmProcessManager" class="com.idega.bpm.exe.ProcessManagerAbstractImpl" scope="singleton">
+    
+        <property name="managerType" value="cases" />
+    
         <lookup-method name="createPDW" bean="casesPDW" />
         <lookup-method name="createPIW" bean="casesPIW" />
         <lookup-method name="createTIW" bean="casesTIW" />

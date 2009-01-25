@@ -1,7 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.bundle.CasesBPMProcessBundle;
+import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
@@ -90,8 +90,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 	
 	private String getSheetName(Locale locale, String categoryId) {
-		if (categoryId.startsWith(CasesBPMProcessBundle.defaultCaseCategoryName)) {
-			String processName = categoryId.replaceFirst(CasesBPMProcessBundle.defaultCaseCategoryName, CoreConstants.EMPTY);
+		if (categoryId.startsWith(ProcessBundleCasesImpl.defaultCaseCategoryName)) {
+			String processName = categoryId.replaceFirst(ProcessBundleCasesImpl.defaultCaseCategoryName, CoreConstants.EMPTY);
 			return getCaseManager().getProcessName(processName, locale);
 		}
 		
@@ -176,8 +176,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private List<AdvancedProperty> getAvailableVariablesByProcessDefinition(Locale locale, String processDefinition, boolean isAdmin) {
 		List<VariableInstance> variablesByProcessDefinition = null;
 		try {
-			variablesByProcessDefinition = processDefinition.startsWith(CasesBPMProcessBundle.defaultCaseCategoryName)
-			? getCasesBinder().getVariablesByProcessDefinition(processDefinition.replaceFirst(CasesBPMProcessBundle.defaultCaseCategoryName, CoreConstants.EMPTY))
+			variablesByProcessDefinition = processDefinition.startsWith(ProcessBundleCasesImpl.defaultCaseCategoryName)
+			? getCasesBinder().getVariablesByProcessDefinition(processDefinition.replaceFirst(ProcessBundleCasesImpl.defaultCaseCategoryName, CoreConstants.EMPTY))
 			: null;
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variables for process: " + processDefinition, e);
@@ -432,8 +432,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			if (theCase instanceof GeneralCase) {
 				caseCategory = ((GeneralCase) theCase).getCaseCategory();
 				if (caseCategory != null) {
-					if (CasesBPMProcessBundle.defaultCaseCategoryName.equals(caseCategory.getName())) {
-						categoryId = new StringBuilder(CasesBPMProcessBundle.defaultCaseCategoryName).append(getCaseManager().getProcessDefinitionName(theCase))
+					if (ProcessBundleCasesImpl.defaultCaseCategoryName.equals(caseCategory.getName())) {
+						categoryId = new StringBuilder(ProcessBundleCasesImpl.defaultCaseCategoryName).append(getCaseManager().getProcessDefinitionName(theCase))
 										.toString();	//	BPM case
 					} else { 
 						categoryId = caseCategory.getPrimaryKey().toString();

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<processBundle-config>
+
+    <processBundle beanIdentifier="defaultBPMProcessBundle" processManagerType="cases" />
+    
+    <tasks>
+        <task name="Email" initial="true">
+            <viewResource resourceIdentifier="forms/email.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+    </tasks>
+    
+</processBundle-config>
