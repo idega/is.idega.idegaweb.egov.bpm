@@ -3,7 +3,7 @@
     <head>
         <title>
          <xf:output model="data_model"
-                    ref="instance('localized_strings')/form.title[@lang=instance('localized_strings')/current_language]"/>
+                    ref="instance('localized_strings')/form-title[@lang=instance('localized_strings')/current_language]"/>
       </title>
 
         <xf:model id="submission_model" schema="#fb-schema">
@@ -33,6 +33,9 @@
             <xf:action ev:event="idega-submit-error" id="idega-submission-error">
                 <xf:message level="modeless" ref="instance('localized_strings')/submission-error_message[@lang=instance('localized_strings')/current_language]"/>
             </xf:action>
+            
+            <xf:bind id="fbc_5_bind" nodeset="Subject_fbc_5" />
+            <xf:bind id="fbc_6_bind" nodeset="Text_fbc_6" />
 	
       </xf:model>
         <xf:model id="data_model">
@@ -41,21 +44,21 @@
                         <default_language>en</default_language>
                        <current_language>is_IS</current_language>
                        
-                       <form.title lang="en">Email message</form.title>
-                         <form.title lang="is_IS">Tölvupóstur</form.title>
+                       <form-title lang="en">Email message</form-title>
+                         <form-title lang="is_IS">Tölvupóstur</form-title>
                          
-                       <page-1.label lang="en"></page-1.label>
-                           <page-1.label lang="is_IS"></page-1.label>
+                       <page-1-label lang="en"></page-1-label>
+                           <page-1-label lang="is_IS"></page-1-label>
                            
-                       <page-2.label lang="en">Submitted</page-2.label>
-                      <page-2.label lang="is_IS">Sent</page-2.label>
+                       <page-2-label lang="en">Submitted</page-2-label>
+                      <page-2-label lang="is_IS">Sent</page-2-label>
                       
-                       <page-2.info lang="en">Form submitted, thank You!</page-2.info>
-                         <page-2.info lang="is_IS">Formið var sent!</page-2.info>
+                       <page-2-info lang="en">Form submitted, thank You!</page-2-info>
+                         <page-2-info lang="is_IS">Formið var sent!</page-2-info>
                        
          
-              	 <fbc_5.title lang="en">Subject</fbc_5.title>
-                  <fbc_5.title lang="is_IS">Efni</fbc_5.title>
+              	 <fbc_5-title lang="en">Subject</fbc_5-title>
+                  <fbc_5-title lang="is_IS">Efni</fbc_5-title>
          
                  <submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
                     <submission-error_message lang="is_IS">Villa varð við að senda formið vinsamlegast athugið hvort stjörnumerktir reitir hafi allir verið útfylltir og að engar villur séu í forminu.</submission-error_message>
@@ -66,7 +69,7 @@
             
              <xf:instance id="locale-instance" relevant="false()" src="context:fb-afk-loginSession.currentLocale"/>
              
- <xf:action ev:event="xforms-model-ready">
+ <xf:action ev:event="xforms-ready">
 				<xf:setvalue model="data_model"
 					ref="instance('localized_strings')/current_language" value="instance('locale-instance')/fb-afk-loginSession.currentLocale"/>
 	</xf:action>
@@ -81,23 +84,21 @@
                   <idega:case id="fbc_1" show="instance('control-instance')/generatePdf='true'">
                         <xf:group appearance="full">
                             <xf:label model="data_model"
-                            ref="instance('localized_strings')/page-1.label[@lang=instance('localized_strings')/current_language]"/>
-                            <xf:output ref="instance('data-instance')/Subject_fbc_5" id="fbc_5" class="subject">
+                            ref="instance('localized_strings')/page-1-label[@lang=instance('localized_strings')/current_language]"/>
+                            <xf:output bind="fbc_5_bind" id="fbc_5" class="subject">
                      <xf:label model="data_model"
-                               ref="instance('localized_strings')/fbc_5.title[@lang=instance('localized_strings')/current_language]"/>
+                               ref="instance('localized_strings')/fbc_5-title[@lang=instance('localized_strings')/current_language]"/>
                   </xf:output>
-                  <xf:output ref="instance('data-instance')/Text_fbc_6"  mediatype="text/html" id="fbc_6" class="text"/>
-                  <div class="fbc_button_area" id="fbc_2" name="fbc_button_area">
-                        
-                    </div>
+                  <xf:output bind="fbc_6_bind"  mediatype="text/html" id="fbc_6" class="text"/>
+                  
                         </xf:group>
                   </idega:case>
                   <idega:case id="fbc_4" type="thx_page">
                         <xf:group appearance="full">
                             <xf:label model="data_model"
-                            ref="instance('localized_strings')/page-2.label[@lang=instance('localized_strings')/current_language]"/>
+                            ref="instance('localized_strings')/page-2-label[@lang=instance('localized_strings')/current_language]"/>
                             <xf:output model="data_model"
-                             ref="instance('localized_strings')/page-2.info[@lang=instance('localized_strings')/current_language]"/>
+                             ref="instance('localized_strings')/page-2-info[@lang=instance('localized_strings')/current_language]"/>
                         </xf:group>
                   </idega:case>
             </idega:switch>
