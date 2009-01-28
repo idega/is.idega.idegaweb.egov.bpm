@@ -58,7 +58,7 @@ import com.sun.mail.imap.IMAPNestedMessage;
  * refactor this, now it's total mess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.18 $ Last modified: $Date: 2009/01/27 14:11:28 $ by $Author: juozas $
+ * @version $Revision: 1.19 $ Last modified: $Date: 2009/01/28 12:30:40 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Service
@@ -86,13 +86,13 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		if (ae instanceof ApplicationEmailEvent) {
 			
 			ApplicationEmailEvent ev = (ApplicationEmailEvent) ae;
-			Map<String, Message> msgs = ev.getMessages();
+			Map<String, List<Message>> msgs = ev.getMessages();
 			HashSet<Date> dates = new HashSet<Date>(msgs.size());
 			HashSet<Integer> identifierIDs = new HashSet<Integer>(msgs.size());
-			final HashMap<PISFORMSG, Message> PISFORMSGMessage = new HashMap<PISFORMSG, Message>(
+			final HashMap<PISFORMSG, List<Message>> PISFORMSGMessage = new HashMap<PISFORMSG, List<Message>>(
 			        msgs.size());
 			
-			for (Entry<String, Message> entry : msgs.entrySet()) {
+			for (Entry<String, List<Message>> entry : msgs.entrySet()) {
 				
 				if (entry.getKey().startsWith(CaseIdentifier.IDENTIFIER_PREFIX)) {
 					
@@ -142,8 +142,11 @@ public class EmailMessagesAttacher implements ApplicationListener {
 							for (PISFORMSG pisformsg : pisformsgs) {
 								
 								if (PISFORMSGMessage.containsKey(pisformsg))
-									attachEmailMsg(context, PISFORMSGMessage
-									        .get(pisformsg), pisformsg.pi);
+									for (Message message : PISFORMSGMessage
+									        .get(pisformsg))
+										
+										attachEmailMsg(context, message,
+										    pisformsg.pi);
 							}
 							
 							return null;
