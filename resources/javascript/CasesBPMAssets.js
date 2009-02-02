@@ -651,6 +651,9 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(subgridId, rowId, has
             }
         });
     };
+    subGridParams.callbackAfterInserted = function() {
+    	LinksLinker.linkLinks(false, subgridTableId);
+    }
 
     var namesForColumns = new Array();
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_DESCRIPTION);

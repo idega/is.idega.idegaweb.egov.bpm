@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.43 $
+ * @version $Revision: 1.44 $
  *
- * Last modified: $Date: 2009/01/10 12:29:42 $ by $Author: civilis $
+ * Last modified: $Date: 2009/02/02 17:29:58 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -240,6 +240,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		//	CSS sources
 		List<String> cssFiles = new ArrayList<String>();
+		cssFiles.add(web2Business.getBundleUriToLinkLinksWithFilesStyleFile());
 		cssFiles.add(web2Business.getBundleURIToJQGridStyles());
 		cssFiles.add(web2Business.getBundleUriToHumanizedMessagesStyleSheet());
 		if (isAllowPDFSigning()) {
@@ -255,6 +256,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		if (!isSingle) {
 			scripts.add(web2Business.getBundleURIToJQueryLib());
 		}
+		scripts.add(web2Business.getBundleUriToLinkLinksWithFilesScriptFile());
 		scripts.add(web2Business.getBundleURIToJQGrid());
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
 		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
