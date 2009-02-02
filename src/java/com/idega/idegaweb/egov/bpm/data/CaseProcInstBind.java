@@ -21,9 +21,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  *
- * Last modified: $Date: 2009/01/08 16:43:45 $ by $Author: valdas $
+ * Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -86,7 +86,7 @@ import javax.persistence.TemporalType;
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
-				"inner join "+ProcessUserBind.TABLE_NAME+" pu " +
+				"inner join "+ ProcessUserBind.TABLE_NAME+" pu " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu.process_instance_id " +
 				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :"+ProcessUserBind.statusProp
 			),

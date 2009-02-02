@@ -43,7 +43,7 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.21 $ Last modified: $Date: 2009/01/22 11:18:19 $ by $Author: civilis $
+ * @version $Revision: 1.22 $ Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
@@ -319,15 +319,14 @@ public class CasesBPMProcessView {
 			CaseManager caseManager;
 			
 			if (theCase.getCaseManagerType() != null)
-				caseManager = getCaseManagersProvider().getCaseManager(
-				    theCase.getCaseManagerType());
+				caseManager = getCaseManagersProvider().getCaseManager();
 			else
 				caseManager = null;
 			
 			if (caseManager != null) {
 				
-				UIComponent caseAssets = caseManager.getView(iwc, theCase,
-				    caseProcessorType);
+				UIComponent caseAssets = caseManager.getView(iwc, caseId,
+				    caseProcessorType, theCase.getCaseManagerType());
 				
 				if (caseAssets != null)
 					return caseAssets;

@@ -10,6 +10,7 @@ import org.jbpm.context.exe.VariableInstance;
 import org.jbpm.graph.exe.Token;
 
 import com.idega.core.persistence.GenericDao;
+import com.idega.core.user.data.User;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
@@ -17,9 +18,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.17 $
+ * @version $Revision: 1.18 $
  *
- * Last modified: $Date: 2009/01/08 16:43:45 $ by $Author: valdas $
+ * Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -59,4 +60,13 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName);
 	
 	public abstract List<VariableInstance> getVariablesByProcessInstanceId(Long processInstanceId);
+	
+	public abstract List<Integer> getCasesIdsForUser(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection groups,
+			Collection<String> roles);
+	
+	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<String> roles);
+	
+	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes, Collection<String> roles);
+	
+	public abstract List<Integer> getCasesIdsByStatusForAdmin(List<String> caseStatuses, List<String> caseStatusesToHide);
 }

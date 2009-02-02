@@ -2,10 +2,8 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
@@ -32,13 +30,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseManager;
-import com.idega.block.process.data.Case;
+import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.builder.bean.AdvancedProperty;
-import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
 import com.idega.data.IDOLookup;
-import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MemoryFileBuffer;
@@ -48,7 +43,6 @@ import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.presentation.IWContext;
-import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IOUtil;
@@ -65,7 +59,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsHolderImpl.class.getName());
 	private static final short DEFAULT_CELL_WIDTH = (short) (40 * 256);
 	
-	private Collection<Case> cases;
+	private Collection<CasePresentation> cases;
 	private MemoryFileBuffer memory;
 
 	@Autowired
@@ -75,7 +69,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	@Autowired
 	private BPMFactory bpmFactory;
 	
-	public void setSearchResults(Collection<Case> cases) {
+	public void setSearchResults(Collection<CasePresentation> cases) {
 		this.cases = cases;	
 	}
 
@@ -115,17 +109,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		
 		return caseCategory.getLocalizedCategoryName(locale);
 	}
-	
-	private User getCaseOwner(Case theCase) {
-		return theCase.getOwner();
-	}
-	
-	private String getCaseCreator(Case theCase) {
-		User owner = getCaseOwner(theCase);
 		
+	private String getCaseCreator(CasePresentation caze) {
+				
 		String name = null;
-		if (owner != null) {
-			name = owner.getName();
+		if (caze.getOwner() != null) {
+			name = caze.getOwner().getName();
 		}
 		if (StringUtil.isEmpty(name)) {
 			name = getResourceBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getLocalizedString("cases.unknown_owner", "Unkown");
@@ -134,12 +123,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return name;
 	}
 	
-	private String getCaseCreatorPersonalId(Case theCase) {
-		User owner = getCaseOwner(theCase);
+	private String getCaseCreatorPersonalId(CasePresentation caze) {
 		
 		String personalId = null;
-		if (owner != null) {
-			personalId = owner.getPersonalID();
+		if (caze.getOwner() != null) {
+			personalId = caze.getOwner().getPersonalID();
 		}
 		if (StringUtil.isEmpty(personalId)) {
 			personalId = getResourceBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getLocalizedString("cases.unknown_owner_personal_id", "Unkown");
@@ -147,30 +135,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		
 		return personalId;
 	}
-	
-	private String getCaseIdentifier(Case theCase) {
-		CaseManager caseManager = null;
-		if (theCase.getCaseManagerType() != null) {
-			caseManager = getCasesBusiness().getCaseHandlersProvider().getCaseManager(theCase.getCaseManagerType());
-		}
 		
-		String caseIdentifier = caseManager == null ? theCase.getPrimaryKey().toString() : caseManager.getProcessIdentifier(theCase);
-		if (StringUtil.isEmpty(caseIdentifier)) {
-			caseIdentifier = theCase.getPrimaryKey().toString();
-		}
-		
-		return caseIdentifier;
-	}
-	
-	private CasesBusiness getCasesBusiness() {
-		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
-		} catch (IBOLookupException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
-	}
 	
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessDefinition(Locale locale, String processDefinition, boolean isAdmin) {
@@ -248,7 +213,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return availableVariables;
 	}
 	
-	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, Case theCase, HSSFRow row, HSSFSheet sheet, HSSFCellStyle bigStyle,
+	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet, HSSFCellStyle bigStyle,
 			Locale locale, boolean isAdmin, short cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
 		if (ListUtil.isEmpty(variablesByProcessDefinition)) {
 			return;
@@ -256,7 +221,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		
 		Long processInstanceId = null;
 		try {
-			processInstanceId = getCaseManager().getProcessInstanceId(theCase);
+			processInstanceId = getCaseManager().getProcessInstanceIdByCaseId(theCase.getId());
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting process instance for case: " + theCase);
 		}
@@ -326,7 +291,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 	
 	private MemoryFileBuffer getExportedData() {
-		Map<String, List<Case>> casesByCategories = getCasesByCategories();
+		Map<String, List<CasePresentation>> casesByCategories = getCasesByCategories();
 		if (casesByCategories == null || ListUtil.isEmpty(casesByCategories.values())) {
 			return null;
 		}
@@ -342,7 +307,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		bigStyle.setFont(bigFont);
 		
 		boolean isAdmin = false;
-		List<Case> cases = null;
+		List<CasePresentation> cases = null;
 		Locale locale = null;
 		IWContext iwc = CoreUtil.getIWContext();
 		String fileNameLabel = "File name";
@@ -362,13 +327,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			List<Integer> fileCellsIndexes = null;
 			int rowNumber = 1;
 			
-			for (Case theCase: cases) {
+			for (CasePresentation theCase: cases) {
 				fileCellsIndexes = new ArrayList<Integer>();
 				HSSFRow row = sheet.createRow(rowNumber++);
 				short cellIndex = 0;
 
 				//	Default header values
-				row.createCell(cellIndex++).setCellValue(getCaseIdentifier(theCase));
+				row.createCell(cellIndex++).setCellValue(theCase.getCaseIdentifier());
 				row.createCell(cellIndex++).setCellValue(getCaseCreator(theCase));
 				row.createCell(cellIndex++).setCellValue(getCaseCreatorPersonalId(theCase));
 				
@@ -415,38 +380,24 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return ListUtil.isEmpty(cases) ? Boolean.FALSE : Boolean.TRUE;
 	}
 	
-	private Map<String, List<Case>> getCasesByCategories() {
+	private Map<String, List<CasePresentation>> getCasesByCategories() {
 		if (ListUtil.isEmpty(cases)) {
 			return null;
 		}
 		
 		boolean putToMap = false;
-		String categoryId = null;
-		CaseCategory caseCategory = null;
-		Map<String, List<Case>> casesByCategories = new HashMap<String, List<Case>>();
-		for (Case theCase: cases) {
-			categoryId = null;
-			caseCategory = null;
+		Map<String, List<CasePresentation>> casesByCategories = new HashMap<String, List<CasePresentation>>();
+		for (CasePresentation theCase: cases) {
+			String categoryId = theCase.getCategoryId();
 			putToMap = false;
 			
-			if (theCase instanceof GeneralCase) {
-				caseCategory = ((GeneralCase) theCase).getCaseCategory();
-				if (caseCategory != null) {
-					if (ProcessBundleCasesImpl.defaultCaseCategoryName.equals(caseCategory.getName())) {
-						categoryId = new StringBuilder(ProcessBundleCasesImpl.defaultCaseCategoryName).append(getCaseManager().getProcessDefinitionName(theCase))
-										.toString();	//	BPM case
-					} else { 
-						categoryId = caseCategory.getPrimaryKey().toString();
-					}
-				}
-			}
 			if (StringUtil.isEmpty(categoryId)) {
 				categoryId = CasesStatistics.UNKOWN_CATEGORY_ID;
 			}
 		
-			List<Case> cases = casesByCategories.get(categoryId);
+			List<CasePresentation> cases = casesByCategories.get(categoryId);
 			if (ListUtil.isEmpty(cases)) {
-				cases = new ArrayList<Case>();
+				cases = new ArrayList<CasePresentation>();
 			}
 			if (!cases.contains(theCase)) {
 				cases.add(theCase);

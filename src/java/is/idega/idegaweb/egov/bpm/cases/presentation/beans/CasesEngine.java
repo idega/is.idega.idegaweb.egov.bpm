@@ -26,8 +26,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.UserCases;
+import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
@@ -42,6 +45,7 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.presentation.IWContext;
+import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -57,6 +61,8 @@ public class CasesEngine {
 	private CasesBPMProcessView casesBPMProcessView;
 	private BuilderLogicWrapper builderLogic;
 	private GeneralCasesListBuilder casesListBuilder;
+	@Autowired private CaseManagersProvider caseManagersProvider;
+	
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
@@ -142,7 +148,7 @@ public class CasesEngine {
 		
 		return true;
 	}
-	
+		
 	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean) {
 		if (criteriaBean == null) {
 			logger.log(Level.SEVERE, "Can not execute search - search criterias unknown");
@@ -164,17 +170,17 @@ public class CasesEngine {
 		
 		addSearchQueryToSession(iwc, criteriaBean);
 		
-		Collection<Case> cases = getCasesByQuery(iwc, criteriaBean);
-		setSearchResults(iwc, cases);
+		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean);
+		setSearchResults(iwc, cases.getCollection());
 		
 		UIComponent component = null;
-		if (UserCases.TYPE.equals(criteriaBean.getCaseListType())) {
+		if (CaseManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection());
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection(), 0, 0, null, null);
 		}
 		else {
 			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection());
+					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection(), 0, 0, null, null);
 		}
 		if (component == null) {
 			return null;
@@ -237,11 +243,12 @@ public class CasesEngine {
 																												variable.getName()), variable.getValue()));
 			}
 		}
-		
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
 	}
 	
-	private Collection<Case> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
+	
+	
+	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
 		
 		final User currentUser;
 		
@@ -251,10 +258,8 @@ public class CasesEngine {
 			return null;
 		}
 		
-		CasesBusiness casesBusiness = getCasesBusiness(iwc);
-		
-		String casesProcessorType = criteriaBean.getCaseListType() == null ? MyCases.TYPE : criteriaBean.getCaseListType();
-		List<Integer> caseIdsByUser = casesBusiness.getCasesIdsForUser(currentUser, casesProcessorType);
+		String casesProcessorType = criteriaBean.getCaseListType() == null ? CaseManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
+		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType);
 		if (ListUtil.isEmpty(caseIdsByUser)) {
 			return null;
 		}
@@ -263,7 +268,7 @@ public class CasesEngine {
 			criteriaBean.setStatuses(new String[] {criteriaBean.getStatusId()});
 		}
 		
-		Collection<Case> cases = null;
+		PagedDataCollection<CasePresentation> cases = null;
 		
 		List<CasesListSearchFilter> filters = criteriaBean.getFilters();
 		if (filters != null) {
@@ -273,7 +278,7 @@ public class CasesEngine {
 		}
 			
 		if (!ListUtil.isEmpty(caseIdsByUser)) {
-			cases = casesBusiness.getCasesByIds(caseIdsByUser);
+			cases =  getCaseManagersProvider().getCaseManager().getCasesByIds(caseIdsByUser, iwc.getCurrentLocale());
 		}
 		
 		return cases;
@@ -384,7 +389,7 @@ public class CasesEngine {
 		return resultsHolder;
 	}
 	
-	private boolean setSearchResults(IWContext iwc, Collection<Case> cases) {
+	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases) {
 		CasesSearchResultsHolder resultsHolder = null;
 		try {
 			resultsHolder = getSearchResultsHolder();
@@ -426,6 +431,14 @@ public class CasesEngine {
 		result.setValue(new StringBuilder(iwc.getIWMainApplication().getMediaServletURI()).append("?").append(MediaWritable.PRM_WRITABLE_CLASS).append("=")
 				.append(IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class)).toString());
 		return result;
+	}
+
+	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
+		this.caseManagersProvider = caseManagersProvider;
+	}
+
+	public CaseManagersProvider getCaseManagersProvider() {
+		return caseManagersProvider;
 	}
 
 }

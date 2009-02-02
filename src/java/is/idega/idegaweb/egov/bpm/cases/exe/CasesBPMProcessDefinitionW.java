@@ -1,5 +1,8 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.CasesStatusVariables;
 import is.idega.idegaweb.egov.bpm.cases.manager.CasesBPMCaseManagerImpl;
@@ -14,6 +17,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ejb.FinderException;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
@@ -32,6 +38,8 @@ import com.idega.bpm.xformsview.XFormsView;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.data.IDOLookup;
+import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.AppProcBindDefinition;
@@ -51,7 +59,7 @@ import com.idega.util.ListUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.31 $ Last modified: $Date: 2009/01/18 16:53:21 $ by $Author: civilis $
+ * @version $Revision: 1.32 $ Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -64,8 +72,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	private CasesBPMDAO casesBPMDAO;
 	@Autowired
 	private CaseIdentifier caseIdentifier;
-	@Autowired
-	private CaseManager caseManager;
 	
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = false)
@@ -448,13 +454,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		this.caseIdentifier = caseIdentifier;
 	}
 	
-	public CaseManager getCaseManager() {
-		return caseManager;
-	}
-	
-	public void setCaseManager(CaseManager caseManager) {
-		this.caseManager = caseManager;
-	}
 	
 	@Override
 	public String getProcessName(Locale locale) {
@@ -463,7 +462,73 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			return null;
 		}
 		
-		return getCaseManager()
-		        .getProcessName(getProcessDefinitionId(), locale);
+		return getProcessName(getProcessDefinitionId(), locale);
+	}
+	
+	public String getProcessName(final Long processDefinitionId, final Locale locale) {
+		
+		if (processDefinitionId == null) {
+			return null;
+		}
+		
+		return getBpmContext().execute(new JbpmCallback() {
+
+			public Object doInJbpm(JbpmContext context) throws JbpmException {
+				
+				ProcessDefinition pd = context.getGraphSession().getProcessDefinition(processDefinitionId);
+				try {
+					return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+					
+				} catch (IDOLookupException e) {
+					e.printStackTrace();
+					return null;
+				}
+			}
+		});
+	}
+	
+	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, Locale locale, ApplicationHome appHome) {
+		if (pd == null || locale == null || appHome == null) {
+			return null;
+		}
+		
+		Collection<Application> apps = null;
+		try {
+			apps = appHome.findAllByApplicationUrl(pd.getName());
+		} catch (FinderException e) {
+			e.printStackTrace();
+		}
+		if (ListUtil.isEmpty(apps)) {
+			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName() + ", returning standard name!");
+			return pd.getName();
+		}
+		
+		ApplicationBusiness applicationBusiness = null;
+		try {
+			applicationBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
+																															ApplicationBusiness.class);
+		} catch (IBOLookupException e) {
+			e.printStackTrace();
+		}
+		if (applicationBusiness == null) {
+			return pd.getName();
+		}
+		
+		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
+	}
+	
+	public String getProcessName(String processName, Locale locale) {
+		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(processName);
+		if (pd == null) {
+			return null;
+		}
+		
+		try {
+			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+		} catch (IDOLookupException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 }

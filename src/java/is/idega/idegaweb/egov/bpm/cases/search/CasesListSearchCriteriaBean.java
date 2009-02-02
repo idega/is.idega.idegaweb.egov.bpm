@@ -19,6 +19,7 @@ import javax.ejb.FinderException;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseHome;
 import com.idega.block.process.presentation.UserCases;
@@ -111,7 +112,7 @@ public class CasesListSearchCriteriaBean {
 				}
 				
 				//	Old cases
-				List<Integer> simpleCases = UserCases.TYPE.equals(getCaseListType()) ? getUserCasesByNumber(loweredCaseNumber) :
+				List<Integer> simpleCases = CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()) ? getUserCasesByNumber(loweredCaseNumber) :
 					getGeneralCasesByNumber(loweredCaseNumber);
 				if (ListUtil.isEmpty(simpleCases)) {
 					logger.log(Level.INFO, "No simple cases found by number: " + caseNumber);
@@ -161,7 +162,7 @@ public class CasesListSearchCriteriaBean {
 				String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
 				
 				Collection<Case> cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
-						getDateTo(), null, null, false, UserCases.TYPE.equals(getCaseListType()));
+						getDateTo(), null, null, false, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
 
 				List<Integer> casesByCriteria = null;
 				if (ListUtil.isEmpty(cases)) {
@@ -241,7 +242,7 @@ public class CasesListSearchCriteriaBean {
 				List<Integer> casesByProcessDefinition = null;
 				if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
 					//	Getting ONLY none "BPM" cases
-					casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, UserCases.TYPE.equals(getCaseListType()));
+					casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
 				}
 				else {
 					//	Getting "BPM" cases
