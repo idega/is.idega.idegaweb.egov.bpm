@@ -438,7 +438,8 @@
          <script>
             <expression>
                 emailReadAssignmentExpression = 
-	                   "{taskAssignment: {roles: {role: ["
+	                   "{taskAssignment: {rolesFromProcessInstanceId: "+executionContext.getProcessInstance().getId()
+	                   +", roles: {role: ["
 	                   +"{roleName: \"bpm_genericProcess_handler\", accesses: {access: [read]}}"
 	                   +"]} }}";
             </expression>

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root-container name="GenericProcess" width="1115" height="1202">
+<root-container name="GenericProcess" width="1104" height="1202">
   <node name="submitNewCase" x="328" y="-144" width="203" height="32">
     <edge>
       <label x="-16" y="-9"/>
