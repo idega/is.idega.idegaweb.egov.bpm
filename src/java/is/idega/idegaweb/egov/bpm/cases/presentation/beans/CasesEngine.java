@@ -8,7 +8,6 @@ import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.util.ArrayList;
@@ -29,7 +28,6 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.data.Case;
-import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.Web2Business;
