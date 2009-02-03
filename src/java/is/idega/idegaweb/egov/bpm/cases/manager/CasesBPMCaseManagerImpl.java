@@ -74,9 +74,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.23 $
+ * @version $Revision: 1.24 $
  *
- * Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/03 08:16:02 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -579,6 +579,16 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		bean = super.convertToPresentation(theCase, bean, locale);
 		
 		bean.setBpm(caseHandlerType.equals(theCase.getCaseManagerType()));
+		
+		String caseIdentifier = theCase.getCaseIdentifier();
+		if (caseIdentifier == null) {
+			caseIdentifier = getProcessIdentifier(theCase);
+		}
+		if (caseIdentifier == null) {
+			caseIdentifier = theCase.getPrimaryKey().toString();
+		}
+		bean.setCaseIdentifier(caseIdentifier);
+		
 		if (theCase instanceof GeneralCase) {
 			
 			GeneralCase generalCase = (GeneralCase) theCase;
@@ -596,8 +606,6 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 				}
 				bean.setCategoryId(categoryId);
 			}
-			bean.setCaseIdentifier(theCase.getCaseIdentifier() == null ? theCase.getPrimaryKey().toString() : theCase
-					.getCaseIdentifier());
 			try {
 				bean.setCaseStatus(getCasesBusiness(iwc).getCaseStatus(
 								theCase.getStatus()));
