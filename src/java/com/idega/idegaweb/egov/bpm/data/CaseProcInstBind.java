@@ -21,9 +21,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  *
- * Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -32,6 +32,7 @@ import javax.persistence.TemporalType;
 			@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
 			@NamedQuery(name=CaseProcInstBind.getLatestByDateQN, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = :"+CaseProcInstBind.dateCreatedProp+" and cp."+CaseProcInstBind.caseIdentierIDProp+" = (select max(cp2."+CaseProcInstBind.caseIdentierIDProp+") from CaseProcInstBind cp2 where cp2."+CaseProcInstBind.dateCreatedProp+" = cp."+CaseProcInstBind.dateCreatedProp+")"),
 			@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
+			@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 			@NamedQuery(name=CaseProcInstBind.getCaseIdByProcessInstanceId, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp."+ CaseProcInstBind.procInstIdProp + " = :" + CaseProcInstBind.procInstIdProp),
 			@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIds, query = "select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp." + CaseProcInstBind.procInstIdProp + " in (:" + CaseProcInstBind.processInstanceIdsProp + ") group by cp." + CaseProcInstBind.caseIdProp),
 //			some stupid hibernate bug, following doesn't work
@@ -165,6 +166,7 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.procInstIdColumnName + " = pi.id_ where pi.start_ between :" + CaseProcInstBind.caseStartDateProp + " and :" +
 				CaseProcInstBind.caseEndDateProp
 			)
+			
 		}
 )
 public class CaseProcInstBind implements Serializable {
@@ -192,6 +194,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
 	public static final String getVariablesByProcessDefinitionName = "CaseProcInstBind.getVariablesByProcessDefinitionName";
 	public static final String getVariablesByProcessInstanceId = "CaseProcInstBind.getVariablesByProcessInstanceId";
+	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
 	
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
@@ -214,9 +217,17 @@ public class CaseProcInstBind implements Serializable {
 	private Integer caseIdentierID;
 	
 	public static final String dateCreatedProp = "dateCreated";
+	
+	/**
+	 * this date means identifier creation date, NOT PROCESS/case creation date.
+	 */
 	@Column(name="date_created")
 	@Temporal(TemporalType.DATE)
 	private Date dateCreated;
+	
+	public static final String caseIdentifierProp = "caseIdentifier";
+	@Column(name="case_identifier", unique=false)
+	private String caseIdentifier;
 	
 	public static final String processDefinitionIdsProp = "processDefinitionIds";
 	public static final String processDefinitionNameProp = "processDefinitionName";
@@ -256,11 +267,25 @@ public class CaseProcInstBind implements Serializable {
 		this.caseIdentierID = caseIdentierID;
 	}
 
+	/**
+	 * this date means identifier creation date, NOT PROCESS/case creation date.
+	 */
 	public Date getDateCreated() {
 		return dateCreated;
 	}
 
+	/**
+	 * this date means identifier creation date, NOT PROCESS/case creation date.
+	 */
 	public void setDateCreated(Date dateCreated) {
 		this.dateCreated = dateCreated;
 	}
+
+	public String getCaseIdentifier() {
+    	return caseIdentifier;
+    }
+
+	public void setCaseIdentifier(String caseIdentifier) {
+    	this.caseIdentifier = caseIdentifier;
+    }
 }

@@ -32,9 +32,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  *
- * Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -157,6 +157,24 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<Object[]> u = getEntityManager().createNamedQuery(CaseProcInstBind.getByDateCreatedAndCaseIdentifierId)
 			.setParameter(CaseProcInstBind.dateCreatedProp, dates)
 			.setParameter(CaseProcInstBind.caseIdentierIDProp, identifierIDs)
+			.getResultList();
+			
+			cps = u;
+		} else
+			cps = new ArrayList<Object[]>(0);
+		
+		return cps;
+	}
+	
+	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers) {
+		
+		List<Object[]> cps = null;
+		
+		if(identifiers != null && !identifiers.isEmpty()) {
+		
+			@SuppressWarnings("unchecked")
+			List<Object[]> u = getEntityManager().createNamedQuery(CaseProcInstBind.getByCaseIdentifier)
+			.setParameter(CaseProcInstBind.caseIdentifierProp, identifiers)
 			.getResultList();
 			
 			cps = u;

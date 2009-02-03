@@ -59,7 +59,7 @@ import com.idega.util.ListUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.32 $ Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
+ * @version $Revision: 1.33 $ Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -105,6 +105,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		        .get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		final String caseIdentifier = parameters
 		        .get(CasesBPMProcessConstants.caseIdentifier);
+		final String realCaseCreationDate = parameters
+		        .get(CasesBPMProcessConstants.caseCreationDateParam);
 		
 		getBpmContext().execute(new JbpmCallback() {
 			
@@ -218,7 +220,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					        .toString()));
 					piBind.setProcInstId(pi.getId());
 					piBind.setCaseIdentierID(caseIdentifierNumber);
-					piBind.setDateCreated(created.getDate());
+					piBind.setDateCreated(new IWTimestamp(realCaseCreationDate).getDate());
+					piBind.setCaseIdentifier(caseIdentifier);
 					getCasesBPMDAO().persist(piBind);
 					
 					// TODO: if variables submission and process execution fails here,
@@ -275,6 +278,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					Integer identifierNumber = (Integer) identifiers[0];
 					String identifier = (String) identifiers[1];
 					
+					IWTimestamp realCreationDate = new IWTimestamp();
+					String realCreationDateString = realCreationDate.toString();
 					Map<String, String> parameters = new HashMap<String, String>(
 					        7);
 					
@@ -296,6 +301,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					    String.valueOf(identifierNumber));
 					parameters.put(CasesBPMProcessConstants.caseIdentifier,
 					    String.valueOf(identifier));
+					parameters.put(
+					    CasesBPMProcessConstants.caseCreationDateParam,
+					    realCreationDateString);
 					
 					view.populateParameters(parameters);
 					

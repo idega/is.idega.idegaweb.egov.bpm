@@ -4,6 +4,9 @@ import is.idega.idegaweb.egov.bpm.cases.exe.CaseIdentifier;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -58,7 +61,7 @@ import com.sun.mail.imap.IMAPNestedMessage;
  * refactor this, now it's total mess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $ Last modified: $Date: 2009/01/28 12:30:40 $ by $Author: juozas $
+ * @version $Revision: 1.20 $ Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Service
@@ -87,37 +90,19 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 			ApplicationEmailEvent ev = (ApplicationEmailEvent) ae;
 			Map<String, List<Message>> msgs = ev.getMessages();
-			HashSet<Date> dates = new HashSet<Date>(msgs.size());
-			HashSet<Integer> identifierIDs = new HashSet<Integer>(msgs.size());
+			
 			final HashMap<PISFORMSG, List<Message>> PISFORMSGMessage = new HashMap<PISFORMSG, List<Message>>(
 			        msgs.size());
-			
+			Set<String> identifiers = new HashSet<String>();
 			for (Entry<String, List<Message>> entry : msgs.entrySet()) {
 				
 				if (entry.getKey().startsWith(CaseIdentifier.IDENTIFIER_PREFIX)) {
 					
 					try {
-						String[] keyParts = entry.getKey().split(
-						    CoreConstants.MINUS);
 						
-						String yearStr = keyParts[1];
-						String monthStr = keyParts[2];
-						String dayStr = keyParts[3];
-						String identifierIDStr = keyParts[4];
+						identifiers.add(entry.getKey());
 						
-						IWTimestamp iwt = new IWTimestamp(new Integer(yearStr),
-						        new Integer(monthStr), new Integer(dayStr));
-						iwt.setYear(new Integer(yearStr));
-						iwt.setMonth(new Integer(monthStr));
-						iwt.setDay(new Integer(dayStr));
-						
-						Date date = iwt.getDate();
-						Integer identifierID = new Integer(identifierIDStr);
-						
-						dates.add(date);
-						identifierIDs.add(identifierID);
-						
-						PISFORMSGMessage.put(new PISFORMSG(date, identifierID,
+						PISFORMSGMessage.put(new PISFORMSG(entry.getKey(),
 						        null), entry.getValue());
 						
 					} catch (Exception e) {
@@ -128,10 +113,9 @@ public class EmailMessagesAttacher implements ApplicationListener {
 				}
 			}
 			
-			if (!dates.isEmpty() && !identifierIDs.isEmpty()) {
+			if (!identifiers.isEmpty()) {
 				
-				final Set<PISFORMSG> pisformsgs = resolveProcessInstances(
-				    dates, identifierIDs);
+				final Set<PISFORMSG> pisformsgs = resolveProcessInstances(identifiers);
 				
 				if (!pisformsgs.isEmpty()) {
 					
@@ -309,12 +293,10 @@ public class EmailMessagesAttacher implements ApplicationListener {
 		return msgAndAttachments;
 	}
 	
-	protected Set<PISFORMSG> resolveProcessInstances(Set<Date> dates,
-	        Set<Integer> identifierIDs) {
+	protected Set<PISFORMSG> resolveProcessInstances(Set<String> identifiers) {
 		
 		List<Object[]> cps = getCasesBPMDAO()
-		        .getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
-		            dates, identifierIDs);
+		        .getCaseProcInstBindProcessInstanceByCaseIdentifier(identifiers);
 		HashSet<PISFORMSG> pisformsgs = new HashSet<PISFORMSG>(cps.size());
 		
 		for (Object[] objects : cps) {
@@ -322,8 +304,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			CaseProcInstBind cp = (CaseProcInstBind) objects[0];
 			ProcessInstance pi = (ProcessInstance) objects[1];
 			
-			PISFORMSG pisformsg = new PISFORMSG(cp.getDateCreated(), cp
-			        .getCaseIdentierID(), pi);
+			PISFORMSG pisformsg = new PISFORMSG(cp.getCaseIdentifier(), pi);
 			pisformsgs.add(pisformsg);
 		}
 		
@@ -467,13 +448,12 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	
 	class PISFORMSG {
 		
-		Date date;
-		Integer identifierID;
+		String identifier;
 		ProcessInstance pi;
 		
-		public PISFORMSG(Date date, Integer identifierID, ProcessInstance pi) {
-			this.date = date;
-			this.identifierID = identifierID;
+		public PISFORMSG(String identifier, ProcessInstance pi) {
+			
+			this.identifier = identifier;
 			this.pi = pi;
 		}
 		
@@ -482,12 +462,11 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 			if (!super.equals(obj)) {
 				
-				if (date != null && identifierID != null
+				if (identifier != null
 				        && obj instanceof PISFORMSG) {
 					
 					PISFORMSG another = (PISFORMSG) obj;
-					return date.equals(another.date)
-					        && identifierID.equals(another.identifierID);
+					return  identifier.equals(another.identifier);
 				}
 			} else
 				return true;
@@ -500,10 +479,10 @@ public class EmailMessagesAttacher implements ApplicationListener {
 			
 			int hashCode;
 			
-			if (date == null || identifierID == null)
+			if (identifier == null)
 				hashCode = super.hashCode();
 			else
-				hashCode = identifierID.hashCode() + date.hashCode();
+				hashCode = identifier.hashCode();
 			
 			return hashCode;
 		}

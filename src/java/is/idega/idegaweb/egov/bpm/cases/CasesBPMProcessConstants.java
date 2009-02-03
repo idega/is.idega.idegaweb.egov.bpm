@@ -4,9 +4,9 @@ package is.idega.idegaweb.egov.bpm.cases;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  * 
- *          Last modified: $Date: 2008/12/28 11:58:49 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
  * 
  */
 public class CasesBPMProcessConstants {
@@ -29,6 +29,7 @@ public class CasesBPMProcessConstants {
 	public static final String userIdActionVariableName = "userId";
 	public static final String caseCategoryIdActionVariableName = "caseCategoryId";
 	public static final String caseTypeActionVariableName = "caseType";
+	public static final String caseCreationDateParam = "caseCreationDate";
 
 	public static final String caseStatusClosedVariableName = "string_caseStatusClosed";
 	public static final String caseStatusDenied = "string_caseStatusDenied";
