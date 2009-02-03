@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.44 $
+ * @version $Revision: 1.45 $
  *
- * Last modified: $Date: 2009/02/02 17:29:58 $ by $Author: valdas $
+ * Last modified: $Date: 2009/02/03 11:34:57 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -101,8 +101,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesListAsset.xhtml"));
 		div.getChildren().add(facelet);
-		
-		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetsRendered}"));
+
+		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetsRendered}", Boolean.class));
 		getFacets().put(assetsFacet, div);
 //		</assets grid component>
 //		<asset view>
@@ -128,7 +128,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesBPMAssetView.xhtml"));
 
 		div.getChildren().add(facelet);
-		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetViewRendered}"));
+		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetsRendered}", Boolean.class));
 		getFacets().put(assetViewFacet, div);
 //		</asset view>
 	}
