@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.45 $
+ * @version $Revision: 1.46 $
  *
- * Last modified: $Date: 2009/02/03 11:34:57 $ by $Author: valdas $
+ * Last modified: $Date: 2009/02/04 14:17:16 $ by $Author: civilis $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -128,7 +128,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesBPMAssetView.xhtml"));
 
 		div.getChildren().add(facelet);
-		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetsRendered}", Boolean.class));
+		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetViewRendered}", Boolean.class));
 		getFacets().put(assetViewFacet, div);
 //		</asset view>
 	}
