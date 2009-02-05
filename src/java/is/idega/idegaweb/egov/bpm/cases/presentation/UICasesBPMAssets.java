@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.46 $
+ * @version $Revision: 1.47 $
  *
- * Last modified: $Date: 2009/02/04 14:17:16 $ by $Author: civilis $
+ * Last modified: $Date: 2009/02/05 13:41:19 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -307,8 +307,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		Integer caseId = stateBean.getCaseId();
 		
 		String mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
-			.append(processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ").append(isUsePdfDownloadColumn()).append(", ")
-			.append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(");").toString();
+			.append(processInstanceId == null ? String.valueOf(-1) : processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ")
+			.append(isUsePdfDownloadColumn()).append(", ").append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(");").toString();
 		
 		if (!isSingle) {
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction).append("\n});").toString();
