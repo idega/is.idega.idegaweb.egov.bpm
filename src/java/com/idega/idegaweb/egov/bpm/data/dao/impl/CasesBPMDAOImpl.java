@@ -32,9 +32,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  *
- * Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
+ * Last modified: $Date: 2009/02/05 12:33:20 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -433,7 +433,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				.toArray(new Param[params.size()]));
 	}
 
-	public List<Integer> getCasesIdsForUser(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection groups,
+	public List<Integer> getOpenCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection groups,
 			Collection<String> roles) {
 
 		List<Param> params = new ArrayList<Param>();
@@ -449,13 +449,85 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						+ "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
 						+ "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
 						+ "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
+						+ "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
 						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where (");
 		if (!ListUtil.isEmpty(roles)) {
 			builder.append("act.role_name in (:roles) or ");
 			params.add(new Param("roles", roles));
 		}
 		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
-		builder.append("and act.process_instance_id is not null and proc_case.case_status in (:statusesToShow)");
+		builder.append("and act.process_instance_id is not null and pi.end_ is null");
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			builder.append("and proc_case.case_status not in (:statusesToHide)" );
+		}
+		builder.append(") union"
+				+ "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
+				+ "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where proc_case.case_status in (:statusesToShow) ");
+		if (!ListUtil.isEmpty(groups)) {
+			builder.append("and proc_case.handler_group_id in (:groups) ");
+			params.add(new Param("groups", groups));
+		}
+		builder.append("and proc_case.case_manager_type is null) order by Created desc");
+
+		return getResultListByInlineNativeQuery(builder.toString(), Integer.class, "caseId", params
+				.toArray(new Param[params.size()]));
+	}
+	
+	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
+
+		List<Param> params = new ArrayList<Param>();
+		params.add(new Param("statusesToShow", caseStatusesToShow));
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			params.add(new Param("statusesToHide", caseStatusesToHide));
+		}
+		StringBuilder builder = new StringBuilder(1000);
+		builder
+				.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
+						+ "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
+						+ "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
+						+ "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
+						+ "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
+						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where ");
+		builder.append(" act.process_instance_id is not null and pi.end_ is null ");
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			builder.append("and proc_case.case_status not in (:statusesToHide)" );
+		}
+		builder.append(") union"
+				+ "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
+				+ "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where proc_case.case_status in (:statusesToShow) ");
+		builder.append("and proc_case.case_manager_type is null) order by Created desc");
+
+		return getResultListByInlineNativeQuery(builder.toString(), Integer.class, "caseId", params
+				.toArray(new Param[params.size()]));
+	}
+	
+	public List<Integer> getClosedCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection groups,
+			Collection<String> roles) {
+
+		List<Param> params = new ArrayList<Param>();
+		params.add(new Param("statusesToShow", caseStatusesToShow));
+		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
+		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			params.add(new Param("statusesToHide", caseStatusesToHide));
+		}
+		StringBuilder builder = new StringBuilder(1000);
+		builder
+				.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
+						+ "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
+						+ "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
+						+ "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
+						+ "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
+						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where (");
+		if (!ListUtil.isEmpty(roles)) {
+			builder.append("act.role_name in (:roles) or ");
+			params.add(new Param("roles", roles));
+		}
+		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
+		builder.append("and act.process_instance_id is not null and pi.end_ is not null");
+		if (!ListUtil.isEmpty(caseStatusesToShow)) {
+			builder.append("and proc_case.case_status in (:statusesToShow)" );
+		}
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide)" );
 		}
@@ -475,6 +547,40 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				.toArray(new Param[params.size()]));
 	}
 	
+	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
+
+		List<Param> params = new ArrayList<Param>();
+		params.add(new Param("statusesToShow", caseStatusesToShow));
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			params.add(new Param("statusesToHide", caseStatusesToHide));
+		}
+		StringBuilder builder = new StringBuilder(1000);
+		builder
+				.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
+						+ "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
+						+ "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
+						+ "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
+						+ "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
+						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where ");
+
+		builder.append("act.process_instance_id is not null and pi.end_ is not null ");
+		if (!ListUtil.isEmpty(caseStatusesToShow)) {
+			builder.append("and proc_case.case_status in (:statusesToShow)" );
+		}
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			builder.append("and proc_case.case_status not in (:statusesToHide) " );
+		}
+		builder.append(") union"
+				+ "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
+				+ "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where proc_case.case_status in (:statusesToShow) ");
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			builder.append("and proc_case.case_status not in (:statusesToHide) ");
+		}
+		builder.append("and proc_case.case_manager_type is null) order by Created desc");
+
+		return getResultListByInlineNativeQuery(builder.toString(), Integer.class, "caseId", params
+				.toArray(new Param[params.size()]));
+	}
 	
 	public List<Integer> getUserCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, List<String> caseCodes, Collection<String> roles) {
 		List<Param> params = new ArrayList<Param>();

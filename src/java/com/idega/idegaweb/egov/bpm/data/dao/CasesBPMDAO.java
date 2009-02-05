@@ -18,9 +18,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.19 $
+ * @version $Revision: 1.20 $
  *
- * Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
+ * Last modified: $Date: 2009/02/05 12:33:20 $ by $Author: donatas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -63,7 +63,10 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 	
-	public abstract List<Integer> getCasesIdsForUser(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection groups,
+	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection groups,
+			Collection<String> roles);
+	
+	public abstract List<Integer> getClosedCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection groups,
 			Collection<String> roles);
 	
 	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<String> roles);
@@ -71,4 +74,8 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes, Collection<String> roles);
 	
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(List<String> caseStatuses, List<String> caseStatusesToHide);
+	
+	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide);
+	
+	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 }

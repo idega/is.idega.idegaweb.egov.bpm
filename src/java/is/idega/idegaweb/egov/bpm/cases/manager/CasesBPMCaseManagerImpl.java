@@ -72,9 +72,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  *
- * Last modified: $Date: 2009/02/05 09:44:34 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/05 12:33:20 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -259,9 +259,10 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 
 				String[] caseStatuses = casesBusiness.getStatusesForOpenCases();
 				statusesToShow.addAll(Arrays.asList(caseStatuses));
+				statusesToHide.addAll(Arrays.asList(casesBusiness.getStatusesForClosedCases()));
 				
 				if (isSuperAdmin) {
-					caseIds = getCasesBPMDAO().getCasesIdsByStatusForAdmin(statusesToShow, statusesToHide);
+					caseIds = getCasesBPMDAO().getOpenCasesIdsForAdmin(statusesToShow, statusesToHide);
 				} else {
 					Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
 					List<Object> groups = null;
@@ -272,7 +273,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 							groups.add(group.getPrimaryKey());
 						}
 					}
-					caseIds = getCasesBPMDAO().getCasesIdsForUser(user, statusesToShow, statusesToHide, groups, roles);
+					caseIds = getCasesBPMDAO().getOpenCasesIds(user, statusesToShow, statusesToHide, groups, roles);
 				}
 			} else if (CaseManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
 
@@ -280,7 +281,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 				statusesToShow.addAll(Arrays.asList(caseStatuses));
 				
 				if (isSuperAdmin) {
-					caseIds = getCasesBPMDAO().getCasesIdsByStatusForAdmin(statusesToShow, statusesToHide);
+					caseIds = getCasesBPMDAO().getClosedCasesIdsForAdmin(statusesToShow, statusesToHide);
 				} else {
 					Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
 					List<Object> groups = null;
@@ -291,7 +292,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 							groups.add(group.getPrimaryKey());
 						}
 					}
-					caseIds = getCasesBPMDAO().getCasesIdsForUser(user, statusesToShow, statusesToHide, groups, roles);
+					caseIds = getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles);
 				}
 
 			} else if (CaseManager.CASE_LIST_TYPE_MY.equals(type)) {
