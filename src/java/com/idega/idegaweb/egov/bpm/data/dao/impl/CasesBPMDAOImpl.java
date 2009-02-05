@@ -32,9 +32,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  *
- * Last modified: $Date: 2009/02/05 12:33:20 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/05 12:43:08 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -456,7 +456,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("roles", roles));
 		}
 		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
-		builder.append("and act.process_instance_id is not null and pi.end_ is null");
+		builder.append("and act.process_instance_id is not null and pi.end_ is null ");
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide)" );
 		}
@@ -524,10 +524,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("roles", roles));
 		}
 		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
-		builder.append("and act.process_instance_id is not null and pi.end_ is not null");
-		if (!ListUtil.isEmpty(caseStatusesToShow)) {
-			builder.append("and proc_case.case_status in (:statusesToShow)" );
-		}
+		builder.append("and act.process_instance_id is not null and (pi.end_ is not null or proc_case.case_status in (:statusesToShow)) " );
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide)" );
 		}
@@ -563,10 +560,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						+ "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
 						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where ");
 
-		builder.append("act.process_instance_id is not null and pi.end_ is not null ");
-		if (!ListUtil.isEmpty(caseStatusesToShow)) {
-			builder.append("and proc_case.case_status in (:statusesToShow)" );
-		}
+		builder.append("act.process_instance_id is not null and (pi.end_ is not null or proc_case.case_status in (:statusesToShow))" );
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide) " );
 		}
