@@ -169,7 +169,9 @@ public class CasesEngine {
 		addSearchQueryToSession(iwc, criteriaBean);
 		
 		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean);
-		setSearchResults(iwc, cases.getCollection());
+		if (cases != null) {
+			setSearchResults(iwc, cases.getCollection());
+		}
 		
 		UIComponent component = null;
 		if (CaseManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {

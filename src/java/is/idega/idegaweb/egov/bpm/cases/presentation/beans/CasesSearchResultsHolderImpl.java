@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.builder.bean.AdvancedProperty;
@@ -63,7 +63,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private MemoryFileBuffer memory;
 
 	@Autowired
-	private CaseManager caseManager;
+	private CaseManagersProvider caseManagersProvider;
 	@Autowired
 	private CasesBPMDAO casesBinder;
 	@Autowired
@@ -86,7 +86,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private String getSheetName(Locale locale, String categoryId) {
 		if (categoryId.startsWith(ProcessBundleCasesImpl.defaultCaseCategoryName)) {
 			String processName = categoryId.replaceFirst(ProcessBundleCasesImpl.defaultCaseCategoryName, CoreConstants.EMPTY);
-			return getCaseManager().getProcessName(processName, locale);
+			return getCaseManagersProvider().getCaseManager().getProcessName(processName, locale);
 		}
 		
 		return getCategoryName(locale, categoryId.equals(CasesStatistics.UNKOWN_CATEGORY_ID) ? null : getCaseCategory(categoryId));
@@ -221,7 +221,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		
 		Long processInstanceId = null;
 		try {
-			processInstanceId = getCaseManager().getProcessInstanceIdByCaseId(theCase.getId());
+			processInstanceId = getCaseManagersProvider().getCaseManager().getProcessInstanceIdByCaseId(theCase.getId());
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting process instance for case: " + theCase);
 		}
@@ -411,14 +411,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return casesByCategories;
 	}
 
-	public CaseManager getCaseManager() {
-		return caseManager;
-	}
-
-	public void setCaseManager(CaseManager caseManager) {
-		this.caseManager = caseManager;
-	}
-
 	public CasesBPMDAO getCasesBinder() {
 		return casesBinder;
 	}
@@ -433,6 +425,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
+	}
+
+	public CaseManagersProvider getCaseManagersProvider() {
+		return caseManagersProvider;
+	}
+
+	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
+		this.caseManagersProvider = caseManagersProvider;
 	}
 
 }
