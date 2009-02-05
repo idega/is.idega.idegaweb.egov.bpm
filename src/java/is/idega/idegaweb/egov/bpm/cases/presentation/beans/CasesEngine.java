@@ -257,7 +257,7 @@ public class CasesEngine {
 		}
 		
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CaseManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
-		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType);
+		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, new ArrayList<String>(), new ArrayList<String>());
 		if (ListUtil.isEmpty(caseIdsByUser)) {
 			return null;
 		}

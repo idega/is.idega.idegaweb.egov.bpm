@@ -10,7 +10,6 @@ import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.rmi.RemoteException;
@@ -42,7 +41,6 @@ import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.business.CaseManagerImpl;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseCode;
-import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.business.IBOLookup;
@@ -74,9 +72,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  *
- * Last modified: $Date: 2009/02/03 08:16:02 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/05 09:44:34 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -92,6 +90,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
 
+	@Override
 	public String getBeanIdentifier() {
 		return beanIdentifier;
 	}
@@ -233,6 +232,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
 	}
 	
+	@Override
 	@SuppressWarnings("unchecked")
 	public List<Integer> getCaseIds(User user, String type, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
 
