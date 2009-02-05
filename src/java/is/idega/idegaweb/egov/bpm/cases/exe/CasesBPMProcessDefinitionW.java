@@ -31,7 +31,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
 import com.idega.bpm.xformsview.XFormsView;
@@ -56,10 +55,11 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.33 $ Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
+ * @version $Revision: 1.34 $ Last modified: $Date: 2009/02/05 12:12:11 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -220,7 +220,15 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					        .toString()));
 					piBind.setProcInstId(pi.getId());
 					piBind.setCaseIdentierID(caseIdentifierNumber);
-					piBind.setDateCreated(new IWTimestamp(realCaseCreationDate).getDate());
+					
+					Date caseCreated;
+					
+					if(!StringUtil.isEmpty(realCaseCreationDate)) {
+						caseCreated = new IWTimestamp(realCaseCreationDate).getDate();
+					} else
+						caseCreated = new Date();
+					
+					piBind.setDateCreated(caseCreated);
 					piBind.setCaseIdentifier(caseIdentifier);
 					getCasesBPMDAO().persist(piBind);
 					
