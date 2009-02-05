@@ -12,14 +12,13 @@ import com.idega.core.contact.data.Email;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
 import com.idega.util.text.Item;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/12/30 11:33:37 $ by $Author: arunas $
+ * Last modified: $Date: 2009/02/05 18:20:43 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -36,7 +35,6 @@ public class XformBPMDSBean implements XformBPM{
 		this.bpmFactory = bpmFactory;
 	}
 	
-	@SuppressWarnings("unchecked")
 	public List<Item> getUsersConnectedToProcess(String pid) {
 		
 		List<User> users = getUsersConnecetedList(new Long(pid));
@@ -44,7 +42,20 @@ public class XformBPMDSBean implements XformBPM{
 		List<Item> usersItem = new ArrayList<Item>();
 		
 		for(User user: users) 
-			usersItem.add(new Item(getUserEmails(user.getEmails()),user.getName() ));
+			usersItem.add(new Item(user.getName(),user.getName()));
+			
+		return usersItem;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<Item> getUsersConnectedToProcessEmails(String pid) {
+		
+		List<User> users = getUsersConnecetedList(new Long(pid));
+		
+		List<Item> usersItem = new ArrayList<Item>();
+		
+		for(User user: users) 
+			usersItem.add(new Item(getUserEmails(user.getEmails()),user.getName()));
 			
 		return usersItem;
 	}
@@ -74,7 +85,7 @@ public class XformBPMDSBean implements XformBPM{
 		StringBuilder userEmails = new StringBuilder();
 		
 		for (Email email : emails) 
-			userEmails.append(email.getEmailAddress()).append(CoreConstants.SPACE);
+			userEmails.append(email.getEmailAddress());
 		
 		return userEmails.toString();
 		
