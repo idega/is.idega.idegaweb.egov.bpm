@@ -72,9 +72,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  *
- * Last modified: $Date: 2009/02/05 12:33:20 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/06 19:01:21 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -241,7 +241,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		IWMainApplication iwma = IWMainApplication.getDefaultIWMainApplication();
 
 		List<Integer> caseIds = null;
-
+		
 		List<String> statusesToShow = caseStatusesToShow == null ? new ArrayList() : new ArrayList<String>(caseStatusesToShow);
 		List<String> statusesToHide = caseStatusesToHide == null ? new ArrayList() : new ArrayList<String>(caseStatusesToHide);
 		
@@ -265,12 +265,12 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 					caseIds = getCasesBPMDAO().getOpenCasesIdsForAdmin(statusesToShow, statusesToHide);
 				} else {
 					Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
-					List<Object> groups = null;
+					List<Integer> groups = null;
 					Collection<GroupBMPBean> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 					if (!ListUtil.isEmpty(groupBeans)) {
-						groups = new ArrayList<Object>(groupBeans.size());
+						groups = new ArrayList<Integer>(groupBeans.size());
 						for (GroupBMPBean group : groupBeans) {
-							groups.add(group.getPrimaryKey());
+							groups.add(new Integer(group.getPrimaryKey().toString()));
 						}
 					}
 					caseIds = getCasesBPMDAO().getOpenCasesIds(user, statusesToShow, statusesToHide, groups, roles);
@@ -284,12 +284,12 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 					caseIds = getCasesBPMDAO().getClosedCasesIdsForAdmin(statusesToShow, statusesToHide);
 				} else {
 					Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
-					List<Object> groups = null;
+					List<Integer> groups = null;
 					Collection<GroupBMPBean> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 					if (!ListUtil.isEmpty(groupBeans)) {
-						groups = new ArrayList<Object>(groupBeans.size());
+						groups = new ArrayList<Integer>(groupBeans.size());
 						for (GroupBMPBean group : groupBeans) {
-							groups.add(group.getPrimaryKey());
+							groups.add(new Integer(group.getPrimaryKey().toString()));
 						}
 					}
 					caseIds = getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles);
@@ -298,10 +298,9 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 			} else if (CaseManager.CASE_LIST_TYPE_MY.equals(type)) {
 
 				String[] caseStatus = casesBusiness.getStatusesForMyCases();
-				Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
 				statusesToShow.addAll(Arrays.asList(caseStatus));
 
-				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide, roles);
+				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide);
 
 			} else if (CaseManager.CASE_LIST_TYPE_USER.equals(type)) {
 				
