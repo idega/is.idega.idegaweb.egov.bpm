@@ -59,11 +59,10 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.34 $ Last modified: $Date: 2009/02/05 12:12:11 $ by $Author: civilis $
+ * @version $Revision: 1.35 $ Last modified: $Date: 2009/02/06 19:00:40 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
-@Transactional(readOnly = true)
 public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	
 	public static final String SPRING_BEAN_IDENTIFIER = "casesPDW";
@@ -255,6 +254,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 	
 	@Override
+	@Transactional(readOnly = false)
 	public View loadInitView(final Integer initiatorId) {
 		
 		try {
@@ -336,6 +336,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 	
 	@Override
+	@Transactional(readOnly = true)
 	public List<String> getRolesCanStartProcess(Object context) {
 		
 		final Integer appId = new Integer(context.toString());
@@ -376,6 +377,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	 *            applications - then context will be application id
 	 */
 	@Override
+	@Transactional(readOnly = false)
 	public void setRolesCanStartProcess(final List<String> roles,
 	        Object processContext) {
 		
@@ -481,6 +483,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return getProcessName(getProcessDefinitionId(), locale);
 	}
 	
+	@Transactional(readOnly = true)
 	public String getProcessName(final Long processDefinitionId, final Locale locale) {
 		
 		if (processDefinitionId == null) {
@@ -533,6 +536,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
 	}
 	
+	@Transactional(readOnly = true)
 	public String getProcessName(String processName, Locale locale) {
 		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(processName);
 		if (pd == null) {

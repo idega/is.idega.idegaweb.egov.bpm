@@ -40,13 +40,12 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.22 $
+ * @version $Revision: 1.23 $
  * 
- *          Last modified: $Date: 2008/12/28 11:58:49 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/02/06 19:00:40 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service("casesPIW")
-@Transactional(readOnly = true)
 public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 	@Autowired
@@ -132,6 +131,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	private static final String caseDescriptionVariableName = "string_caseDescription";
 
 	@Override
+	@Transactional(readOnly = true)
 	public String getProcessDescription() {
 
 		String description = (String) getProcessInstance().getContextInstance()
@@ -141,6 +141,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public String getProcessIdentifier() {
 
 		return (String) getProcessInstance().getContextInstance().getVariable(
@@ -148,6 +149,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Integer getHandlerId() {
 
 		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class,
@@ -172,6 +174,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public boolean hasHandlerAssignmentSupport() {
 
 		Boolean res = getBpmContext().execute(new JbpmCallback() {
