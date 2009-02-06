@@ -18,9 +18,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $
+ * @version $Revision: 1.21 $
  *
- * Last modified: $Date: 2009/02/05 12:33:20 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/06 19:03:47 $ by $Author: civilis $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -63,13 +63,20 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 	
-	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection groups,
+	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<Integer> groups,
 			Collection<String> roles);
 	
-	public abstract List<Integer> getClosedCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection groups,
+	public abstract List<Integer> getClosedCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<Integer> groups,
 			Collection<String> roles);
 	
-	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<String> roles);
+	/**
+	 * 
+	 * @param user
+	 * @param caseStatuses
+	 * @param caseStatusesToHide
+	 * @return cases of not ended processes (end_ is null) whose user provided is handler of, or what user is watching
+	 */
+	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide);
 	
 	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes, Collection<String> roles);
 	

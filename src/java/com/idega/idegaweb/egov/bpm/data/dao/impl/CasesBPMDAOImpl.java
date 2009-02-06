@@ -32,9 +32,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.30 $
+ * @version $Revision: 1.31 $
  *
- * Last modified: $Date: 2009/02/05 12:43:08 $ by $Author: donatas $
+ * Last modified: $Date: 2009/02/06 19:03:47 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -387,42 +387,43 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		);
 	}
 
-	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection<String> roles) {
+//	TODO: those queries are very similar, make some general query, and just append queries/joins in more special use cases
+	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseStatusToShow", caseStatusesToShow));
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
-		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER
-				.toString()));
-		params.add(new Param("handler", user.getPrimaryKey()));
+//		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER
+//				.toString()));
+//		params.add(new Param("handler", user.getPrimaryKey()));
 		params.add(new Param("userStatus", ProcessUserBind.Status.PROCESS_WATCHED.toString()));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
 		}
+		
 		StringBuilder builder = new StringBuilder(1000);
 		builder
-				.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
-						+ "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
-						+ "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
-						+ "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
-						+ "inner join "
-						+ ProcessUserBind.TABLE_NAME
-						+ " pu on cp."
-						+ CaseProcInstBind.procInstIdColumnName
-						+ " = pu.process_instance_id "
-						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where (");
-		if (!ListUtil.isEmpty(roles)) {
-			builder.append("act.role_name in (:roles) or ");
-			params.add(new Param("roles", roles));
-		}
-		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
-		builder
-				.append("and act.process_instance_id is not null and proc_case.case_status in (:caseStatusToShow) and pu.user_status = :userStatus ");
+				.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
+				.append("inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id ")
+				.append("inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id ")
+				.append("inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id ")
+				.append("left join ")
+				.append(ProcessUserBind.TABLE_NAME)
+				.append(" pu on cp.")
+				.append(CaseProcInstBind.procInstIdColumnName)
+				.append(" = pu.process_instance_id ")
+				.append("where ");
+		
+		builder.append("pi.end_ is null and ");
+		builder.append("(comm_case.handler = :"+NativeIdentityBind.identityIdProperty+" or (pu.user_id = :"+NativeIdentityBind.identityIdProperty+" and pu.user_status = :userStatus)) ");
+		
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide) " );
 		}
 		builder.append(") UNION (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 						+ "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where ");
-		builder.append("proc_case.handler_group_id = :handler ");
+		
+//		FIXME: this is probably wrong behavior? it is asked for groupId, but userId provided
+		builder.append("proc_case.handler_group_id = :"+NativeIdentityBind.identityIdProperty+" ");
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide) " );
 		}
@@ -433,7 +434,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				.toArray(new Param[params.size()]));
 	}
 
-	public List<Integer> getOpenCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection groups,
+	public List<Integer> getOpenCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection<Integer> groups,
 			Collection<String> roles) {
 
 		List<Param> params = new ArrayList<Param>();
@@ -501,7 +502,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				.toArray(new Param[params.size()]));
 	}
 	
-	public List<Integer> getClosedCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection groups,
+	public List<Integer> getClosedCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection<Integer> groups,
 			Collection<String> roles) {
 
 		List<Param> params = new ArrayList<Param>();
