@@ -16,9 +16,9 @@ import com.idega.util.text.Item;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2009/02/05 18:20:43 $ by $Author: arunas $
+ * Last modified: $Date: 2009/02/09 11:54:53 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -37,12 +37,24 @@ public class XformBPMDSBean implements XformBPM{
 	
 	public List<Item> getUsersConnectedToProcess(String pid) {
 		
-		List<User> users = getUsersConnecetedList(new Long(pid));
+		List<User> users = getUsersConnectedList(new Long(pid));
 		
 		List<Item> usersItem = new ArrayList<Item>();
 		
 		for(User user: users) 
-			usersItem.add(new Item(user.getName(),user.getName()));
+			usersItem.add(new Item(user.getId(), user.getName()));
+			
+		return usersItem;
+	}
+	
+	public List<Item> getUsersNamesConnectedToProcess(String pid) {
+		
+		List<User> users = getUsersConnectedList(new Long(pid));
+		
+		List<Item> usersItem = new ArrayList<Item>();
+		
+		for(User user: users) 
+			usersItem.add(new Item(user.getName(), user.getName()));
 			
 		return usersItem;
 	}
@@ -50,7 +62,7 @@ public class XformBPMDSBean implements XformBPM{
 	@SuppressWarnings("unchecked")
 	public List<Item> getUsersConnectedToProcessEmails(String pid) {
 		
-		List<User> users = getUsersConnecetedList(new Long(pid));
+		List<User> users = getUsersConnectedList(new Long(pid));
 		
 		List<Item> usersItem = new ArrayList<Item>();
 		
@@ -60,7 +72,7 @@ public class XformBPMDSBean implements XformBPM{
 		return usersItem;
 	}
 	
-	private List<User> getUsersConnecetedList(Long pid) {
+	private List<User> getUsersConnectedList(Long pid) {
 		
 		ProcessInstanceW piw = getBpmFactory()
 		.getProcessManagerByProcessInstanceId(pid)
