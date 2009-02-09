@@ -72,9 +72,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.27 $
+ * @version $Revision: 1.28 $
  *
- * Last modified: $Date: 2009/02/06 19:01:21 $ by $Author: civilis $
+ * Last modified: $Date: 2009/02/09 16:15:44 $ by $Author: laddi $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -563,9 +563,14 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	
 	@Override
 	public PagedDataCollection<CasePresentation> getMyCases(User user) {
-		Collection<GeneralCase> closedCases = getCasesBusiness(IWContext.getCurrentInstance()).getMyCases(user);
-		List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, IWContext.getCurrentInstance().getCurrentLocale());
-		return new PagedDataCollection<CasePresentation>(presentationBeans);
+		try {
+			Collection<GeneralCase> closedCases = getCasesBusiness(IWContext.getCurrentInstance()).getMyCases(user);
+			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, IWContext.getCurrentInstance().getCurrentLocale());
+			return new PagedDataCollection<CasePresentation>(presentationBeans);
+		}
+		catch (RemoteException re) {
+			throw new IBORuntimeException(re);
+		}
 	}
 
 	@Override

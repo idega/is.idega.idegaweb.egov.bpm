@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -161,11 +162,18 @@ public class CasesListSearchCriteriaBean {
 				
 				String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
 				
-				Collection<Case> cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
-						getDateTo(), null, null, false, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+				Collection<Case> cases = null;
+				try {
+					cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
+							getDateTo(), null, null, false, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+				}
+				catch (RemoteException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 
 				List<Integer> casesByCriteria = null;
-				if (ListUtil.isEmpty(cases)) {
+				if (cases != null && ListUtil.isEmpty(cases)) {
 					logger.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
 							.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
 							.append(", dateRange: ").append(getDateRange())
@@ -242,7 +250,13 @@ public class CasesListSearchCriteriaBean {
 				List<Integer> casesByProcessDefinition = null;
 				if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
 					//	Getting ONLY none "BPM" cases
-					casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+					try {
+						casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+					}
+					catch (RemoteException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
 				}
 				else {
 					//	Getting "BPM" cases

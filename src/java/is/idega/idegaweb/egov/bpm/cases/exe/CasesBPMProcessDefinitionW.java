@@ -59,7 +59,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.35 $ Last modified: $Date: 2009/02/06 19:00:40 $ by $Author: civilis $
+ * @version $Revision: 1.36 $ Last modified: $Date: 2009/02/09 16:15:44 $ by $Author: laddi $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -153,6 +153,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					            user,
 					            caseCategoryId,
 					            caseTypeId,
+					            null,
 					            null,
 					            "This is simple cases-jbpm-formbuilder integration example.",
 					            null,
