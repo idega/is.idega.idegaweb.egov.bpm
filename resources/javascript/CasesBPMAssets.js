@@ -225,7 +225,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     };
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights);
+    							hasRightChangeRights, null);
 };
 
 CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
@@ -290,7 +290,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     };
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights);
+    							hasRightChangeRights, null);
 };
 
 CasesBPMAssets.reloadDocumentsGrid = function() {
@@ -411,7 +411,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     };
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights);
+    							hasRightChangeRights, null);
 };
 
 CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, hideEmptySection, onContactsInited) {
@@ -427,6 +427,31 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
                 CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
+                
+                var manageProfilePictures = function() {
+                	jQuery.each(jQuery('img.userProfilePictureInCasesList', jQuery(customerView)), function() {
+			    		var image = jQuery(this);
+			    		var imageSource = image.attr('src');
+			    		var tdCell = image.parent();
+			    		var pictureBoxId = 'personProfilePictureInCasesListContactPart';
+			    		tdCell.parent().mouseover(function(event) {
+			    			jQuery(document.body).append('<div id=\''+pictureBoxId+'\' class=\''+pictureBoxId+'Style\' style=\'display: none;\'>'+
+			    				'<img src=\''+imageSource+'\' /></div>');
+
+			    			jQuery('#' + pictureBoxId).css({
+								top: (jQuery(event.target).position().top + 2) + 'px',
+								left: (event.clientX + 10) + 'px'
+							});
+							jQuery('#' + pictureBoxId).fadeIn('fast');
+			    		});
+			    		tdCell.parent().mouseout(function(event) {
+			    			jQuery('#' + pictureBoxId).fadeOut('fast', function() {
+			    				jQuery(this).remove();
+			    			});
+			    		});
+					});
+                }
+                manageProfilePictures();
                 
                 if (onContactsInited) {
                 	onContactsInited();
@@ -455,11 +480,11 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRig
     }
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights);
+    							hasRightChangeRights, null);
 };
 
 CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, populatingFunction, subGridForThisGrid, namesForColumns, modelForColumns,
-										onSelectRowFunction, rightsChanger) {
+										onSelectRowFunction, rightsChanger, callbackAfterInserted) {
     var params = new JQGridParams();
     
     params.identifier = tableClassName;
@@ -472,6 +497,10 @@ CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, popul
     
     if (onSelectRowFunction != null) {
         params.onSelectRow = onSelectRowFunction;
+    }
+    
+    if (callbackAfterInserted != null) {
+    	params.callbackAfterInserted = callbackAfterInserted;
     }
     
     var tables = getElementsByClassName(customerView, 'table', tableClassName);
