@@ -19,13 +19,6 @@
             <param name="class" value="is.idega.idegaweb.egov.bpm.application.ApplicationTypeBPM" />
             <include method="getRolesCanStartProcessDWR" />
         </create>
-        
-    	<create creator="jsf" javascript="PDFGeneratorFromProcess">
-            <param name="managedBeanName" value="processTaskInstanceConverterToPDF" />
-            <param name="class" value="is.idega.idegaweb.egov.bpm.cases.business.ProcessTaskInstanceConverterToPDFBean" />
-            <include method="getGeneratedPDFFromXForm" />
-            <include method="getHashValueForGeneratedPDFFromXForm" />
-        </create>
     	
     	<convert match="is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean" converter="bean" />
     	<convert match="is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable" converter="bean" />
