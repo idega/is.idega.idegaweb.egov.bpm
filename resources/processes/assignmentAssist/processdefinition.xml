@@ -4,6 +4,22 @@
   xmlns=""  name="AssignmentAssist">
   
 	<start-state name="start-state1">
+		<event type="node-leave">
+	        <script>
+	            <expression>
+	            
+	                    if(mainProcessInstanceId == null) {
+	                    
+	                    //  this is backward compatibility because of late binding
+	                        mainProcessInstanceId = assignFromProcessInstanceId;
+	                    }
+	                    
+	            </expression>
+	            <variable name='mainProcessInstanceId' access='read,write' mapped-name="mainProcessInstanceId" />
+	            <variable name='assignFromProcessInstanceId' access='read' mapped-name="assignFromProcessInstanceId" />
+	        </script>
+	      </event>
+	
 		<transition to="isCurrentUserAssistant"></transition>
 	</start-state>
 
@@ -12,7 +28,7 @@
 				<handlerName>belongsToRoleDecisionHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
 			        <entry><key>roleExpression</key><value>#{assistantRoleExpression}</value></entry>
-			        <entry><key>processInstanceId</key><value>#{assignFromProcessInstanceId}</value></entry>
+			        <entry><key>processInstanceId</key><value>#{mainProcessInstanceId}</value></entry>
 			    </propertyMap>
 		</handler>
 		<transition to="locateAssignee" name="true"></transition>
@@ -36,7 +52,7 @@
 			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>assignUserToRoleHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-			        <entry><key>processInstanceId</key><value>#{assignFromProcessInstanceId}</value></entry>
+			        <entry><key>processInstanceId</key><value>#{mainProcessInstanceId}</value></entry>
 			        <entry><key>roleExpression</key><value>#{assigneeRoleExpression}</value></entry>
 			        <entry><key>userId</key><value>#{assigneeData.userId}</value></entry>
 			    </propertyMap>
@@ -65,7 +81,7 @@
 	<process-state name="sendInvitationToAssignee">
 		<sub-process name="participantInvitation" binding="late" />
       
-	      <variable name="assignFromProcessInstanceId" access="read" mapped-name="sendFromProcessInstanceId" />
+	      <variable name="mainProcessInstanceId" />
 	      <variable name="assigneeData" access="read" mapped-name="participantUserData" />
 	      <variable name="assigneeRoleExpression" access="read" mapped-name="participantRoleExpression" />
 		<transition to="assignNewCaseOwner"></transition>
@@ -101,7 +117,7 @@
                 <handlerName>assignCaseOwnerHandler</handlerName>
                 <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
                     <entry><key>ownerUserId</key><value>#{assigneeData.userId}</value></entry>
-                    <entry><key>processInstanceId</key><value>#{assignFromProcessInstanceId}</value></entry>
+                    <entry><key>processInstanceId</key><value>#{mainProcessInstanceId}</value></entry>
                 </propertyMap>
             </action>
         </event>

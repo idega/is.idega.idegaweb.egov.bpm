@@ -18,7 +18,7 @@
 			<script>
                 <expression>
                     String joinedRoles = com.idega.util.CoreConstants.EMPTY;
-                    org.jbpm.graph.exe.ProcessInstance sendFromProcessInstance = null;
+                    //org.jbpm.graph.exe.ProcessInstance sendFromProcessInstance = null;
                     
                     if(tasksBeans != null) {
                     
@@ -28,9 +28,9 @@
                         
                             String[] roles = tb.getRoles();
                             
-                            if(sendFromProcessInstance == null) {
-                                sendFromProcessInstance = tb.getToken().getProcessInstance();
-                            }
+                            //if(sendFromProcessInstance == null) {
+                            //    sendFromProcessInstance = tb.getToken().getProcessInstance();
+                            //}
                             
                             if(roles != null) {
                             
@@ -46,7 +46,8 @@
                 </expression>
                 <variable name='followupTasks' access='read' mapped-name='tasksBeans' />
                 <variable name='rolesToSendMessages' access='write' mapped-name='joinedRoles' />
-                <variable name='sendFromProcessInstance' access='write' mapped-name='sendFromProcessInstance' />
+                <variable name='mainProcessInstanceId' access='read' />
+                <!--  <variable name='sendFromProcessInstance' access='write' mapped-name='sendFromProcessInstance' />-->
             </script>
 		</event>
 		<transition to="sendMessagesForAllRolesUsers" name="tr2"></transition>
