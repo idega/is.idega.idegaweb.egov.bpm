@@ -182,7 +182,7 @@ public class CasesEngine {
 		properties.setPageSize(0);
 		properties.setPage(0);
 		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
-		properties.setShowCaseCreationDateColumn(criteriaBean.isShowCaseCreationDateColumn());
+		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
 		UIComponent component = null;
 		if (CaseManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
 			properties.setType(CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
