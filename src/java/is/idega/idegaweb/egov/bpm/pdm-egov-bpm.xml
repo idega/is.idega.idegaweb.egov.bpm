@@ -2,11 +2,11 @@
 
 <processes>
 
-    <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/fetchEmails/" autoload="true" version="14" />
+    <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/fetchEmails/" autoload="true" version="15" />
     <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/GenericProcess/" autoload="true" version="1" />
     
-    <processDefinition bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/followupResponses/" autoload="true" version="1" />
-    <processDefinition bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/assignmentAssist/" autoload="true" version="1" />
-    <processDefinition bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/anonAssignment/" autoload="true" version="1" />
+    <processDefinition bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/followupResponses/" autoload="true" version="2" />
+    <processDefinition bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/assignmentAssist/" autoload="true" version="2" />
+    <processDefinition bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/anonAssignment/" autoload="true" version="2" />
     
 </processes>
