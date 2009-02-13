@@ -17,6 +17,7 @@ import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.business.CaseManagersProvider;
@@ -43,7 +44,7 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.22 $ Last modified: $Date: 2009/02/02 13:42:32 $ by $Author: donatas $
+ * @version $Revision: 1.23 $ Last modified: $Date: 2009/02/13 17:03:43 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
@@ -56,6 +57,7 @@ public class CasesBPMProcessView {
 	private CasesBPMDAO casesBPMDAO;
 	private CaseManagersProvider caseManagersProvider;
 	
+	@Transactional(readOnly = true)
 	public CasesBPMTaskViewBean getTaskView(final long taskInstanceId) {
 		
 		return getIdegaJbpmContext().execute(new JbpmCallback() {
@@ -119,6 +121,7 @@ public class CasesBPMProcessView {
 		return "Not started";
 	}
 	
+	@Transactional(readOnly = true)
 	protected String getTaskAssignedTo(TaskInstance taskInstance) {
 		
 		String actorId = taskInstance.getActorId();
@@ -140,6 +143,7 @@ public class CasesBPMProcessView {
 		return "No one";
 	}
 	
+	@Transactional(readOnly = false)
 	public void startTask(long taskInstanceId, int actorUserId) {
 		
 		ProcessManager processManager = getBPMFactory()
@@ -147,6 +151,7 @@ public class CasesBPMProcessView {
 		processManager.getTaskInstance(taskInstanceId).start(actorUserId);
 	}
 	
+	@Transactional(readOnly = false)
 	public void assignTask(long taskInstanceId, int actorUserId) {
 		
 		ProcessManager processManager = getBPMFactory()
@@ -159,6 +164,7 @@ public class CasesBPMProcessView {
 	 * @param userId
 	 * @return null if task can be started, err message otherwise
 	 */
+	@Transactional(readOnly = true)
 	public String getCanStartTask(long taskInstanceId, int userId) {
 		
 		try {
@@ -172,6 +178,7 @@ public class CasesBPMProcessView {
 		return null;
 	}
 	
+	@Transactional(readOnly = true)
 	public String getCanTakeTask(long taskInstanceId, int userId) {
 		
 		try {
@@ -185,6 +192,7 @@ public class CasesBPMProcessView {
 		return null;
 	}
 	
+	@Transactional(readOnly = true)
 	public CasesBPMProcessViewBean getProcessView(final long processInstanceId,
 	        final int caseId) {
 		
@@ -264,6 +272,7 @@ public class CasesBPMProcessView {
 		return getBPMFactory().getBpmUserFactory().getCurrentBPMUser();
 	}
 	
+	@Transactional(readOnly = true)
 	public Long getProcessInstanceId(Object casePK) {
 		
 		if (casePK != null) {
@@ -284,6 +293,7 @@ public class CasesBPMProcessView {
 		return null;
 	}
 	
+	@Transactional(readOnly = true)
 	public Integer getCaseId(Long processInstanceId) {
 		
 		CaseProcInstBind cpi = getCPIBind(null, processInstanceId);
@@ -301,6 +311,7 @@ public class CasesBPMProcessView {
 	 * @param caseId
 	 * @return
 	 */
+	@Transactional(readOnly = true)
 	public UIComponent getCaseManagerView(IWContext iwc,
 	        Long processInstanceId, Integer caseId, String caseProcessorType) {
 		
@@ -350,6 +361,7 @@ public class CasesBPMProcessView {
 		return null;
 	}
 	
+	@Transactional(readOnly = true)
 	protected CaseProcInstBind getCPIBind(Integer caseId, Long processInstanceId) {
 		
 		if (caseId != null) {
