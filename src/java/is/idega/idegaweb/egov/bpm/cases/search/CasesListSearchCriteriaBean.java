@@ -23,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseHome;
-import com.idega.block.process.presentation.UserCases;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -71,6 +70,8 @@ public class CasesListSearchCriteriaBean {
 	private boolean allowPDFSigning = true;
 	private boolean showStatistics;
 	private boolean hideEmptySection;
+	private boolean showCaseNumberColumn = true;
+	private boolean showCaseCreationDateColumn = true;
 	
 	public String getCaseNumber() {
 		return caseNumber;
@@ -684,6 +685,22 @@ public class CasesListSearchCriteriaBean {
 
 	public void setHideEmptySection(boolean hideEmptySection) {
 		this.hideEmptySection = hideEmptySection;
+	}
+
+	public boolean isShowCaseNumberColumn() {
+		return showCaseNumberColumn;
+	}
+
+	public void setShowCaseNumberColumn(boolean showCaseNumberColumn) {
+		this.showCaseNumberColumn = showCaseNumberColumn;
+	}
+
+	public boolean isShowCaseCreationDateColumn() {
+		return showCaseCreationDateColumn;
+	}
+
+	public void setShowCaseCreationDateColumn(boolean showCaseCreationDateColumn) {
+		this.showCaseCreationDateColumn = showCaseCreationDateColumn;
 	}
 	
 }

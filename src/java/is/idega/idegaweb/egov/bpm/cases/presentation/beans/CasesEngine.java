@@ -28,6 +28,7 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.data.Case;
+import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.Web2Business;
@@ -173,14 +174,25 @@ public class CasesEngine {
 			setSearchResults(iwc, cases.getCollection());
 		}
 		
+		CaseListPropertiesBean properties = new CaseListPropertiesBean();
+		properties.setUsePDFDownloadColumn(criteriaBean.isUsePDFDownloadColumn());
+		properties.setAllowPDFSigning(criteriaBean.isAllowPDFSigning());
+		properties.setShowStatistics(criteriaBean.isShowStatistics());
+		properties.setHideEmptySection(criteriaBean.isHideEmptySection());
+		properties.setPageSize(0);
+		properties.setPage(0);
+		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
+		properties.setShowCaseCreationDateColumn(criteriaBean.isShowCaseCreationDateColumn());
 		UIComponent component = null;
 		if (CaseManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
-			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection(), 0, 0, null, null);
+			properties.setType(CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
+			properties.setAddCredentialsToExernalUrls(false);
+			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, properties);
 		}
 		else {
-			component = getCasesListBuilder().getCasesList(iwc, cases, CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS, false,
-					criteriaBean.isUsePDFDownloadColumn(), criteriaBean.isAllowPDFSigning(), criteriaBean.isShowStatistics(), criteriaBean.isHideEmptySection(), 0, 0, null, null);
+			properties.setType(CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
+			properties.setShowCheckBoxes(false);
+			component = getCasesListBuilder().getCasesList(iwc, cases, properties);
 		}
 		if (component == null) {
 			return null;

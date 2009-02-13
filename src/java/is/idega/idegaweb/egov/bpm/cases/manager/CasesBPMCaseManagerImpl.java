@@ -72,9 +72,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.28 $
+ * @version $Revision: 1.29 $
  *
- * Last modified: $Date: 2009/02/09 16:15:44 $ by $Author: laddi $
+ * Last modified: $Date: 2009/02/13 13:54:13 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -95,10 +95,12 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return beanIdentifier;
 	}
 
+	@Override
 	public String getType() {
 		return caseHandlerType;
 	}
 	
+	@Override
 	public String getProcessIdentifier(Case theCase) {
 		final Long piId = getProcessInstanceId(theCase);
 		if (piId == null) {
@@ -110,11 +112,12 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return getBpmContext().execute(new JbpmCallback() {
 
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				return (String)context.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+				return context.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
 			}
 		});
 	}
 	
+	@Override
 	public Long getProcessInstanceId(Case theCase) {
 		
 		Integer caseId = theCase.getPrimaryKey() instanceof Integer ? (Integer) theCase.getPrimaryKey() : Integer.valueOf((theCase.getPrimaryKey().toString()));
@@ -124,6 +127,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return cpi == null ? null : cpi.getProcInstId();
 	}
 	
+	@Override
 	public Long getProcessInstanceIdByCaseId(Object id) {
 		
 		Integer caseId = id instanceof Integer ? (Integer) id : Integer.valueOf(id.toString());
@@ -133,11 +137,13 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return cpi == null ? null : cpi.getProcInstId();
 	}
 	
+	@Override
 	public Long getProcessDefinitionId(Case theCase) {
 		ProcessDefinition processDefinition = getProcessDefinition(theCase);
 		return processDefinition == null ? null : processDefinition.getId();
 	}
 	
+	@Override
 	public String getProcessDefinitionName(Case theCase) {
 		ProcessDefinition processDefinition = getProcessDefinition(theCase);
 		return processDefinition == null ? null : processDefinition.getName();
@@ -157,12 +163,14 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		});
 	}
 
+	@Override
 	public List<Link> getCaseLinks(Case theCase, String casesComponentType) {
 		
 		throw new UnsupportedOperationException("Implement with correct pages if needed");
 		
 	}
 
+	@Override
 	public UIComponent getView(IWContext iwc, Integer caseId, String type, String caseManagerType) {
 		if (!caseHandlerType.equals(caseManagerType)) {
 			return super.getView(iwc, caseId, type, caseManagerType);
@@ -211,9 +219,9 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 				if (startIndex < totalCount) {
 					Collection<Integer> casesToFetch = null;
 					if (startIndex + count < totalCount) {
-						casesToFetch = casesIds.subList((int) startIndex, (int) (startIndex + count));
+						casesToFetch = casesIds.subList(startIndex, (startIndex + count));
 					} else {
-						casesToFetch = casesIds.subList((int) startIndex, (int) totalCount);
+						casesToFetch = casesIds.subList(startIndex, totalCount);
 					}
 					if (!CaseManager.CASE_LIST_TYPE_USER.equals(type)) {
 						cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesToFetch);
@@ -410,6 +418,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		this.bpmFactory = bpmFactory;
 	}
 
+	@Override
 	public Map<Long, String> getAllCaseProcessDefinitionsWithName() {
 		List<ProcessDefinition> allProcesses = getAllProcessDefinitions();
 		if (ListUtil.isEmpty(allProcesses)) {
@@ -447,6 +456,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return processes;
 	}
 	
+	@Override
 	public List<Long> getAllCaseProcessDefinitions() {
 		List<ProcessDefinition> allProcesses = getAllProcessDefinitions();
 		if (ListUtil.isEmpty(allProcesses)) {
@@ -491,6 +501,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	}
 	
 	
+	@Override
 	public String getProcessName(String processName, Locale locale) {
 		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(processName);
 		if (pd == null) {
@@ -536,12 +547,14 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
 	}
 
+	@Override
 	public Long getLatestProcessDefinitionIdByProcessName(String name) {
 		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(name);
 		return pd == null ? null : pd.getId();
 	}
 	
 
+	@Override
 	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale) {
 		Collection<Case> cases = getCasesBusiness(IWContext.getCurrentInstance()).getCasesByIds(ids);
 		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), cases.size());
@@ -604,8 +617,9 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 			if (caseCategory != null) {
 				String categoryId = null;
 				if (ProcessBundleCasesImpl.defaultCaseCategoryName.equals(caseCategory.getName())) {
-					categoryId = new StringBuilder(ProcessBundleCasesImpl.defaultCaseCategoryName).append(
-							getProcessDefinitionName(theCase)).toString(); 																		
+					String processName = getProcessDefinitionName(theCase);
+					bean.setProcessName(processName);
+					categoryId = new StringBuilder(ProcessBundleCasesImpl.defaultCaseCategoryName).append(processName).toString();
 				} else {
 					categoryId = caseCategory.getPrimaryKey().toString();
 				}
@@ -623,7 +637,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 			} catch (RemoteException e) {
 				e.printStackTrace();
 			}
-		} 
+		}
 		return bean;
 	}
 	
