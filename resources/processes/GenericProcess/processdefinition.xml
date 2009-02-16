@@ -19,37 +19,37 @@
 			</propertyMap>
 		 </assignment>
          <controller>
-            <variable name="string_ownerKennitala" 						access="read,write,required"></variable>
-            <variable name="string_ownerEmailAddress" 					access="read,write"></variable>
-            <variable name="string_ownerAddress" 						access="read,write,required"></variable>
-            <variable name="string_ownerPostCode" 						access="read,write,required"></variable>
-            <variable name="string_ownerMunicipality" 					access="read,write"></variable>
-            <variable name="string_ownerPhone" 							access="read,write,required"></variable>
-			<variable name="string_ownerFullName"						access="read,write,required"></variable>
-			<variable name="string_ownerAverageNumberOfEmployees"		access="read,write"></variable>
-			<variable name="string_ownerContactPerson"					access="read,write,required"></variable>
-			<variable name="string_caseDescription"						access="read,write,required"></variable>
-			<variable name="string_ownerAppliedProjectDescription"		access="read,write"></variable>
-			<variable name="string_ownerResult"							access="read,write"></variable>
-			<variable name="string_ownerApplicantBackground"			access="read,write"></variable>
-			<variable name="string_ownerPotentialDevelopment"			access="read,write"></variable>
-			<variable name="string_ownerProjectPresentStatus"			access="read,write"></variable>
-			<variable name="list_ownerSupportForProject"				access="read,write,required"></variable>
-			<variable name="string_ownerBusinessConceptDetail"			access="read,write"></variable>
-			<variable name="string_ownerCompetitions"					access="read,write"></variable>
-			<variable name="objlist_ownerCostsAndMainTasks"				access="read,write"></variable>
-			<variable name="objlist_ownerFinanceOfTasks"				access="read,write"></variable>
-			<variable name="list_ownerInformationAboutProgram"			access="read,write"></variable>
-			<variable name="string_ownerMobile"							access="read,write"></variable>
-			<variable name="string_ownerFax"							access="read,write"></variable>
-			<variable name="string_ownerBusinessConcept"				access="read,write,required"></variable>
-			<variable name="string_ownerCustomInformationAboutProgram"	access="read,write"></variable>
-			<variable name="files_ownerAttachments"						access="read,write"></variable>
-			<variable name="string_caseIdentifier"						access="read,write"></variable>
-			<variable name="string_ownerOther"							access="read,write"></variable>
-			<variable name="string_ownerTotalCost"						access="read,write"></variable>
-			<variable name="string_ownerGrantAmount"               	    access="read,write"></variable>
-			<variable  name="string_ownerGender"						access="read,write,required"></variable>
+            <variable name="string_ownerKennitala" 						access="write,required"></variable>
+            <variable name="string_ownerEmailAddress" 					access="write"></variable>
+            <variable name="string_ownerAddress" 						access="write,required"></variable>
+            <variable name="string_ownerPostCode" 						access="write,required"></variable>
+            <variable name="string_ownerMunicipality" 					access="write"></variable>
+            <variable name="string_ownerPhone" 							access="write,required"></variable>
+			<variable name="string_ownerFullName"						access="write,required"></variable>
+			<variable name="string_ownerAverageNumberOfEmployees"		access="write"></variable>
+			<variable name="string_ownerContactPerson"					access="write,required"></variable>
+			<variable name="string_caseDescription"						access="write,required"></variable>
+			<variable name="string_ownerAppliedProjectDescription"		access="write"></variable>
+			<variable name="string_ownerResult"							access="write"></variable>
+			<variable name="string_ownerApplicantBackground"			access="write"></variable>
+			<variable name="string_ownerPotentialDevelopment"			access="write"></variable>
+			<variable name="string_ownerProjectPresentStatus"			access="write"></variable>
+			<variable name="list_ownerSupportForProject"				access="write,required"></variable>
+			<variable name="string_ownerBusinessConceptDetail"			access="write"></variable>
+			<variable name="string_ownerCompetitions"					access="write"></variable>
+			<variable name="objlist_ownerCostsAndMainTasks"				access="write"></variable>
+			<variable name="objlist_ownerFinanceOfTasks"				access="write"></variable>
+			<variable name="list_ownerInformationAboutProgram"			access="write"></variable>
+			<variable name="string_ownerMobile"							access="write"></variable>
+			<variable name="string_ownerFax"							access="write"></variable>
+			<variable name="string_ownerBusinessConcept"				access="write,required"></variable>
+			<variable name="string_ownerCustomInformationAboutProgram"	access="write"></variable>
+			<variable name="files_ownerAttachments"						access="write"></variable>
+			<variable name="string_caseIdentifier"						access="write"></variable>
+			<variable name="string_ownerOther"							access="write"></variable>
+			<variable name="string_ownerTotalCost"						access="write"></variable>
+			<variable name="string_ownerGrantAmount"               	    access="write"></variable>
+			<variable  name="string_ownerGender"						access="write,required"></variable>
 			
 			
          </controller>
@@ -127,7 +127,7 @@
          </assignment>
          -->
          <controller>
-            <variable name="string_additionalInformationRequestText" access="read,write,required"></variable>
+            <variable name="string_additionalInformationRequestText" access="write,required"></variable>
             <variable name="files_additionalAttachments"></variable>
          </controller>
       </task>
@@ -150,7 +150,7 @@
 		 </assignment>
          <controller>
             <variable name="string_additionalInformationRequestText" access="read"></variable>
-            <variable name="string_additionalInformation" access="read,write,required"></variable>
+            <variable name="string_additionalInformation" access="write,required"></variable>
             <variable name="files_additionalAttachments"></variable>
          </controller>
       </task>
@@ -174,7 +174,7 @@
 		 </assignment>
          <controller>
             <variable name="string_ownerCaseInformation" access="read"></variable>
-            <variable name="string_participantCaseAnswer" access="read,write,required"></variable>
+            <variable name="string_participantCaseAnswer" access="write,required"></variable>
             <variable name="files_participantAttachments"></variable>
          </controller>
       </task>
@@ -184,7 +184,7 @@
    <task-node name="submitProcessRuling">
       <task name="Submit Process Ruling">
          <controller>
-            <variable name="string_rulingText" access="read,write,required"></variable>
+            <variable name="string_rulingText" access="write,required"></variable>
          </controller>
          <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>jsonAssignmentHandler</handlerName>
@@ -360,10 +360,10 @@
    <task-node name="inviteDefandant">
       <task name="Invite participant">
          <controller>
-            <variable name="string_inviteText" access="read,write,required"></variable>
-            <variable name="string_participantEmail" access="read,write,required"></variable>
-		    <variable name="string_participantName" access="read,write,required"></variable>
-				<variable access="read,write" name="files_inviteParticipantAttachments"></variable>
+            <variable name="string_inviteText" access="write,required"></variable>
+            <variable name="string_participantEmail" access="write,required"></variable>
+		    <variable name="string_participantName" access="write,required"></variable>
+				<variable access="write" name="files_inviteParticipantAttachments"></variable>
          </controller>
          <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>jsonAssignmentHandler</handlerName>
@@ -512,8 +512,8 @@
 				</propertyMap>
 			</assignment>
 			<controller>
-				<variable access="read,write" name="string_processEndFinalSummary"></variable>
-				<variable access="read,write" name="files_processEndAttachments"></variable>
+				<variable access="write" name="string_processEndFinalSummary"></variable>
+				<variable access="write" name="files_processEndAttachments"></variable>
 			</controller>
 		</task>
 		<transition to="endCaseProcess"></transition>
