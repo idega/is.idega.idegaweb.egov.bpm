@@ -246,30 +246,34 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return;
 		}
 		
-		List<TaskInstanceW> submittedTasks = pi.getSubmittedTaskInstances();
-		if (ListUtil.isEmpty(submittedTasks)) {
-			return;
-		}
-		List<BinaryVariable> attachments = null;
-		for (TaskInstanceW task: submittedTasks) {
-			attachments = task.getAttachments();
-			if (!ListUtil.isEmpty(attachments)) {
-				for (BinaryVariable attachment: attachments) {
-					VariableDataType dataType = attachment.getVariable().getDataType();
-					if (dataType.equals(VariableDataType.FILES) || dataType.equals(VariableDataType.FILE)) {
-						if (ListUtil.isEmpty(fileCellsIndexes) || !fileCellsIndexes.contains(Integer.valueOf(cellIndex))) {
-							//	Header row
-							sheet.setColumnWidth(cellIndex, DEFAULT_CELL_WIDTH);
-							HSSFCell cell = sheet.getRow(0).createCell(cellIndex);
-							cell.setCellValue(localizedFileLabel);
-							cell.setCellStyle(bigStyle);
+		if(false) {
+			
+//			FIXME: disabled resolving attachments for the moment
+			List<TaskInstanceW> submittedTasks = pi.getSubmittedTaskInstances();
+			if (ListUtil.isEmpty(submittedTasks)) {
+				return;
+			}
+			List<BinaryVariable> attachments = null;
+			for (TaskInstanceW task: submittedTasks) {
+				attachments = task.getAttachments();
+				if (!ListUtil.isEmpty(attachments)) {
+					for (BinaryVariable attachment: attachments) {
+						VariableDataType dataType = attachment.getVariable().getDataType();
+						if (dataType.equals(VariableDataType.FILES) || dataType.equals(VariableDataType.FILE)) {
+							if (ListUtil.isEmpty(fileCellsIndexes) || !fileCellsIndexes.contains(Integer.valueOf(cellIndex))) {
+								//	Header row
+								sheet.setColumnWidth(cellIndex, DEFAULT_CELL_WIDTH);
+								HSSFCell cell = sheet.getRow(0).createCell(cellIndex);
+								cell.setCellValue(localizedFileLabel);
+								cell.setCellStyle(bigStyle);
+								
+								fileCellsIndexes.add(Integer.valueOf(cellIndex));
+							}
 							
-							fileCellsIndexes.add(Integer.valueOf(cellIndex));
+							//	Body row
+							row.createCell(cellIndex).setCellValue(attachment.getFileName());
+							cellIndex++;
 						}
-						
-						//	Body row
-						row.createCell(cellIndex).setCellValue(attachment.getFileName());
-						cellIndex++;
 					}
 				}
 			}
