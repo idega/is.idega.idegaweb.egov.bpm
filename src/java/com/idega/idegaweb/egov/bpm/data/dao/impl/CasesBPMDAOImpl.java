@@ -24,6 +24,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.data.NativeIdentityBind;
+import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
@@ -32,9 +33,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.31 $
+ * @version $Revision: 1.32 $
  *
- * Last modified: $Date: 2009/02/06 19:03:47 $ by $Author: civilis $
+ * Last modified: $Date: 2009/02/23 13:59:59 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -436,11 +437,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	public List<Integer> getOpenCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection<Integer> groups,
 			Collection<String> roles) {
-
+		
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
-		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
+		params.add(new Param(NativeIdentityBind.identityTypeProperty, IdentityType.USER.toString()));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
 		}
@@ -453,8 +454,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						+ "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
 						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where (");
 		if (!ListUtil.isEmpty(roles)) {
-			builder.append("act.role_name in (:roles) or ");
+			builder.append("(act.role_name in (:roles) or (ni.identity_type = :identityTypeRole and ni.identity_id in(:roles))) or ");
 			params.add(new Param("roles", roles));
+			params.add(new Param("identityTypeRole", IdentityType.ROLE.toString()));
 		}
 		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
 		builder.append("and act.process_instance_id is not null and pi.end_ is null ");
@@ -520,10 +522,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						+ "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
 						+ "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
 						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk " + "where (");
+		
 		if (!ListUtil.isEmpty(roles)) {
-			builder.append("act.role_name in (:roles) or ");
+			builder.append("(act.role_name in (:roles) or (ni.identity_type = :identityTypeRole and ni.identity_id in(:roles))) or ");
 			params.add(new Param("roles", roles));
+			params.add(new Param("identityTypeRole", IdentityType.ROLE.toString()));
 		}
+		
 		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
 		builder.append("and act.process_instance_id is not null and (pi.end_ is not null or proc_case.case_status in (:statusesToShow)) " );
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
@@ -594,9 +599,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						+ "inner join bpm_cases_processinstances cp on cp.case_id = proc_case.proc_case_id "
 						+ "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
 						+ "left join bpm_native_identities ni on act.actor_id = ni.actor_fk where (");
+		
 		if (!ListUtil.isEmpty(roles)) {
-			builder.append("act.role_name in (:roles) or ");
+			builder.append("(act.role_name in (:roles) or (ni.identity_type = :identityTypeRole and ni.identity_id in(:roles))) or ");
 			params.add(new Param("roles", roles));
+			params.add(new Param("identityTypeRole", IdentityType.ROLE.toString()));
 		}
 		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
 		builder.append("and act.process_instance_id is not null and proc_case.case_code not in (:caseCodes) ");
