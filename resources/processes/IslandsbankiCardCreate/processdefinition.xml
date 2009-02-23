@@ -9,6 +9,8 @@
                 String handlerRoleName = "bpm_islandsbankicard_handler";
                 String ownerRoleName = "bpm_islandsbankicard_owner";
                 String caseHandlerRoleName = "bpm_islandsbankicard_caseHandler";
+                String invitedRoleName = "bpm_islandsbankicard_invited";
+                
                 mainProcessInstanceId = executionContext.getProcessInstance().getId();
                 
                 String string_bankDepartmentId = "CARDDEP";
@@ -17,6 +19,7 @@
                 String remindBefore = "4 minutes";
             </expression>
             <variable name='handlerRoleName' access='write' />
+            <variable name='invitedRoleName' access='write' />
             <variable name='ownerRoleName' access='write' />
             <variable name='caseHandlerRoleName' access='write' />
             <variable name='mainProcessInstanceId' access='write' />
@@ -51,6 +54,7 @@
 	                    <entry><key>expression</key>
 	                        <value>
 	                             {taskAssignment: {roles: {role: [
+	                                   {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read]}, scope: PI},
 	                                   {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read]}, scope: PI},
 	                                   {roleName: "bpm_islandsbankicard_owner", accesses: {access: [read, write]}, scope: PI, assignIdentities: {string: ["current_user"]}}
 	                             ]} }}
@@ -114,7 +118,8 @@
                         <entry><key>expression</key>
                             <value>
                                  {taskAssignment: {roles: {role: [
-                                       {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI}
+                                        {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read, write]}, scope: PI},
+                                        {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI}
                                  ]} }}
                             </value>
                         </entry>
@@ -246,7 +251,8 @@
             <expression>
                 addAttachmentAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
-                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read,write]}, scope: PI}"
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read,write]}, scope: PI},"
+                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read,write]}, scope: PI}"
                        +"]} }}";
             </expression>
             <variable name='string_addAttachmentAssignmentExpression' access='write' mapped-name='addAttachmentAssignmentExpression' />
@@ -271,11 +277,13 @@
                     reqAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
                        +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read, write]}, scope: PI}"
+                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read, write]}, scope: PI}"
                        +"]} }}";
                        
                     subAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
                        +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read]}, scope: PI}, "
+                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read]}, scope: PI}, "
                        +"{roleName: \"bpm_islandsbankicard_owner\", accesses: {access: [read, write]}, scope: PI}"
                        +"]} }}";
                        
@@ -283,11 +291,12 @@
                     
                     HashMap subject = new HashMap(2);
                     subject.put("en", "Additional information needed");
-                    subjectMap.put("is_IS", "Skilaboð frá umsjónaraðila umsóknar þinnar ({0}, {1}) hjá Íslandsbanka");
+                    subject.put("is_IS", "Skilaboð frá umsjónaraðila umsóknar þinnar ({0}, {1}) hjá Íslandsbanka");
                     
                     HashMap message = new HashMap(2);
                     message.put("en", "Hello, {0}. There is a new form for you to supply additional information in the case {1} with identifier {2} and description {3}.");
-                    message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n" + resolver.get("string_additionalInformationRequestText") + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
+                    //message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n" + resolver.get("string_additionalInformationRequestText") + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
+                    message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n" + "TODO" + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
                     
                     subjectValues = "{list: {mv: [{type: \"bean\", value: \"piw.processDescription\"}, {type: \"bean\", value: \"piw.processIdentifier\"}]}}";
                     messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"},{type: \"bean\", value: \"caseUser.urlToTheCase\"}]}}";
@@ -623,12 +632,62 @@
 	</task-node>
 
 	<task-node name="inviteParticipant">
+	   <task name="Invite participant" priority="-1">
+         <controller>
+            <variable name="string_inviteText" access="write,required"></variable>
+            <variable name="string_participantEmail" access="write,required"></variable>
+            <variable name="string_participantName" access="write,required"></variable>
+            <variable access="write" name="files_inviteParticipantAttachments"></variable>
+         </controller>
+         <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+            <handlerName>jsonAssignmentHandler</handlerName>
+            <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                <entry><key>expression</key>
+                    <value>
+                        {taskAssignment: {roles: {role: [
+                           {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI},
+                           {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read, write]}, scope: PI}
+                        ]} }}
+                    </value>
+                </entry>
+            </propertyMap>
+         </assignment>
+      </task>
 		<transition to="inviteParticipantSubprocess"></transition>
 	</task-node>
 
 	<process-state name="inviteParticipantSubprocess">
-		<sub-process name=""></sub-process>
-		<transition to="end-state1"></transition>
+		  <sub-process name="participantInvitation" binding="late" />
+      
+	      <variable name="mainProcessInstanceId" access="read" />
+	      <variable name="participantInviteUserPersonalData" access="read" mapped-name="participantUserData" />
+	      <variable name="participantInviteRoleExp" access="read" mapped-name="participantRoleExpression" />
+	      <variable name="participantInviteMsg" access="read" mapped-name="participantInvitationMessage" />
+	      
+	      <event type="node-enter">
+	         <script>
+	            <expression>
+	                s_upd = new com.idega.jbpm.identity.UserPersonalData();
+	                s_upd.setUserEmail(userEmail);
+	                s_upd.setFullName(userFullName);
+	                s_upd.setUserType("BPM_USER_LEGAL");
+	                
+	                s_roleExp = "{role: {roleName: \""+invitedRoleName+"\", scope: PI}}";
+	                
+	                s_msg = new com.idega.bpm.process.invitation.Message();
+	                s_msg.setText(msgText);
+	            </expression>
+	            <variable name='string_participantEmail' access='read' mapped-name='userEmail' />
+	            <variable name='string_participantName' access='read' mapped-name='userFullName' />
+	            <variable name='string_inviteText' access='read' mapped-name='msgText' />
+	            <variable name='participantInviteUserPersonalData' access='write' mapped-name='s_upd' />
+	            <variable name='participantInviteRoleExp' access='write' mapped-name='s_roleExp' />
+	            <variable name='participantInviteMsg' access='write' mapped-name='s_msg' />
+	            
+	            <variable name='invitedRoleName' access='read' />
+	         </script>
+	      </event>
+		  <transition to="end-state1"></transition>
 	</process-state>
 
 	<end-state name="end-complete-process" end-complete-process="true"></end-state>
@@ -736,5 +795,9 @@
 			<label lang="en">owner</label>
 			<label lang="is_IS">Sendandi</label>
 		</role>
+		<role name="bpm_islandsbankicard_invited">
+            <label lang="en">Business rules master</label>
+            <label lang="is_IS">Business rules master</label>
+        </role>
 	</roles-localization>
 </process-definition>
