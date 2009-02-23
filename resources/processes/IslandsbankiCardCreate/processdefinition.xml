@@ -67,6 +67,7 @@
 	            <variable name="list_ownerAppartmentNumbers"                access="write,required"></variable>
 	            <variable name="string_vehicleRegistrationNumber"                   	access="write,required"></variable>
 	            <variable name="files_ownerAttachments"						access="write"></variable>
+	            <variable name="system_allowSigning" access="read" ></variable>
 	            
 	         </controller>
 		</task>
