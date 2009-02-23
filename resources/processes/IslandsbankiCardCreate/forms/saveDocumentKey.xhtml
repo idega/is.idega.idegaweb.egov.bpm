@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:idega="http://idega.com/xforms" xmlns:xf="http://www.w3.org/2002/xforms" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ 
+<head>
+<title><xf:output model="data_model"
+	ref="instance('localized_strings')/form-title[@lang=instance('localized_strings')/current_language]" />
+</title>
+<xf:model id="submission_model" schema="#fb-schema">
+	<xf:instance id="data-instance" xmlns="">
+		<data> <form_id>4</form_id> <Document_Key_fbc_9 mapping="string_documentKey" /> 
+		</data>
+	</xf:instance>
+	
+              <xf:instance id="control-instance">
+                <control xmlns="">
+                    <readonly>false</readonly>
+                    <submission>false</submission>
+                      <generatePdf>false</generatePdf>
+                     <submissionButton />
+                </control>
+            </xf:instance>
+	
+	   <xf:submission action="xformsBPM:/nouri" id="submit_data_submission"	method="post" replace="none" >
+                     <idega:toggle case="fbc_4" ev:event="xforms-submit-done"/>
+            </xf:submission>
+            
+			
+		  <xf:action ev:event="xforms-submit-error" id="submission-error">
+                <xf:dispatch name="idega-submit-error" target="idega-submission-error"/>
+            </xf:action>
+            <xf:action ev:event="idega-submit-error" id="idega-submission-error">
+                <xf:message level="modeless" ref="instance('localized_strings')/submission-error_message[@lang=instance('localized_strings')/current_language]"/>
+            </xf:action>
+		
+	<xf:bind id="fbc_9_bind" nodeset="Document_Key_fbc_9" type="xs:string"  readonly="instance('control-instance')/readonly = 'true'" />
+               <xf:bind id="bind-submissionButton" nodeset="instance('control-instance')/submissionButton" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'" />
+	
+</xf:model>
+<xf:model id="data_model">
+	<xf:instance id="localized_strings" xmlns="">
+		<localized_strings> <default_language>en</default_language>
+		<current_language>is_IS</current_language> 
+		<form-title lang="en">Set Document Key</form-title> 
+		<form-title lang="is_IS">Velja skjalalykil</form-title>
+		   <submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
+                    <submission-error_message lang="is_IS">Villa varð við að senda formið vinsamlegast athugið hvort stjörnumerktir reitir hafi allir verið útfylltir og að engar villur séu í forminu.</submission-error_message>
+                 	<page-2-label lang="en">Submitted</page-2-label>
+		<page-2-label lang="is_IS">Vistaður</page-2-label>
+		 <page-1-submit-label lang="en">Submit</page-1-submit-label>
+		 <page-1-submit-label lang="is_IS">Vista</page-1-submit-label>
+		<page-2-info lang="en">Your form has been received. Thank you.</page-2-info>
+		<page-2-info lang="is_IS">Formið hefur verið móttekið. Takk fyrir.</page-2-info> 
+		<fbc_8-text	lang="en">Please choose the document key for this case.</fbc_8-text>
+		<fbc_8-text	lang="is_IS">Vinsamlegast veldu réttan skjalalykil fyrir þetta mál</fbc_8-text>
+		<fbc_9-title lang="is_IS">Skjalalykill</fbc_9-title>
+	    <fbc_9-title lang="en">Document Key</fbc_9-title>
+	     </localized_strings>
+	</xf:instance>
+	 <xf:instance id="locale-instance" relevant="false()"
+                      src="context:fb-afk-loginSession.currentLocale"/>
+                      
+	 <xf:action ev:event="xforms-ready">
+                <xf:setvalue model="data_model" ref="instance('localized_strings')/current_language"
+                         value="instance('locale-instance')/fb-afk-loginSession.currentLocale"/>
+            </xf:action>
+	<xf:instance id="fbc_9_lds" xmlns="">
+		<local_src> <localizedEntries lang="en">
+		<item> 
+			<itemLabel>Innlánarreikningar</itemLabel>
+			<itemValue>Innlánarreikningar</itemValue> 
+		</item> 
+		<item> 
+			<itemLabel>Rithandarsýnishorn</itemLabel>
+			<itemValue>Rithandarsýnishorn</itemValue> </item> 
+		<item> 
+			<itemLabel>Stofnskírteini</itemLabel>
+			<itemValue>Stofnskírteini</itemValue> 
+		</item> 
+	
+		</localizedEntries>
+		<localizedEntries lang="is_IS">
+		<item> 
+			<itemLabel>Innlánarreikningar</itemLabel>
+			<itemValue>Innlánarreikningar</itemValue> 
+		</item> 
+		<item> 
+			<itemLabel>Rithandarsýnishorn</itemLabel>
+			<itemValue>Rithandarsýnishorn</itemValue> </item> 
+		<item> 
+			<itemLabel>Stofnskírteini</itemLabel>
+			<itemValue>Stofnskírteini</itemValue> 
+		</item> 
+		</localizedEntries> 
+		 </local_src>
+	</xf:instance>
+	<xf:instance id="fbc_9_eds" xmlns="">
+		<ext_src />
+	</xf:instance>
+</xf:model>
+<xs:schema id="fb-schema" />
+</head>
+<body>
+<xf:group appearance="full">
+	<idega:switch>
+		<idega:case id="fbc_1" show="instance('control-instance')/generatePdf='true'">
+			<xf:group appearance="full">
+			
+				<div class="fbc_simple_text" id="fbc_8" type="fbc_simple_text">
+				<xf:output model="data_model"
+					ref="instance('localized_strings')/fbc_8-text[@lang=instance('localized_strings')/current_language]" />
+				</div>
+				<xf:select1 appearance="minimal" bind="fbc_9_bind" id="fbc_9">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/fbc_9-title[@lang=instance('localized_strings')/current_language]" />
+					<xf:itemset model="data_model"
+						nodeset="instance('fbc_9_lds')/localizedEntries[@lang=instance('localized_strings')/current_language]/item">
+						<xf:label ref="itemLabel" />
+						<xf:value ref="itemValue" />
+					</xf:itemset>
+				</xf:select1>
+				<div class="fbc_button_area" id="fbc_2" type="fbc_button_area">
+				<xf:trigger class="fbc_button_submit" id="fbc_3" type="fbc_button_submit" bind="bind-submissionButton">
+					<xf:label model="data_model"
+						ref="instance('localized_strings')/page-1-submit-label[@lang=instance('localized_strings')/current_language]" />
+					<xf:send submission="submit_data_submission" />
+					
+				</xf:trigger></div>
+			</xf:group>
+		</idega:case>
+		<idega:case id="fbc_4" type="thx_page">
+			<xf:group appearance="full">
+				<xf:label model="data_model"
+					ref="instance('localized_strings')/page-2-label[@lang=instance('localized_strings')/current_language]" />
+				<xf:output model="data_model"
+					ref="instance('localized_strings')/page-2-info[@lang=instance('localized_strings')/current_language]" />
+			</xf:group>
+		</idega:case>
+	</idega:switch>
+</xf:group>
+</body>
+</html>
