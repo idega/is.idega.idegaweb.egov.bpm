@@ -11,6 +11,8 @@
                 String caseHandlerRoleName = "bpm_islandsbankicard_caseHandler";
                 mainProcessInstanceId = executionContext.getProcessInstance().getId();
                 
+                String bankDepartmentId = "CARDDEP";
+                
                 String cardLifeTime = "10 minutes";
                 String remindBefore = "4 minutes";
             </expression>
@@ -20,6 +22,7 @@
             <variable name='mainProcessInstanceId' access='write' />
             <variable name='cardLifeTime' access='write' />
             <variable name='remindBefore' access='write' />
+            <variable name='bankDepartmentId' access='write' />
          </script>
   </event>  
   <event type="process-start">
@@ -39,25 +42,6 @@
             </propertyMap>
         </action>
     </event>
-    <!--  
-    <event type="process-start">
-        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
-            <handlerName>rolesAssignmentHandler</handlerName>
-                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-                    <entry>
-                        <key>assignmentExpression</key>
-                        <value>
-                            {rightsAssignment: {roles: {role: [
-                                {roleName: "bpm_islandsbankicard_handler", accesses: {access: [modifyPermissions, caseHandler]}},
-                                {roleName: "bpm_islandsbankicard_handler", accesses: {access: [seeContacts]}, rolesContacts: {string: ["all"]}},
-                                {roleName: "bpm_islandsbankicard_owner", accesses: {access: [seeContacts]}, rolesContacts: {string: ["bpm_islandsbankicard_caseHandler"]}}
-                            ]} }}
-                        </value>
-                </entry>
-            </propertyMap>
-        </action>
-    </event>
-    -->
   
    <start-state name="applicationForParkingCard">
 		<task name="ApplicationForParkingCardTask">
@@ -552,6 +536,27 @@
 	</decision>
 
 	<node name="assignHandlerRole">
+	   <event type="node-enter">
+	        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+	            <handlerName>rolesAssignmentHandler</handlerName>
+	                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+	                    <entry>
+	                        <key>assignmentExpression</key>
+	                        <value>
+	                           ${
+	                           String handlerRoleName = resolver.get("handlerRoleName");
+	                           String nativeRoleName = handlerRoleName + "_" + resolver.get("bankDepartmentId"); 
+	                           
+	                           return
+	                           "{rolesAssignment: {roles: {role: ["+
+                               "     {roleName: \""+handlerRoleName+"\", identities: {identity: [{identityType: ROLE, identityId: \""+nativeRoleName+"\"}]}}"+
+                               " ]} }}";
+	                           }
+	                        </value>
+	                </entry>
+	            </propertyMap>
+	        </action>
+        </event>
 		<transition to="sendOwnerCaseCreatedMessage"></transition>
 	</node>
 

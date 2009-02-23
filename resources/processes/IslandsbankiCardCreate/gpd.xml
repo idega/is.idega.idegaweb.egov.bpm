@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root-container name="IslandsbankiCardCreate" width="1351" height="1063">
-  <node name="applicationForParkingCard" x="236" y="-70" width="167" height="39">
+<root-container name="IslandsbankiCardCreate" width="1351" height="1124">
+  <node name="applicationForParkingCard" x="233" y="-131" width="167" height="39">
     <edge>
       <label x="5" y="-10"/>
     </edge>
@@ -155,4 +155,9 @@
   <node name="end-complete-process" x="-340" y="668" width="151" height="44"/>
   <node name="end-state1" x="848" y="145" width="22" height="27"/>
   <node name="end-state2" x="988" y="787" width="21" height="26"/>
+  <node name="assignHandlerRole" x="252" y="-50" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
 </root-container>
