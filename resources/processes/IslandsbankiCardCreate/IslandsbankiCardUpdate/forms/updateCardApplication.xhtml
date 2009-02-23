@@ -10,16 +10,25 @@
         <xf:model id="submission_model" schema="#fb-schema">
             <xf:instance id="data-instance" xmlns="">
                 <data>
-                    <form_id>3771</form_id>
-                    <Kennitala_fbc_5/>
-                    <Nafn_fbc_6/>
-                    <Heimilisfang_fbc_7/>
-                    <Borg_fbc_8/>
-                    <Pstnmer_fbc_9/>
-                    <Smar_fbc_10/>
-                    <Viskiptatib_fbc_11/>
-                    <Tmasetning_fbc_12/>
-                    <Netfang_fbc_13/>
+                    <form_id>3782</form_id>
+                    <Kennitala_fbc_5 mapping="string_ownerPersonalId"/>
+                    <Nafn_fbc_6 mapping="string_ownerFullName"/>
+                    <Heimilisfang_fbc_7 mapping="string_ownerAddress"/>
+                    <Borg_fbc_8 mapping="string_ownerMunicipality"/>
+                    <Pstnmer_fbc_9 mapping="string_ownerPostCode"/>
+                    <Smar_fbc_10 mapping="string_ownerPhone"/>
+                    <Viskiptatib_fbc_11 mapping="string_bankDepartmentId"/>
+                    <Tmasetning_fbc_12 mapping="list_callTime"/>
+                    <Netfang_fbc_13 mapping="string_ownerEmailAddress"/>
+                    <Vihengi_fbc_16 mapping="files_ownerAttachments">
+                        <group/>
+                        <entry filename="" mediatype="">
+                            <description/>
+                        </entry>
+                        <entry filename="" mediatype="">
+                            <description/>
+                        </entry>
+                    </Vihengi_fbc_16>
                 </data>
             </xf:instance>
             <xf:instance id="control-instance">
@@ -41,10 +50,11 @@
             <xf:bind id="errors" idega:shared="true" nodeset="instance('error-instance')/error[. != '']"/>
             <xf:bind id="bind-submissionButton" idega:shared="true"
                 nodeset="instance('control-instance')/submissionButton" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'"/>
-             <xf:submission action="xformsBPM:/nouri" id="submit_data_submission" method="post" ref="instance('data-instance')" replace="none">
+            <xf:submission action="xformsBPM:/nouri"
+                id="submit_data_submission" method="post"
+                ref="instance('data-instance')" replace="none">
                 <idega:toggle case="fbc_4" ev:event="xforms-submit-done"/>
             </xf:submission>
-            
             <xf:action ev:event="xforms-submit-error" id="submission-error">
                 <xf:dispatch name="idega-submit-error" target="idega-submission-error"/>
             </xf:action>
@@ -82,6 +92,10 @@
                 readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
             <xf:instance id="fbc_13_autofill-instance"
                 relevant="false()" src="context:fb-afk-collection-string-loginSession.user.emails.emailAddress"/>
+            <xf:bind id="fbc_16_bind" nodeset="Vihengi_fbc_16/group" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'">
+                <xf:bind id="fbc_16_bind-entries"
+                    nodeset="../entry[position() != last()]" type="xs:anyURI"/>
+            </xf:bind>
         </xf:model>
         <xf:model id="data_model">
             <xf:instance id="localized_strings" xmlns="">
@@ -134,6 +148,20 @@
                     <fbc_14-text lang="en">Paragraph text</fbc_14-text>
                     <fbc_15-text lang="is_IS">Upplýsingar</fbc_15-text>
                     <fbc_15-text lang="en">Header text</fbc_15-text>
+                    <fbc_16-paragraph-text lang="is_IS">Mögulegt er að senda viðbótarupplýsingar í viðhengi</fbc_16-paragraph-text>
+                    <fbc_16-paragraph-text lang="en">Additional information can be sent with the form as attachments</fbc_16-paragraph-text>
+                    <fbc_16-title lang="is_IS">Viðhengi</fbc_16-title>
+                    <fbc_16-title lang="en">Attachements</fbc_16-title>
+                    <fbc_16-insert_trigger-label lang="is_IS">Bæta við viðhengi</fbc_16-insert_trigger-label>
+                    <fbc_16-insert_trigger-label lang="en">Add attachement</fbc_16-insert_trigger-label>
+                    <fbc_16-description-label lang="is_IS">Lýsandi nafn skjals</fbc_16-description-label>
+                    <fbc_16-description-label lang="en">Descriptive name</fbc_16-description-label>
+                    <fbc_16-filename-label lang="is_IS">Skráarnafn</fbc_16-filename-label>
+                    <fbc_16-filename-label lang="en">Uploaded file name</fbc_16-filename-label>
+                    <fbc_16-custom lang="is_IS">Það þarf að setja lýsandi nafn á skjalið</fbc_16-custom>
+                    <fbc_16-custom lang="en">Uploaded file description can not be empty</fbc_16-custom>
+                    <fbc_16-remove_trigger-label lang="is_IS">Fjarlægja viðhengi</fbc_16-remove_trigger-label>
+                    <fbc_16-remove_trigger-label lang="en">Remove</fbc_16-remove_trigger-label>
                 </localized_strings>
             </xf:instance>
             <xf:instance id="locale-instance" relevant="false()" src="context:fb-afk-loginSession.currentLocale"/>
@@ -331,6 +359,64 @@
                                 <xf:output ref="instance('localized_strings')/fbc_12-help[@lang=instance('localized_strings')/current_language]"/>
                             </xf:help>
                         </xf:select1>
+                        <xf:group appearance="full" bind="fbc_16_bind"
+                            id="fbc_16" type="fbc_multiupload">
+                            <idega:dispatch
+                                ev:event="idega-xforms-ready"
+                                name="idega-validate" stopOnError="true" target="//*[@id='fbc_16']//xf:upload"/>
+                            <div class="fbc_simple_text">
+                                <xf:output model="data_model" ref="instance('localized_strings')/fbc_16-paragraph-text[@lang=instance('localized_strings')/current_language]"/>
+                            </div>
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_16-title[@lang=instance('localized_strings')/current_language]"/>
+                            <xf:trigger>
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_16-insert_trigger-label[@lang=instance('localized_strings')/current_language]"/>
+                                <xf:action>
+                                    <xf:insert at="last()"
+                                    nodeset="instance('data-instance')/Vihengi_fbc_16/entry" position="before"/>
+                                </xf:action>
+                            </xf:trigger>
+                            <xf:repeat appearance="group"
+                                bind="fbc_16_bind-entries" id="fbc_16-multiupload_entries">
+                                <xf:group>
+                                    <xf:input ref="./description">
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_16-description-label[@lang=instance('localized_strings')/current_language]"/>
+                                    <idega:dispatch
+                                    ev:event="xforms-value-changed"
+                                    name="idega-validate"
+                                    stopOnError="true" target="//*[@id='fbc_16']//xf:upload"/>
+                                    </xf:input>
+                                    <xf:group appearance="minimal"
+                                    class="error" ref=".[. !='' and ./description ='']">
+                                    <xf:output value="instance('error-instance')/error[@for='fbc_16']"/>
+                                    </xf:group>
+                                    <xf:output ref="@filename">
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_16-filename-label[@lang=instance('localized_strings')/current_language]"/>
+                                    </xf:output>
+                                    <xf:upload ref=".">
+                                    <xf:filename ref="@filename"/>
+                                    <xf:mediatype ref="@mediatype"/>
+                                    <idega:dispatch
+                                    ev:event="xforms-value-changed"
+                                    name="idega-validate"
+                                    stopOnError="true" target="//*[@id='fbc_16']//xf:upload"/>
+                                    <idega:validator
+                                    componentId="fbc_16"
+                                    ev:event="idega-validate" validateif="(.!='' and ./description !='') or (.='' and ./description ='')">
+                                    <idega:message
+                                    errorType="custom"
+                                    model="data_model" value="instance('localized_strings')/fbc_16-custom[@lang=instance('localized_strings')/current_language]"/>
+                                    </idega:validator>
+                                    </xf:upload>
+                                    <xf:trigger>
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_16-remove_trigger-label[@lang=instance('localized_strings')/current_language]"/>
+                                    <xf:action>
+                                    <xf:delete
+                                    at="index('fbc_16-multiupload_entries')" nodeset="instance('data-instance')/Vihengi_fbc_16/entry"/>
+                                    </xf:action>
+                                    </xf:trigger>
+                                </xf:group>
+                            </xf:repeat>
+                        </xf:group>
                         <div class="fbc_button_area" id="fbc_2" type="fbc_button_area">
                             <xf:trigger bind="bind-submissionButton"
                                 class="fbc_button_submit" id="fbc_3" type="fbc_button_submit">
