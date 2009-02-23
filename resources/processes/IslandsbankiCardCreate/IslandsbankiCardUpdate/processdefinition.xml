@@ -26,7 +26,7 @@
 			        		${
 			        		Map subjectMap = new HashMap();
 			        		subjectMap.put("en", "Your parking card will expire soon ({0})");
-			        		subjectMap.put("is_IS", "Íbúakortið þitt fer að renna út ({0})");
+			        		subjectMap.put("is_IS", "Yfirdrátturinn þinn fer að renna út ({0})");
 			        		return subjectMap;
 			        		}
 			        		
@@ -38,7 +38,7 @@
 			        		${
 			        		Map messageMap = new HashMap();
 			        		messageMap.put("en", "Hello {0}. Your parking card is about to expire "+resolver.get("parentDate_cardExpireDate")+" but you can renew it by clicking on this link {1} and filling out the form \"Renew parking card\" under tasks. Best regards Bílastæðasjóður");
-			        		messageMap.put("is_IS", "Sæl/ll {0}. Nú styttist í að íbúakort þitt renni út "+resolver.get("parentDate_cardExpireDate")+" en þú getur endurnýjað það strax með því að fara á slóðina {1}. Þar er aðgerð sem þú smellir á sem heitir \"Endurnýja íbúakort\". kveðja Bílastæðasjóðu");
+			        		messageMap.put("is_IS", "Sæl/ll {0}. Nú styttist í yfirdrátturinn þinn renni út þann "+resolver.get("parentDate_cardExpireDate")+" en þú getur sótt um endurnýujun á honum með því að fara á slóðina {1}. Þar er aðgerð sem þú smellir á sem heitir \"Endurnýja yfirdrátt\".");
 			        		return messageMap;
 			        		}
                 		</value>
