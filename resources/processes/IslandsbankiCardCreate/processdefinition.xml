@@ -11,7 +11,7 @@
                 String caseHandlerRoleName = "bpm_islandsbankicard_caseHandler";
                 mainProcessInstanceId = executionContext.getProcessInstance().getId();
                 
-                String bankDepartmentId = "CARDDEP";
+                String string_bankDepartmentId = "CARDDEP";
                 
                 String cardLifeTime = "10 minutes";
                 String remindBefore = "4 minutes";
@@ -22,7 +22,7 @@
             <variable name='mainProcessInstanceId' access='write' />
             <variable name='cardLifeTime' access='write' />
             <variable name='remindBefore' access='write' />
-            <variable name='bankDepartmentId' access='write' />
+            <variable name='string_bankDepartmentId' access='write' />
          </script>
   </event>  
   <event type="process-start">
@@ -63,9 +63,14 @@
 	            <variable name="string_ownerPersonalId"                     access="write"></variable>
 	            <variable name="string_ownerAddress"                        access="write"></variable>
 	            <variable name="string_ownerPostCode"                       access="write"></variable>
-           
-	            <variable name="list_ownerAppartmentNumbers"                access="write,required"></variable>
-	            <variable name="string_vehicleRegistrationNumber"                   	access="write,required"></variable>
+	            <variable name="string_ownerEmailAddress" 					access="write"></variable>
+            	<variable name="string_ownerMunicipality" 					access="write"></variable>
+            	<variable name="string_ownerPhone" 							access="write"></variable>
+				<variable name="string_ownerMobile"							access="write"></variable>
+				
+				<variable name="string_bankDepartmentId"					access="write"></variable>
+				<variable name="list_callTime"								access="write"></variable>
+				
 	            <variable name="files_ownerAttachments"						access="write"></variable>
 	            <variable name="system_allowSigning" access="read" ></variable>
 	            
@@ -79,7 +84,7 @@
                     <entry>
                         <key>description</key>
                         <value>
-                            #{string_vehicleRegistrationNumber}
+                            #{string_ownerPersonalId}
                         </value>
                     </entry>
                 </propertyMap>
@@ -116,12 +121,23 @@
                 </propertyMap>
              </assignment>
 			<controller>
-				<variable name="string_ownerFullName"                       access="read"></variable>
-	           	<variable name="string_ownerPersonalId"                     access="read"></variable>
+			 	<variable name="string_ownerFullName"                       access="read"></variable>
+	            <variable name="string_ownerPersonalId"                     access="read"></variable>
 	            <variable name="string_ownerAddress"                        access="read"></variable>
 	            <variable name="string_ownerPostCode"                       access="read"></variable>
-	            <variable name="list_ownerAppartmentNumbers"                access="read"></variable>
-	            <variable name="string_vehicleRegistrationNumber"                   	access="read"></variable>
+	            <variable name="string_ownerEmailAddress" 					access="read"></variable>
+            	<variable name="string_ownerMunicipality" 					access="read"></variable>
+            	<variable name="string_ownerPhone" 							access="read"></variable>
+				<variable name="string_ownerMobile"							access="read"></variable>
+				
+				<variable name="string_bankDepartmentId"					access="read"></variable>
+				<variable name="list_callTime"								access="read"></variable>
+				
+	            <variable name="files_ownerAttachments"						access="write"></variable>
+	            
+				
+				<variable name="list_ownerAppartmentNumbers"                access="read"></variable>
+	            <variable name="string_vehicleRegistrationNumber"           access="read"></variable>
 	            <variable name="string_parkingZone"                     	access="write"></variable>
 	            
 				<variable access="write" name="list_ownerReason"></variable>
@@ -352,7 +368,7 @@
 					
 					<entry>
                 		<key>licencePlateNumber</key>
-                		<value>#{string_vehicleRegistrationNumber}</value>
+                		<value>#{string_ownerPersonalId}</value>
                 	</entry>
                 	
                 	<entry>
@@ -543,11 +559,11 @@
 		<event type="node-enter">
 		   <script>
 	            <expression>
-	                String handlerNativeRoleName = handlerRoleName + "_" + bankDepartmentId;
+	                String handlerNativeRoleName = handlerRoleName + "_" + string_bankDepartmentId;
 	            </expression>
 	            <variable name='handlerNativeRoleName' access='write' />
 	            <variable name='handlerRoleName' access='read' />
-	            <variable name='bankDepartmentId' access='read' />
+	            <variable name='string_bankDepartmentId' access='read' />
 	         </script>
 		</event>
 		
