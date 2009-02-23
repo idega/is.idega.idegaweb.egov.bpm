@@ -276,7 +276,7 @@
                 <expression>
                     reqAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
-                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read, write]}, scope: PI}"
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read, write]}, scope: PI},"
                        +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read, write]}, scope: PI}"
                        +"]} }}";
                        

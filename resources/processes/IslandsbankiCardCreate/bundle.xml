@@ -20,6 +20,9 @@
         <task name="parkingCard">
             <viewResource resourceIdentifier="BPMTaskPDFViewer" viewType="jsf" />
         </task>
+        <task name="Invite participant">
+            <viewResource resourceIdentifier="forms/inviteParticipant.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
     </tasks>
     
 </processBundle-config>
