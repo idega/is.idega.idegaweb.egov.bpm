@@ -39,6 +39,7 @@
             </propertyMap>
         </action>
     </event>
+    <!--  
     <event type="process-start">
         <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
             <handlerName>rolesAssignmentHandler</handlerName>
@@ -56,6 +57,7 @@
             </propertyMap>
         </action>
     </event>
+    -->
   
    <start-state name="applicationForParkingCard">
 		<task name="ApplicationForParkingCardTask">

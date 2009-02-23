@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root-container name="IslandsbankiCardCreate" width="1010" height="1103">
-  <node name="applicationForParkingCard" x="238" y="-110" width="167" height="39">
+<root-container name="IslandsbankiCardCreate" width="1351" height="1063">
+  <node name="applicationForParkingCard" x="236" y="-70" width="167" height="39">
     <edge>
       <label x="5" y="-10"/>
     </edge>
@@ -14,9 +14,6 @@
   </node>
   <node name="rulingForCardCreate" x="149" y="290" width="132" height="36">
     <edge>
-      <label x="0" y="-12"/>
-    </edge>
-    <edge>
       <label x="-33" y="-14"/>
     </edge>
     <edge>
@@ -26,4 +23,136 @@
       <label x="-19" y="-14"/>
     </edge>
   </node>
+  <node name="fork1" x="396" y="295" width="25" height="24">
+    <edge>
+      <label x="-50" y="-15"/>
+      <bendpoint w1="-10" h1="-46" w2="183" h2="-47"/>
+      <bendpoint w1="-120" h1="-47" w2="73" h2="-48"/>
+    </edge>
+    <edge>
+      <label x="-222" y="-17"/>
+      <bendpoint w1="307" h1="2" w2="0" h2="-66"/>
+    </edge>
+  </node>
+  <node name="fork2" x="334" y="772" width="23" height="24">
+    <edge>
+      <label x="-21" y="-12"/>
+      <bendpoint w1="-262" h1="0" w2="0" h2="-69"/>
+    </edge>
+    <edge>
+      <label x="-75" y="-16"/>
+      <bendpoint w1="289" h1="-1" w2="-1" h2="-93"/>
+    </edge>
+  </node>
+  <node name="runReminderTimer" x="568" y="819" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="runInvalidateTimer" x="15" y="812" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="sendDenyReasonMessage" x="-150" y="517" width="171" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="createCard" x="278" y="690" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="invalidateCard" x="13" y="894" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+      <bendpoint w1="-147" h1="-1" w2="4" h2="220"/>
+    </edge>
+  </node>
+  <node name="fork3" x="306" y="134" width="22" height="24">
+    <edge>
+      <label x="-81" y="8"/>
+      <bendpoint w1="-102" h1="55" w2="-1" h2="-102"/>
+    </edge>
+    <edge>
+      <label x="78" y="-13"/>
+      <bendpoint w1="51" h1="-36" w2="-206" h2="-2"/>
+    </edge>
+    <edge>
+      <label x="13" y="-4"/>
+      <bendpoint w1="53" h1="22" w2="-231" h2="-35"/>
+      <bendpoint w1="52" h1="60" w2="-330" h2="-4"/>
+    </edge>
+  </node>
+  <node name="addAttachment" x="620" y="95" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+      <bendpoint w1="174" h1="0" w2="-1" h2="-38"/>
+    </edge>
+  </node>
+  <node name="requestAdditionalInformationProcess" x="603" y="192" width="193" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+      <bendpoint w1="161" h1="1" w2="0" h2="46"/>
+    </edge>
+  </node>
+  <node name="endCaseProcess" x="-130" y="673" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="submitAdditionalInformation" x="636" y="425" width="156" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+      <bendpoint w1="149" h1="1" w2="4" h2="286"/>
+    </edge>
+  </node>
+  <node name="parkingCard" x="280" y="613" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="updateCardExpireDate" x="280" y="538" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="setApproveProcessStatus" x="273" y="402" width="148" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="setDenyProcessStatus" x="17" y="400" width="138" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="sendOwnerCaseCreatedMessage" x="207" y="24" width="224" height="33">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="sendApproveMessage" x="279" y="464" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="sendAdditionalInformationMessage" x="608" y="357" width="215" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="isWorkaroundForJbpmBug" x="744" y="781" width="146" height="36">
+    <edge>
+      <label x="-6" y="158"/>
+      <bendpoint w1="-3" h1="-241" w2="468" h2="2"/>
+    </edge>
+    <edge>
+      <label x="-24" y="-14"/>
+    </edge>
+  </node>
+  <node name="end-complete-process" x="-340" y="668" width="151" height="44"/>
+  <node name="end-state1" x="848" y="145" width="22" height="27"/>
+  <node name="end-state2" x="988" y="787" width="21" height="26"/>
 </root-container>
