@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<root-container name="IslandsbankiCardCreate" width="1449" height="1124">
-  <node name="applicationForParkingCard" x="233" y="-131" width="167" height="39">
+<root-container name="IslandsbankiCardCreate" width="1351" height="1157">
+  <node name="applicationForParkingCard" x="233" y="-164" width="167" height="39">
     <edge>
       <label x="5" y="-10"/>
     </edge>
@@ -76,25 +76,27 @@
       <bendpoint w1="-102" h1="55" w2="-1" h2="-102"/>
     </edge>
     <edge>
-      <label x="78" y="-13"/>
-      <bendpoint w1="51" h1="-36" w2="-206" h2="-2"/>
+      <label x="22" y="-15"/>
     </edge>
     <edge>
-      <label x="13" y="-4"/>
-      <bendpoint w1="53" h1="22" w2="-231" h2="-35"/>
+      <label x="4" y="-17"/>
       <bendpoint w1="52" h1="60" w2="-330" h2="-4"/>
     </edge>
+    <edge>
+      <label x="35" y="-19"/>
+      <bendpoint w1="134" h1="-61" w2="-218" h2="3"/>
+    </edge>
   </node>
-  <node name="addAttachment" x="620" y="95" width="132" height="36">
+  <node name="addAttachment" x="605" y="146" width="132" height="36">
     <edge>
       <label x="5" y="-10"/>
       <bendpoint w1="174" h1="0" w2="-1" h2="-38"/>
     </edge>
   </node>
-  <node name="requestAdditionalInformationProcess" x="603" y="192" width="193" height="36">
+  <node name="requestAdditionalInformationProcess" x="604" y="208" width="193" height="36">
     <edge>
       <label x="5" y="-10"/>
-      <bendpoint w1="161" h1="1" w2="0" h2="46"/>
+      <bendpoint w1="178" h1="-1" w2="0" h2="62"/>
     </edge>
   </node>
   <node name="endCaseProcess" x="-130" y="673" width="132" height="36">
@@ -105,7 +107,7 @@
   <node name="submitAdditionalInformation" x="636" y="425" width="156" height="36">
     <edge>
       <label x="5" y="-10"/>
-      <bendpoint w1="149" h1="1" w2="4" h2="286"/>
+      <bendpoint w1="164" h1="-1" w2="0" h2="279"/>
     </edge>
   </node>
   <node name="parkingCard" x="280" y="613" width="132" height="36">
@@ -128,7 +130,7 @@
       <label x="5" y="-10"/>
     </edge>
   </node>
-  <node name="sendOwnerCaseCreatedMessage" x="207" y="24" width="224" height="33">
+  <node name="sendOwnerCaseCreatedMessage" x="205" y="-24" width="224" height="33">
     <edge>
       <label x="5" y="-10"/>
     </edge>
@@ -152,15 +154,25 @@
       <label x="-24" y="-14"/>
     </edge>
   </node>
-  <node name="assignHandlerRole" x="252" y="-50" width="132" height="36">
+  <node name="assignHandlerRole" x="250" y="-90" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="saveDocumentKey" x="251" y="37" width="132" height="36">
     <edge>
       <label x="5" y="-10"/>
     </edge>
   </node>
   <node name="end-complete-process" x="-340" y="668" width="151" height="44"/>
-  <node name="end-state1" x="848" y="145" width="22" height="27"/>
+  <node name="end-state1" x="867" y="150" width="22" height="27"/>
   <node name="end-state2" x="988" y="787" width="21" height="26"/>
-  <node name="saveDocumentKey" x="254" y="81" width="132" height="36">
+  <node name="inviteParticipant" x="603" y="86" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="inviteParticipantSubprocess" x="795" y="86" width="163" height="36">
     <edge>
       <label x="5" y="-10"/>
     </edge>

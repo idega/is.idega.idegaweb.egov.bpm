@@ -234,6 +234,7 @@
 		<transition to="rulingForCardCreate" name="toRulingForCardCreate"></transition>
 		<transition to="addAttachment" name="toAddAttachment"></transition>
 		<transition to="requestAdditionalInformationProcess" name="toRequestAdditionalInformationProcess"></transition>
+		<transition to="inviteParticipant" name="toInviteParticipant"></transition>
 	</fork>
 
 	<process-state name="addAttachment">
@@ -620,6 +621,15 @@
 	</task>
 		<transition to="fork3"></transition>
 	</task-node>
+
+	<task-node name="inviteParticipant">
+		<transition to="inviteParticipantSubprocess"></transition>
+	</task-node>
+
+	<process-state name="inviteParticipantSubprocess">
+		<sub-process name=""></sub-process>
+		<transition to="end-state1"></transition>
+	</process-state>
 
 	<end-state name="end-complete-process" end-complete-process="true"></end-state>
 
