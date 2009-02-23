@@ -159,5 +159,8 @@
     <edge>
       <label x="5" y="-10"/>
     </edge>
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
   </node>
 </root-container>

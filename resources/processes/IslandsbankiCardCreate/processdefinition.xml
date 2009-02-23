@@ -537,7 +537,30 @@
 	</decision>
 
 	<node name="assignHandlerRole">
-	   <event type="node-enter">
+		<event type="node-enter">
+		   <script>
+	            <expression>
+	                String handlerNativeRoleName = handlerRoleName + "_" + bankDepartmentId;
+	            </expression>
+	            <variable name='handlerNativeRoleName' access='write' />
+	            <variable name='handlerRoleName' access='read' />
+	            <variable name='bankDepartmentId' access='read' />
+	         </script>
+		</event>
+		
+        <event type="node-leave">
+            <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>createNativeRoleHandler</handlerName>
+                    <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                        <entry>
+                            <key>nativeRoleName</key>
+                            <value>#{handlerNativeRoleName}</value>
+                        </entry>
+                </propertyMap>
+            </action>
+        </event>
+	   
+	   <event type="node-leave">
 	        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 	            <handlerName>rolesAssignmentHandler</handlerName>
 	                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
@@ -545,12 +568,9 @@
 	                        <key>assignmentExpression</key>
 	                        <value>
 	                           ${
-	                           String handlerRoleName = resolver.get("handlerRoleName");
-	                           String nativeRoleName = handlerRoleName + "_" + resolver.get("bankDepartmentId"); 
-	                           
 	                           return
 	                           "{rolesAssignment: {roles: {role: ["+
-                               "     {roleName: \""+handlerRoleName+"\", identities: {identity: [{identityType: ROLE, identityId: \""+nativeRoleName+"\"}]}}"+
+                               "     {roleName: \""+resolver.get("handlerRoleName")+"\", identities: {identity: [{identityType: ROLE, identityId: \""+resolver.get("handlerNativeRoleName")+"\"}]}}"+
                                " ]} }}";
 	                           }
 	                        </value>
