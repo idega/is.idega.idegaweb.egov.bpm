@@ -180,7 +180,7 @@
 							${
 							Map subjectMap = new HashMap();
 							subjectMap.put("en", "subject empty");
-							subjectMap.put("is_IS", "subject empty");
+							subjectMap.put("is_IS", "Umsókn um bankaviðskipti" hafnað);
 							return subjectMap;
 							}
                 		</value>
@@ -191,7 +191,7 @@
 							${
 							Map messageMap = new HashMap();
 							messageMap.put("en", "Message " + resolver.get("string_additionalInformationRequestText") + " list of reasons " + resolver.get("list_ownerReason") );
-							messageMap.put("is_IS", "Message " + resolver.get("string_additionalInformationRequestText") + " list of reasons " + resolver.get("list_ownerReason") );
+							messageMap.put("is_IS", "Umsókn þinni um bankaviðskipti hefur verið hafnað. " + resolver.get("string_additionalInformationRequestText") +" " + resolver.get("list_ownerReason") );
 							
 							return messageMap;
 							
@@ -265,13 +265,14 @@
                     
                     HashMap subject = new HashMap(2);
                     subject.put("en", "Additional information needed");
-                    subject.put("is_IS", "Meiri uppl\u00FDsingar er \u00FE\u00F6rf.");
+                    subjectMap.put("is_IS", "Skilaboð frá umsjónaraðila umsóknar þinnar ({0}, {1}) hjá Íslandsbanka");
                     
                     HashMap message = new HashMap(2);
                     message.put("en", "Hello, {0}. There is a new form for you to supply additional information in the case {1} with identifier {2} and description {3}.");
-                    message.put("is_IS", "S\u00E6l/ll, {0}. Frekari uppl\u00FDsinga um ums\u00F3knina \u00FE\u00EDna er \u00FE\u00F6rf. Skr\u00E1\u00F0u \u00FEig inn \u00E1 Impru \u00FEar b\u00ED\u00F0ur \u00FE\u00EDn form til a\u00F0 fylla \u00FAt undir \"A\u00F0ger\u00F0ir\" \u00ED m\u00E1lsyfirlitinu.");
+                    message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n" + resolver.get("string_additionalInformationRequestText") + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
                     
-                    messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"}]}}";
+                    subjectValues = "{list: {mv: [{type: \"bean\", value: \"piw.processDescription\"}, {type: \"bean\", value: \"piw.processIdentifier\"}]}}"
+                    messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"},{type: \"bean\", value: \"caseUser.urlToTheCase\"}]}}";
                     sendToRoles = "bpm_islandsbankicard_owner";
                        
                 </expression>
