@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<process-definition
+  xmlns=""  name="IslandsbankiCardCreate">
+
+  <event type="process-start">
+         <script>
+            <expression>
+                String handlerRoleName = "bpm_islandsbankicard_handler";
+                String ownerRoleName = "bpm_islandsbankicard_owner";
+                String caseHandlerRoleName = "bpm_islandsbankicard_caseHandler";
+                mainProcessInstanceId = executionContext.getProcessInstance().getId();
+                
+                String cardLifeTime = "10 minutes";
+                String remindBefore = "4 minutes";
+            </expression>
+            <variable name='handlerRoleName' access='write' />
+            <variable name='ownerRoleName' access='write' />
+            <variable name='caseHandlerRoleName' access='write' />
+            <variable name='mainProcessInstanceId' access='write' />
+            <variable name='cardLifeTime' access='write' />
+            <variable name='remindBefore' access='write' />
+         </script>
+  </event>  
+  <event type="process-start">
+        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+            <handlerName>rightsManagementRolesAssignmentHandler</handlerName>
+                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                    <entry>
+                        <key>assignmentExpression</key>
+                        <value>
+                            {rightsAssignment: {roles: {role: [
+                                {roleName: "bpm_islandsbankicard_handler", accesses: {access: [modifyPermissions, caseHandler]}},
+                                {roleName: "bpm_islandsbankicard_handler", accesses: {access: [seeContacts]}, rolesContacts: {string: ["all"]}},
+                                {roleName: "bpm_islandsbankicard_owner", accesses: {access: [seeContacts]}, rolesContacts: {string: ["bpm_islandsbankicard_caseHandler"]}}
+                            ]} }}
+                        </value>
+                </entry>
+            </propertyMap>
+        </action>
+    </event>
+    <event type="process-start">
+        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+            <handlerName>rolesAssignmentHandler</handlerName>
+                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                    <entry>
+                        <key>assignmentExpression</key>
+                        <value>
+                            {rightsAssignment: {roles: {role: [
+                                {roleName: "bpm_islandsbankicard_handler", accesses: {access: [modifyPermissions, caseHandler]}},
+                                {roleName: "bpm_islandsbankicard_handler", accesses: {access: [seeContacts]}, rolesContacts: {string: ["all"]}},
+                                {roleName: "bpm_islandsbankicard_owner", accesses: {access: [seeContacts]}, rolesContacts: {string: ["bpm_islandsbankicard_caseHandler"]}}
+                            ]} }}
+                        </value>
+                </entry>
+            </propertyMap>
+        </action>
+    </event>
+  
+   <start-state name="applicationForParkingCard">
+		<task name="ApplicationForParkingCardTask">
+			<assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+	                <handlerName>jsonAssignmentHandler</handlerName>
+	                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+	                    <entry><key>expression</key>
+	                        <value>
+	                             {taskAssignment: {roles: {role: [
+	                                   {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read]}, scope: PI},
+	                                   {roleName: "bpm_islandsbankicard_owner", accesses: {access: [read, write]}, scope: PI, assignIdentities: {string: ["current_user"]}}
+	                             ]} }}
+	                        </value>
+	                    </entry>
+	            </propertyMap>
+	         </assignment>
+	         <controller>
+	            <variable name="string_ownerFullName"                       access="write"></variable>
+	            <variable name="string_ownerPersonalId"                     access="write"></variable>
+	            <variable name="string_ownerAddress"                        access="write"></variable>
+	            <variable name="string_ownerPostCode"                       access="write"></variable>
+           
+	            <variable name="list_ownerAppartmentNumbers"                access="write,required"></variable>
+	            <variable name="string_vehicleRegistrationNumber"                   	access="write,required"></variable>
+	            <variable name="files_ownerAttachments"						access="write"></variable>
+	            
+	         </controller>
+		</task>
+		<transition to="assignHandlerRole"></transition>
+		<event type="node-leave">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>setProcessDescriptionHandler</handlerName>
+                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                    <entry>
+                        <key>description</key>
+                        <value>
+                            #{string_vehicleRegistrationNumber}
+                        </value>
+                    </entry>
+                </propertyMap>
+                
+            </action>
+		</event>
+		
+	</start-state>
+
+	<process-state name="cardUpdateSubprocess">
+        <sub-process name="ParkingCardUpdate" binding="late"></sub-process>
+        
+        <variable name="handlerRoleName" access="read" />
+        <variable name="ownerRoleName" access="read" />
+		<variable name="caseHandlerRoleName" access="read" />
+		<variable name='mainProcessInstanceId' access='read' />
+		<variable name="date_cardExpireDate" access="read" mapped-name="parentDate_cardExpireDate" />
+
+        <transition to="isWorkaroundForJbpmBug"></transition>
+	</process-state>
+
+	<task-node name="rulingForCardCreate">
+		<task name="RulingForCardCreateTask">
+		  <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                    <handlerName>jsonAssignmentHandler</handlerName>
+                    <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                        <entry><key>expression</key>
+                            <value>
+                                 {taskAssignment: {roles: {role: [
+                                       {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI}
+                                 ]} }}
+                            </value>
+                        </entry>
+                </propertyMap>
+             </assignment>
+			<controller>
+				<variable name="string_ownerFullName"                       access="read"></variable>
+	           	<variable name="string_ownerPersonalId"                     access="read"></variable>
+	            <variable name="string_ownerAddress"                        access="read"></variable>
+	            <variable name="string_ownerPostCode"                       access="read"></variable>
+	            <variable name="list_ownerAppartmentNumbers"                access="read"></variable>
+	            <variable name="string_vehicleRegistrationNumber"                   	access="read"></variable>
+	            <variable name="string_parkingZone"                     	access="write"></variable>
+	            
+				<variable access="write" name="list_ownerReason"></variable>
+				<variable access="write" name="string_additionalInformationRequestText"></variable>
+				<variable access="write" name="string_actionTaken"></variable>
+				
+			</controller>
+		</task>
+		<transition to="fork1" name="moreInfo"></transition>
+		<transition to="setApproveProcessStatus" name="approve"></transition>
+		<transition to="setDenyProcessStatus" name="deny"></transition>
+	</task-node>
+
+	<fork name="fork1">
+		<transition to="rulingForCardCreate" name="toRulingForCardCreate"></transition>
+		<transition to="sendAdditionalInformationMessage" name="toSendAdditionalInformationMessage"></transition>
+	</fork>
+
+	<fork name="fork2">
+		<transition to="runInvalidateTimer" name="toRunInvalidateTimer"></transition>
+		<transition to="runReminderTimer" name="toRunReminderTimer"></transition>
+	</fork>
+	
+	<state name="runReminderTimer">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>deleteNodeTimersHandler</handlerName>
+			</action>
+		</event>
+		<timer duedate='#{date_cardExpireRemindDate}'
+              transition='reminded'>
+       </timer>
+	   <transition to="cardUpdateSubprocess" name="reminded"></transition>
+	</state>
+
+	<state name="runInvalidateTimer">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>deleteNodeTimersHandler</handlerName>
+			</action>
+		</event>
+		<timer duedate='#{date_cardExpireDate}'
+               transition='invalidate'>
+        </timer>
+		<transition to="invalidateCard" name="invalidate"></transition>
+	</state>
+
+	<node name="sendDenyReasonMessage">
+			<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy">
+				<handlerName>sendCaseMessagesHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+					<entry>
+						<key>inlineSubject</key>
+						<value>
+							${
+							Map subjectMap = new HashMap();
+							subjectMap.put("en", "subject empty");
+							subjectMap.put("is_IS", "subject empty");
+							return subjectMap;
+							}
+                		</value>
+					</entry>
+					<entry>
+						<key>inlineMessage</key>
+						<value>
+							${
+							Map messageMap = new HashMap();
+							messageMap.put("en", "Message " + resolver.get("string_additionalInformationRequestText") + " list of reasons " + resolver.get("list_ownerReason") );
+							messageMap.put("is_IS", "Message " + resolver.get("string_additionalInformationRequestText") + " list of reasons " + resolver.get("list_ownerReason") );
+							
+							return messageMap;
+							
+							}
+                		</value>
+					</entry>
+					<entry><key>sendToRoles</key><value>bpm_islandsbankicard_owner</value></entry>
+				</propertyMap>
+			</action>
+		</event>
+		
+		<transition to="endCaseProcess"></transition>
+	</node>
+
+	<node name="createCard">
+		<transition to="fork2"></transition>
+	</node>
+
+	<node name="invalidateCard">
+		<transition to="endCaseProcess"></transition>
+	</node>
+
+	<fork name="fork3">
+		<transition to="rulingForCardCreate" name="toRulingForCardCreate"></transition>
+		<transition to="addAttachment" name="toAddAttachment"></transition>
+		<transition to="requestAdditionalInformationProcess" name="toRequestAdditionalInformationProcess"></transition>
+	</fork>
+
+	<process-state name="addAttachment">
+        <sub-process name="addAttachments" binding="late" />
+        <variable name="string_addAttachmentAssignmentExpression" access="read" />
+        <variable name='mainProcessInstanceId' access='read' />
+      <event type="node-enter">
+         <script>
+            <expression>
+                addAttachmentAssignmentExpression = 
+                       "{taskAssignment: {roles: {role: ["
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read,write]}, scope: PI}"
+                       +"]} }}";
+            </expression>
+            <variable name='string_addAttachmentAssignmentExpression' access='write' mapped-name='addAttachmentAssignmentExpression' />
+         </script>
+      </event>
+		<transition to="end-state1"></transition>
+	</process-state>
+
+	<process-state name="requestAdditionalInformationProcess">
+        <sub-process name="additionalInformation" binding="late" />
+        <variable name="string_requestAdditionalInformationTaskAssignmentExpression" access="read" mapped-name="requestAdditionalInformationTaskAssignmentExpression" />
+        <variable name="string_submitAdditionalInformationTaskAssignmentExpression" access="read" mapped-name="submitAdditionalInformationTaskAssignmentExpression" />
+        <variable name="string_additionalInfoSendMessageHandler" access="read" mapped-name="sendMessageHandler" />
+        <variable name="string_additionalInfoSubject" access="read" mapped-name="subject" />
+        <variable name="string_additionalInfoMessage" access="read" mapped-name="message" />
+        <variable name="string_additionalInfoMessageValues" access="read" mapped-name="messageValues" />
+        <variable name="string_additionalInfoSendToRoles" access="read" mapped-name="sendToRoles" />
+        <event type="node-enter">
+            <script>
+                <expression>
+                    reqAssignmentExpression = 
+                       "{taskAssignment: {roles: {role: ["
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read, write]}, scope: PI}"
+                       +"]} }}";
+                       
+                    subAssignmentExpression = 
+                       "{taskAssignment: {roles: {role: ["
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read]}, scope: PI}, "
+                       +"{roleName: \"bpm_islandsbankicard_owner\", accesses: {access: [read, write]}, scope: PI}"
+                       +"]} }}";
+                       
+                    sendMessageHandler = "sendCaseMessagesHandler";
+                    
+                    HashMap subject = new HashMap(2);
+                    subject.put("en", "Additional information needed");
+                    subject.put("is_IS", "Meiri uppl\u00FDsingar er \u00FE\u00F6rf.");
+                    
+                    HashMap message = new HashMap(2);
+                    message.put("en", "Hello, {0}. There is a new form for you to supply additional information in the case {1} with identifier {2} and description {3}.");
+                    message.put("is_IS", "S\u00E6l/ll, {0}. Frekari uppl\u00FDsinga um ums\u00F3knina \u00FE\u00EDna er \u00FE\u00F6rf. Skr\u00E1\u00F0u \u00FEig inn \u00E1 Impru \u00FEar b\u00ED\u00F0ur \u00FE\u00EDn form til a\u00F0 fylla \u00FAt undir \"A\u00F0ger\u00F0ir\" \u00ED m\u00E1lsyfirlitinu.");
+                    
+                    messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"}]}}";
+                    sendToRoles = "bpm_islandsbankicard_owner";
+                       
+                </expression>
+                <variable name='string_requestAdditionalInformationTaskAssignmentExpression' access='write' mapped-name='reqAssignmentExpression' />
+                <variable name='string_submitAdditionalInformationTaskAssignmentExpression' access='write' mapped-name='subAssignmentExpression' />
+                
+                <variable name='string_additionalInfoSendMessageHandler' access='write' mapped-name='sendMessageHandler' />
+                <variable name='string_additionalInfoSubject' access='write' mapped-name='subject' />
+                <variable name='string_additionalInfoMessage' access='write' mapped-name='message' />
+                <variable name='string_additionalInfoMessageValues' access='write' mapped-name='messageValues' />
+                <variable name='string_additionalInfoSendToRoles' access='write' mapped-name='sendToRoles' />
+            </script>
+        </event>
+		<transition to="end-state1"></transition>
+	</process-state>
+
+	<node name="endCaseProcess">
+		<transition to="end-complete-process"></transition>
+	</node>
+
+	<task-node name="submitAdditionalInformation">
+	   <task name="submitAdditionalInformationForParkingCardTask">
+         <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>jsonAssignmentHandler</handlerName>
+                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                    <entry><key>expression</key>
+                        <value>
+                            {taskAssignment: {roles: {role: [
+                               {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read]}, scope: PI},
+                               {roleName: "bpm_islandsbankicard_owner", accesses: {access: [read, write]}, scope: PI} 
+                            ]} }}
+                        </value>
+                </entry>
+            </propertyMap>
+         </assignment>
+         <controller>
+            <variable name="string_additionalInformationRequestText" access="read"></variable>
+            <variable name="string_additionalInformation" access="write,required"></variable>
+            <variable name="files_additionalAttachments" access="write"></variable>
+         </controller>
+      </task>
+		<transition to="end-state1"></transition>
+	</task-node>
+
+	<task-node name="parkingCard" create-tasks="false" signal="unsynchronized">
+		<task name="parkingCard" >
+			 <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+                <handlerName>jsonAssignmentHandler</handlerName>
+                <propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+                    <entry><key>expression</key>
+                        <value>
+                            {taskAssignment: {roles: {role: [
+                               {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI}
+                            ]} }}
+                        </value>
+	                </entry>
+	            </propertyMap>
+	         </assignment>
+			
+			
+			<controller>
+				<variable name="files_pdfTaskView" access="write,required"></variable>
+			</controller>
+			
+		</task>
+		
+		<event type="node-leave">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy">
+				<handlerName>createParkingCardHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+					<entry>
+						<key>taskName</key>
+						<value>parkingCard</value>
+					</entry>
+					
+					<entry>
+                		<key>licencePlateNumber</key>
+                		<value>#{string_vehicleRegistrationNumber}</value>
+                	</entry>
+                	
+                	<entry>
+                		<key>cardExpirationDate</key>
+                		<value>#{date_cardExpireDate}</value>
+					</entry>
+				</propertyMap>
+			</action>
+		</event>
+		<transition to="createCard"></transition>
+	</task-node>
+
+	<node name="updateCardExpireDate">
+	<event type="node-enter">
+	   <script>
+            <expression>
+            
+            	if(cardExpireDate == null) {
+                    cardExpireDate = new Date();
+                }
+                
+                cardExpireDate = com.idega.jbpm.proxy.JbpmHandlerProxy.bean("calendarOps").add(cardExpireDate, cardLifeTime);
+                cardExpireRemindDate = com.idega.jbpm.proxy.JbpmHandlerProxy.bean("calendarOps").substract(cardExpireDate, remindBefore);
+                
+            </expression>
+            <variable name='date_cardExpireRemindDate' access='write' mapped-name='cardExpireRemindDate' />
+            <variable name='date_cardExpireDate' access='read,write' mapped-name='cardExpireDate' />
+            <variable name='cardLifeTime' access='read' />
+            <variable name='remindBefore' access='read' />
+         </script>
+	</event>
+		<transition to="parkingCard"></transition>
+	</node>
+
+	<node name="setApproveProcessStatus">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>casesStatusHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+				   	<entry><key>caseStatus</key><value>#{string_caseStatusGranted}</value></entry>
+				</propertyMap>
+			</action>
+        </event>
+		<transition to="sendApproveMessage"></transition>
+	</node>
+
+	<node name="setDenyProcessStatus">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>casesStatusHandler</handlerName>
+					<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			   			<entry><key>caseStatus</key><value>#{string_caseStatusDenied}</value></entry>
+					</propertyMap>
+			</action>
+		</event>
+	
+		<transition to="sendDenyReasonMessage"></transition>
+	</node>
+
+	<node name="sendOwnerCaseCreatedMessage">
+		<event type="node-enter">
+		<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>sendCaseMessagesHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			        <entry>
+			        	<key>inlineSubject</key>
+			        	<value>
+			        		${
+			        		Map subjectMap = new HashMap();
+			        		subjectMap.put("en", "Case created successfully!");
+			        		subjectMap.put("is_IS", "Umsókn þín með nafnið {1}({0})");
+			        		return subjectMap;
+			        		}
+			        		
+                		</value>
+                	</entry>
+                	<entry>
+			        	<key>inlineMessage</key>
+			        	<value>
+			        		${
+			        		Map messageMap = new HashMap();
+			        		messageMap.put("en", "Hello, {0}.\n You have successfully created case {1} with identifier {2} and description {3}. We are hopeful that your case will be handled soon. Good luck!");
+			        		messageMap.put("is_IS", "Sæl/ll, {0}.\nUmsókn þín í flokknum : {1} með nafnið : {3} og númerið : {2}  hefur verið móttekin	. Svar verður sent til þín í tölvupósti þegar umsóknin hefur verið tekin fyrir.");
+			        		return messageMap;
+			        		}
+                		</value>
+                	</entry>
+                	<entry>
+                        <key>subjectValues</key>
+                        <value>
+                            {list: {mv: [{type: "bean", value: "piw.processIdentifier"}, {type: "bean", value: "piw.processDescription"}]}}
+                        </value>
+                    </entry>
+                	<entry>
+			        	<key>messageValues</key>
+			        	<value>
+			        		{list: {mv: [{type: "bean", value: "user.name"}, {type: "bean", value: "piw.processDefinitionW.startTaskName"}, {type: "bean", value: "piw.processIdentifier"}, {type: "bean", value: "piw.processDescription"}]}}
+                		</value>
+                	</entry>
+                	<entry><key>sendToRoles</key><value>bpm_islandsbankicard_owner</value></entry>
+			    </propertyMap>
+		 </action>
+		</event>
+		<transition to="fork3"></transition>
+	</node>
+
+	<node name="sendApproveMessage">
+			<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy">
+				<handlerName>sendCaseMessagesHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+					<entry>
+						<key>inlineSubject</key>
+						<value>
+							${
+							Map subjectMap = new HashMap();
+							subjectMap.put("en", "Parking card approved");
+							subjectMap.put("is_IS", "Íbúakort þitt hefur verið samþykkt og er tilbúið til afgreiðslu");
+							return subjectMap;
+							}
+                		</value>
+					</entry>
+					<entry>
+						<key>inlineMessage</key>
+						<value>
+							${
+							Map messageMap = new HashMap();
+							messageMap.put("en", "Parking card approved, collect it at the Reykjavik service center.");
+							messageMap.put("is_IS", "Íbúakort þitt hefur verið samþykkt og er tilbúið til afgreiðslu í þjónustuveri Reykjavíkurborgar.");
+							
+							return messageMap;
+							
+							}
+                		</value>
+					</entry>
+					<entry><key>sendToRoles</key><value>bpm_islandsbankicard_owner</value></entry>
+				</propertyMap>
+			</action>
+		</event>
+		<transition to="updateCardExpireDate"></transition>
+	</node>
+
+	<node name="sendAdditionalInformationMessage">
+		<event type="node-enter">
+			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy">
+				<handlerName>sendCaseMessagesHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+					<entry>
+						<key>inlineSubject</key>
+						<value>
+							${
+							Map subjectMap = new HashMap();
+							subjectMap.put("en", "additional info subject");
+							subjectMap.put("is_IS", "Meiri upplýsingar óskast vegna umsóknar um íbúakort");
+							return subjectMap;
+							}
+                		</value>
+					</entry>
+					<entry>
+						<key>inlineMessage</key>
+						<value>
+							${
+							Map messageMap = new HashMap();
+							messageMap.put("en", "additional info message");
+							messageMap.put("is_IS", "Meiri upplýsingar óskast vegna umsóknar um íbúakort. Sjá umsókn þína á Rafrænni Reykjavík");
+							
+							return messageMap;
+							
+							}
+                		</value>
+					</entry>
+					<entry><key>sendToRoles</key><value>bpm_islandsbankicard_owner</value></entry>
+				</propertyMap>
+			</action>
+		</event>
+		<transition to="submitAdditionalInformation"></transition>
+	</node>
+
+	<decision name="isWorkaroundForJbpmBug" expression="#{token.end != null}">
+		<description>
+			see https://jira.jboss.org/jira/browse/JBPM-1471 for fixes
+		</description>
+		<transition to="updateCardExpireDate" name="false"></transition>
+		<transition to="end-state2" name="true"></transition>
+	</decision>
+
+	<node name="assignHandlerRole">
+		<transition to="sendOwnerCaseCreatedMessage"></transition>
+	</node>
+
+	<end-state name="end-complete-process" end-complete-process="true"></end-state>
+
+	<end-state name="end-state1"></end-state>
+
+	<end-state name="end-state2"></end-state>
+
+	<event type="handlerAssignedToCase">
+        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>caseHandlerAssignmentHandler</handlerName>
+				
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+				<entry><key>caseHandlerRoleExp</key><value>{role: {roleName: "bpm_islandsbankicard_caseHandler", scope: PI}}</value></entry>
+			        <entry>
+			        	<key>inlineSubject</key>
+			        	<value>
+			        		${
+			        		Map subjectMap = new HashMap();
+			        		subjectMap.put("en", "Handler was assigned to the case");
+			        		subjectMap.put("is_IS", "M\u00E1li\u00F0 \u00FEitt hefur fengi\u00F0 umsj\u00F3narmann");
+			        		return subjectMap;
+			        		}
+			        		
+                		</value>
+                	</entry>
+                	<entry>
+			        	<key>inlineMessage</key>
+			        	<value>
+			        		${
+			        		Map messageMap = new HashMap();
+			        		messageMap.put("en", "Hi, {0}.\n Handler {1} was assigned to the case {2} with identifier {3} and description {4}");
+			        		messageMap.put("is_IS", "S\u00E6l/ll, {0}.\n {1} hefur teki\u00F0 a\u00F0 s\u00E9r m\u00E1l \u00ED flokknum \"{2}\" me\u00F0 nafni\u00F0 \"{4}\" og m\u00E1lsn\u00FAmeri\u00F0 \"{3}\"");
+			        		return messageMap;
+			        		}
+                		</value>
+                	</entry>
+                	<entry>
+			        	<key>messageValues</key>
+			        	<value>
+			        		{list: {mv: [{type: "bean", value: "user.name"}, {type: "roleUsers", value: "{role: {roleName: \"bpm_islandsbankicard_caseHandler\"}}"},  {type: "bean", value: "piw.processDefinitionW.startTaskName"}, {type: "bean", value: "piw.processIdentifier"}, {type: "bean", value: "piw.processDescription"}]}}
+                		</value>
+                	</entry>
+                	<entry><key>sendToRoles</key><value>bpm_islandsbankicard_handler</value></entry>
+			    </propertyMap>
+		 </action>
+    </event>
+    <event type="handlerUnassignedFromCase">
+        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+				<handlerName>caseHandlerAssignmentHandler</handlerName>
+				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			      	<entry><key>caseHandlerRoleExp</key><value>{role: {roleName: "bpm_islandsbankicard_caseHandler", scope: PI}}</value></entry>
+			        <entry>
+			        	<key>inlineSubject</key>
+			        	<value>
+			        		${
+			        		Map subjectMap = new HashMap();
+			        		subjectMap.put("en", "Handler was unassigned from the case");
+			        		subjectMap.put("is_IS", "Umsj\u00F3narmannaskipti");
+			        		return subjectMap;
+			        		}
+			        		
+                		</value>
+                	</entry>
+                	<entry>
+			        	<key>inlineMessage</key>
+			        	<value>
+			        		${
+			        		Map messageMap = new HashMap();
+			        		messageMap.put("en", "Hi, {0}.\n Handler was unassigned from the case {1} with identifier {2} and description {3}");
+			        		messageMap.put("is_IS", "S\u00E6l/ll, {0}.\n Umsj\u00F3narmannaskipti hafa \u00E1tt s\u00E9r sta\u00F0 fyrir m\u00E1l \u00ED flokknum \"{1}\" me\u00F0 nafni\u00F0 \"{3}\" og m\u00E1lsn\u00FAmeri\u00F0 \"{2}\". N\u00FDr umsj\u00F3narma\u00F0ur tekur vi\u00F0.");
+			        		return messageMap;
+			        		}
+                		</value>
+                	</entry>
+                	<entry>
+			        	<key>messageValues</key>
+			        	<value>
+			        		{list: {mv: [{type: "bean", value: "user.name"}, {type: "bean", value: "piw.processDefinitionW.startTaskName"}, {type: "bean", value: "piw.processIdentifier"}, {type: "bean", value: "piw.processDescription"}]}}
+                		</value>
+                	</entry>
+                	<entry><key>sendToRoles</key><value>bpm_islandsbankicard_handler</value></entry>
+			    </propertyMap>
+		</action>
+    </event>
+    <event type="postStartActivity">
+        <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+			<handlerName>casesStatusHandler</handlerName>
+			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+			   	<entry><key>caseStatus</key><value>#{string_caseStatusInProgress}</value></entry>
+			  	<entry><key>ifCaseStatus</key><value>#{string_caseStatusReceived}</value></entry>
+			</propertyMap>
+		</action>
+    </event>
+	<roles-localization xmlns="http://idega.com/bpm">
+		<role name="bpm_islandsbankicard_caseHandler">
+			<label lang="en">caseHandler</label>
+			<label lang="is_IS">Umsjónarmaður</label>
+		</role>
+		<role name="bpm_islandsbankicard_handler">
+			<label lang="en">handler</label>
+			<label lang="is_IS">Umsjónarhópur</label>
+		</role>
+		<role name="bpm_islandsbankicard_owner">
+			<label lang="en">owner</label>
+			<label lang="is_IS">Sendandi</label>
+		</role>
+	</roles-localization>
+</process-definition>

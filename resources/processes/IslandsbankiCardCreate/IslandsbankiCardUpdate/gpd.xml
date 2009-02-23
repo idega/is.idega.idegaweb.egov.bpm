@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<root-container name="IslandsbankiCardUpdate" width="1061" height="646">
+  <node name="updateCardStart" x="214" y="55" width="23" height="24">
+    <edge>
+      <label x="-48" y="-7"/>
+    </edge>
+  </node>
+  <node name="sendUpdateReminder" x="159" y="114" width="132" height="36">
+    <edge>
+      <label x="-63" y="-11"/>
+    </edge>
+  </node>
+  <node name="updateCardApplication" x="156" y="192" width="132" height="36">
+    <edge>
+      <label x="-61" y="-34"/>
+    </edge>
+  </node>
+  <node name="rulingForCardUpdate" x="156" y="311" width="132" height="36">
+    <edge>
+      <label x="-26" y="-13"/>
+    </edge>
+    <edge>
+      <label x="-25" y="-12"/>
+    </edge>
+    <edge>
+      <label x="-8" y="-13"/>
+    </edge>
+  </node>
+  <node name="fork1" x="398" y="322" width="24" height="24">
+    <edge>
+      <label x="-6" y="-16"/>
+      <bendpoint w1="-46" h1="-62" w2="142" h2="-57"/>
+      <bendpoint w1="-108" h1="-62" w2="80" h2="-57"/>
+    </edge>
+    <edge>
+      <label x="-126" y="-13"/>
+      <bendpoint w1="162" h1="0" w2="-1" h2="-36"/>
+    </edge>
+  </node>
+  <node name="sendDenyReason" x="36" y="486" width="132" height="36">
+    <edge>
+      <label x="-49" y="-57"/>
+      <bendpoint w1="-89" h1="-1" w2="-163" h2="211"/>
+      <bendpoint w1="-88" h1="-209" w2="-162" h2="3"/>
+    </edge>
+  </node>
+  <node name="submitAdditionalInformation" x="488" y="352" width="170" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="setDenyProcessStatus" x="38" y="412" width="132" height="36">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="setApproveProcessStatus" x="284" y="412" width="160" height="35">
+    <edge>
+      <label x="5" y="-10"/>
+    </edge>
+  </node>
+  <node name="approvedPostCondition" x="292" y="483" width="141" height="28"/>
+  <node name="end-state1" x="714" y="357" width="22" height="25"/>
+</root-container>

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<processBundle-config>
+
+    <processBundle beanIdentifier="casesBPMProcessBundle" processManagerType="cases" />
+    
+    <tasks>
+        <task name="ApplicationForParkingCardTask" initial="true">
+            <viewResource resourceIdentifier="forms/applicationForParkingCard.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="RulingForCardCreateTask">
+            <viewResource resourceIdentifier="forms/rulingForCardCreate.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="submitAdditionalInformationForParkingCardTask">
+            <viewResource resourceIdentifier="forms/submitAdditionalInformationForCardRuling.xhtml" viewType="xforms" viewResourceType="xforms" />
+        </task>
+        <task name="parkingCard">
+            <viewResource resourceIdentifier="BPMTaskPDFViewer" viewType="jsf" />
+        </task>
+    </tasks>
+    
+</processBundle-config>
