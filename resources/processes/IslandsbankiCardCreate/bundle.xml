@@ -14,7 +14,7 @@
         <task name="submitAdditionalInformationForParkingCardTask">
             <viewResource resourceIdentifier="forms/submitAdditionalInformationForCardRuling.xhtml" viewType="xforms" viewResourceType="xforms" />
         </task>
-        <task name="submitAdditionalInformationForParkingCardTask">
+        <task name="saveDocumentKey">
             <viewResource resourceIdentifier="forms/saveDocumentKey.xhtml" viewType="xforms" viewResourceType="xforms" />
         </task>
         <task name="parkingCard">
