@@ -456,7 +456,7 @@
 			    </propertyMap>
 		 </action>
 		</event>
-		<transition to="fork3"></transition>
+		<transition to="saveDocumentKey"></transition>
 	</node>
 
 	<node name="sendApproveMessage">
@@ -584,6 +584,27 @@
 		<transition to="sendOwnerCaseCreatedMessage"></transition>
 	</node>
 
+	<task-node name="saveDocumentKey">
+	  <task name="Set the document key">
+	     <assignment class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
+			<handlerName>jsonAssignmentHandler</handlerName>
+			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
+				<entry><key>expression</key>
+					<value>
+                {taskAssignment: {roles: {role: [
+	            {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}}
+	        	]} }}
+            </value>
+				</entry>
+			</propertyMap>
+		</assignment>
+	 	<controller>
+            <variable name="string_documentKey" access="read,write,required"></variable>
+         </controller>
+	</task>
+		<transition to="fork3"></transition>
+	</task-node>
+
 	<end-state name="end-complete-process" end-complete-process="true"></end-state>
 
 	<end-state name="end-state1"></end-state>
@@ -679,7 +700,7 @@
 	<roles-localization xmlns="http://idega.com/bpm">
 		<role name="bpm_islandsbankicard_caseHandler">
 			<label lang="en">caseHandler</label>
-			<label lang="is_IS">Umsjónarmaður</label>
+			<label lang="is_IS">Þjónustufulltrúi</label>
 		</role>
 		<role name="bpm_islandsbankicard_handler">
 			<label lang="en">handler</label>
