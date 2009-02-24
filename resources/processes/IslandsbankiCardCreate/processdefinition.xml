@@ -99,7 +99,7 @@
 	</start-state>
 
 	<process-state name="cardUpdateSubprocess">
-        <sub-process name="ParkingCardUpdate" binding="late"></sub-process>
+        <sub-process name="IslandsbankiCardUpdate" binding="late"></sub-process>
         
         <variable name="handlerRoleName" access="read" />
         <variable name="ownerRoleName" access="read" />
