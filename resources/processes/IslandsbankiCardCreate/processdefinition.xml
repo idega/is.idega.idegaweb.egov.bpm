@@ -706,7 +706,7 @@
 			        		${
 			        		Map subjectMap = new HashMap();
 			        		subjectMap.put("en", "Handler was assigned to the case");
-			        		subjectMap.put("is_IS", "M\u00E1li\u00F0 \u00FEitt hefur fengi\u00F0 umsj\u00F3narmann");
+			        		subjectMap.put("is_IS", "Mál hefur fengið umsjónarmann");
 			        		return subjectMap;
 			        		}
 			        		
@@ -718,7 +718,7 @@
 			        		${
 			        		Map messageMap = new HashMap();
 			        		messageMap.put("en", "Hi, {0}.\n Handler {1} was assigned to the case {2} with identifier {3} and description {4}");
-			        		messageMap.put("is_IS", "S\u00E6l/ll, {0}.\n {1} hefur teki\u00F0 a\u00F0 s\u00E9r m\u00E1l \u00ED flokknum \"{2}\" me\u00F0 nafni\u00F0 \"{4}\" og m\u00E1lsn\u00FAmeri\u00F0 \"{3}\"");
+			        		messageMap.put("is_IS", "Sæl/ll, {0}.\n {1} hefur tekið að sér málið í flokknum \"{2}\" með málsnúmerið \"{3}\".");
 			        		return messageMap;
 			        		}
                 		</value>
@@ -744,7 +744,7 @@
 			        		${
 			        		Map subjectMap = new HashMap();
 			        		subjectMap.put("en", "Handler was unassigned from the case");
-			        		subjectMap.put("is_IS", "Umsj\u00F3narmannaskipti");
+			        		subjectMap.put("is_IS", "Umsjónarmannaskipti");
 			        		return subjectMap;
 			        		}
 			        		
@@ -756,7 +756,7 @@
 			        		${
 			        		Map messageMap = new HashMap();
 			        		messageMap.put("en", "Hi, {0}.\n Handler was unassigned from the case {1} with identifier {2} and description {3}");
-			        		messageMap.put("is_IS", "S\u00E6l/ll, {0}.\n Umsj\u00F3narmannaskipti hafa \u00E1tt s\u00E9r sta\u00F0 fyrir m\u00E1l \u00ED flokknum \"{1}\" me\u00F0 nafni\u00F0 \"{3}\" og m\u00E1lsn\u00FAmeri\u00F0 \"{2}\". N\u00FDr umsj\u00F3narma\u00F0ur tekur vi\u00F0.");
+			        		messageMap.put("is_IS", "Sæl/ll, {0}.\n Umsjónarmannaskipti hafa átt sér stað fyrir mál í flokknum \"{1}\" með málsnúmerið \"{2}\". Nýr umsjónarmaður tekur við.");
 			        		return messageMap;
 			        		}
                 		</value>
