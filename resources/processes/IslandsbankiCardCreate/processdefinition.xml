@@ -139,15 +139,10 @@
 				<variable name="list_callTime"								access="read"></variable>
 				
 	            <variable name="files_ownerAttachments"						access="write"></variable>
-	            
-				
-				<variable name="list_ownerAppartmentNumbers"                access="read"></variable>
-	            <variable name="string_vehicleRegistrationNumber"           access="read"></variable>
-	            <variable name="string_parkingZone"                     	access="write"></variable>
-	            
-				<variable access="write" name="list_ownerReason"></variable>
-				<variable access="write" name="string_additionalInformationRequestText"></variable>
-				<variable access="write" name="string_actionTaken"></variable>
+	              
+				<variable name="list_ownerReason"							access="write"></variable>
+				<variable name="string_additionalInformationRequestText"	access="write" ></variable>
+				<variable name="string_actionTaken"							access="write"></variable>
 				
 			</controller>
 		</task>
@@ -201,7 +196,7 @@
 							${
 							Map subjectMap = new HashMap();
 							subjectMap.put("en", "subject empty");
-							subjectMap.put("is_IS", "Umsókn um bankaviðskipti" hafnað);
+							subjectMap.put("is_IS", "Umsókn um bankaviðskipti hjá Íslandsbanka hafnað");
 							return subjectMap;
 							}
                 		</value>
@@ -291,12 +286,12 @@
                     
                     HashMap subject = new HashMap(2);
                     subject.put("en", "Additional information needed");
-                    subject.put("is_IS", "Skilaboð frá umsjónaraðila umsóknar þinnar ({0}, {1}) hjá Íslandsbanka");
+                    subject.put("is_IS", "Skilaboð frá umsjónaraðila umsóknar þinnar ({1}) hjá Íslandsbanka");
                     
                     HashMap message = new HashMap(2);
                     message.put("en", "Hello, {0}. There is a new form for you to supply additional information in the case {1} with identifier {2} and description {3}.");
                     //message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n" + resolver.get("string_additionalInformationRequestText") + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
-                    message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n" + "TODO" + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
+                    message.put("is_IS", "Sæl/ll, {0}.\Þú hefur fengið skilaboð í heimabankann vegna umsóknar þinnar ({2}) í flokknum : {1} :\n\n" + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
                     
                     subjectValues = "{list: {mv: [{type: \"bean\", value: \"piw.processDescription\"}, {type: \"bean\", value: \"piw.processIdentifier\"}]}}";
                     messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"},{type: \"bean\", value: \"caseUser.urlToTheCase\"}]}}";
@@ -367,8 +362,8 @@
 			
 		</task>
 		
-		<event type="node-leave">
-			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy">
+		<!--event type="node-leave">
+			 <action class="com.idega.jbpm.proxy.JbpmHandlerProxy">
 				<handlerName>createParkingCardHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
 					<entry>
@@ -387,7 +382,10 @@
 					</entry>
 				</propertyMap>
 			</action>
-		</event>
+		</event-->
+		
+		
+		
 		<transition to="createCard"></transition>
 	</task-node>
 
@@ -449,7 +447,7 @@
 			        		${
 			        		Map subjectMap = new HashMap();
 			        		subjectMap.put("en", "Case created successfully!");
-			        		subjectMap.put("is_IS", "Umsókn þín með nafnið {1}({0})");
+			        		subjectMap.put("is_IS", "Umsókn þín um bankaviðskipti við Íslandsbanka hefur verið móttekin ({0})");
 			        		return subjectMap;
 			        		}
 			        		
@@ -461,7 +459,7 @@
 			        		${
 			        		Map messageMap = new HashMap();
 			        		messageMap.put("en", "Hello, {0}.\n You have successfully created case {1} with identifier {2} and description {3}. We are hopeful that your case will be handled soon. Good luck!");
-			        		messageMap.put("is_IS", "Sæl/ll, {0}.\nUmsókn þín í flokknum : {1} með nafnið : {3} og númerið : {2}  hefur verið móttekin	. Svar verður sent til þín í tölvupósti þegar umsóknin hefur verið tekin fyrir.");
+			        		messageMap.put("is_IS", "Sæl/ll, {0}.\nUmsókn þín í flokknum : {1} og með númerið : {2}  hefur verið móttekin	. Svar verður sent til þín í tölvupósti þegar umsóknin hefur verið tekin fyrir.");
 			        		return messageMap;
 			        		}
                 		</value>
@@ -496,7 +494,7 @@
 							${
 							Map subjectMap = new HashMap();
 							subjectMap.put("en", "Parking card approved");
-							subjectMap.put("is_IS", "Íbúakort þitt hefur verið samþykkt og er tilbúið til afgreiðslu");
+							subjectMap.put("is_IS", "Umsókn þín um bankaviðskipti við Íslandsbanka hefur verið samþykkt");
 							return subjectMap;
 							}
                 		</value>
@@ -507,7 +505,7 @@
 							${
 							Map messageMap = new HashMap();
 							messageMap.put("en", "Parking card approved, collect it at the Reykjavik service center.");
-							messageMap.put("is_IS", "Íbúakort þitt hefur verið samþykkt og er tilbúið til afgreiðslu í þjónustuveri Reykjavíkurborgar.");
+							messageMap.put("is_IS", "Umsókn þín um bankaviðskipti við Íslandsbanka hefur verið samþykkt. Þú færð sent debetkort í pósti.");
 							
 							return messageMap;
 							
@@ -532,7 +530,7 @@
 							${
 							Map subjectMap = new HashMap();
 							subjectMap.put("en", "additional info subject");
-							subjectMap.put("is_IS", "Meiri upplýsingar óskast vegna umsóknar um íbúakort");
+							subjectMap.put("is_IS", "Meiri upplýsingar óskast vegna umsóknar um bankaviðskipti við Íslandsbanka");
 							return subjectMap;
 							}
                 		</value>
@@ -543,7 +541,7 @@
 							${
 							Map messageMap = new HashMap();
 							messageMap.put("en", "additional info message");
-							messageMap.put("is_IS", "Meiri upplýsingar óskast vegna umsóknar um íbúakort. Sjá umsókn þína á Rafrænni Reykjavík");
+							messageMap.put("is_IS", "Meiri upplýsingar óskast vegna umsóknar um bankaviðskipti við Íslandsbanka. Skráðu þig inn í heimabankann og sjáðu skilaboðin undir Umsóknir og Mín mál.");
 							
 							return messageMap;
 							
