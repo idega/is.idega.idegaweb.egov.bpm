@@ -1,24 +1,29 @@
-<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml" xmlns:ev="http://www.w3.org/2001/xml-events" xmlns:idega="http://idega.com/xforms" xmlns:xf="http://www.w3.org/2002/xforms" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:ev="http://www.w3.org/2001/xml-events"
+    xmlns:idega="http://idega.com/xforms"
+    xmlns:xf="http://www.w3.org/2002/xforms"
+    xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
     <head>
         <title>
             <xf:output model="data_model" ref="instance('localized_strings')/form-title[@lang=instance('localized_strings')/current_language]"/>
         </title>
         <xf:model id="submission_model" schema="#fb-schema">
-            <xf:instance xmlns="" id="data-instance">
+            <xf:instance id="data-instance" xmlns="">
                 <data>
-                    <form_id>1517</form_id>
-                   <Name_fbc_5 mapping="string_ownerFullName"/>
+                    <form_id>3795</form_id>
+                    <Name_fbc_5 mapping="string_ownerFullName"/>
                     <Personal_id_fbc_6 mapping="string_ownerPersonalId"/>
                     <Address_fbc_7 mapping="string_ownerAddress"/>
                     <Postal_code_fbc_8 mapping="string_ownerPostCode"/>
-                    <Reason_fbc_9 mapping="list_ownerReason"/>
-                    <Description_fbc_13 mapping="string_additionalInformationRequestText" />
-                     <Apartment_number_fbc_14 mapping="list_ownerAppartmentNumbers"/>
-                    <License_plate_number_fbc_15 mapping="string_vehicleRegistrationNumber" />
-                    <Parking_zone_fbc_16 mapping="string_parkingZone"/>
-                	<actionTaken mapping="string_actionTaken"/>
-                	
-			</data>
+                    <Reason_for_denial_fbc_9 mapping="list_ownerReason"/>
+                    <Message_to_applicant_fbc_13 mapping="string_additionalInformationRequestText"/>
+                    <actionTaken mapping="string_actionTaken"/>
+                    <Text_output_fbc_21 mapping="string_ownerEmailAddress"/>
+                    <Text_output_fbc_23 mapping="string_bankDepartmentId"/>
+                    <Text_output_fbc_22 mapping="string_ownerMunicipality"/>
+                    <Text_output_fbc_26 mapping="list_callTime"/>
+                    <Text_output_fbc_29 mapping="string_ownerPhone"/>
+                </data>
             </xf:instance>
             <xf:instance id="control-instance">
                 <control xmlns="">
@@ -27,511 +32,296 @@
                     <submission>false</submission>
                     <generatePdf>false</generatePdf>
                     <submissionButton/>
-                     </control>
+                </control>
             </xf:instance>
-            
-            <xf:instance xmlns="" id="error-instance">
+            <xf:instance id="error-instance" xmlns="">
                 <data>
                     <error for=""/>
                 </data>
             </xf:instance>
-            
-            <xf:bind id="errorsGroup" idega:shared="true" nodeset="instance('error-instance')/error" relevant="instance('control-instance')/submission = 'true' and count-non-empty(instance('error-instance')/error)!=0"/>
+            <xf:bind id="errorsGroup" idega:shared="true"
+                nodeset="instance('error-instance')/error" relevant="instance('control-instance')/submission = 'true' and count-non-empty(instance('error-instance')/error)!=0"/>
             <xf:bind id="errors" idega:shared="true" nodeset="instance('error-instance')/error[. != '']"/>
-            <xf:bind id="bind-submissionButton" idega:shared="true" nodeset="instance('control-instance')/submissionButton" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'"/>
-            <xf:bind id="bind-controlsButton" idega:shared="true" nodeset="instance('control-instance')/controlsButton" relevant="instance('control-instance')/generatePdf != 'true'"/>
-            
-            <xf:submission action="xformsBPM:/nouri" id="submit_data_submission" method="post" ref="instance('data-instance')" replace="none">
+            <xf:bind id="bind-submissionButton" idega:shared="true"
+                nodeset="instance('control-instance')/submissionButton" relevant="instance('control-instance')/readonly != 'true' and instance('control-instance')/generatePdf != 'true'"/>
+            <xf:bind id="bind-controlsButton" idega:shared="true"
+                nodeset="instance('control-instance')/controlsButton" relevant="instance('control-instance')/generatePdf != 'true'"/>
+            <xf:submission action="xformsBPM:/nouri"
+                id="submit_data_submission" method="post"
+                ref="instance('data-instance')" replace="none">
                 <idega:toggle case="fbc_4" ev:event="xforms-submit-done"/>
             </xf:submission>
-            
             <xf:action ev:event="xforms-submit-error" id="submission-error">
                 <xf:dispatch name="idega-submit-error" target="idega-submission-error"/>
             </xf:action>
-            
             <xf:action ev:event="idega-submit-error" id="idega-submission-error">
                 <xf:message level="modeless" ref="instance('localized_strings')/submission-error_message[@lang=instance('localized_strings')/current_language]"/>
             </xf:action>
-       
-			<xf:bind id="actionTaken" nodeset="actionTaken" shared="true"/>
-			<xf:bind id="fbc_5_bind" nodeset="Name_fbc_5" readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
-            <xf:bind id="fbc_6_bind" nodeset="Personal_id_fbc_6" readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
+            <xf:bind id="actionTaken" nodeset="actionTaken" shared="true"/>
+            <xf:bind id="fbc_5_bind" nodeset="Name_fbc_5"
+                readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
+            <xf:bind id="fbc_6_bind" nodeset="Personal_id_fbc_6"
+                readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
             <xf:bind id="fbc_7_bind" nodeset="Address_fbc_7" type="xs:string"/>
-            <xf:bind id="fbc_8_bind" nodeset="Postal_code_fbc_8" readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
-            <xf:bind id="fbc_9_bind" nodeset="Reason_fbc_9" readonly="instance('control-instance')/readonly = 'true'" type="xs:string"  />
-            <xf:bind id="fbc_13_bind" nodeset="Description_fbc_13" type="xs:string" readonly="instance('control-instance')/readonly = 'true'" />
-            <xf:bind id="fbc_14_bind" nodeset="Apartment_number_fbc_14" readonly="true()" type="xs:string"/>
-			<xf:bind id="fbc_15_bind" nodeset="License_plate_number_fbc_15" readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
-			<xf:bind id="fbc_16_bind" nodeset="Parking_zone_fbc_16" type="xs:string"  readonly="instance('control-instance')/readonly = 'true'" />
-            
-		</xf:model> 
-		<xf:model id="data_model">
-		 <xf:instance xmlns="" id="localized_strings">
-		  <localized_strings>
-			<default_language>en</default_language>
-			<current_language>en</current_language> 
-			<form-title lang="en">Process application</form-title>
-			<form-title lang="is_IS">Afgreiða umsókn</form-title>
-			<page-2-label lang="en">Form submitted</page-2-label>
-			<page-2-label lang="is_IS">Form sent</page-2-label>
-			<submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
-			<submission-error_message lang="is_IS">Villa varð við að senda formið vinsamlegast athugið hvort stjörnumerktir reitir hafi allir verið útfylltir og að engar villur séu í forminu.</submission-error_message>
-			<submission-success_message lang="en">Your form has been received. Thank you.</submission-success_message>
-			<submission-success_message lang="is_IS">Formið hefur verið móttekið. Takk fyrir.</submission-success_message>
-			<fbc_5-label lang="is_IS">Nafn</fbc_5-label>
-			<fbc_5-label lang="en">Name</fbc_5-label> 
-			<fbc_6-label lang="is_IS">Kennitala</fbc_6-label>
-			<fbc_6-label lang="en">Personal id</fbc_6-label> 
-			<fbc_7-label lang="is_IS">Heimilisfang</fbc_7-label>
-			<fbc_7-label lang="en">Address</fbc_7-label>
-			<fbc_8-label lang="is_IS">Póstnúmer</fbc_8-label> 
-			<fbc_8-label lang="en">Postal code</fbc_8-label>
-			<fbc_9-label lang="is_IS">Reason for denial</fbc_9-label>
-			<fbc_9-label lang="en">Reason for denial</fbc_9-label> 
-			<fbc_10-label lang="is_IS">Hafna</fbc_10-label>
-			<fbc_10-label lang="en">Deny</fbc_10-label>
-			<fbc_18-label lang="is_IS">Senda</fbc_18-label>
-			<fbc_18-label lang="en">Deny</fbc_18-label>
-			<fbc_11-label lang="is_IS">Senda</fbc_11-label>
-			<fbc_11-label lang="en">More information required</fbc_11-label>
-			<fbc_12-label lang="is_IS">Samþykkja</fbc_12-label>
-			<fbc_12-label lang="en">Approve</fbc_12-label>
-			<fbc_13-title lang="is_IS">Message to applicant</fbc_13-title>
-			<fbc_13-title lang="en">Message to applicant</fbc_13-title>
-			<fbc_14-label lang="is_IS">Staðsetning í húsi, íbúðarnúmer</fbc_14-label>
-			<fbc_14-label lang="en">Apartment number</fbc_14-label>
-			<fbc_15-title lang="is_IS">Bílnúmer</fbc_15-title>
-        	<fbc_15-title lang="en">License plate number</fbc_15-title>
-        	<fbc_16-label lang="is_IS">Svæði íbúakorts</fbc_16-label>
-			<fbc_16-label lang="en">Parking card zones</fbc_16-label>
-        
-			<fbc_21-label lang="is_IS">Óska meiri upplýsinga</fbc_21-label>
-			<fbc_21-label lang="en">More information required</fbc_21-label>
-			 <page-back lang="en">Back</page-back>
-             <page-back lang="is_IS">Til baka</page-back>
-		</localized_strings>
-		</xf:instance>
-		 
-	<xf:action ev:event="xforms-ready">
-	 <idega:dispatch name="idega-xforms-ready" target="//h:body//*[starts-with(@id, 'fbc_')]"/> 
-		<xf:setvalue model="data_model" ref="instance('localized_strings')/current_language" value="idega:currentLocale()"/>
-		<xf:setvalue if="instance('control-instance')/generatePdf='true'" model="submission_model" ref="instance('control-instance')/required" value="'false'"/>
-		<idega:setvalue ref="instance('fbc_14_lds')" value="idega:resolveBean('propertyRegistryService.getApartmentsForAddressItems({0})', idega:resolveBean('loginSession.user.usersMainAddress.ID'))" />
-			 
-		</xf:action> 
-		
-		<xf:instance id="fbc_9_lds" xmlns="">
-		<local_src>
-		<localizedEntries lang="en">
-		
-		<item>
-		<itemLabel>Other</itemLabel>
-		<itemValue>test</itemValue>
-		</item>
-		
-		</localizedEntries>
-		<localizedEntries lang="is_IS">
-		<item>
-		<itemLabel>Heimilisfang á umsókn er ekki í samræmi við þjóðskrá.</itemLabel>
-		<itemValue>1</itemValue>
-		</item>
-		<item>
-		<itemLabel>Svæði sem sótt er um íbúakort á ber ekki saman við lögheimili.</itemLabel>
-		<itemValue>2</itemValue>
-		</item>
-		<item>
-		<itemLabel>Umsækjandi er ekki eigandi/umráðamaður bifreiðar skv. ökutækjaskrá.</itemLabel>
-		<itemValue>3</itemValue>
-		</item>
-		<item>
-		<itemLabel>Bifreið er þeirrar gerðar/stærðar að samrýmist ekki reglum um íbúakort.</itemLabel>
-		<itemValue>4</itemValue>
-		</item>
-		<item>
-		<itemLabel>Umsækjandi er ekki skráður eigandi íbúðar skv. Fasteignamati ríkisins.</itemLabel>
-		<itemValue>5</itemValue>
-		</item>
-		<item>
-		<itemLabel>Umsækjandi framvísar ekki samþykki leigusala.</itemLabel>
-		<itemValue>6</itemValue>
-		</item>
-		<item>
-		<itemLabel>Umsækjandi framvísar ekki þinglýstum leigusamningi.</itemLabel>
-		<itemValue>7</itemValue>
-		</item>
-		<item>
-		<itemLabel>Umsækjandi er útilokaður frá íbúakorti af tilgreindri ástæðu</itemLabel>
-		<itemValue>8</itemValue>
-		</item>
-		
-		
-		</localizedEntries>
-		</local_src>
-	</xf:instance>
-	<xf:instance id="fbc_9_eds" xmlns="">
-		<ext_src/>
-	</xf:instance>
-	
-		<xf:instance id="fbc_14_lds" xmlns="">
-		<local_src>
-		
-		</local_src>
-	</xf:instance>
-	<xf:instance id="fbc_14_eds" xmlns="">
-		<ext_src/>
-	</xf:instance>
-	 
-	 	<xf:instance id="fbc_16_eds" xmlns="">
-	<ext_src/>
-	</xf:instance>
-	
-	<xf:instance id="fbc_16_lds" xmlns="">
-		<local_src>
-		<localizedEntries lang="en">
-		<item>
-		<itemLabel>A</itemLabel>
-		<itemValue>A</itemValue>
-		</item>
-		<item>
-		<itemLabel>B</itemLabel>
-		<itemValue>B</itemValue>
-		</item>
-		<item>
-		<itemLabel>C</itemLabel>
-		<itemValue>C</itemValue>
-		</item>
-		<item>
-		<itemLabel>D</itemLabel>
-		<itemValue>D</itemValue>
-		</item>
-		<item>
-		<itemLabel>E</itemLabel>
-		<itemValue>E</itemValue>
-		</item>
-		<item>
-		<itemLabel>F</itemLabel>
-		<itemValue>F</itemValue>
-		</item>
-		<item>
-		<itemLabel>G</itemLabel>
-		<itemValue>G</itemValue>
-		</item>
-		<item>
-		<itemLabel>H</itemLabel>
-		<itemValue>H</itemValue>
-		</item>
-		<item>
-		<itemLabel>I</itemLabel>
-		<itemValue>I</itemValue>
-		</item>
-		<item>
-		<itemLabel>J</itemLabel>
-		<itemValue>J</itemValue>
-		</item>
-		<item>
-		<itemLabel>K</itemLabel>
-		<itemValue>K</itemValue>
-		</item>
-		<item>
-		<itemLabel>L</itemLabel>
-		<itemValue>L</itemValue>
-		</item>
-		<item>
-		<itemLabel>M</itemLabel>
-		<itemValue>M</itemValue>
-		</item>
-		<item>
-		<itemLabel>N</itemLabel>
-		<itemValue>N</itemValue>
-		</item><item>
-		<itemLabel>O</itemLabel>
-		<itemValue>O</itemValue>
-		</item><item>
-		<itemLabel>P</itemLabel>
-		<itemValue>P</itemValue>
-		</item>
-		<item>
-		<itemLabel>Q</itemLabel>
-		<itemValue>Q</itemValue>
-		</item>
-		<item>
-		<itemLabel>R</itemLabel>
-		<itemValue>R</itemValue>
-		</item>
-		
-		<item>
-		<itemLabel>S</itemLabel>
-		<itemValue>S</itemValue>
-		</item>
-		<item>
-		<itemLabel>T</itemLabel>
-		<itemValue>T</itemValue>
-		</item><item>
-		<itemLabel>U</itemLabel>
-		<itemValue>U</itemValue>
-		</item><item>
-		<itemLabel>V</itemLabel>
-		<itemValue>V</itemValue>
-		</item><item>
-		<itemLabel>X</itemLabel>
-		<itemValue>X</itemValue>
-		</item><item>
-		<itemLabel>Y</itemLabel>
-		<itemValue>Y</itemValue>
-		</item><item>
-		<itemLabel>Z</itemLabel>
-		<itemValue>Z</itemValue>
-		</item>
-		</localizedEntries>
-		<localizedEntries lang="is_IS">
-		<item>
-		<itemLabel>A</itemLabel>
-		<itemValue>A</itemValue>
-		</item>
-		<item>
-		<itemLabel>B</itemLabel>
-		<itemValue>B</itemValue>
-		</item>
-		<item>
-		<itemLabel>C</itemLabel>
-		<itemValue>C</itemValue>
-		</item>
-		<item>
-		<itemLabel>D</itemLabel>
-		<itemValue>D</itemValue>
-		</item>
-		<item>
-		<itemLabel>E</itemLabel>
-		<itemValue>E</itemValue>
-		</item>
-		<item>
-		<itemLabel>F</itemLabel>
-		<itemValue>F</itemValue>
-		</item>
-		<item>
-		<itemLabel>G</itemLabel>
-		<itemValue>G</itemValue>
-		</item>
-		<item>
-		<itemLabel>H</itemLabel>
-		<itemValue>H</itemValue>
-		</item>
-		<item>
-		<itemLabel>I</itemLabel>
-		<itemValue>I</itemValue>
-		</item>
-		<item>
-		<itemLabel>J</itemLabel>
-		<itemValue>J</itemValue>
-		</item>
-		<item>
-		<itemLabel>K</itemLabel>
-		<itemValue>K</itemValue>
-		</item>
-		<item>
-		<itemLabel>L</itemLabel>
-		<itemValue>L</itemValue>
-		</item>
-		<item>
-		<itemLabel>M</itemLabel>
-		<itemValue>M</itemValue>
-		</item>
-		<item>
-		<itemLabel>N</itemLabel>
-		<itemValue>N</itemValue>
-		</item><item>
-		<itemLabel>O</itemLabel>
-		<itemValue>O</itemValue>
-		</item><item>
-		<itemLabel>P</itemLabel>
-		<itemValue>P</itemValue>
-		</item>
-		<item>
-		<itemLabel>Q</itemLabel>
-		<itemValue>Q</itemValue>
-		</item>
-		<item>
-		<itemLabel>R</itemLabel>
-		<itemValue>R</itemValue>
-		</item>
-		
-		<item>
-		<itemLabel>S</itemLabel>
-		<itemValue>S</itemValue>
-		</item>
-		<item>
-		<itemLabel>T</itemLabel>
-		<itemValue>T</itemValue>
-		</item><item>
-		<itemLabel>U</itemLabel>
-		<itemValue>U</itemValue>
-		</item><item>
-		<itemLabel>V</itemLabel>
-		<itemValue>V</itemValue>
-		</item><item>
-		<itemLabel>X</itemLabel>
-		<itemValue>X</itemValue>
-		</item><item>
-		<itemLabel>Y</itemLabel>
-		<itemValue>Y</itemValue>
-		</item><item>
-		<itemLabel>Z</itemLabel>
-		<itemValue>Z</itemValue>
-		</item>
-		</localizedEntries>
-		</local_src>
-	</xf:instance>
-	
-	
-		
-		
-		</xf:model> 
-		<xs:schema id="fb-schema"/> 
-	
- 	
-  </head>
-   <body>
-<xf:group appearance="full"> 
-<xf:group bind="errorsGroup" class="xformErrors">
- <xf:repeat bind="errors">
-  <xf:output ref="."/>
-   </xf:repeat>
-    </xf:group> 
-    <idega:setError ev:event="idega-validation-error" id="formSetErrorHandler" ref="instance('error-instance')/error"/> 
-    
-    <idega:switch>
-<idega:case id="fbc_1" show="instance('control-instance')/generatePdf='true'">
- <xf:group appearance="full"> 
-
-   <xf:output bind="fbc_5_bind" id="fbc_5"> 
-			<xf:label model="data_model" ref="instance('localized_strings')/fbc_5-label[@lang=instance('localized_strings')/current_language]"/>
-	   </xf:output>
-	   
-	 <xf:output bind="fbc_6_bind" id="fbc_6">
-		<xf:label model="data_model" ref="instance('localized_strings')/fbc_6-label[@lang=instance('localized_strings')/current_language]"/>
-	</xf:output>
-	
-	 <xf:output bind="fbc_7_bind" id="fbc_7">
-		<xf:label model="data_model" ref="instance('localized_strings')/fbc_7-label[@lang=instance('localized_strings')/current_language]"/>
-	</xf:output>
-	
-	 <xf:output bind="fbc_8_bind" id="fbc_8">
-		<xf:label model="data_model" ref="instance('localized_strings')/fbc_8-label[@lang=instance('localized_strings')/current_language]"/>
-	</xf:output>
-	
-				<xf:select1 appearance="minimal" bind="fbc_16_bind" id="fbc_16">
-					<xf:label model="data_model"
-						ref="instance('localized_strings')/fbc_16-label[@lang=instance('localized_strings')/current_language]" />
-					<xf:itemset model="data_model"
-						nodeset="instance('fbc_16_lds')/localizedEntries[@lang=instance('localized_strings')/current_language]/item">
-						<xf:label ref="itemLabel" />
-						<xf:value ref="itemValue" />
-					</xf:itemset>
-				</xf:select1>
-	
-	<xf:select1 appearance="full" bind="fbc_14_bind" id="fbc_14">
-			<xf:label model="data_model" ref="instance('localized_strings')/fbc_14-label[@lang=instance('localized_strings')/current_language]"/>
-				<xf:itemset model="data_model" nodeset="instance('fbc_14_lds')/localizedEntries[@lang=instance('localized_strings')/current_language]/item">
-					<xf:label ref="itemLabel"/>
-					<xf:value ref="itemValue"/>
-				</xf:itemset>
-							
-		</xf:select1>
-		
-     <xf:output bind="fbc_15_bind" id="fbc_15">
-                  <xf:label model="data_model" ref="instance('localized_strings')/fbc_15-title[@lang=instance('localized_strings')/current_language]"/>
-	</xf:output>	
-	
-	
-			<xf:select appearance="full" bind="fbc_9_bind" id="fbc_9">
-			<xf:label model="data_model" ref="instance('localized_strings')/fbc_9-label[@lang=instance('localized_strings')/current_language]"/>
-				<xf:itemset model="data_model" nodeset="instance('fbc_9_lds')/localizedEntries[@lang=instance('localized_strings')/current_language]/item">
-					<xf:label ref="itemLabel"/>
-					<xf:value ref="itemValue"/>
-				</xf:itemset>
-							
-		</xf:select>
-		
-		<xf:textarea bind="fbc_13_bind" id="fbc_13">
-					<xf:label model="data_model" ref="instance('localized_strings')/fbc_13-title[@lang=instance('localized_strings')/current_language]"/>
-		</xf:textarea>
-		
-
-
-	
-	
-<div class="fbc_button_area" id="fbc_2" type="fbc_button_area">
-  
-  
-	<xf:trigger bind="bind-submissionButton" class="fbc_button_submit" id="fbc_11" type="fbc_button_submit">
-		<xf:label model="data_model" ref="instance('localized_strings')/fbc_11-label[@lang=instance('localized_strings')/current_language]"/>
-		  
-            <xf:action ev:event="DOMActivate">
-			<xf:setvalue ref="instance('control-instance')/submission" value="'true'"/>
-			<xf:setvalue bind="actionTaken">moreInfo</xf:setvalue>
-			<idega:dispatch name="idega-validate" target="//h:body//*[starts-with(@id, 'fbc_')]"/>
-			<xf:dispatch name="xforms-rebuild" target="data_model"/>
-			<xf:dispatch name="xforms-recalculate" target="data_model"/>
-			<xf:dispatch name="xforms-revalidate" target="data_model"/>
-			<xf:dispatch name="xforms-refresh" target="data_model"/>
-			<xf:action if="count-non-empty(instance('error-instance')/error)=0">
-			<xf:send submission="submit_data_submission"/>
-			</xf:action>
-			<xf:dispatch if="count-non-empty(instance('error-instance')/error)!=0" name="idega-submit-error" target="idega-submission-error"/>
-		</xf:action>
-	</xf:trigger>
-	
-
-            
-		<xf:trigger bind="bind-submissionButton" class="fbc_button_submit" id="fbc_10" type="fbc_button_submit">
-		
-			<xf:label model="data_model" ref="instance('localized_strings')/fbc_10-label[@lang=instance('localized_strings')/current_language]"/>
-				<xf:action ev:event="DOMActivate">
-					<xf:setvalue ref="instance('control-instance')/submission" value="'true'"/>
-					<xf:setvalue bind="actionTaken">deny</xf:setvalue>
-					<idega:dispatch name="idega-validate" target="//h:body//*[starts-with(@id, 'fbc_')]"/>
-					<xf:dispatch name="xforms-rebuild" target="data_model"/>
-					<xf:dispatch name="xforms-recalculate" target="data_model"/>
-					<xf:dispatch name="xforms-revalidate" target="data_model"/>
-					<xf:dispatch name="xforms-refresh" target="data_model"/>
-					<xf:action if="count-non-empty(instance('error-instance')/error)=0">
-					<xf:send submission="submit_data_submission"/>
-					</xf:action>
-					<xf:dispatch if="count-non-empty(instance('error-instance')/error)!=0" name="idega-submit-error" target="idega-submission-error"/>
-				</xf:action>
-			</xf:trigger>
-
-
-
-		<xf:trigger bind="bind-submissionButton" class="fbc_button_submit" id="fbc_12" type="fbc_button_submit">
-			<xf:label model="data_model" ref="instance('localized_strings')/fbc_12-label[@lang=instance('localized_strings')/current_language]"/>
-			
-				<xf:action ev:event="DOMActivate">
-				<xf:setvalue ref="instance('control-instance')/submission" value="'true'"/>
-				<xf:setvalue bind="actionTaken">approve</xf:setvalue>
-				<idega:dispatch name="idega-validate" target="//h:body//*[starts-with(@id, 'fbc_')]"/>
-				<xf:dispatch name="xforms-rebuild" target="data_model"/>
-				<xf:dispatch name="xforms-recalculate" target="data_model"/>
-				<xf:dispatch name="xforms-revalidate" target="data_model"/>
-				<xf:dispatch name="xforms-refresh" target="data_model"/>	
-				<xf:action if="count-non-empty(instance('error-instance')/error)=0">
-				<xf:send submission="submit_data_submission"/>
-				</xf:action>
-				<xf:dispatch if="count-non-empty(instance('error-instance')/error)!=0" name="idega-submit-error" target="idega-submission-error"/>
-			</xf:action>
-		</xf:trigger>
-	</div> 
-</xf:group>
-</idega:case>
-
- 
-  <idega:case id="fbc_4" type="thx_page">
-	<xf:group appearance="full" class="thx_page"> <xf:label model="data_model" ref="instance('localized_strings')/page-2-label[@lang=instance('localized_strings')/current_language]"/>
- 			<xf:output model="data_model" ref="instance('localized_strings')/submission-success_message[@lang=instance('localized_strings')/current_language]"/>	
-	</xf:group>
- </idega:case>
- 
- </idega:switch>
-</xf:group> 
-</body>
+            <xf:bind id="fbc_8_bind" nodeset="Postal_code_fbc_8"
+                readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
+            <xf:bind id="fbc_9_bind" nodeset="Reason_for_denial_fbc_9"
+                readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
+            <xf:bind id="fbc_13_bind"
+                nodeset="Message_to_applicant_fbc_13"
+                readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
+            <xf:bind id="bind.fbc_17" nodeset="bind.fbc_17"/>
+            <xf:bind id="bind.fbc_18" nodeset="bind.fbc_18"/>
+            <xf:bind id="bind.fbc_20" nodeset="bind.fbc_20"/>
+            <xf:bind id="fbc_21_bind" nodeset="Text_output_fbc_21"/>
+            <xf:bind id="fbc_22_bind" nodeset="Text_output_fbc_22"/>
+            <xf:bind id="fbc_23_bind" nodeset="Text_output_fbc_23"/>
+            <xf:bind id="fbc_26_bind" nodeset="Text_output_fbc_26"/>
+            <xf:bind id="fbc_29_bind" nodeset="Text_output_fbc_29"/>
+        </xf:model>
+        <xf:model id="data_model">
+            <xf:instance id="localized_strings" xmlns="">
+                <localized_strings>
+                    <default_language>en</default_language>
+                    <current_language>en</current_language>
+                    <form-title lang="en">Process application</form-title>
+                    <form-title lang="is_IS">Afgreiða umsókn</form-title>
+                    <page-2-label lang="en">Form submitted</page-2-label>
+                    <page-2-label lang="is_IS">Form sent</page-2-label>
+                    <submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
+                    <submission-error_message lang="is_IS">Villa varð við að senda formið vinsamlegast athugið hvort stjörnumerktir reitir hafi allir verið útfylltir og að engar villur séu í forminu.</submission-error_message>
+                    <submission-success_message lang="en">Your form has been received. Thank you.</submission-success_message>
+                    <submission-success_message lang="is_IS">Formið hefur verið móttekið. Takk fyrir.</submission-success_message>
+                    <fbc_5-label lang="is_IS">Nafn</fbc_5-label>
+                    <fbc_5-label lang="en">Name</fbc_5-label>
+                    <fbc_6-label lang="is_IS">Kennitala</fbc_6-label>
+                    <fbc_6-label lang="en">Personal id</fbc_6-label>
+                    <fbc_7-label lang="is_IS">Heimilisfang</fbc_7-label>
+                    <fbc_7-label lang="en">Address</fbc_7-label>
+                    <fbc_8-label lang="is_IS">Póstnúmer</fbc_8-label>
+                    <fbc_8-label lang="en">Postal code</fbc_8-label>
+                    <fbc_9-label lang="is_IS">Ástæða höfnunar</fbc_9-label>
+                    <fbc_9-label lang="en">Reason for denial</fbc_9-label>
+                    <fbc_10-label lang="is_IS">Hafna</fbc_10-label>
+                    <fbc_10-label lang="en">Deny</fbc_10-label>
+                    <fbc_11-label lang="is_IS">Senda skilaboð</fbc_11-label>
+                    <fbc_11-label lang="en">More information required</fbc_11-label>
+                    <fbc_12-label lang="is_IS">Samþykkja</fbc_12-label>
+                    <fbc_12-label lang="en">Approve</fbc_12-label>
+                    <fbc_13-title lang="is_IS">Skilaboð til umsækjanda</fbc_13-title>
+                    <fbc_13-title lang="en">Message to applicant</fbc_13-title>
+                    <fbc_21-label lang="is_IS">Netfang</fbc_21-label>
+                    <fbc_21-label lang="en">Text output</fbc_21-label>
+                    <page-back lang="en">Back</page-back>
+                    <page-back lang="is_IS">Til baka</page-back>
+                    <fbc_17-text lang="is_IS"/>
+                    <fbc_17-text lang="en">Message</fbc_17-text>
+                    <fbc_17-label lang="is_IS">Netfang</fbc_17-label>
+                    <fbc_22-label lang="is_IS">Staður</fbc_22-label>
+                    <fbc_22-label lang="en">Text output</fbc_22-label>
+                    <fbc_23-label lang="is_IS">Valið útibú</fbc_23-label>
+                    <fbc_23-label lang="en">Text output</fbc_23-label>
+                    <fbc_24-text lang="is_IS">Upplýsingar úr umsókn</fbc_24-text>
+                    <fbc_24-text lang="en">Header text</fbc_24-text>
+                    <fbc_25-text lang="is_IS">Ákvörðun</fbc_25-text>
+                    <fbc_25-text lang="en">Header text</fbc_25-text>
+                    <fbc_26-label lang="is_IS">Tími til að hringja</fbc_26-label>
+                    <fbc_26-label lang="en">Text output</fbc_26-label>
+                    <fbc_27-text lang="is_IS">Vanskilaskrá</fbc_27-text>
+                    <fbc_27-text lang="en">Header text</fbc_27-text>
+                    <fbc_28-text lang="is_IS">Nei</fbc_28-text>
+                    <fbc_28-text lang="en">Message</fbc_28-text>
+                    <fbc_28-label lang="is_IS">Er viðkomandi á vanskilaskrá?</fbc_28-label>
+                    <fbc_29-label lang="is_IS">Símar</fbc_29-label>
+                    <fbc_29-label lang="en">Text output</fbc_29-label>
+                </localized_strings>
+            </xf:instance>
+            <xf:action ev:event="xforms-ready">
+                <idega:dispatch name="idega-xforms-ready" target="//h:body//*[starts-with(@id, 'fbc_')]"/>
+                <xf:setvalue model="data_model"
+                    ref="instance('localized_strings')/current_language" value="idega:currentLocale()"/>
+                <xf:setvalue
+                    if="instance('control-instance')/generatePdf='true'"
+                    model="submission_model"
+                    ref="instance('control-instance')/required" value="'false'"/>
+            </xf:action>
+            <xf:instance id="fbc_9_lds" xmlns="">
+                <local_src>
+                    <localizedEntries lang="en">
+                        <item>
+                            <itemLabel>Other</itemLabel>
+                            <itemValue>test</itemValue>
+                        </item>
+                    </localizedEntries>
+                    <localizedEntries lang="is_IS">
+                        <item>
+                            <itemLabel>Heimilisfang á umsókn er ekki í samræmi við þjóðskrá</itemLabel>
+                            <itemValue>Heimilisfang á umsókn er ekki í samræmi við þjóðskrá</itemValue>
+                        </item>
+                        <item>
+                            <itemLabel>Umsækjandi er á vanskilaskrá</itemLabel>
+                            <itemValue>Umsækjandi er á vanskilaskrá</itemValue>
+                        </item>
+                        <item>
+                            <itemLabel>Umsækjandi er ekki orðinn fjárráða</itemLabel>
+                            <itemValue>Umsækjandi er ekki orðinn fjárráða</itemValue>
+                        </item>
+                        <item>
+                            <itemLabel>Umsókn var hafnað af tilgreindri ástæðu</itemLabel>
+                            <itemValue>Umsókn var hafnað af tilgreindri ástæðu</itemValue>
+                        </item>
+                    </localizedEntries>
+                </local_src>
+            </xf:instance>
+            <xf:instance id="fbc_9_eds" xmlns="">
+                <ext_src/>
+            </xf:instance>
+        </xf:model>
+        <xs:schema id="fb-schema"/>
+    </head>
+    <body>
+        <xf:group appearance="full">
+            <xf:group bind="errorsGroup" class="xformErrors">
+                <xf:repeat bind="errors">
+                    <xf:output ref="."/>
+                </xf:repeat>
+            </xf:group>
+            <idega:setError ev:event="idega-validation-error"
+                id="formSetErrorHandler" ref="instance('error-instance')/error"/>
+            <idega:switch>
+                <idega:case id="fbc_1" show="instance('control-instance')/generatePdf='true'">
+                    <xf:group appearance="full">
+                        <div class="fbc_header_text" id="fbc_24" type="fbc_header_text">
+                            <xf:output model="data_model" ref="instance('localized_strings')/fbc_24-text[@lang=instance('localized_strings')/current_language]"/>
+                        </div>
+                        <xf:output bind="fbc_5_bind" id="fbc_5">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_5-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_6_bind" id="fbc_6">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_6-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_21_bind" id="fbc_21">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_21-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_29_bind" id="fbc_29">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_29-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_7_bind" id="fbc_7">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_7-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_8_bind" id="fbc_8">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_22_bind" id="fbc_22">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_22-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_23_bind" id="fbc_23">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_23-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <xf:output bind="fbc_26_bind" id="fbc_26">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_26-label[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:output>
+                        <div class="fbc_header_text" id="fbc_27" type="fbc_header_text">
+                            <xf:output model="data_model" ref="instance('localized_strings')/fbc_27-text[@lang=instance('localized_strings')/current_language]"/>
+                        </div>
+                        <div id="fbc_28" type="fbc_static_output">
+                            <xf:output model="data_model" ref="instance('localized_strings')/fbc_28-text[@lang=instance('localized_strings')/current_language]">
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_28-label[@lang=instance('localized_strings')/current_language]"/>
+                            </xf:output>
+                        </div>
+                        <div class="fbc_header_text" id="fbc_25" type="fbc_header_text">
+                            <xf:output model="data_model" ref="instance('localized_strings')/fbc_25-text[@lang=instance('localized_strings')/current_language]"/>
+                        </div>
+                        <xf:select appearance="full" bind="fbc_9_bind" id="fbc_9">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_9-label[@lang=instance('localized_strings')/current_language]"/>
+                            <xf:itemset model="data_model" nodeset="instance('fbc_9_lds')/localizedEntries[@lang=instance('localized_strings')/current_language]/item">
+                                <xf:label ref="itemLabel"/>
+                                <xf:value ref="itemValue"/>
+                            </xf:itemset>
+                        </xf:select>
+                        <xf:textarea bind="fbc_13_bind" id="fbc_13">
+                            <xf:label model="data_model" ref="instance('localized_strings')/fbc_13-title[@lang=instance('localized_strings')/current_language]"/>
+                        </xf:textarea>
+                        <div class="fbc_button_area" id="fbc_2" type="fbc_button_area">
+                            <xf:trigger bind="bind-submissionButton"
+                                class="fbc_button_submit" id="fbc_11" type="fbc_button_submit">
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_11-label[@lang=instance('localized_strings')/current_language]"/>
+                                <xf:action ev:event="DOMActivate">
+                                    <xf:setvalue
+                                    ref="instance('control-instance')/submission" value="'true'"/>
+                                    <xf:setvalue bind="actionTaken">moreInfo</xf:setvalue>
+                                    <idega:dispatch
+                                    name="idega-validate" target="//h:body//*[starts-with(@id, 'fbc_')]"/>
+                                    <xf:dispatch name="xforms-rebuild" target="data_model"/>
+                                    <xf:dispatch
+                                    name="xforms-recalculate" target="data_model"/>
+                                    <xf:dispatch
+                                    name="xforms-revalidate" target="data_model"/>
+                                    <xf:dispatch name="xforms-refresh" target="data_model"/>
+                                    <xf:action if="count-non-empty(instance('error-instance')/error)=0">
+                                    <xf:send submission="submit_data_submission"/>
+                                    </xf:action>
+                                    <xf:dispatch
+                                    if="count-non-empty(instance('error-instance')/error)!=0"
+                                    name="idega-submit-error" target="idega-submission-error"/>
+                                </xf:action>
+                            </xf:trigger>
+                            <xf:trigger bind="bind-submissionButton"
+                                class="fbc_button_submit" id="fbc_10" type="fbc_button_submit">
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_10-label[@lang=instance('localized_strings')/current_language]"/>
+                                <xf:action ev:event="DOMActivate">
+                                    <xf:setvalue
+                                    ref="instance('control-instance')/submission" value="'true'"/>
+                                    <xf:setvalue bind="actionTaken">deny</xf:setvalue>
+                                    <idega:dispatch
+                                    name="idega-validate" target="//h:body//*[starts-with(@id, 'fbc_')]"/>
+                                    <xf:dispatch name="xforms-rebuild" target="data_model"/>
+                                    <xf:dispatch
+                                    name="xforms-recalculate" target="data_model"/>
+                                    <xf:dispatch
+                                    name="xforms-revalidate" target="data_model"/>
+                                    <xf:dispatch name="xforms-refresh" target="data_model"/>
+                                    <xf:action if="count-non-empty(instance('error-instance')/error)=0">
+                                    <xf:send submission="submit_data_submission"/>
+                                    </xf:action>
+                                    <xf:dispatch
+                                    if="count-non-empty(instance('error-instance')/error)!=0"
+                                    name="idega-submit-error" target="idega-submission-error"/>
+                                </xf:action>
+                            </xf:trigger>
+                            <xf:trigger bind="bind-submissionButton"
+                                class="fbc_button_submit" id="fbc_12" type="fbc_button_submit">
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_12-label[@lang=instance('localized_strings')/current_language]"/>
+                                <xf:action ev:event="DOMActivate">
+                                    <xf:setvalue
+                                    ref="instance('control-instance')/submission" value="'true'"/>
+                                    <xf:setvalue bind="actionTaken">approve</xf:setvalue>
+                                    <idega:dispatch
+                                    name="idega-validate" target="//h:body//*[starts-with(@id, 'fbc_')]"/>
+                                    <xf:dispatch name="xforms-rebuild" target="data_model"/>
+                                    <xf:dispatch
+                                    name="xforms-recalculate" target="data_model"/>
+                                    <xf:dispatch
+                                    name="xforms-revalidate" target="data_model"/>
+                                    <xf:dispatch name="xforms-refresh" target="data_model"/>
+                                    <xf:action if="count-non-empty(instance('error-instance')/error)=0">
+                                    <xf:send submission="submit_data_submission"/>
+                                    </xf:action>
+                                    <xf:dispatch
+                                    if="count-non-empty(instance('error-instance')/error)!=0"
+                                    name="idega-submit-error" target="idega-submission-error"/>
+                                </xf:action>
+                            </xf:trigger>
+                        </div>
+                    </xf:group>
+                </idega:case>
+                <idega:case id="fbc_4" type="thx_page">
+                    <xf:group appearance="full" class="thx_page">
+                        <xf:label model="data_model" ref="instance('localized_strings')/page-2-label[@lang=instance('localized_strings')/current_language]"/>
+                        <xf:output model="data_model" ref="instance('localized_strings')/submission-success_message[@lang=instance('localized_strings')/current_language]"/>
+                    </xf:group>
+                </idega:case>
+            </idega:switch>
+        </xf:group>
+    </body>
 </html>

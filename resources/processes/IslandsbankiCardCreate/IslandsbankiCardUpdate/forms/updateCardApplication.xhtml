@@ -10,11 +10,11 @@
         <xf:model id="submission_model" schema="#fb-schema">
             <xf:instance id="data-instance" xmlns="">
                 <data>
-                    <form_id>3782</form_id>
+                    <form_id>3796</form_id>
                     <Kennitala_fbc_5 mapping="string_ownerPersonalId"/>
                     <Nafn_fbc_6 mapping="string_ownerFullName"/>
                     <Heimilisfang_fbc_7 mapping="string_ownerAddress"/>
-                    <Borg_fbc_8 mapping="string_ownerMunicipality"/>
+                    <Staur_fbc_8 mapping="string_ownerMunicipality"/>
                     <Pstnmer_fbc_9 mapping="string_ownerPostCode"/>
                     <Smar_fbc_10 mapping="string_ownerPhone"/>
                     <Viskiptatib_fbc_11 mapping="string_bankDepartmentId"/>
@@ -72,7 +72,7 @@
             <xf:bind id="fbc_7_bind" nodeset="Heimilisfang_fbc_7"
                 readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
             <xf:instance id="fbc_7_autofill-instance" relevant="false()" src="context:fb-afk-loginSession.user.usersMainAddress.streetAddress"/>
-            <xf:bind id="fbc_8_bind" nodeset="Borg_fbc_8"
+            <xf:bind id="fbc_8_bind" nodeset="Staur_fbc_8"
                 readonly="instance('control-instance')/readonly = 'true'" type="xs:string"/>
             <xf:instance id="fbc_8_autofill-instance" relevant="false()" src="context:fb-afk-loginSession.user.usersMainAddress.city"/>
             <xf:bind id="fbc_9_bind" nodeset="Pstnmer_fbc_9"
@@ -109,7 +109,7 @@
                     <page-2-label lang="en">Form submitted</page-2-label>
                     <page-2-label lang="is_IS">Form sent</page-2-label>
                     <page-1-submit_button-label lang="en">Submit</page-1-submit_button-label>
-                    <page-1-submit_button-label lang="is_IS">Senda umsókn</page-1-submit_button-label>
+                    <page-1-submit_button-label lang="is_IS">Send umsókn</page-1-submit_button-label>
                     <submission-error_message lang="en">Submission error. Please check your form!</submission-error_message>
                     <submission-error_message lang="is_IS">Villa varð við að senda formið vinsamlegast athugið hvort stjörnumerktir reitir hafi allir verið útfylltir og að engar villur séu í forminu.</submission-error_message>
                     <submission-success_message lang="en">Your form has been received. Thank you.</submission-success_message>
@@ -120,7 +120,7 @@
                     <fbc_6-label lang="en">Name</fbc_6-label>
                     <fbc_7-label lang="is_IS">Heimilisfang</fbc_7-label>
                     <fbc_7-label lang="en">Address</fbc_7-label>
-                    <fbc_8-label lang="is_IS">Borg</fbc_8-label>
+                    <fbc_8-label lang="is_IS">Staður</fbc_8-label>
                     <fbc_8-label lang="en">City</fbc_8-label>
                     <fbc_9-label lang="is_IS">Póstnúmer</fbc_9-label>
                     <fbc_9-label lang="en">Postal code</fbc_9-label>
