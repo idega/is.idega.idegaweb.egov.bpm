@@ -81,15 +81,20 @@
                 </propertyMap>
              </assignment>
 			 <controller>
-	            <variable name="string_ownerFullName"                       access="write"></variable>
+	           <variable name="string_ownerFullName"                       access="write"></variable>
 	            <variable name="string_ownerPersonalId"                     access="write"></variable>
 	            <variable name="string_ownerAddress"                        access="write"></variable>
 	            <variable name="string_ownerPostCode"                       access="write"></variable>
-	            <variable name="list_ownerAppartmentNumbers"                access="required,write"></variable>
-	            <variable name="string_vehicleRegistrationNumber"                   	access="required,write"></variable>
+	            <variable name="string_ownerEmailAddress" 					access="write"></variable>
+            	<variable name="string_ownerMunicipality" 					access="write"></variable>
+            	<variable name="string_ownerPhone" 							access="write"></variable>
+				<variable name="string_ownerMobile"							access="write"></variable>
+				
+				<variable name="string_bankDepartmentId"					access="write"></variable>
+				<variable name="list_callTime"								access="write"></variable>
+				
 	            <variable name="files_ownerAttachments"						access="write"></variable>
 	            <variable name="system_allowSigning" access="read" ></variable>
-	            
 	            
 	         </controller>
 		</task>
@@ -113,17 +118,23 @@
                 </propertyMap>
              </assignment>
 				<controller>
-					<variable name="string_ownerFullName"                       access="read"></variable>
-	           		<variable name="string_ownerPersonalId"                     access="read"></variable>
-	            	<variable name="string_ownerAddress"                        access="read"></variable>
-	            	<variable name="string_ownerPostCode"                       access="read"></variable>
-	            	<variable name="string_parkingZone"                         access="write"></variable>
-	            	<variable name="list_ownerAppartmentNumbers"                access="read"></variable>
-	            	<variable name="string_vehicleRegistrationNumber"                   	access="read"></variable>
-	            	
-					<variable access="write" name="list_ownerReason"></variable>
-					<variable access="write" name="string_additionalInformationRequestText"></variable>
-					<variable access="write" name="string_actionTaken"></variable>
+						<variable name="string_ownerFullName"                       access="read"></variable>
+	            <variable name="string_ownerPersonalId"                     access="read"></variable>
+	            <variable name="string_ownerAddress"                        access="read"></variable>
+	            <variable name="string_ownerPostCode"                       access="read"></variable>
+	            <variable name="string_ownerEmailAddress" 					access="read"></variable>
+            	<variable name="string_ownerMunicipality" 					access="read"></variable>
+            	<variable name="string_ownerPhone" 							access="read"></variable>
+				<variable name="string_ownerMobile"							access="read"></variable>
+				
+				<variable name="string_bankDepartmentId"					access="read"></variable>
+				<variable name="list_callTime"								access="read"></variable>
+				
+	            <variable name="files_ownerAttachments"						access="write"></variable>
+	              
+				<variable name="list_ownerReason"							access="write"></variable>
+				<variable name="string_additionalInformationRequestText"	access="write" ></variable>
+				<variable name="string_actionTaken"							access="write"></variable>
 				</controller>
 		</task>
 		<transition to="fork1" name="moreInfo"></transition>
