@@ -33,9 +33,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.32 $
+ * @version $Revision: 1.33 $
  *
- * Last modified: $Date: 2009/02/23 13:59:59 $ by $Author: civilis $
+ * Last modified: $Date: 2009/02/25 11:26:04 $ by $Author: donatas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -393,9 +393,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseStatusToShow", caseStatusesToShow));
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
-//		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER
-//				.toString()));
-//		params.add(new Param("handler", user.getPrimaryKey()));
 		params.add(new Param("userStatus", ProcessUserBind.Status.PROCESS_WATCHED.toString()));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
@@ -423,8 +420,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(") UNION (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 						+ "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where ");
 		
-//		FIXME: this is probably wrong behavior? it is asked for groupId, but userId provided
-		builder.append("proc_case.handler_group_id = :"+NativeIdentityBind.identityIdProperty+" ");
+		builder.append("comm_case.handler = :"+NativeIdentityBind.identityIdProperty+" ");
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide) " );
 		}
