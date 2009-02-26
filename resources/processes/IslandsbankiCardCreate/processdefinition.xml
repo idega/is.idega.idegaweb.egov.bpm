@@ -54,9 +54,9 @@
 	                    <entry><key>expression</key>
 	                        <value>
 	                             {taskAssignment: {roles: {role: [
-	                                   {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read]}, scope: PI},
-	                                   {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read]}, scope: PI},
-	                                   {roleName: "bpm_islandsbankicard_owner", accesses: {access: [read, write]}, scope: PI, assignIdentities: {string: ["current_user"]}}
+	                                   {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read]}},
+	                                   {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read]}},
+	                                   {roleName: "bpm_islandsbankicard_owner", accesses: {access: [read, write]}, assignIdentities: {string: ["current_user"]}}
 	                             ]} }}
 	                        </value>
 	                    </entry>
@@ -118,8 +118,8 @@
                         <entry><key>expression</key>
                             <value>
                                  {taskAssignment: {roles: {role: [
-                                        {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read, write]}, scope: PI},
-                                        {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI}
+                                        {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read, write]}},
+                                        {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}}
                                  ]} }}
                             </value>
                         </entry>
@@ -246,8 +246,8 @@
             <expression>
                 addAttachmentAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
-                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read,write]}, scope: PI},"
-                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read,write]}, scope: PI}"
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read,write]}},"
+                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read,write]}}"
                        +"]} }}";
             </expression>
             <variable name='string_addAttachmentAssignmentExpression' access='write' mapped-name='addAttachmentAssignmentExpression' />
@@ -271,15 +271,15 @@
                 <expression>
                     reqAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
-                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read, write]}, scope: PI},"
-                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read, write]}, scope: PI}"
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read, write]}},"
+                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read, write]}}"
                        +"]} }}";
                        
                     subAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
-                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read]}, scope: PI}, "
-                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read]}, scope: PI}, "
-                       +"{roleName: \"bpm_islandsbankicard_owner\", accesses: {access: [read, write]}, scope: PI}"
+                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read]}}, "
+                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read]}}, "
+                       +"{roleName: \"bpm_islandsbankicard_owner\", accesses: {access: [read, write]}}"
                        +"]} }}";
                        
                     sendMessageHandler = "sendCaseMessagesHandler";
@@ -324,8 +324,8 @@
                     <entry><key>expression</key>
                         <value>
                             {taskAssignment: {roles: {role: [
-                               {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read]}, scope: PI},
-                               {roleName: "bpm_islandsbankicard_owner", accesses: {access: [read, write]}, scope: PI} 
+                               {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read]}},
+                               {roleName: "bpm_islandsbankicard_owner", accesses: {access: [read, write]}} 
                             ]} }}
                         </value>
                 </entry>
@@ -348,7 +348,7 @@
                     <entry><key>expression</key>
                         <value>
                             {taskAssignment: {roles: {role: [
-                               {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI}
+                               {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}}
                             ]} }}
                         </value>
 	                </entry>
@@ -643,8 +643,8 @@
                 <entry><key>expression</key>
                     <value>
                         {taskAssignment: {roles: {role: [
-                           {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}, scope: PI},
-                           {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read, write]}, scope: PI}
+                           {roleName: "bpm_islandsbankicard_handler", accesses: {access: [read, write]}},
+                           {roleName: "bpm_islandsbankicard_invited", accesses: {access: [read, write]}}
                         ]} }}
                     </value>
                 </entry>
@@ -670,7 +670,7 @@
 	                s_upd.setFullName(userFullName);
 	                s_upd.setUserType("BPM_USER_LEGAL");
 	                
-	                s_roleExp = "{role: {roleName: \""+invitedRoleName+"\", scope: PI}}";
+	                s_roleExp = "{role: {roleName: \""+invitedRoleName+"\"}}";
 	                
 	                s_msg = new com.idega.bpm.process.invitation.Message();
 	                s_msg.setText(msgText);
@@ -699,7 +699,7 @@
 				<handlerName>caseHandlerAssignmentHandler</handlerName>
 				
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-				<entry><key>caseHandlerRoleExp</key><value>{role: {roleName: "bpm_islandsbankicard_caseHandler", scope: PI}}</value></entry>
+				<entry><key>caseHandlerRoleExp</key><value>{role: {roleName: "bpm_islandsbankicard_caseHandler"}}</value></entry>
 			        <entry>
 			        	<key>inlineSubject</key>
 			        	<value>
@@ -737,7 +737,7 @@
         <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>caseHandlerAssignmentHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-			      	<entry><key>caseHandlerRoleExp</key><value>{role: {roleName: "bpm_islandsbankicard_caseHandler", scope: PI}}</value></entry>
+			      	<entry><key>caseHandlerRoleExp</key><value>{role: {roleName: "bpm_islandsbankicard_caseHandler"}}</value></entry>
 			        <entry>
 			        	<key>inlineSubject</key>
 			        	<value>
@@ -780,22 +780,30 @@
 			</propertyMap>
 		</action>
     </event>
-	<roles-localization xmlns="http://idega.com/bpm">
-		<role name="bpm_islandsbankicard_caseHandler">
-			<label lang="en">caseHandler</label>
-			<label lang="is_IS">Þjónustufulltrúi</label>
-		</role>
-		<role name="bpm_islandsbankicard_handler">
-			<label lang="en">handler</label>
-			<label lang="is_IS">Umsjónarhópur</label>
-		</role>
-		<role name="bpm_islandsbankicard_owner">
-			<label lang="en">owner</label>
-			<label lang="is_IS">Sendandi</label>
-		</role>
-		<role name="bpm_islandsbankicard_invited">
+    <idg:roles xmlns:idg="http://idega.com/bpm">
+        <role name="bpm_islandsbankicard_caseHandler">
+          <labels>
+            <label lang="en">caseHandler</label>
+            <label lang="is_IS">Þjónustufulltrúi</label>
+          </labels>
+        </role>
+        <role name="bpm_islandsbankicard_handler" createNative="false">
+          <labels>
+            <label lang="en">handler</label>
+            <label lang="is_IS">Umsjónarhópur</label>
+          </labels>
+        </role>
+        <role name="bpm_islandsbankicard_invited">
+          <labels>
             <label lang="en">Business rules master</label>
             <label lang="is_IS">Business rules master</label>
+          </labels>
         </role>
-	</roles-localization>
+        <role name="bpm_islandsbankicard_owner">
+          <labels>
+            <label lang="en">owner</label>
+            <label lang="is_IS">Sendandi</label>
+          </labels>
+        </role>
+    </idg:roles>
 </process-definition>
