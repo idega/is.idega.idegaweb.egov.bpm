@@ -72,8 +72,8 @@
                             <value>
                             ${
                                  "{taskAssignment: {roles: {role: [
-                                       {roleName: \""+resolver.get("handlerRoleName")+"\", accesses: {access: [read]}, scope: PI},
-                                       {roleName: \""+resolver.get("ownerRoleName")+"\", accesses: {access: [read, write]}, scope: PI}
+                                       {roleName: \""+resolver.get("handlerRoleName")+"\", accesses: {access: [read]}},
+                                       {roleName: \""+resolver.get("ownerRoleName")+"\", accesses: {access: [read, write]}}
                                  ]} }}"
                              }
                             </value>
@@ -110,7 +110,7 @@
                             <value>
                             ${
                                  "{taskAssignment: {roles: { role: [
-                                       {roleName: \""+resolver.get("handlerRoleName")+"\", accesses: {access: [read, write]}, scope: PI}
+                                       {roleName: \""+resolver.get("handlerRoleName")+"\", accesses: {access: [read, write]}}
                                  ]} }}"
                              }
                             </value>
@@ -160,8 +160,8 @@
                         <value>
                             ${
                                  "{taskAssignment: {roles: {role: [
-                                       {roleName: \""+resolver.get("handlerRoleName")+"\", accesses: {access: [read]}, scope: PI},
-                                       {roleName: \""+resolver.get("ownerRoleName")+"\", accesses: {access: [read, write]}, scope: PI}
+                                       {roleName: \""+resolver.get("handlerRoleName")+"\", accesses: {access: [read]}},
+                                       {roleName: \""+resolver.get("ownerRoleName")+"\", accesses: {access: [read, write]}}
                                  ]} }}"
                              }
                         </value>
