@@ -3,7 +3,9 @@
 <processes>
 
     <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/fetchEmails/" autoload="true" version="15" />
-    <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/GenericProcess/" autoload="true" version="1" />
+    <!--  
+    <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/GenericProcess/" autoload="false" version="1" />
+    -->
     
     <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/followupResponses/" autoload="true" version="2" />
     <processBundle bundle="is.idega.idegaweb.egov.bpm" processBundleLocationWithinBundle="resources/processes/assignmentAssist/" autoload="true" version="2" />
