@@ -271,15 +271,15 @@
                 <expression>
                     reqAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
-                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read, write]}},"
-                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read, write]}}"
+                       +"{roleName: \""+handlerRoleName+"\", accesses: {access: [read, write]}},"
+                       +"{roleName: \""+invitedRoleName+"\", accesses: {access: [read, write]}}"
                        +"]} }}";
                        
                     subAssignmentExpression = 
                        "{taskAssignment: {roles: {role: ["
-                       +"{roleName: \"bpm_islandsbankicard_handler\", accesses: {access: [read]}}, "
-                       +"{roleName: \"bpm_islandsbankicard_invited\", accesses: {access: [read]}}, "
-                       +"{roleName: \"bpm_islandsbankicard_owner\", accesses: {access: [read, write]}}"
+                       +"{roleName: \""+handlerRoleName+"\", accesses: {access: [read]}}, "
+                       +"{roleName: \""+invitedRoleName+"\", accesses: {access: [read]}}, "
+                       +"{roleName: \""+ownerRoleName+"\", accesses: {access: [read, write]}}"
                        +"]} }}";
                        
                     sendMessageHandler = "sendCaseMessagesHandler";
@@ -295,7 +295,7 @@
                     
                     subjectValues = "{list: {mv: [{type: \"bean\", value: \"piw.processDescription\"}, {type: \"bean\", value: \"piw.processIdentifier\"}]}}";
                     messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"},{type: \"bean\", value: \"caseUser.urlToTheCase\"}]}}";
-                    sendToRoles = "bpm_islandsbankicard_owner";
+                    sendToRoles = ownerRoleName;
                        
                 </expression>
                 <variable name='string_requestAdditionalInformationTaskAssignmentExpression' access='write' mapped-name='reqAssignmentExpression' />
@@ -307,6 +307,10 @@
                 <variable name='string_additionalInfoSubjectValues' access='write' mapped-name='subjectValues' />
                 <variable name='string_additionalInfoMessageValues' access='write' mapped-name='messageValues' />
                 <variable name='string_additionalInfoSendToRoles' access='write' mapped-name='sendToRoles' />
+                
+                <variable name='handlerRoleName' access='read' />
+                <variable name='ownerRoleName' access='read' />
+                <variable name='invitedRoleName' access='read' />
             </script>
         </event>
 		<transition to="end-state1"></transition>
