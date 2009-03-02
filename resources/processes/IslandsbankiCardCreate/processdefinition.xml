@@ -263,8 +263,8 @@
         <variable name="string_additionalInfoSendMessageHandler" access="read" mapped-name="sendMessageHandler" />
         <variable name="string_additionalInfoSubject" access="read" mapped-name="subject" />
         <variable name="string_additionalInfoMessage" access="read" mapped-name="message" />
-        <variable name="string_additionalInfoMessageValues" access="read" mapped-name="subjectValues" />
-        <variable name="string_additionalInfoSubjectValues" access="read" mapped-name="messageValues" />
+        <variable name="string_additionalInfoMessageValues" access="read" mapped-name="messageValues" />
+        <variable name="string_additionalInfoSubjectValues" access="read" mapped-name="subjectValues" />
         <variable name="string_additionalInfoSendToRoles" access="read" mapped-name="sendToRoles" />
         <event type="node-enter">
             <script>
@@ -290,11 +290,10 @@
                     
                     HashMap message = new HashMap(2);
                     message.put("en", "Hello, {0}. There is a new form for you to supply additional information in the case {1} with identifier {2} and description {3}.");
-                    //message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n" + resolver.get("string_additionalInformationRequestText") + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
-                    message.put("is_IS", "Sæl/ll, {0}.\nÞú hefur fengið skilaboð í heimabankann vegna umsóknar þinnar ({2}) í flokknum : {1} :\n\n" + "\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
+                    message.put("is_IS", "Sæl/ll, {0}.\nÞessi skilaboð eru vegna umsóknar þinnar með nafnið : {3} ({2}) í flokknum : {1} :\n\n{5}\n\nÞú getur farið inn á yfirlit umsóknarinnar með þessum hlekk {4} til að skoða hana og önnur skjöl sem umsjónaraðilinn hefur bætt við. Þar geturðu einnig sent skilaboð til baka með aðgerð sem er þar nú sýnileg. Þú getur einnig sent viðbótargögn með því að svara þessum tölvupósti en þá verður númer umsóknarinnar að vera í efni tölvupóstsins áfram svo hann hengist við skjalalistann.");
                     
                     subjectValues = "{list: {mv: [{type: \"bean\", value: \"piw.processDescription\"}, {type: \"bean\", value: \"piw.processIdentifier\"}]}}";
-                    messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"},{type: \"bean\", value: \"caseUser.urlToTheCase\"}]}}";
+                    messageValues = "{list: {mv: [{type: \"bean\", value: \"user.name\"},  {type: \"bean\", value: \"piw.processDefinitionW.startTaskName\"}, {type: \"bean\", value: \"piw.processIdentifier\"}, {type: \"bean\", value: \"piw.processDescription\"},{type: \"bean\", value: \"caseUser.urlToTheCase\"}, {type: \"script\", value: \"return piw.getVariableLocally(\\\"string_additionalInformationRequestText\\\", token);\"}]}}";
                     sendToRoles = ownerRoleName;
                        
                 </expression>
