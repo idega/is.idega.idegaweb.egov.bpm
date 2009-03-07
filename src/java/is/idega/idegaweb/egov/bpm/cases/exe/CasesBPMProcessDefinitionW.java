@@ -59,7 +59,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.36 $ Last modified: $Date: 2009/02/09 16:15:44 $ by $Author: laddi $
+ * @version $Revision: 1.37 $ Last modified: $Date: 2009/03/07 13:33:10 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -339,6 +339,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Override
 	@Transactional(readOnly = true)
 	public List<String> getRolesCanStartProcess(Object context) {
+		
+		if(true)
+			return null;
 		
 		final Integer appId = new Integer(context.toString());
 		
