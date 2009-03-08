@@ -12,6 +12,7 @@ import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -30,6 +31,7 @@ import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
+import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
@@ -271,7 +273,8 @@ public class CasesEngine {
 		}
 		
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CaseManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
-		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, new ArrayList<String>(), new ArrayList<String>());
+		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, new ArrayList<String>(),
+				new ArrayList<String>());
 		if (ListUtil.isEmpty(caseIdsByUser)) {
 			return null;
 		}
@@ -290,8 +293,16 @@ public class CasesEngine {
 		}
 			
 		if (!ListUtil.isEmpty(caseIdsByUser)) {
-			cases =  getCaseManagersProvider().getCaseManager().getCasesByIds(caseIdsByUser, iwc.getCurrentLocale());
+			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(caseIdsByUser, iwc.getCurrentLocale());
 		}
+		
+		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
+			return null;
+		}
+		
+		List<CasePresentation> casesToSort = new ArrayList<CasePresentation>(cases.getCollection());
+		Collections.sort(casesToSort, new CasePresentationComparator());
+		cases = new PagedDataCollection<CasePresentation>(casesToSort);
 		
 		return cases;
 	}
@@ -425,7 +436,7 @@ public class CasesEngine {
 		try {
 			resultsHolder = getSearchResultsHolder();
 		} catch(NullPointerException e) {
-			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search resutls to Excel"));
+			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
 		
@@ -435,7 +446,7 @@ public class CasesEngine {
 		}
 		
 		if (!resultsHolder.doExport()) {
-			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search resutls to Excel"));
+			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
 		
@@ -451,6 +462,10 @@ public class CasesEngine {
 
 	public CaseManagersProvider getCaseManagersProvider() {
 		return caseManagersProvider;
+	}
+	
+	public boolean clearSearchResults() {
+		return getSearchResultsHolder().clearSearchResults();
 	}
 
 }
