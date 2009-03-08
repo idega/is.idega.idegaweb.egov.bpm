@@ -152,7 +152,7 @@ CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
 	                takeCaseSelect.attr("id", selectId);
 	            }
 	            
-	            DWRUtil.addOptions(selectId, handlerUsers, 'id', 'value');
+	            dwr.util.addOptions(selectId, handlerUsers, 'id', 'value');
 	            
 	            var selected = IWCORE.getSelectedFromAdvancedProperties(handlerUsers);
 	            
