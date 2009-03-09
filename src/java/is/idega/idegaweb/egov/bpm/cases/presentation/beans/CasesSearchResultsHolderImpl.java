@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -31,6 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.presentation.beans.CasePresentation;
+import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.data.IDOLookup;
@@ -55,7 +57,6 @@ import com.idega.util.expression.ELUtil;
 @Service(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER)
 public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
-	private static final long serialVersionUID = -8865395805034867319L;
 	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsHolderImpl.class.getName());
 	private static final short DEFAULT_CELL_WIDTH = (short) (40 * 256);
 	
@@ -437,6 +438,51 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
 		this.caseManagersProvider = caseManagersProvider;
+	}
+	
+	public Integer getNextCaseId(Integer currentId, String processDefinitionName) {
+		if (currentId == null || ListUtil.isEmpty(cases)) {
+			return null;
+		}
+		
+		Collection<CasePresentation> cases = this.cases;
+		CasePresentation nextCase = null;
+		
+		if (!StringUtil.isEmpty(processDefinitionName)) {
+			List<CasePresentation> casesFromTheSameProcessDefinition = new ArrayList<CasePresentation>();
+			for (CasePresentation theCase: cases) {
+				if (processDefinitionName.equals(theCase.getProcessName())) {
+					casesFromTheSameProcessDefinition.add(theCase);
+				}
+			}
+			cases = casesFromTheSameProcessDefinition;
+		}
+		
+		for (Iterator<CasePresentation> casesIter = cases.iterator(); (casesIter.hasNext() && nextCase == null);) {
+			nextCase = casesIter.next();
+			
+			if (nextCase.getPrimaryKey().intValue() == currentId.intValue() && casesIter.hasNext()) {
+				nextCase = casesIter.next();
+			}
+			else {
+				nextCase = null;
+			}
+		}
+	
+		return nextCase == null ? null : nextCase.getPrimaryKey();
+	}
+	
+	public Integer getNextCaseId(Integer currentId) {
+		return getNextCaseId(currentId, null);
+	}
+
+	public boolean clearSearchResults() {
+		setSearchResults(null);
+		return Boolean.TRUE;
+	}
+
+	public Collection<CasePresentation> getSearchResults() {
+		return cases;
 	}
 
 }

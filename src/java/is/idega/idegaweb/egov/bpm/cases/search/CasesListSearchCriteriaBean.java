@@ -72,6 +72,10 @@ public class CasesListSearchCriteriaBean {
 	private boolean hideEmptySection;
 	private boolean showCaseNumberColumn = true;
 	private boolean showCreationTimeInDateColumn = true;
+	private boolean showCheckBoxesForCases;
+	
+	private String componentId;
+	private String uuid;
 	
 	public String getCaseNumber() {
 		return caseNumber;
@@ -169,7 +173,6 @@ public class CasesListSearchCriteriaBean {
 							getDateTo(), null, null, false, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
 				}
 				catch (RemoteException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 
@@ -255,7 +258,6 @@ public class CasesListSearchCriteriaBean {
 						casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, CaseManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
 					}
 					catch (RemoteException e) {
-						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
 				}
@@ -703,5 +705,27 @@ public class CasesListSearchCriteriaBean {
 		this.showCreationTimeInDateColumn = showCreationTimeInDateColumn;
 	}
 
-	
+	public boolean isShowCheckBoxesForCases() {
+		return showCheckBoxesForCases;
+	}
+
+	public void setShowCheckBoxesForCases(boolean showCheckBoxesForCases) {
+		this.showCheckBoxesForCases = showCheckBoxesForCases;
+	}
+
+	public String getComponentId() {
+		return componentId;
+	}
+
+	public void setComponentId(String componentId) {
+		this.componentId = componentId;
+	}
+
+	public String getUuid() {
+		return uuid;
+	}
+
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
 }

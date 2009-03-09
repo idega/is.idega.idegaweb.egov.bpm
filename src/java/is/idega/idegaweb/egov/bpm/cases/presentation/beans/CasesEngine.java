@@ -8,8 +8,6 @@ import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,10 +26,13 @@ import org.springframework.stereotype.Service;
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.business.CaseManagersProvider;
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
+import com.idega.block.process.presentation.UICasesList;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
+import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
@@ -149,7 +150,30 @@ public class CasesEngine {
 		
 		return true;
 	}
+	
+	public Document getCasesList(CasesListSearchCriteriaBean criteriaBean) {
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null || !iwc.isLoggedOn()) {
+			return null;
+		}
 		
+		UICasesList list = (UICasesList) iwc.getApplication().createComponent(UICasesList.COMPONENT_TYPE);
+		list.setType(criteriaBean.getCaseListType());
+		list.setShowCheckBoxes(criteriaBean.isShowCheckBoxesForCases());
+		list.setUsePDFDownloadColumn(criteriaBean.isUsePDFDownloadColumn());
+		list.setAllowPDFSigning(criteriaBean.isAllowPDFSigning());
+		list.setShowStatistics(criteriaBean.isShowStatistics());
+		list.setHideEmptySection(criteriaBean.isHideEmptySection());
+		list.setPageSize(20);
+		list.setPage(1);
+		list.setComponentId(criteriaBean.getComponentId());
+		list.setInstanceId(criteriaBean.getUuid());
+		list.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
+		list.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
+		
+		return getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, list, true);
+	}
+	
 	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean) {
 		if (criteriaBean == null) {
 			logger.log(Level.SEVERE, "Can not execute search - search criterias unknown");
@@ -187,12 +211,12 @@ public class CasesEngine {
 		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
 		UIComponent component = null;
 		if (CaseManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
-			properties.setType(CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
+			properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
 			properties.setAddCredentialsToExernalUrls(false);
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, properties);
 		}
 		else {
-			properties.setType(CasesConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
+			properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
 			properties.setShowCheckBoxes(false);
 			component = getCasesListBuilder().getCasesList(iwc, cases, properties);
 		}
@@ -465,6 +489,9 @@ public class CasesEngine {
 	}
 	
 	public boolean clearSearchResults() {
+		IWContext iwc = CoreUtil.getIWContext();
+		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE);
+		
 		return getSearchResultsHolder().clearSearchResults();
 	}
 
