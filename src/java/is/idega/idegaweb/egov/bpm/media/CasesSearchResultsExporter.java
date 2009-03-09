@@ -1,7 +1,6 @@
 package is.idega.idegaweb.egov.bpm.media;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesSearchResultsHolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -10,6 +9,7 @@ import java.io.OutputStream;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;

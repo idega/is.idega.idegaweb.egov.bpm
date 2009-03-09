@@ -72,9 +72,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.29 $
+ * @version $Revision: 1.30 $
  *
- * Last modified: $Date: 2009/02/13 13:54:13 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/09 16:01:15 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -208,7 +208,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseStatusesToHide, List<String> caseStatusesToShow, int startIndex,
 			int count) {
 
-		IWContext iwc = IWContext.getCurrentInstance();
+		IWContext iwc = CoreUtil.getIWContext();
 
 		try {
 			List<Integer> casesIds = getCaseIds(user, type, caseStatusesToHide, caseStatusesToShow);
@@ -244,7 +244,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	@SuppressWarnings("unchecked")
 	public List<Integer> getCaseIds(User user, String type, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
 
-		IWContext iwc = IWContext.getCurrentInstance();
+		IWContext iwc = CoreUtil.getIWContext();
 
 		IWMainApplication iwma = IWMainApplication.getDefaultIWMainApplication();
 
@@ -556,7 +556,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale) {
-		Collection<Case> cases = getCasesBusiness(IWContext.getCurrentInstance()).getCasesByIds(ids);
+		Collection<Case> cases = getCasesBusiness(CoreUtil.getIWContext()).getCasesByIds(ids);
 		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), cases.size());
 	}
 	
@@ -565,8 +565,8 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	@SuppressWarnings("unchecked")
 	public PagedDataCollection<CasePresentation> getClosedCases(Collection groups) {
 		try {
-			Collection<Case> closedCases = getCasesBusiness(IWContext.getCurrentInstance()).getClosedCases(groups);
-			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, IWContext.getCurrentInstance().getCurrentLocale());
+			Collection<Case> closedCases = getCasesBusiness(CoreUtil.getIWContext()).getClosedCases(groups);
+			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<CasePresentation>(presentationBeans);
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -577,8 +577,8 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	@Override
 	public PagedDataCollection<CasePresentation> getMyCases(User user) {
 		try {
-			Collection<GeneralCase> closedCases = getCasesBusiness(IWContext.getCurrentInstance()).getMyCases(user);
-			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, IWContext.getCurrentInstance().getCurrentLocale());
+			Collection<GeneralCase> closedCases = getCasesBusiness(CoreUtil.getIWContext()).getMyCases(user);
+			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<CasePresentation>(presentationBeans);
 		}
 		catch (RemoteException re) {
@@ -592,7 +592,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 			bean = new CasePresentation();
 		}
 		
-		IWContext iwc = IWContext.getCurrentInstance();
+		IWContext iwc = CoreUtil.getIWContext();
 		
 		bean = super.convertToPresentation(theCase, bean, locale);
 		
