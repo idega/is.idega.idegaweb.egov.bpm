@@ -28,7 +28,6 @@ import com.idega.block.process.business.CaseManager;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
-import com.idega.block.process.presentation.UICasesList;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
@@ -151,29 +150,6 @@ public class CasesEngine {
 		return true;
 	}
 	
-	public Document getCasesList(CasesListSearchCriteriaBean criteriaBean) {
-		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null || !iwc.isLoggedOn()) {
-			return null;
-		}
-		
-		UICasesList list = (UICasesList) iwc.getApplication().createComponent(UICasesList.COMPONENT_TYPE);
-		list.setType(criteriaBean.getCaseListType());
-		list.setShowCheckBoxes(criteriaBean.isShowCheckBoxesForCases());
-		list.setUsePDFDownloadColumn(criteriaBean.isUsePDFDownloadColumn());
-		list.setAllowPDFSigning(criteriaBean.isAllowPDFSigning());
-		list.setShowStatistics(criteriaBean.isShowStatistics());
-		list.setHideEmptySection(criteriaBean.isHideEmptySection());
-		list.setPageSize(20);
-		list.setPage(1);
-		list.setComponentId(criteriaBean.getComponentId());
-		list.setInstanceId(criteriaBean.getUuid());
-		list.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
-		list.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
-		
-		return getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, list, true);
-	}
-	
 	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean) {
 		if (criteriaBean == null) {
 			logger.log(Level.SEVERE, "Can not execute search - search criterias unknown");
@@ -197,7 +173,7 @@ public class CasesEngine {
 		
 		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean);
 		if (cases != null) {
-			setSearchResults(iwc, cases.getCollection());
+			setSearchResults(iwc, cases.getCollection(), criteriaBean.getId());
 		}
 		
 		CaseListPropertiesBean properties = new CaseListPropertiesBean();
@@ -209,6 +185,7 @@ public class CasesEngine {
 		properties.setPage(0);
 		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
 		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
+		properties.setInstanceId(criteriaBean.getInstanceId());
 		UIComponent component = null;
 		if (CaseManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
 			properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
@@ -436,7 +413,7 @@ public class CasesEngine {
 		return resultsHolder;
 	}
 	
-	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases) {
+	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, String id) {
 		CasesSearchResultsHolder resultsHolder = null;
 		try {
 			resultsHolder = getSearchResultsHolder();
@@ -444,11 +421,11 @@ public class CasesEngine {
 			return false;
 		}
 		
-		resultsHolder.setSearchResults(cases);
+		resultsHolder.setSearchResults(id, cases);
 		return true;
 	}
 	
-	public AdvancedProperty getExportedSearchResults() {
+	public AdvancedProperty getExportedSearchResults(String id) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -464,19 +441,20 @@ public class CasesEngine {
 			return result;
 		}
 		
-		if (!resultsHolder.isSearchResultStored()) {
+		if (!resultsHolder.isSearchResultStored(id)) {
 			result.setValue(getResourceBundle(iwc).getLocalizedString("no_search_results_to_export", "There are no search results to export!"));
 			return result;
 		}
 		
-		if (!resultsHolder.doExport()) {
+		if (!resultsHolder.doExport(id)) {
 			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
 		
 		result.setId(Boolean.TRUE.toString());
 		result.setValue(new StringBuilder(iwc.getIWMainApplication().getMediaServletURI()).append("?").append(MediaWritable.PRM_WRITABLE_CLASS).append("=")
-				.append(IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class)).toString());
+				.append(IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class)).append("&").append(CasesSearchResultsExporter.ID_PARAMETER)
+				.append("=").append(id).toString());
 		return result;
 	}
 
@@ -488,11 +466,11 @@ public class CasesEngine {
 		return caseManagersProvider;
 	}
 	
-	public boolean clearSearchResults() {
+	public boolean clearSearchResults(String id) {
 		IWContext iwc = CoreUtil.getIWContext();
 		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE);
 		
-		return getSearchResultsHolder().clearSearchResults();
+		return getSearchResultsHolder().clearSearchResults(id);
 	}
 
 }

@@ -20,6 +20,8 @@ import com.idega.util.expression.ELUtil;
 
 public class CasesSearchResultsExporter extends DownloadWriter implements MediaWritable {
 
+	public static final String ID_PARAMETER = "casesSearchResultsExportId";
+	
 	private MemoryFileBuffer memory;
 	
 	@Override
@@ -30,7 +32,8 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 	@Override
 	public void init(HttpServletRequest req, IWContext iwc) {
 		CasesSearchResultsHolder searchResultHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
-		memory = searchResultHolder.getExportedSearchResults();
+		String id = iwc.getParameter(ID_PARAMETER);
+		memory = searchResultHolder.getExportedSearchResults(id);
 		
 		memory.setMimeType(MimeTypeUtil.MIME_TYPE_EXCEL_2);
 		setAsDownload(iwc, new StringBuilder(iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc)

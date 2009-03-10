@@ -12,7 +12,6 @@
 	    	<include method="getVariablesWindow" />
 	    	<include method="getExportedSearchResults" />
 	    	<include method="clearSearchResults" />
-	    	<include method="getCasesList" />
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">

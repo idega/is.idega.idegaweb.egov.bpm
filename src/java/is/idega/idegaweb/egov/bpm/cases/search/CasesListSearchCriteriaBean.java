@@ -72,10 +72,9 @@ public class CasesListSearchCriteriaBean {
 	private boolean hideEmptySection;
 	private boolean showCaseNumberColumn = true;
 	private boolean showCreationTimeInDateColumn = true;
-	private boolean showCheckBoxesForCases;
 	
-	private String componentId;
-	private String uuid;
+	private String id;
+	private String instanceId;
 	
 	public String getCaseNumber() {
 		return caseNumber;
@@ -705,27 +704,20 @@ public class CasesListSearchCriteriaBean {
 		this.showCreationTimeInDateColumn = showCreationTimeInDateColumn;
 	}
 
-	public boolean isShowCheckBoxesForCases() {
-		return showCheckBoxesForCases;
+	public String getId() {
+		return id;
 	}
 
-	public void setShowCheckBoxesForCases(boolean showCheckBoxesForCases) {
-		this.showCheckBoxesForCases = showCheckBoxesForCases;
+	public void setId(String id) {
+		this.id = id;
+	}
+	
+	public String getInstanceId() {
+		return instanceId;
 	}
 
-	public String getComponentId() {
-		return componentId;
+	public void setInstanceId(String instanceId) {
+		this.instanceId = instanceId;
 	}
-
-	public void setComponentId(String componentId) {
-		this.componentId = componentId;
-	}
-
-	public String getUuid() {
-		return uuid;
-	}
-
-	public void setUuid(String uuid) {
-		this.uuid = uuid;
-	}
+	
 }

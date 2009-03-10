@@ -10,7 +10,7 @@
 		class="casesBPMAssets"
 >
 
-	<fc:addResource resourcePath="/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/resources/style/casesBPM.css" />
+	<fc:addResource resourcePath="#{iwResourceResolver['is.idega.idegaweb.egov.bpm']['style/casesBPM.css']}" />
 
 	<h:form>
 		<t:saveState id="storeCaseManagerState" value="#{caseManagerState}"/>
@@ -56,6 +56,6 @@
 		<div class="content">
 			<ui:insert name="content">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.title.no_content']}</ui:insert>
 		</div>
-		</h:form>
-		<ui:insert name="chibaform" />
+	</h:form>
+	<ui:insert name="chibaform" />
 </div>

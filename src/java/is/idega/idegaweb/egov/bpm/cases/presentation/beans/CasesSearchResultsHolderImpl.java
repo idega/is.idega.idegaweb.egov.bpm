@@ -60,7 +60,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsHolderImpl.class.getName());
 	private static final short DEFAULT_CELL_WIDTH = (short) (40 * 256);
 	
-	private Collection<CasePresentation> cases;
+	private Map<String, Collection<CasePresentation>> cases = new HashMap<String, Collection<CasePresentation>>();
 	private MemoryFileBuffer memory;
 
 	@Autowired
@@ -70,16 +70,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	@Autowired
 	private BPMFactory bpmFactory;
 	
-	public void setSearchResults(Collection<CasePresentation> cases) {
-		this.cases = cases;	
+	public void setSearchResults(String id, Collection<CasePresentation> cases) {
+		this.cases.put(id, cases);
 	}
 
-	public boolean doExport() {
+	public boolean doExport(String id) {
+		Collection<CasePresentation> cases = this.cases.get(id);
 		if (ListUtil.isEmpty(cases)) {
 			return false;
 		}
 		
-		memory = getExportedData();
+		memory = getExportedData(id);
 		
 		return memory == null ? false : true;
 	}
@@ -295,8 +296,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 	
-	private MemoryFileBuffer getExportedData() {
-		Map<String, List<CasePresentation>> casesByCategories = getCasesByCategories();
+	private MemoryFileBuffer getExportedData(String id) {
+		Map<String, List<CasePresentation>> casesByCategories = getCasesByCategories(id);
 		if (casesByCategories == null || ListUtil.isEmpty(casesByCategories.values())) {
 			return null;
 		}
@@ -369,26 +370,29 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 
-	public MemoryFileBuffer getExportedSearchResults() {
+	public MemoryFileBuffer getExportedSearchResults(String id) {
 		if (memory != null) {
 			return memory;
 		}
 		
-		if (doExport()) {
+		if (doExport(id)) {
 			return memory;
 		}
 		
 		return null;
 	}
 
-	public boolean isSearchResultStored() {
+	public boolean isSearchResultStored(String id) {
+		Collection<CasePresentation> cases = this.cases.get(id);
 		return ListUtil.isEmpty(cases) ? Boolean.FALSE : Boolean.TRUE;
 	}
 	
-	private Map<String, List<CasePresentation>> getCasesByCategories() {
-		if (ListUtil.isEmpty(cases)) {
+	private Map<String, List<CasePresentation>> getCasesByCategories(String id) {
+		if (!isSearchResultStored(id)) {
 			return null;
 		}
+		
+		Collection<CasePresentation> cases = this.cases.get(id);
 		
 		boolean putToMap = false;
 		Map<String, List<CasePresentation>> casesByCategories = new HashMap<String, List<CasePresentation>>();
@@ -400,16 +404,16 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				categoryId = CasesStatistics.UNKOWN_CATEGORY_ID;
 			}
 		
-			List<CasePresentation> cases = casesByCategories.get(categoryId);
-			if (ListUtil.isEmpty(cases)) {
-				cases = new ArrayList<CasePresentation>();
+			List<CasePresentation> casesByCategory = casesByCategories.get(categoryId);
+			if (ListUtil.isEmpty(casesByCategory)) {
+				casesByCategory = new ArrayList<CasePresentation>();
 			}
-			if (!cases.contains(theCase)) {
-				cases.add(theCase);
+			if (!casesByCategory.contains(theCase)) {
+				casesByCategory.add(theCase);
 				putToMap = true;
 			}
 			if (putToMap) {
-				casesByCategories.put(categoryId, cases);
+				casesByCategories.put(categoryId, casesByCategory);
 			}
 		}
 		
@@ -440,12 +444,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		this.caseManagersProvider = caseManagersProvider;
 	}
 	
-	public Integer getNextCaseId(Integer currentId, String processDefinitionName) {
-		if (currentId == null || ListUtil.isEmpty(cases)) {
+	public Integer getNextCaseId(String id, Integer currentId, String processDefinitionName) {
+		if (currentId == null || !isSearchResultStored(id)) {
 			return null;
 		}
 		
-		Collection<CasePresentation> cases = this.cases;
+		Collection<CasePresentation> cases = this.cases.get(id);
 		CasePresentation nextCase = null;
 		
 		if (!StringUtil.isEmpty(processDefinitionName)) {
@@ -472,17 +476,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return nextCase == null ? null : nextCase.getPrimaryKey();
 	}
 	
-	public Integer getNextCaseId(Integer currentId) {
-		return getNextCaseId(currentId, null);
+	public Integer getNextCaseId(String id, Integer currentId) {
+		return getNextCaseId(id, currentId, null);
 	}
 
-	public boolean clearSearchResults() {
-		setSearchResults(null);
+	public boolean clearSearchResults(String id) {
+		setSearchResults(id, null);
 		return Boolean.TRUE;
 	}
 
-	public Collection<CasePresentation> getSearchResults() {
-		return cases;
+	public Collection<CasePresentation> getSearchResults(String id) {
+		return cases.get(id);
 	}
 
 }
