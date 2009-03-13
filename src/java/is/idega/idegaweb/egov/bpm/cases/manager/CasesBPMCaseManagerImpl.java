@@ -74,9 +74,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.31 $
+ * @version $Revision: 1.32 $
  *
- * Last modified: $Date: 2009/03/13 09:55:40 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/13 14:24:29 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -647,6 +647,15 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	public List<String> getCaseStringVariablesValuesByVariables(Case theCase, List<String> variablesNames) {
 		return getCasesBPMDAO().getStringVariablesValuesByVariablesNamesForProcessInstance(getProcessInstanceId(theCase), variablesNames);
 	}
+	
+	private ProcessInstanceW getProcessInstance(Case theCase) {
+		Long piId = getProcessInstanceId(theCase);
+		if (piId == null) {
+			return null;
+		}
+		
+		return getBpmFactory().getProcessManagerByProcessInstanceId(piId).getProcessInstance(piId);
+	}
 
 	@Override
 	public Long getTaskInstanceIdForTask(Case theCase, String taskName) {
@@ -674,5 +683,15 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return null;
 	}
 	
-	
+	@Override
+	public boolean setCaseVariable(Case theCase, String variableName, String variableValue) {
+		ProcessInstanceW processInstance = getProcessInstance(theCase);
+		if (processInstance == null) {
+			return false;
+		}
+		
+		processInstance.getProcessInstance().getContextInstance().setVariable(variableName, variableValue);
+		
+		return true;
+	}
 }
