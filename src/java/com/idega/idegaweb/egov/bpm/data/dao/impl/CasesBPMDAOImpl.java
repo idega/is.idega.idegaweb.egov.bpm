@@ -34,9 +34,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.34 $
+ * @version $Revision: 1.35 $
  *
- * Last modified: $Date: 2009/03/13 09:55:40 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/13 10:08:42 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -417,6 +417,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 		
+		String noValueKeyword = "no_value";
 		List<String> values = new ArrayList<String>();
 		for (String name: variablesNames) {
 			boolean addedValue = false;
@@ -424,7 +425,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				if (variable instanceof StringInstance && name.equals(variable.getName())) {
 					Object value = variable.getValue();
 					if (value == null) {
-						value = String.valueOf(-1);
+						value = noValueKeyword;
 					}
 					values.add(value.toString());
 					addedValue = Boolean.TRUE;
@@ -433,7 +434,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				}
 			}
 			if (!addedValue) {
-				values.add(String.valueOf(-1));
+				values.add(noValueKeyword);
 			}
 		}
 		
