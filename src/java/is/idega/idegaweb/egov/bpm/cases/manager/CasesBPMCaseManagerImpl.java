@@ -58,6 +58,8 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.presentation.text.Link;
@@ -72,9 +74,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.30 $
+ * @version $Revision: 1.31 $
  *
- * Last modified: $Date: 2009/03/09 16:01:15 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/13 09:55:40 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -640,5 +642,37 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		}
 		return bean;
 	}
+	
+	@Override
+	public List<String> getCaseStringVariablesValuesByVariables(Case theCase, List<String> variablesNames) {
+		return getCasesBPMDAO().getStringVariablesValuesByVariablesNamesForProcessInstance(getProcessInstanceId(theCase), variablesNames);
+	}
+
+	@Override
+	public Long getTaskInstanceIdForTask(Case theCase, String taskName) {
+		Long piId = getProcessInstanceId(theCase);
+		if (piId == null) {
+			return null;
+		}
+		
+		ProcessInstanceW processInstance = getBpmFactory().getProcessManagerByProcessInstanceId(piId).getProcessInstance(piId);
+		if (processInstance == null) {
+			return null;
+		}
+		
+		List<TaskInstanceW> tasks = processInstance.getAllTaskInstances();
+		if (ListUtil.isEmpty(tasks)) {
+			return null;
+		}
+		
+		for (TaskInstanceW task: tasks) {
+			if (taskName.equals(task.getTaskInstance().getName())) {
+				return task.getTaskInstanceId();
+			}
+		}
+		
+		return null;
+	}
+	
 	
 }

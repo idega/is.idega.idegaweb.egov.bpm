@@ -18,9 +18,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.21 $
+ * @version $Revision: 1.22 $
  *
- * Last modified: $Date: 2009/02/06 19:03:47 $ by $Author: civilis $
+ * Last modified: $Date: 2009/03/13 09:55:40 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -60,6 +60,8 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName);
 	
 	public abstract List<VariableInstance> getVariablesByProcessInstanceId(Long processInstanceId);
+	
+	public abstract List<String> getStringVariablesValuesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames);
 
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 	
@@ -78,7 +80,8 @@ public interface CasesBPMDAO extends GenericDao {
 	 */
 	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide);
 	
-	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes, Collection<String> roles);
+	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes,
+			Collection<String> roles);
 	
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(List<String> caseStatuses, List<String> caseStatusesToHide);
 	

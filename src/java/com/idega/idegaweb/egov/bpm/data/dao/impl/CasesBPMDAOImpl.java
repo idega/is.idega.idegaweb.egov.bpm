@@ -11,6 +11,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jbpm.context.exe.VariableInstance;
+import org.jbpm.context.exe.variableinstance.StringInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
@@ -33,9 +34,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.33 $
+ * @version $Revision: 1.34 $
  *
- * Last modified: $Date: 2009/02/25 11:26:04 $ by $Author: donatas $
+ * Last modified: $Date: 2009/03/13 09:55:40 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -386,6 +387,57 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getResultList(CaseProcInstBind.getVariablesByProcessInstanceId, VariableInstance.class,
 				new Param(CaseProcInstBind.processInstanceIdProp, processInstanceId)
 		);
+	}
+	
+	public List<VariableInstance> getVariablesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames) {
+//		if (processInstanceId == null || ListUtil.isEmpty(variablesNames)) {
+//			return null;
+//		}
+//		
+//		List<Param> params = new ArrayList<Param>();
+//		StringBuilder query = new StringBuilder("select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi ")
+//			.append("where pi.id = :").append(CaseProcInstBind.processInstanceIdProp).append(" and (");
+//		for (Iterator<String> variablesIter = variablesNames.iterator(); variablesIter.hasNext();) {
+//			query.append("var.name = :").append(variablesIter.next());
+//			
+//			if (variablesIter.hasNext()) {
+//				query.append(" and ");
+//			}
+//		}
+//		query.append(")");
+//		
+//		return getResultListByInlineNativeQuery(query.toString(), VariableInstance.class, params.toArray());
+		return getVariablesByProcessInstanceId(processInstanceId);	//	TODO: make dynamic query, to optimize select
+	}
+	
+	@Transactional(readOnly=true)
+	public List<String> getStringVariablesValuesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames) {
+		List<VariableInstance> variables = getVariablesByVariablesNamesForProcessInstance(processInstanceId, variablesNames);
+		if (ListUtil.isEmpty(variables)) {
+			return null;
+		}
+		
+		List<String> values = new ArrayList<String>();
+		for (String name: variablesNames) {
+			boolean addedValue = false;
+			for (VariableInstance variable: variables) {
+				if (variable instanceof StringInstance && name.equals(variable.getName())) {
+					Object value = variable.getValue();
+					if (value == null) {
+						value = String.valueOf(-1);
+					}
+					values.add(value.toString());
+					addedValue = Boolean.TRUE;
+					
+					break;
+				}
+			}
+			if (!addedValue) {
+				values.add(String.valueOf(-1));
+			}
+		}
+		
+		return values;
 	}
 
 //	TODO: those queries are very similar, make some general query, and just append queries/joins in more special use cases
