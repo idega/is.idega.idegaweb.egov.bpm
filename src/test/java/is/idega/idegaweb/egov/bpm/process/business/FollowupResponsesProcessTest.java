@@ -17,13 +17,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/11/28 05:07:18 $ by $Author: anton $
+ * Last modified: $Date: 2009/03/14 12:01:16 $ by $Author: civilis $
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -32,7 +33,7 @@ import com.idega.jbpm.IdegaJbpmContext;
 public final class FollowupResponsesProcessTest extends EgovBPMBaseTest {
 
 	@Autowired
-	private IdegaJbpmContext bpmContext;
+	private BPMContext bpmContext;
 	
 	void deployProcessDefinitions() throws Exception {
 

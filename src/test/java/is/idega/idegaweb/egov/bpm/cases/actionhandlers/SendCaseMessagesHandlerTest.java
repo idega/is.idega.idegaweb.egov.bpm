@@ -13,13 +13,14 @@ import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2008/10/10 11:07:00 $ by $Author: civilis $
+ * Last modified: $Date: 2009/03/14 12:01:16 $ by $Author: civilis $
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
@@ -27,7 +28,7 @@ import com.idega.jbpm.IdegaJbpmContext;
 public final class SendCaseMessagesHandlerTest extends EgovBPMBaseTest {
 
 	@Autowired
-	private IdegaJbpmContext bpmContext;
+	private BPMContext bpmContext;
 	
 	void deployProcessDefinitions() throws Exception {
 
