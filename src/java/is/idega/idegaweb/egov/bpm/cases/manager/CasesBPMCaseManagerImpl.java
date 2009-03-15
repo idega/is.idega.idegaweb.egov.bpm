@@ -74,9 +74,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.32 $
+ * @version $Revision: 1.33 $
  *
- * Last modified: $Date: 2009/03/13 14:24:29 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/15 17:43:17 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -693,5 +693,10 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		processInstance.getProcessInstance().getContextInstance().setVariable(variableName, variableValue);
 		
 		return true;
+	}
+
+	@Override
+	public List<Long> getCasesIdsByProcessDefinitionName(String processDefinitionName) {
+		return getCasesBPMDAO().getCaseIdsByProcessDefinition(processDefinitionName);
 	}
 }

@@ -34,9 +34,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.35 $
+ * @version $Revision: 1.36 $
  *
- * Last modified: $Date: 2009/03/13 10:08:42 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/15 17:43:17 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -269,6 +269,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return allResults;
 	}
 	
+	public List<Long> getCaseIdsByProcessDefinition(String processDefinitionName) {
+		if (StringUtil.isEmpty(processDefinitionName)) {
+			return null;
+		}
+		
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionName, Long.class,
+				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+	}
+
 	private List<Long> getCaseIdsByVariable(String queryName, List<Long> processDefinitionIds, String processDefinitionName, String variableName, Object value,
 			List<String> types) {		
 		return getResultList(queryName, Long.class,
