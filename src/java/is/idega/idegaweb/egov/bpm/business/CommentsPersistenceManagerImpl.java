@@ -6,7 +6,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.apache.commons.httpclient.HttpException;
-import org.apache.commons.httpclient.URIException;
 import org.apache.webdav.lib.WebdavResource;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
@@ -182,25 +181,20 @@ public class CommentsPersistenceManagerImpl implements
 		try {
 			pathToFeed = new StringBuilder(slide.getWebdavServerURL().getURI())
 			        .append(uri).toString();
-		} catch (URIException e) {
-			e.printStackTrace();
-		} catch (RemoteException e) {
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 		if (StringUtil.isEmpty(pathToFeed)) {
 			logger.log(Level.SEVERE, "Error creating path to comments feed!");
 			return null;
 		}
-		SyndFeed comments = rss.getFeedAuthenticatedByUser(pathToFeed,
-		    currentUser);
+		SyndFeed comments = rss.getFeedAuthenticatedByUser(pathToFeed, currentUser);
 		if (comments == null) {
-			logger
-			        .log(Level.WARNING,
-			            "Unable to get comments feed by current user, trying with admin user");
+			logger.log(Level.WARNING, "Unable to get comments feed ('"+pathToFeed+"') by current ("+currentUser+") user, trying with admin user");
 			comments = rss.getFeedAuthenticatedByAdmin(pathToFeed);
 		}
 		if (comments == null) {
-			logger.log(Level.SEVERE, "Error getting comments feed!");
+			logger.log(Level.SEVERE, "Error getting comments feed ('"+pathToFeed+"') by super admin!");
 			return null;
 		}
 		
