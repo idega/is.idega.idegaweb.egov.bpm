@@ -74,9 +74,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.33 $
+ * @version $Revision: 1.34 $
  *
- * Last modified: $Date: 2009/03/15 17:43:17 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/16 10:23:59 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -669,7 +669,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 			return null;
 		}
 		
-		List<TaskInstanceW> tasks = processInstance.getAllTaskInstances();
+		List<TaskInstanceW> tasks = processInstance.getAllUnfinishedTaskInstances();
 		if (ListUtil.isEmpty(tasks)) {
 			return null;
 		}
