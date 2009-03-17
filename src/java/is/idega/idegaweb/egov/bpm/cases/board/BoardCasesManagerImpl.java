@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.UserCases;
 import com.idega.builder.bean.AdvancedProperty;
@@ -38,6 +38,7 @@ import com.idega.business.IBOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -53,6 +54,7 @@ import com.idega.util.expression.ELUtil;
 
 @Scope("singleton")
 @Service
+@Transactional
 public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private static final List<String> GRADING_VARIABLES = Collections
@@ -73,13 +75,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	public static final String BOARD_CASES_LIST_SORTING_PREFERENCES = "boardCasesListSortingPreferencesAttribute";
 	
-	private CaseManager caseManager;
+	private CasesRetrievalManager caseManager;
 	
 	@Autowired
 	private BPMFactory bpmFactory;
 	
 	@Autowired
 	private CaseProcessInstanceRelationImpl caseProcessInstanceRelation;
+	
+	@Autowired
+	private CasesBPMDAO casesBPMDAO;
 	
 	@Autowired
 	private BuilderLogicWrapper builderLogicWrapper;
@@ -107,14 +112,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 	
 	private CaseBoardBean getFilledBoardCaseWithInfo(GeneralCase theCase) {
-		CaseManager caseManager = getCaseManager();
+		CasesRetrievalManager caseManager = getCaseManager();
 		if (caseManager == null) {
 			return null;
 		}
 		
-		List<String> values = caseManager
-		        .getCaseStringVariablesValuesByVariables(theCase,
-		            getVariables());
+		List<String> values = getStringVariablesValuesByVariablesNamesForProcessInstance(
+		    new Integer(theCase.getPrimaryKey().toString()), getVariables());
+		
 		if (ListUtil.isEmpty(values)) {
 			return null;
 		}
@@ -151,6 +156,43 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 		
 		return value;
+	}
+	
+	@Transactional(readOnly = true)
+	List<String> getStringVariablesValuesByVariablesNamesForProcessInstance(
+	        Integer caseId, List<String> variablesNames) {
+		
+		Long processInstanceId = getCaseProcessInstanceRelation()
+		        .getCaseProcessInstanceId(caseId);
+		
+		ProcessInstanceW piw = getBpmFactory()
+		        .getProcessManagerByProcessInstanceId(processInstanceId)
+		        .getProcessInstance(processInstanceId);
+		
+		@SuppressWarnings("unchecked")
+		Map<String, Object> variables = piw.getProcessInstance()
+		        .getContextInstance().getVariables();
+		
+		String noValueKeyword = "no_value";
+		List<String> values = new ArrayList<String>();
+		
+		for (String name : variablesNames) {
+			boolean addedValue = false;
+			
+			Object value = variables.get(name);
+			
+			if (value == null) {
+				value = noValueKeyword;
+			}
+			values.add(value.toString());
+			addedValue = Boolean.TRUE;
+			
+			if (!addedValue) {
+				values.add(noValueKeyword);
+			}
+		}
+		
+		return values;
 	}
 	
 	private Long getNumberValue(String value, boolean dropThousands) {
@@ -249,9 +291,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private Collection<Case> getCasesByProcessAndCaseStatus(
 	        IWApplicationContext iwac, String caseStatus, String processName) {
-		CaseManager caseManager = getCaseManager();
+		CasesRetrievalManager caseManager = getCaseManager();
 		if (caseManager == null) {
-			LOGGER.severe(CaseManager.class + " bean was not initialized!");
+			LOGGER.severe(CasesRetrievalManager.class
+			        + " bean was not initialized!");
 			return null;
 		}
 		
@@ -297,14 +340,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return null;
 	}
 	
-	private CaseManager getCaseManager() {
+	private CasesRetrievalManager getCaseManager() {
 		if (caseManager == null) {
 			try {
 				caseManager = ELUtil.getInstance().getBean(
 				    "casesBPMCaseHandler");
 			} catch (Exception e) {
 				LOGGER.log(Level.SEVERE, "Error getting Spring bean for: "
-				        + CaseManager.class, e);
+				        + CasesRetrievalManager.class, e);
 			}
 		}
 		return caseManager;
@@ -365,6 +408,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				
 				TaskInstanceW sharedTIW = allTasks.iterator().next();
 				
+				Long sharedTaskInstanceId = sharedTIW.getTaskInstanceId();
 				View view = sharedTIW.loadView();
 				
 				// TODO: move getViewSubmission to view too
@@ -388,7 +432,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				
 				return new AdvancedProperty(value, getLinkToTheTask(iwc, caseId
 				        .toString(), getPageUriForTaskViewer(iwc),
-				    viewTaskInstanceId.toString()));
+				    sharedTaskInstanceId.toString()));
 				
 			} else {
 				
@@ -467,10 +511,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	public String getGradingSum(IWContext iwc, CaseBoardBean boardCase) {
 		List<String> gradingValues = null;
 		try {
-			gradingValues = getCaseManager()
-			        .getCaseStringVariablesValuesByVariables(
-			            getCasesBusiness(iwc).getCase(boardCase.getCaseId()),
-			            GRADING_VARIABLES);
+			gradingValues = getStringVariablesValuesByVariablesNamesForProcessInstance(
+			    new Integer(boardCase.getCaseId()), GRADING_VARIABLES);
+			
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting grading values for case: "
 			        + boardCase.getCaseId());
@@ -623,5 +666,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	CaseProcessInstanceRelationImpl getCaseProcessInstanceRelation() {
 		return caseProcessInstanceRelation;
+	}
+	
+	CasesBPMDAO getCasesBPMDAO() {
+		return casesBPMDAO;
 	}
 }
