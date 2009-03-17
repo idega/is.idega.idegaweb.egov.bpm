@@ -5,7 +5,7 @@ import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.CasesStatusVariables;
-import is.idega.idegaweb.egov.bpm.cases.manager.CasesBPMCaseManagerImpl;
+import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
@@ -59,7 +59,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.37 $ Last modified: $Date: 2009/03/07 13:33:10 $ by $Author: civilis $
+ * @version $Revision: 1.38 $ Last modified: $Date: 2009/03/17 20:53:23 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -157,7 +157,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					            null,
 					            "This is simple cases-jbpm-formbuilder integration example.",
 					            null,
-					            CasesBPMCaseManagerImpl.caseHandlerType,
+					            BPMCasesRetrievalManagerImpl.caseHandlerType,
 					            false,
 					            casesBusiness
 					                    .getIWResourceBundleForUser(

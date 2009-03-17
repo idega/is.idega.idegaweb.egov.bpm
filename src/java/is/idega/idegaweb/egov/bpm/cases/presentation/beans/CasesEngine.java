@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseBusiness;
-import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
@@ -187,7 +187,7 @@ public class CasesEngine {
 		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
 		properties.setInstanceId(criteriaBean.getInstanceId());
 		UIComponent component = null;
-		if (CaseManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
+		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
 			properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
 			properties.setAddCredentialsToExernalUrls(false);
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, properties);
@@ -273,7 +273,7 @@ public class CasesEngine {
 			return null;
 		}
 		
-		String casesProcessorType = criteriaBean.getCaseListType() == null ? CaseManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
+		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
 		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, new ArrayList<String>(),
 				new ArrayList<String>());
 		if (ListUtil.isEmpty(caseIdsByUser)) {

@@ -19,7 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.block.process.business.CaseManager;
+import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
@@ -44,7 +44,7 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.23 $ Last modified: $Date: 2009/02/13 17:03:43 $ by $Author: donatas $
+ * @version $Revision: 1.24 $ Last modified: $Date: 2009/03/17 20:53:23 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
@@ -327,7 +327,7 @@ public class CasesBPMProcessView {
 		try {
 			Case theCase = getCasesBusiness(iwc).getCase(caseId);
 			
-			CaseManager caseManager;
+			CasesRetrievalManager caseManager;
 			
 			if (theCase.getCaseManagerType() != null)
 				caseManager = getCaseManagersProvider().getCaseManager();
