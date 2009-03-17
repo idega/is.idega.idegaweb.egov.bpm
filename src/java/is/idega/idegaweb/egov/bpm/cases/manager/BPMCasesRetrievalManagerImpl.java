@@ -37,8 +37,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.block.process.business.CaseManager;
-import com.idega.block.process.business.CaseManagerImpl;
+import com.idega.block.process.business.CasesRetrievalManager;
+import com.idega.block.process.business.CasesRetrievalManagerImpl;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseCode;
 import com.idega.block.process.presentation.beans.CaseManagerState;
@@ -75,14 +75,14 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.36 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2009/03/17 17:43:23 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/17 20:53:34 $ by $Author: civilis $
  */
 @Scope("singleton")
-@Service(CasesBPMCaseManagerImpl.beanIdentifier)
+@Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
 @Transactional(readOnly = true)
-public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseManager {
+public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements CasesRetrievalManager {
 
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
 	
@@ -192,7 +192,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		
 		CaseManagerState managerState = ELUtil.getInstance().getBean(CaseManagerState.beanIdentifier);
 		
-		if(!CaseManager.CASE_LIST_TYPE_USER.equals(type))
+		if(!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type))
 			managerState.setFullView(true);
 		else
 			managerState.setFullView(false);
@@ -234,7 +234,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 					} else {
 						casesToFetch = casesIds.subList(startIndex, totalCount);
 					}
-					if (!CaseManager.CASE_LIST_TYPE_USER.equals(type)) {
+					if (!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 						cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesToFetch);
 					} else {
 						cases = getCaseBusiness(iwc).getCasesByIds(casesToFetch);
@@ -274,7 +274,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 					UserBusiness.class);
 
 
-			if (CaseManager.CASE_LIST_TYPE_OPEN.equals(type)) {
+			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
 
 				String[] caseStatuses = casesBusiness.getStatusesForOpenCases();
 				statusesToShow.addAll(Arrays.asList(caseStatuses));
@@ -294,7 +294,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 					}
 					caseIds = getCasesBPMDAO().getOpenCasesIds(user, statusesToShow, statusesToHide, groups, roles);
 				}
-			} else if (CaseManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
+			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
 
 				String[] caseStatuses = casesBusiness.getStatusesForClosedCases();
 				statusesToShow.addAll(Arrays.asList(caseStatuses));
@@ -314,14 +314,14 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 					caseIds = getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles);
 				}
 
-			} else if (CaseManager.CASE_LIST_TYPE_MY.equals(type)) {
+			} else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
 
 				String[] caseStatus = casesBusiness.getStatusesForMyCases();
 				statusesToShow.addAll(Arrays.asList(caseStatus));
 
 				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide);
 
-			} else if (CaseManager.CASE_LIST_TYPE_USER.equals(type)) {
+			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 				
 				CaseCode[] caseCodes = getCaseBusiness(iwc).getCaseCodesForUserCasesList();
 				Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
@@ -652,10 +652,10 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return bean;
 	}
 	
-	@Override
-	public List<String> getCaseStringVariablesValuesByVariables(Case theCase, List<String> variablesNames) {
-		return getCasesBPMDAO().getStringVariablesValuesByVariablesNamesForProcessInstance(getProcessInstanceId(theCase), variablesNames);
-	}
+//	@Override
+//	public List<String> getCaseStringVariablesValuesByVariables(Case theCase, List<String> variablesNames) {
+//		return getCasesBPMDAO().getStringVariablesValuesByVariablesNamesForProcessInstance(getProcessInstanceId(theCase), variablesNames);
+//	}
 	
 	private ProcessInstanceW getProcessInstance(Case theCase) {
 		Long piId = getProcessInstanceId(theCase);
@@ -692,6 +692,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return null;
 	}
 	
+	/*
 	@Override
 	public boolean setCaseVariable(Long taskInstanceId, String variableName, String variableValue) {
 		if (taskInstanceId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(variableValue)) {
@@ -709,6 +710,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		return true;
 	}
 	
+	
 	@Override
 	public String submitCaseTaskInstance(Long taskInstanceId) {
 		return getBpmFactory().getProcessManagerByTaskInstanceId(taskInstanceId).getTaskInstance(taskInstanceId).submit();
@@ -718,6 +720,7 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	public Long createNewTaskForCase(Long taskInstanceId, String tokenName) {
 		return getBpmFactory().getProcessManagerByTaskInstanceId(taskInstanceId).getTaskInstance(taskInstanceId).creatTask(tokenName);
 	}
+	*/
 
 	@Override
 	public List<Long> getCasesIdsByProcessDefinitionName(String processDefinitionName) {
