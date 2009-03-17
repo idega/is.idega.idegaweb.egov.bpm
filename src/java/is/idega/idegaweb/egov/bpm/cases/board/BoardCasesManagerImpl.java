@@ -53,7 +53,6 @@ import com.idega.util.expression.ELUtil;
 
 @Scope("singleton")
 @Service
-@Transactional
 public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private static final List<String> GRADING_VARIABLES = Collections
@@ -322,6 +321,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return variables;
 	}
 	
+	@Transactional
 	public AdvancedProperty setCaseVariableValue(Integer caseId,
 	        String variableName, String value, String role) {
 		if (caseId == null || StringUtil.isEmpty(variableName)
