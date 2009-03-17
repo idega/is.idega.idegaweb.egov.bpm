@@ -74,9 +74,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.34 $
+ * @version $Revision: 1.35 $
  *
- * Last modified: $Date: 2009/03/16 10:23:59 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/17 14:22:43 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -693,6 +693,16 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 		processInstance.getProcessInstance().getContextInstance().setVariable(variableName, variableValue);
 		
 		return true;
+	}
+	
+	@Override
+	public String submitCaseTaskInstance(Long taskInstanceId) {
+		return getBpmFactory().getProcessManagerByTaskInstanceId(taskInstanceId).getTaskInstance(taskInstanceId).submit();
+	}
+	
+	@Override
+	public Long createNewTaskForCase(Long taskInstanceId, String tokenName) {
+		return getBpmFactory().getProcessManagerByTaskInstanceId(taskInstanceId).getTaskInstance(taskInstanceId).creatTask(tokenName);
 	}
 
 	@Override
