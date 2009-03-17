@@ -23,6 +23,9 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jbpm.context.exe.TokenVariableMap;
+import org.jbpm.context.exe.VariableInstance;
+import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -169,9 +172,12 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		        .getProcessManagerByProcessInstanceId(processInstanceId)
 		        .getProcessInstance(processInstanceId);
 		
+		ProcessInstance pi = piw.getProcessInstance();
+		TokenVariableMap tvarmap = pi.getContextInstance().getTokenVariableMap(
+		    pi.getRootToken());
 		@SuppressWarnings("unchecked")
-		Map<String, Object> variables = piw.getProcessInstance()
-		        .getContextInstance().getVariables();
+		Map<String, VariableInstance> variableInstances = tvarmap
+		        .getVariableInstances();
 		
 		String noValueKeyword = "no_value";
 		List<String> values = new ArrayList<String>();
@@ -179,7 +185,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		for (String name : variablesNames) {
 			boolean addedValue = false;
 			
-			Object value = variables.get(name);
+			VariableInstance variableInstance = variableInstances.get(name);
+			Object value = variableInstance == null ? null : variableInstance.getValue();
 			
 			if (value == null) {
 				value = noValueKeyword;
