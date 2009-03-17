@@ -60,6 +60,7 @@ import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.presentation.text.Link;
@@ -74,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.35 $
+ * @version $Revision: 1.36 $
  *
- * Last modified: $Date: 2009/03/17 14:22:43 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/17 17:43:23 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(CasesBPMCaseManagerImpl.beanIdentifier)
@@ -85,9 +86,17 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
 	
-	@Autowired private CasesBPMDAO casesBPMDAO;
-	@Autowired private BPMContext bpmContext;
-	@Autowired private BPMFactory bpmFactory;
+	@Autowired 
+	private CasesBPMDAO casesBPMDAO;
+	
+	@Autowired
+	private BPMContext bpmContext;
+	
+	@Autowired
+	private BPMFactory bpmFactory;
+	
+	@Autowired
+	private VariablesHandler variablesHandler;
 	
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
@@ -684,13 +693,18 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	}
 	
 	@Override
-	public boolean setCaseVariable(Case theCase, String variableName, String variableValue) {
-		ProcessInstanceW processInstance = getProcessInstance(theCase);
-		if (processInstance == null) {
+	public boolean setCaseVariable(Long taskInstanceId, String variableName, String variableValue) {
+		if (taskInstanceId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(variableValue)) {
 			return false;
 		}
 		
-		processInstance.getProcessInstance().getContextInstance().setVariable(variableName, variableValue);
+		try {
+			Map<String, Object> variables = getVariablesHandler().populateVariables(taskInstanceId);
+			variables.put(variableName, variableValue);
+			getVariablesHandler().submitVariablesExplicitly(variables, taskInstanceId);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
 		
 		return true;
 	}
@@ -709,4 +723,13 @@ public class CasesBPMCaseManagerImpl extends CaseManagerImpl implements CaseMana
 	public List<Long> getCasesIdsByProcessDefinitionName(String processDefinitionName) {
 		return getCasesBPMDAO().getCaseIdsByProcessDefinition(processDefinitionName);
 	}
+
+	public VariablesHandler getVariablesHandler() {
+		return variablesHandler;
+	}
+
+	public void setVariablesHandler(VariablesHandler variablesHandler) {
+		this.variablesHandler = variablesHandler;
+	}
+	
 }
