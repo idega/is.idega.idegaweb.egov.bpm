@@ -386,6 +386,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				
 				viewTIW.submit(viewSubmission);
 				
+				return new AdvancedProperty(value, getLinkToTheTask(iwc, caseId
+				        .toString(), getPageUriForTaskViewer(iwc),
+				    viewTaskInstanceId.toString()));
+				
 			} else {
 				
 				// shouldn't be in the list
