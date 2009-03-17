@@ -19,6 +19,11 @@
             <param name="class" value="is.idega.idegaweb.egov.bpm.application.ApplicationTypeBPM" />
             <include method="getRolesCanStartProcessDWR" />
         </create>
+        
+        <create creator="spring" javascript="BoardCasesManager">
+            <param name="beanName" value="boardCasesManagerBean" />
+            <include method="setCaseVariableValue" />
+        </create>
     	
     	<convert match="is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean" converter="bean" />
     	<convert match="is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable" converter="bean" />
