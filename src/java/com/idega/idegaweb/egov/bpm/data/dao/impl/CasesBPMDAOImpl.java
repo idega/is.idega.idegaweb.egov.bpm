@@ -34,9 +34,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.36 $
+ * @version $Revision: 1.37 $
  *
- * Last modified: $Date: 2009/03/15 17:43:17 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/17 20:52:37 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -399,6 +399,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 	
 	public List<VariableInstance> getVariablesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames) {
+		
+		throw new UnsupportedOperationException("Not supported yet");
 //		if (processInstanceId == null || ListUtil.isEmpty(variablesNames)) {
 //			return null;
 //		}
@@ -416,9 +418,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 //		query.append(")");
 //		
 //		return getResultListByInlineNativeQuery(query.toString(), VariableInstance.class, params.toArray());
-		return getVariablesByProcessInstanceId(processInstanceId);	//	TODO: make dynamic query, to optimize select
 	}
 	
+	/*
 	@Transactional(readOnly=true)
 	public List<String> getStringVariablesValuesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames) {
 		List<VariableInstance> variables = getVariablesByVariablesNamesForProcessInstance(processInstanceId, variablesNames);
@@ -449,6 +451,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		return values;
 	}
+	*/
 
 //	TODO: those queries are very similar, make some general query, and just append queries/joins in more special use cases
 	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
