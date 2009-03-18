@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -372,10 +373,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 	
 	@Transactional
-	public AdvancedProperty setCaseVariableValue(Integer caseId,
-	        String variableName, String value, String role) {
-		if (caseId == null || StringUtil.isEmpty(variableName)
-		        || StringUtil.isEmpty(value)) {
+	public AdvancedProperty setCaseVariableValue(Integer caseId, String variableName, String value, String role) {
+		if (caseId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(value)) {
 			return null;
 		}
 		
@@ -392,90 +391,58 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				value = CoreConstants.EMPTY;
 			}
 			
-			Long processInstanceId = getCaseProcessInstanceRelation()
-			        .getCaseProcessInstanceId(caseId);
+			Long processInstanceId = getCaseProcessInstanceRelation().getCaseProcessInstanceId(caseId);
 			
 			ProcessInstanceW piw = getBpmFactory()
-			        .getProcessManagerByProcessInstanceId(processInstanceId)
-			        .getProcessInstance(processInstanceId);
+				.getProcessManagerByProcessInstanceId(processInstanceId)
+				.getProcessInstance(processInstanceId);
 			
 			String taskName = "Grading";
-			List<TaskInstanceW> allTasks = piw
-			        .getUnfinishedTaskInstancesForTask(taskName);
+			List<TaskInstanceW> allTasks = piw.getUnfinishedTaskInstancesForTask(taskName);
 			
-			if (!ListUtil.isEmpty(allTasks)) {
-				
-				// should be only one task instance
-				
-				if (allTasks.size() > 1)
-					Logger.getLogger(getClass().getName()).log(
-					    Level.WARNING,
-					    "More than one task instance found for task = "
-					            + taskName + " when only one expected");
-				
-				TaskInstanceW sharedTIW = allTasks.iterator().next();
-				
-				Long sharedTaskInstanceId = sharedTIW.getTaskInstanceId();
-				View view = sharedTIW.loadView();
-				
-				// TODO: move getViewSubmission to view too
-				// TODO: add addVariable and so to the viewSubmission
-				ViewSubmission viewSubmission = getBpmFactory()
-				        .getViewSubmission();
-				Map<String, Object> variables = view.resolveVariables();
-				
-				variables.put(variableName, value);
-				
-				viewSubmission.populateParameters(view.resolveParameters());
-				viewSubmission.populateVariables(variables);
-				
-				Long viewTaskInstanceId = view.getTaskInstanceId();
-				
-				TaskInstanceW viewTIW = getBpmFactory()
-				        .getProcessManagerByTaskInstanceId(viewTaskInstanceId)
-				        .getTaskInstance(viewTaskInstanceId);
-				
-				viewTIW.submit(viewSubmission);
-				
-				return new AdvancedProperty(value, getLinkToTheTask(iwc, caseId
-				        .toString(), getPageUriForTaskViewer(iwc),
-				    sharedTaskInstanceId.toString()));
-				
-			} else {
-				
-				// shouldn't be in the list
+			if (ListUtil.isEmpty(allTasks)) {
+				LOGGER.log(Level.WARNING, "No tasks instances were found for task = " + taskName + " by process instance: " + processInstanceId);
+				return null;
 			}
+				
+			// should be only one task instance
+			if (allTasks.size() > 1)
+				LOGGER.log(Level.WARNING, "More than one task instance found for task = " + taskName + " when only one expected");
 			
-			/*
-			CaseManager caseManager = getCaseManager();
-			Case theCase = getCasesBusiness(iwc).getCase(caseId);
-			if (caseManager.setCaseVariable(theCase, variableName, value)) {
-				Long currentTaskId = caseManager.getTaskInstanceIdForTask(
-				    theCase, "Grading");
-				String tokenName = caseManager
-				        .submitCaseTaskInstance(currentTaskId);
-				if (!StringUtil.isEmpty(tokenName)) {
-					Long newTaskInstanceId = caseManager.createNewTaskForCase(
-					    currentTaskId, tokenName);
-					return newTaskInstanceId == null ? null
-					        : new AdvancedProperty(value, getLinkToTheTask(iwc,
-					            theCase.getPrimaryKey().toString(),
-					            getPageUriForTaskViewer(iwc), newTaskInstanceId
-					                    .toString()));
-				}
-			}
-			*/
+			TaskInstanceW sharedTIW = allTasks.iterator().next();
+			
+			Long sharedTaskInstanceId = sharedTIW.getTaskInstanceId();
+			View view = sharedTIW.loadView();
+			
+			// TODO: move getViewSubmission to view too
+			// TODO: add addVariable and so to the viewSubmission
+			ViewSubmission viewSubmission = getBpmFactory().getViewSubmission();
+			Map<String, Object> variables = view.resolveVariables();
+			if (variables == null)
+				variables = new HashMap<String, Object>();
+			variables.put(variableName, value);
+			
+			viewSubmission.populateParameters(view.resolveParameters());
+			viewSubmission.populateVariables(variables);
+			
+			Long viewTaskInstanceId = view.getTaskInstanceId();
+			
+			TaskInstanceW viewTIW = getBpmFactory()
+				.getProcessManagerByTaskInstanceId(viewTaskInstanceId)
+				.getTaskInstance(viewTaskInstanceId);
+			
+			viewTIW.submit(viewSubmission);
+			
+			return new AdvancedProperty(value, getLinkToTheTask(iwc, caseId.toString(), getPageUriForTaskViewer(iwc), sharedTaskInstanceId.toString()));
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Error saving variable '" + variableName
-			        + "' with value '" + value + "' for case: " + caseId, e);
+			LOGGER.log(Level.SEVERE, "Error saving variable '" + variableName + "' with value '" + value + "' for case: " + caseId, e);
 		}
 		
 		return null;
 	}
 	
 	public String getLinkToTheTask(IWContext iwc, String caseId, String basePage) {
-		if (iwc == null || StringUtil.isEmpty(caseId)
-		        || StringUtil.isEmpty(basePage)) {
+		if (iwc == null || StringUtil.isEmpty(caseId) || StringUtil.isEmpty(basePage)) {
 			return null;
 		}
 		
@@ -487,27 +454,22 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return getLinkToTheTask(iwc, caseId, basePage, taskId);
 	}
 	
-	private String getLinkToTheTask(IWContext iwc, String caseId,
-	        String basePage, String taskId) {
+	private String getLinkToTheTask(IWContext iwc, String caseId, String basePage, String taskId) {
 		URIUtil uriUtil = new URIUtil(basePage);
 		
-		uriUtil.setParameter(CasesProcessor.PARAMETER_ACTION, String
-		        .valueOf(UserCases.ACTION_CASE_MANAGER_VIEW));
+		uriUtil.setParameter(CasesProcessor.PARAMETER_ACTION, String.valueOf(UserCases.ACTION_CASE_MANAGER_VIEW));
 		uriUtil.setParameter(CaseViewer.PARAMETER_CASE_PK, caseId);
 		uriUtil.setParameter("tiId", taskId);
 		
-		return iwc.getIWMainApplication().getTranslatedURIWithContext(
-		    uriUtil.getUri());
+		return iwc.getIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri());
 	}
 	
 	private String getInstanceIdForGradingTask(IWContext iwc, String caseId) {
 		Long taskId = null;
 		try {
-			taskId = getCaseManager().getTaskInstanceIdForTask(
-			    getCasesBusiness(iwc).getCase(caseId), "Grading");
+			taskId = getCaseManager().getTaskInstanceIdForTask(getCasesBusiness(iwc).getCase(caseId), "Grading");
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error getting task instance for case: "
-			        + caseId);
+			LOGGER.log(Level.WARNING, "Error getting task instance for case: " + caseId);
 		}
 		if (taskId == null) {
 			return null;
