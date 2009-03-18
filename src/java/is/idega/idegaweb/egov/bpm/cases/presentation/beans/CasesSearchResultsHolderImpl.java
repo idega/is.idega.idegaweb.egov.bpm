@@ -397,10 +397,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		boolean putToMap = false;
 		Map<String, List<CasePresentation>> casesByCategories = new HashMap<String, List<CasePresentation>>();
 		for (CasePresentation theCase: cases) {
-			String categoryId = theCase.getCategoryId();
+			Object categoryId = theCase.getCategoryId();
 			putToMap = false;
 			
-			if (StringUtil.isEmpty(categoryId)) {
+			if (categoryId == null || StringUtil.isEmpty(categoryId.toString())) {
 				categoryId = CasesStatistics.UNKOWN_CATEGORY_ID;
 			}
 		
@@ -413,7 +413,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				putToMap = true;
 			}
 			if (putToMap) {
-				casesByCategories.put(categoryId, casesByCategory);
+				casesByCategories.put(categoryId.toString(), casesByCategory);
 			}
 		}
 		

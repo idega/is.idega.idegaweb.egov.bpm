@@ -75,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2009/03/17 20:53:34 $ by $Author: civilis $
+ * Last modified: $Date: 2009/03/18 17:16:31 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -585,6 +585,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return super.getClosedCases(groups);
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public PagedDataCollection<CasePresentation> getMyCases(User user) {
 		try {
@@ -626,15 +627,20 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			bean.setPrivate(generalCase.isPrivate());
 			CaseCategory caseCategory = generalCase.getCaseCategory();
 			if (caseCategory != null) {
-				String categoryId = null;
 				if (ProcessBundleCasesImpl.defaultCaseCategoryName.equals(caseCategory.getName())) {
 					String processName = getProcessDefinitionName(theCase);
 					bean.setProcessName(processName);
-					categoryId = new StringBuilder(ProcessBundleCasesImpl.defaultCaseCategoryName).append(processName).toString();
-				} else {
-					categoryId = caseCategory.getPrimaryKey().toString();
 				}
-				bean.setCategoryId(categoryId);
+				
+				Integer categoryId = null;
+				try {
+					categoryId = Integer.valueOf(caseCategory.getPrimaryKey().toString());
+				} catch(NumberFormatException e) {
+					e.printStackTrace();
+				}
+				if (categoryId != null) {
+					bean.setCategoryId(categoryId);
+				}
 			}
 			try {
 				bean.setCaseStatus(getCasesBusiness(iwc).getCaseStatus(
@@ -650,20 +656,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			}
 		}
 		return bean;
-	}
-	
-//	@Override
-//	public List<String> getCaseStringVariablesValuesByVariables(Case theCase, List<String> variablesNames) {
-//		return getCasesBPMDAO().getStringVariablesValuesByVariablesNamesForProcessInstance(getProcessInstanceId(theCase), variablesNames);
-//	}
-	
-	private ProcessInstanceW getProcessInstance(Case theCase) {
-		Long piId = getProcessInstanceId(theCase);
-		if (piId == null) {
-			return null;
-		}
-		
-		return getBpmFactory().getProcessManagerByProcessInstanceId(piId).getProcessInstance(piId);
 	}
 
 	@Override
