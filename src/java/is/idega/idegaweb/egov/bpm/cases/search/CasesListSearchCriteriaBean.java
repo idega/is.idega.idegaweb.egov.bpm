@@ -122,7 +122,11 @@ public class CasesListSearchCriteriaBean {
 				}
 				else {
 					LOGGER.log(Level.INFO, "Simple cases by number (" + caseNumber + "): " + simpleCases);
-					casesByNumberIds.addAll(simpleCases);
+					for (Integer id: simpleCases) {
+						if (!casesByNumberIds.contains(id)) {
+							casesByNumberIds.add(id);
+						}
+					}
 				}
 				
 				if (ListUtil.isEmpty(casesByNumberIds)) {
