@@ -404,7 +404,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				categoryId = CasesStatistics.UNKOWN_CATEGORY_ID;
 			}
 		
-			List<CasePresentation> casesByCategory = casesByCategories.get(categoryId);
+			List<CasePresentation> casesByCategory = casesByCategories.get(categoryId.toString());
 			if (ListUtil.isEmpty(casesByCategory)) {
 				casesByCategory = new ArrayList<CasePresentation>();
 			}
