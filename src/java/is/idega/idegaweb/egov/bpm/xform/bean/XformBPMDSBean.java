@@ -13,11 +13,12 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.text.Item;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.6 $ Last modified: $Date: 2009/03/16 11:27:52 $ by $Author: juozas $
+ * @version $Revision: 1.7 $ Last modified: $Date: 2009/03/18 12:36:19 $ by $Author: arunas $
  */
 
 @Scope("singleton")
@@ -75,9 +76,7 @@ public class XformBPMDSBean implements XformBPM {
 	
 	private List<User> getUsersConnectedList(Long pid) {
 		
-		ProcessInstanceW piw = getBpmFactory()
-		        .getProcessManagerByProcessInstanceId(pid).getProcessInstance(
-		            pid);
+		ProcessInstanceW piw = getProcessInstanceW(pid);
 		
 		Collection<User> peopleConnectedToProcess = piw
 		        .getUsersConnectedToProcess();
@@ -107,11 +106,8 @@ public class XformBPMDSBean implements XformBPM {
 	
 	public List<Item> getProcessAttachments(String pid) {
 		
-		int processInstanceId = Integer.valueOf(pid);
-		
-		ProcessInstanceW piw = getBpmFactory()
-		        .getProcessManagerByProcessInstanceId(processInstanceId)
-		        .getProcessInstance(processInstanceId);
+		long processInstanceId = Long.valueOf(pid);
+		ProcessInstanceW piw = getProcessInstanceW(processInstanceId);
 		
 		List<Item> attachments = new ArrayList<Item>();
 		
@@ -120,6 +116,26 @@ public class XformBPMDSBean implements XformBPM {
 			        + binaryVariable.getHash(), binaryVariable.getFileName()));
 		
 		return attachments;
+	}
+	
+	public boolean hasProcessAttachments(String pid){
+		
+		if (pid.equals(CoreConstants.EMPTY))
+			return Boolean.FALSE;
+		
+		long processInstanceId = Long.valueOf(pid);
+		ProcessInstanceW piw = getProcessInstanceW(processInstanceId);
+		
+		return piw.getAttachements().size() != 0 ? Boolean.TRUE : Boolean.FALSE;
+	}
+	
+	private ProcessInstanceW getProcessInstanceW(Long pid) {
+		
+		ProcessInstanceW piw = getBpmFactory()
+        .getProcessManagerByProcessInstanceId(pid)
+        .getProcessInstance(pid);
+
+		return piw;
 	}
 	
 }
