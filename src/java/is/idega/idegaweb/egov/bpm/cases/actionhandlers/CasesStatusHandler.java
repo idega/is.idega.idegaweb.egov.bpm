@@ -25,9 +25,9 @@ import com.idega.user.data.User;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2008/11/30 08:22:36 $ by $Author: civilis $
+ * Last modified: $Date: 2009/03/18 20:19:59 $ by $Author: civilis $
  */
 @Service("casesStatusHandler")
 @Scope("prototype")
@@ -88,9 +88,14 @@ public class CasesStatusHandler implements ActionHandler {
 				
 				if(performerUserId == null) {
 				
-					if(iwc != null)
-						performer = iwc.getCurrentUser();
-					else {
+					if(iwc != null) {
+
+						if(iwc.isLoggedOn())
+							performer = iwc.getCurrentUser();
+						else
+							performer = null;
+						
+					} else {
 						
 						Logger.getLogger(getClass().getName()).log(Level.WARNING, "Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
 						performer = null;
