@@ -46,7 +46,7 @@ import com.idega.util.expression.ELUtil;
 
 public class CasesListSearchCriteriaBean {
 	
-	private static final Logger logger = Logger.getLogger(CasesListSearchCriteriaBean.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CasesListSearchCriteriaBean.class.getName());
 	
 	private String caseNumber;
 	private String description;
@@ -92,11 +92,9 @@ public class CasesListSearchCriteriaBean {
 				
 				String caseNumber = getCaseNumber();
 				if (StringUtil.isEmpty(caseNumber)) {
-					logger.log(Level.INFO, "Case number is undefined, not filtering by it!");
+					LOGGER.log(Level.INFO, "Case number is undefined, not filtering by it!");
 					return casesIds;
 				}
-				
-//				logger.log(Level.INFO, "IDs BEFORE filtering by number: " + casesIds);
 				
 				String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
 				List<Integer> casesByNumberIds = new ArrayList<Integer>();
@@ -106,13 +104,13 @@ public class CasesListSearchCriteriaBean {
 				try {
 					bpmCases = getCasesBPMDAO().getCaseIdsByCaseNumber(loweredCaseNumber);
 				} catch(Exception e) {
-					logger.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
+					LOGGER.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
 				}
 				if (ListUtil.isEmpty(bpmCases)) {
-					logger.log(Level.INFO, "No BPM cases found by number: " + caseNumber);
+					LOGGER.log(Level.INFO, "No BPM cases found by number: " + caseNumber);
 				}
 				else {
-					logger.log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
+					LOGGER.log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
 					casesByNumberIds.addAll(getConvertedFromLongs(bpmCases));
 				}
 				
@@ -120,25 +118,21 @@ public class CasesListSearchCriteriaBean {
 				List<Integer> simpleCases = CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()) ? getUserCasesByNumber(loweredCaseNumber) :
 					getGeneralCasesByNumber(loweredCaseNumber);
 				if (ListUtil.isEmpty(simpleCases)) {
-					logger.log(Level.INFO, "No simple cases found by number: " + caseNumber);
+					LOGGER.log(Level.INFO, "No simple cases found by number: " + caseNumber);
 				}
 				else {
-					logger.log(Level.INFO, "Simple cases by number (" + caseNumber + "): " + simpleCases);
+					LOGGER.log(Level.INFO, "Simple cases by number (" + caseNumber + "): " + simpleCases);
 					casesByNumberIds.addAll(simpleCases);
 				}
 				
 				if (ListUtil.isEmpty(casesByNumberIds)) {
-					logger.log(Level.INFO, "No cases found by number: " + caseNumber);
-					//casesIds.clear();	//	No results
+					LOGGER.log(Level.INFO, "No cases found by number: " + caseNumber);
 				}
 				else {
-					logger.log(Level.INFO, "Cases found by number (" + caseNumber + "): " + casesByNumberIds);
-					//	"Narrowing" results
-					//casesIds.retainAll(casesByNumberIds);
+					LOGGER.log(Level.INFO, "Cases found by number (" + caseNumber + "): " + casesByNumberIds);
 				}
 				casesIds = getNarrowedResults(casesIds, casesByNumberIds);
 				
-//				logger.log(Level.INFO, "IDs AFTER filtering by number (" + caseNumber + "): " + casesIds);
 				return casesIds;
 			}
 		};
@@ -155,11 +149,9 @@ public class CasesListSearchCriteriaBean {
 				
 				if (StringUtil.isEmpty(getDescription()) && StringUtil.isEmpty(getName()) && StringUtil.isEmpty(getPersonalId()) &&
 						ArrayUtil.isEmpty(getStatuses()) && getDateFrom() == null && getDateTo() == null) {
-					logger.log(Level.INFO, "None of criterias are defined, not filtering by it!");
+					LOGGER.log(Level.INFO, "None of criterias are defined, not filtering by it!");
 					return casesIds;
 				}
-				
-//				logger.log(Level.INFO, "IDs BEFORE filtering by criterias: " + casesIds);
 					
 				IWContext iwc = CoreUtil.getIWContext();
 				CasesBusiness casesBusiness = getCasesBusiness();
@@ -177,21 +169,17 @@ public class CasesListSearchCriteriaBean {
 
 				List<Integer> casesByCriteria = null;
 				if (cases != null && ListUtil.isEmpty(cases)) {
-					logger.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
+					LOGGER.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
 							.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
 							.append(", dateRange: ").append(getDateRange())
 					.toString());
-//					casesIds.clear();
 				}
 				else {	
 					casesByCriteria = getCasesIds(cases);
-					logger.log(Level.INFO, "Cases by criterias: " + casesByCriteria);
-					
-//					casesIds.retainAll(casesByCriteria);
+					LOGGER.log(Level.INFO, "Cases by criterias: " + casesByCriteria);
 				}
 				casesIds = getNarrowedResults(casesIds, casesByCriteria);
 				
-//				logger.log(Level.INFO, "IDs AFTER filtering by criterias: " + casesIds);
 				return casesIds;
 			}
 		};
@@ -208,24 +196,19 @@ public class CasesListSearchCriteriaBean {
 				}
 				String contact = getContact();
 				if (StringUtil.isEmpty(contact)) {
-					logger.log(Level.INFO, "Contact is undefined, not filtering by it!");
+					LOGGER.log(Level.INFO, "Contact is undefined, not filtering by it!");
 					return casesIds;
 				}
 				
-//				logger.log(Level.INFO, "IDs BEFORE filtering by contact (" + contact + "): " + casesIds);
-				
 				List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
 				if (ListUtil.isEmpty(casesByContact)) {
-					logger.log(Level.INFO, "No BPM cases found by contact: " + contact);
-//					casesIds.clear();
+					LOGGER.log(Level.INFO, "No BPM cases found by contact: " + contact);
 				}
 				else {
-					logger.log(Level.INFO, "Found BPM cases by contact: " + contact);
-//					casesIds.retainAll(casesByContact);
+					LOGGER.log(Level.INFO, "Found BPM cases by contact: " + contact);
 				}
 				casesIds = getNarrowedResults(casesIds, casesByContact);
 				
-//				logger.log(Level.INFO, "IDs AFTER filtering by contact (" + contact + "): " + casesIds);
 				return casesIds;
 			}
 			
@@ -244,11 +227,9 @@ public class CasesListSearchCriteriaBean {
 					
 				String processDefinitionId = getProcessId();
 				if (StringUtil.isEmpty(processDefinitionId)) {
-					logger.log(Level.INFO, "Process definition id is undefined, not filtering by it!");
+					LOGGER.log(Level.INFO, "Process definition id is undefined, not filtering by it!");
 					return casesIds;
 				}
-				
-//				logger.log(Level.INFO, "IDs BEFORE filtering by process definition (" + processDefinitionId + "): " + casesIds);
 				
 				List<Integer> casesByProcessDefinition = null;
 				if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
@@ -266,16 +247,13 @@ public class CasesListSearchCriteriaBean {
 				}
 				
 				if (ListUtil.isEmpty(casesByProcessDefinition)) {
-					logger.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
-//					casesIds.clear();
+					LOGGER.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
 				}
 				else {
-					logger.log(Level.INFO, "Cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
-//					casesIds.retainAll(casesByProcessDefinition);
+					LOGGER.log(Level.INFO, "Cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
 				}
 				casesIds = getNarrowedResults(casesIds, casesByProcessDefinition);
 				
-//				logger.log(Level.INFO, "IDs AFTER filtering by process definition (" + processDefinitionId + "): " + casesIds);
 				return casesIds;
 			}
 		};
@@ -292,7 +270,7 @@ public class CasesListSearchCriteriaBean {
 				convertedValues.add(Integer.valueOf(((Long) o).intValue()));
 			}
 			else {
-				logger.log(Level.WARNING, "Object is not type of Long: " + o);
+				LOGGER.log(Level.WARNING, "Object is not type of Long: " + o);
 			}
 		}
 		
@@ -301,11 +279,11 @@ public class CasesListSearchCriteriaBean {
 	
 	private List<Integer> getNarrowedResults(List<Integer> casesIds, List<Integer> filterResults) {
 		if (ListUtil.isEmpty(casesIds)) {
-			logger.log(Level.INFO, "There are no start data, emptying IDs");
+			LOGGER.log(Level.INFO, "There are no start data, emptying IDs");
 			return null;
 		}
 		if (ListUtil.isEmpty(filterResults)) {
-			logger.log(Level.INFO, "No results found, emptying IDs");
+			LOGGER.log(Level.INFO, "No results found, emptying IDs");
 			return null;
 		}
 		
@@ -315,15 +293,11 @@ public class CasesListSearchCriteriaBean {
 			if (o instanceof Integer) {
 				id = (Integer) o;
 				if (casesIds.contains(id)) {
-//					logger.log(Level.INFO, "HAS ID: " + id);
 					ids.add(id);
 				}
-//				else {
-//					logger.log(Level.INFO, "NO ID: " + id + " in: " + casesIds);
-//				}
 			}
 			else {
-				logger.log(Level.WARNING, "ID is not type of Integer: " + o);
+				LOGGER.log(Level.WARNING, "ID is not type of Integer: " + o);
 			}
 		}
 		
@@ -390,7 +364,7 @@ public class CasesListSearchCriteriaBean {
 		
 		Collection<Case> casesByNumber = null;
 		try {
-			casesByNumber = caseHome.getCasesByCriteria(caseNumber, null, null, null, null, null, null, null, false);
+			casesByNumber = caseHome.getCasesByCriteria(caseNumber, null, null, null, null, null, null, null, true);
 		} catch (FinderException e) {
 			e.printStackTrace();
 		}
@@ -418,7 +392,7 @@ public class CasesListSearchCriteriaBean {
 		try {
 			procDefId = Long.valueOf(processDefinitionId);
 		} catch (NumberFormatException e) {
-			logger.log(Level.SEVERE, "Process definition id provided ("+processDefinitionId+") was incorrect", e);
+			LOGGER.log(Level.SEVERE, "Process definition id provided ("+processDefinitionId+") was incorrect", e);
 			return null;
 		}
 		
@@ -430,7 +404,7 @@ public class CasesListSearchCriteriaBean {
 			return getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndNameAndVariables(processDefinitionIds, processDefinition.getName(), variables);
 			
 		} catch(Exception e) {
-			logger.log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
+			LOGGER.log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
 					processDefinitionId, e);
 		}
 		
@@ -601,7 +575,7 @@ public class CasesListSearchCriteriaBean {
 				casesByContactPerson = getConvertedFromLongs(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc,
 																																contactPerson, false)));
 			} catch(Exception e) {
-				logger.log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);
+				LOGGER.log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);
 			}
 			
 			if (!ListUtil.isEmpty(casesByContactPerson)) {
