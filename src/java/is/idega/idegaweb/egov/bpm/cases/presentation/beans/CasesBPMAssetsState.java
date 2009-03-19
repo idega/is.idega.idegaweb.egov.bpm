@@ -9,6 +9,7 @@ import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
@@ -35,9 +36,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.37 $
+ * @version $Revision: 1.38 $
  *
- * Last modified: $Date: 2009/03/10 19:56:11 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/19 10:41:00 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -45,6 +46,8 @@ import com.idega.util.expression.ELUtil;
 public class CasesBPMAssetsState implements Serializable {
 
 	private static final long serialVersionUID = -6474883869451606583L;
+	
+	private static final Logger LOGGER = Logger.getLogger(CasesBPMAssetsState.class.getName());
 	
 	public static final String beanIdentifier = "casesBPMAssetsState";
 	
@@ -527,14 +530,17 @@ public class CasesBPMAssetsState implements Serializable {
 			showNextTask = Boolean.FALSE;
 			
 			if (!getCasesSearchResultsHolder().isSearchResultStored(id)) {
+				LOGGER.info("NOT shoing next task - no search results stored");
 				return showNextTask;
 			}
 			
 			Integer nextCaseId = getNextCaseId();
 			if (nextCaseId == null || nextCaseId < 0) {
+				LOGGER.info("NOT shoing next task - couldn't resolve ID for next task");
 				return showNextTask;
 			}
 			
+			LOGGER.info("SHOING next task. Next case id: " + nextCaseId);
 			showNextTask = Boolean.TRUE;
 		}
 		return showNextTask;
@@ -552,10 +558,11 @@ public class CasesBPMAssetsState implements Serializable {
 	private Integer getNextCaseId(String id, Integer caseId) {
 		ProcessInstanceW currentProcess = getCurrentProcess();
 		if (currentProcess == null) {
+			LOGGER.info("Cannot resolve next case id: current process is unknown! ID: " + id + ", case ID: " + caseId);
 			return null;
 		}
 		
-		return getCasesSearchResultsHolder().getNextCaseId(id, caseId, currentProcess.getProcessDefinitionW().getProcessDefinition().getName());
+		return getCasesSearchResultsHolder().getNextCaseId(id, caseId, /*currentProcess.getProcessDefinitionW().getProcessDefinition().getName()*/null);
 	}
 	
 	public Long getNextTaskId() {

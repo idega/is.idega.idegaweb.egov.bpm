@@ -446,6 +446,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	
 	public Integer getNextCaseId(String id, Integer currentId, String processDefinitionName) {
 		if (currentId == null || !isSearchResultStored(id)) {
+			LOGGER.info("Unkown current case's id or no search results stored!");
 			return null;
 		}
 		
@@ -473,6 +474,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 		}
 	
+		LOGGER.info("Next case id: " + (nextCase == null ? "not found" : nextCase.getPrimaryKey()) + " in: " + cases + ", for current case: " + currentId);
 		return nextCase == null ? null : nextCase.getPrimaryKey();
 	}
 	
