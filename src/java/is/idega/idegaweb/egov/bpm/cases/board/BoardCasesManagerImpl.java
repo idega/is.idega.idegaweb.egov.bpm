@@ -60,7 +60,7 @@ import com.idega.util.expression.ELUtil;
 
 @Scope("singleton")
 @Service
-@Transactional(propagation = Propagation.SUPPORTS)
+@Transactional/*(propagation = Propagation.SUPPORTS)*/
 public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private static final List<String> GRADING_VARIABLES = Collections
