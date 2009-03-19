@@ -156,6 +156,9 @@ public class CasesEngine {
 			return null;
 		}
 		
+		//	Clearing search result before new search
+		clearSearchResults(criteriaBean.getId());
+		
 		logger.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criteriaBean.getCaseNumber()).append(", description: ")
 				.append(criteriaBean.getDescription()).append(", name: ").append(criteriaBean.getName()).append(", personalId: ")
 				.append(criteriaBean.getPersonalId()).append(", processId: ").append(criteriaBean.getProcessId()).append(", statusId: ")
