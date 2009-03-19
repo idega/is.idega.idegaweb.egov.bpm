@@ -75,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2009/03/18 17:16:31 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/19 12:43:27 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -632,15 +632,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 					bean.setProcessName(processName);
 				}
 				
-				Integer categoryId = null;
-				try {
-					categoryId = Integer.valueOf(caseCategory.getPrimaryKey().toString());
-				} catch(NumberFormatException e) {
-					e.printStackTrace();
-				}
-				if (categoryId != null) {
-					bean.setCategoryId(categoryId);
-				}
+				bean.setCategoryId(caseCategory.getPrimaryKey().toString());
 			}
 			try {
 				bean.setCaseStatus(getCasesBusiness(iwc).getCaseStatus(
