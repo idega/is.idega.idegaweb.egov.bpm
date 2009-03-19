@@ -211,9 +211,13 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 		
 		value = value.replaceAll(CoreConstants.SPACE, CoreConstants.EMPTY);
-		value = value.replaceAll(CoreConstants.DOT, CoreConstants.EMPTY);
-		value = value.replaceAll("þús", CoreConstants.EMPTY);
+		value = value.replace(CoreConstants.DOT, CoreConstants.EMPTY);
+		value = value.replace("þús", CoreConstants.EMPTY);
 		value = value.replaceAll("kr", CoreConstants.EMPTY);
+		
+		if (StringUtil.isEmpty(value)) {
+			return Long.valueOf(0);
+		}
 		
 		Double numberValue = null;
 		try {
