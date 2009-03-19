@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.47 $
+ * @version $Revision: 1.48 $
  *
- * Last modified: $Date: 2009/02/05 13:41:19 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/19 14:51:05 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -291,6 +291,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FILE_SIZE = '")				.append(iwrb.getLocalizedString("cases_bpm.file_size", "File size")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_SUBMITTED_BY = '")				.append(iwrb.getLocalizedString("cases_bpm.submitted_by", "Submitted by")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_GENERATING_PDF = '")			.append(iwrb.getLocalizedString("cases_bpm.generating_pdf", "Downloading PDF")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_LOADING = '")					.append(iwrb.getLocalizedString("cases_bpm.loading", "Loading...")).append("';\n")
 			
 			.append("CasesBPMAssets.Loc.inited = true; }\n")
 			

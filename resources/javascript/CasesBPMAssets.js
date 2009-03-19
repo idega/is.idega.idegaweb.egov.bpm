@@ -19,13 +19,16 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
     CASE_GRID_STRING_DOWNLOAD_DOCUMENT_AS_PDF: 'Download document',
     CASE_GRID_STRING_FILE_SIZE: 'File size',
     CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by',
-    CASE_GRID_STRING_GENERATING_PDF: 'Downloading PDF'
+    CASE_GRID_STRING_GENERATING_PDF: 'Downloading PDF',
+    CASE_GRID_STRING_LOADING: 'Loading...'
 };
 
 CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 
 CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
 CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS = 'casesBPMPDFGeneratorAndDownloader';
+
+CasesBPMAssets.rowInAction = null;
 
 CasesBPMAssets.openedCase = {
 	caseId: null,
@@ -221,6 +224,12 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     }
     
     var onSelectRowFunction = function(rowId) {
+    	if (CasesBPMAssets.rowInAction == rowId) {
+    		return false;
+    	}
+    	
+    	CasesBPMAssets.rowInAction = rowId;
+    	showLoadingMessage(CasesBPMAssets.Loc.CASE_GRID_STRING_LOADING);
         CasesBPMAssets.getProcessRersourceView(caseId, rowId);
     };
     
@@ -1055,8 +1064,7 @@ CasesBPMAssets.closeAccessRightsSetterBox = function(element) {
 }
 
 CasesBPMAssets.setRoleDefaultContactsForUser = function(element, processInstanceId, userId) {
-	
-	showLoadingMessage();
+	showLoadingMessage(CasesBPMAssets.Loc.CASE_GRID_STRING_LOADING);
 	
 	var rightsBoxCands = jQuery(element).parents(".caseProcessResourceAccessRightsSetterStyle");
     
@@ -1084,7 +1092,7 @@ CasesBPMAssets.setRoleDefaultContactsForUser = function(element, processInstance
 }
 
 CasesBPMAssets.setWatchOrUnwatchTask = function(element, processInstanceId) {
-	showLoadingMessage('');
+	showLoadingMessage(CasesBPMAssets.Loc.CASE_GRID_STRING_LOADING);
 	BPMProcessAssets.watchOrUnwatchBPMProcessTask(processInstanceId, {
 		callback: function(message) {
 			closeAllLoadingMessages();
