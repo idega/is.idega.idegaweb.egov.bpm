@@ -227,7 +227,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			return Long.valueOf(numberValue.longValue());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting number value from: "
-			        + value, e);
+			        + value);
 		}
 		
 		return Long.valueOf(0);
