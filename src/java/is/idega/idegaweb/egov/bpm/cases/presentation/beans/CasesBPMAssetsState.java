@@ -38,9 +38,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.39 $
+ * @version $Revision: 1.40 $
  *
- * Last modified: $Date: 2009/03/23 09:13:09 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/23 09:47:37 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -80,8 +80,6 @@ public class CasesBPMAssetsState implements Serializable {
 	private Long nextProcessInstanceId;
 	private Long nextTaskId;
 	private Integer nextCaseId;
-	
-//	private ProcessInstanceW currentProcessInstance;
 	private String currentTaskInstanceName;
 	
 //	private enum FacetRendered {
@@ -549,8 +547,7 @@ public class CasesBPMAssetsState implements Serializable {
 				LOGGER.info("NOT shoing next task - couldn't resolve IDs for next task");
 				return showNextTask;
 			}
-			
-			LOGGER.info("SHOING next task (ID = "+nextTaskId+"). Next case id: " + nextCaseId);
+
 			showNextTask = Boolean.TRUE;
 		}
 		return showNextTask;
@@ -592,6 +589,7 @@ public class CasesBPMAssetsState implements Serializable {
 			
 			ProcessInstanceW nextProcessInstance = getProcessInstance(getCasesBPMProcessView().getProcessInstanceId(nextCaseId));
 			if (nextProcessInstance == null) {
+				LOGGER.warning("Process instance was not found for case: " + nextCaseId);
 				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
 			}
 			
@@ -606,6 +604,7 @@ public class CasesBPMAssetsState implements Serializable {
 				allUnfinishedTasks = nextProcessInstance.getAllUnfinishedTaskInstances();
 			} catch(Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting unfinished tasks for process instance: " + nextProcessInstance.getProcessInstanceId(), e);
+				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
 			}
 			if (ListUtil.isEmpty(allUnfinishedTasks)) {
 				LOGGER.warning("There are no unfinished tasks for process instance: " + nextProcessInstance.getProcessInstanceId());
