@@ -38,9 +38,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.40 $
+ * @version $Revision: 1.41 $
  *
- * Last modified: $Date: 2009/03/23 09:47:37 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/23 09:57:09 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -538,7 +538,6 @@ public class CasesBPMAssetsState implements Serializable {
 			showNextTask = Boolean.FALSE;
 			
 			if (!getCasesSearchResultsHolder().isSearchResultStored(id)) {
-				LOGGER.info("NOT shoing next task - no search results stored");
 				return showNextTask;
 			}
 			
@@ -565,7 +564,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Integer getNextCaseId(String id, Integer caseId) {
 		ProcessInstanceW currentProcess = getCurrentProcess();
 		if (currentProcess == null) {
-			LOGGER.info("Cannot resolve next case id: current process is unknown! ID: " + id + ", case ID: " + caseId);
+			LOGGER.info("Cannot resolve next case id: current process is unknown! Case ID: " + caseId);
 			return null;
 		}
 		
