@@ -26,7 +26,6 @@ public class UICasesListAsset extends IWBaseComponent {
 	private Integer caseId;
 	private boolean downloadDocument = false;
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
