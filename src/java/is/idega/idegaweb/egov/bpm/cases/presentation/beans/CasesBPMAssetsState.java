@@ -9,10 +9,12 @@ import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 import java.io.Serializable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 import javax.faces.context.FacesContext;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -36,9 +38,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.38 $
+ * @version $Revision: 1.39 $
  *
- * Last modified: $Date: 2009/03/19 10:41:00 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/23 09:13:09 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -89,16 +91,18 @@ public class CasesBPMAssetsState implements Serializable {
 //	}
 	
 	public Long getViewSelected() {
-		
-		if(viewSelected == null) {
-			
-			viewSelected = resolveTaskInstanceId();
+		if (viewSelected == null) {
+			viewSelected = getResolvedTaskInstanceId();
 		}
-		
+		return viewSelected;
+	}
+	
+	private Long getResolvedTaskInstanceId() {
 		Object newValue = resolveObject(nextTaskId, "nextTaskInstanceIdParameter");
 		if (newValue instanceof Long) {
 			viewSelected = (Long) newValue;
-			nextTaskId = null;
+		} else {
+			viewSelected = resolveTaskInstanceId();
 		}
 		
 		return viewSelected;
@@ -153,30 +157,31 @@ public class CasesBPMAssetsState implements Serializable {
 		return piId;
 	}
 	
-	public Long getProcessInstanceId() {
-		
-		if(processInstanceId == null) {
-			
-			if(caseId == null) {
+	private Long getResolvedProcessInstanceId() {
+		Object newValue = resolveObject(nextProcessInstanceId, "nextProcessInstanceIdParameter");
+		if (newValue instanceof Long) {
+			processInstanceId = (Long) newValue;
+		}
+		else {
+			if (caseId == null) {
 				processInstanceId = resolveProcessInstanceId();
 				
 				if(processInstanceId != null) {
 				
 					caseId = getCasesBPMProcessView().getCaseId(processInstanceId);
 				}
-				
 			} else {
-				
 				processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
 			}
 		}
 
-		Object newValue = resolveObject(nextProcessInstanceId, "nextProcessInstanceIdParameter");
-		if (newValue instanceof Long) {
-			processInstanceId = (Long) newValue;
-			nextProcessInstanceId = null;
+		return processInstanceId;
+	}
+	
+	public Long getProcessInstanceId() {
+		if (processInstanceId == null) {
+			processInstanceId = getResolvedProcessInstanceId();
 		}
-		
 		return processInstanceId;
 	}
 
@@ -210,27 +215,26 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public Integer getCaseId() {
-		
-		if(caseId == null) {
-			
-			if(processInstanceId == null) {
-				caseId = resolveCaseId();
-				
-				if(caseId != null) {
-				
-					processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
-				}
-				
-			} else {
-
-				caseId = getCasesBPMProcessView().getCaseId(processInstanceId);
-			}
+		if (caseId == null) {
+			caseId = getResolvedCaseId();
 		}
-		
+		return caseId;
+	}
+	
+	public Integer getResolvedCaseId() {
 		Object newValue = resolveObject(nextCaseId, "nextCaseIdParameter");
 		if (newValue instanceof Integer) {
 			caseId = (Integer) newValue;
-			nextCaseId = null;
+		} else {
+			if (processInstanceId == null) {
+				caseId = resolveCaseId();
+				
+				if (caseId != null) {
+					processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
+				}
+			} else {
+				caseId = getCasesBPMProcessView().getCaseId(processInstanceId);
+			}
 		}
 		
 		return caseId;
@@ -270,6 +274,12 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setCaseId(Integer caseId) {
 		this.caseId = caseId;
+		
+		viewSelected = null;
+		showNextTask = null;
+		nextProcessInstanceId = null;
+		nextTaskId = null;
+		nextCaseId = null;
 	}
 	
 	public void takeWatch() {
@@ -534,13 +544,13 @@ public class CasesBPMAssetsState implements Serializable {
 				return showNextTask;
 			}
 			
-			Integer nextCaseId = getNextCaseId();
-			if (nextCaseId == null || nextCaseId < 0) {
-				LOGGER.info("NOT shoing next task - couldn't resolve ID for next task");
+			Long nextTaskId = getNextTaskId(id, getNextCaseId());
+			if (nextTaskId == null) {
+				LOGGER.info("NOT shoing next task - couldn't resolve IDs for next task");
 				return showNextTask;
 			}
 			
-			LOGGER.info("SHOING next task. Next case id: " + nextCaseId);
+			LOGGER.info("SHOING next task (ID = "+nextTaskId+"). Next case id: " + nextCaseId);
 			showNextTask = Boolean.TRUE;
 		}
 		return showNextTask;
@@ -562,13 +572,16 @@ public class CasesBPMAssetsState implements Serializable {
 			return null;
 		}
 		
-		return getCasesSearchResultsHolder().getNextCaseId(id, caseId, /*currentProcess.getProcessDefinitionW().getProcessDefinition().getName()*/null);
+		return getCasesSearchResultsHolder().getNextCaseId(id, caseId);
 	}
 	
 	public Long getNextTaskId() {
-		IWContext iwc = CoreUtil.getIWContext();
-		String id = iwc.getRequestURI();
-		return getNextTaskId(id, getNextCaseId());
+		if (nextTaskId == null) {
+			IWContext iwc = CoreUtil.getIWContext();
+			String id = iwc.getRequestURI();
+			nextTaskId = getNextTaskId(id, getNextCaseId());
+		}
+		return nextTaskId;
 	}
 	
 	private Long getNextTaskId(String id, Integer nextCaseId) {
@@ -579,30 +592,42 @@ public class CasesBPMAssetsState implements Serializable {
 			
 			ProcessInstanceW nextProcessInstance = getProcessInstance(getCasesBPMProcessView().getProcessInstanceId(nextCaseId));
 			if (nextProcessInstance == null) {
-				return null;
+				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
 			}
 			
-			List<TaskInstanceW> unfinishedTasksForNextProcess = nextProcessInstance.getAllUnfinishedTaskInstances();
-			if (ListUtil.isEmpty(unfinishedTasksForNextProcess)) {
-				return null;
-			}
-			
-			nextTaskId = null;
-			TaskInstanceW task = null;
 			String currentTaskName = getCurrentTaskInstanceName();
-			for (Iterator<TaskInstanceW> tasksIter = unfinishedTasksForNextProcess.iterator(); (tasksIter.hasNext() && nextTaskId == null);) {
-				task = tasksIter.next();
+			if (StringUtil.isEmpty(currentTaskName)) {
+				LOGGER.warning("Cannot resolve current task's name for task instance: " + getViewSelected());
+				return null;
+			}
+
+			List<TaskInstanceW> allUnfinishedTasks = null;
+			try {
+				allUnfinishedTasks = nextProcessInstance.getAllUnfinishedTaskInstances();
+			} catch(Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting unfinished tasks for process instance: " + nextProcessInstance.getProcessInstanceId(), e);
+			}
+			if (ListUtil.isEmpty(allUnfinishedTasks)) {
+				LOGGER.warning("There are no unfinished tasks for process instance: " + nextProcessInstance.getProcessInstanceId());
+				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
+			}
+			
+			boolean found = false;
+			for (Iterator<TaskInstanceW> tasksIter = allUnfinishedTasks.iterator(); (!found && tasksIter.hasNext());) {
+				TaskInstanceW task = tasksIter.next();
 				
 				if (currentTaskName.equals(task.getTaskInstance().getName())) {
 					this.nextProcessInstanceId = nextProcessInstance.getProcessInstanceId();
 					this.nextTaskId = task.getTaskInstanceId();
 					this.nextCaseId = nextCaseId;
+					
+					found = true;
 				}
 			}
 			
 			if (nextTaskId == null) {
 				//	Particular task was not found - searching for it in next process instance
-				nextTaskId = getNextTaskId(id, getNextCaseId(id, nextCaseId));
+				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
 			}
 		}
 		return nextTaskId;
@@ -633,13 +658,4 @@ public class CasesBPMAssetsState implements Serializable {
 	private CasesSearchResultsHolder getCasesSearchResultsHolder() {
 		return ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
 	}
-
-	public Long getNextProcessInstanceId() {
-		return nextProcessInstanceId;
-	}
-
-	public void setNextProcessInstanceId(Long nextProcessInstanceId) {
-		this.nextProcessInstanceId = nextProcessInstanceId;
-	}
-	
 }
