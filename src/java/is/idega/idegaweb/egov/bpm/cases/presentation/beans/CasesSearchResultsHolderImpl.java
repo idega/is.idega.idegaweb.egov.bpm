@@ -487,7 +487,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 		}
 	
-		LOGGER.info("Next case id: " + (nextCase == null ? "not found" : nextCase.getPrimaryKey()) + " in: " + cases + ", for current case: " + currentId);
+		LOGGER.info("Next case id: " + (nextCase == null ? "NOT found" : nextCase.getPrimaryKey()) + " in: " + cases + ", for current case: " + currentId);
 		return nextCase == null ? null : nextCase.getPrimaryKey();
 	}
 	
