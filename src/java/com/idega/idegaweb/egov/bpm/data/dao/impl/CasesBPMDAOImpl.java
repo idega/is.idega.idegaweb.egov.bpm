@@ -11,7 +11,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jbpm.context.exe.VariableInstance;
-import org.jbpm.context.exe.variableinstance.StringInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
@@ -34,9 +33,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.37 $
+ * @version $Revision: 1.38 $
  *
- * Last modified: $Date: 2009/03/17 20:52:37 $ by $Author: civilis $
+ * Last modified: $Date: 2009/03/23 16:40:03 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -492,6 +491,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append("and proc_case.case_status in (:caseStatusToShow) "
 				+ "and proc_case.case_manager_type is null) order by Created desc");
 		
+		
 		return getResultListByInlineNativeQuery(builder.toString(), Integer.class, "caseId", params
 				.toArray(new Param[params.size()]));
 	}
@@ -683,7 +683,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToShow) " );
 		}
 		builder.append(") order by Created desc");
-
+		System.out.println(builder.toString());
+		
 		return getResultListByInlineNativeQuery(builder.toString(), Integer.class, "caseId", params
 				.toArray(new Param[params.size()]));
 	}
