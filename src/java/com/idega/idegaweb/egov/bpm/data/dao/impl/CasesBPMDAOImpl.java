@@ -33,9 +33,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.38 $
+ * @version $Revision: 1.39 $
  *
- * Last modified: $Date: 2009/03/23 16:40:03 $ by $Author: juozas $
+ * Last modified: $Date: 2009/03/24 16:59:26 $ by $Author: juozas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -456,7 +456,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseStatusToShow", caseStatusesToShow));
-		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
+		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param("userStatus", ProcessUserBind.Status.PROCESS_WATCHED.toString()));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
@@ -501,7 +501,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
-		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
+		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, IdentityType.USER.toString()));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
@@ -519,7 +519,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("roles", roles));
 			params.add(new Param("identityTypeRole", IdentityType.ROLE.toString()));
 		}
-		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
+		builder.append("ni.identity_id = :identityId  and  ni.identity_type = :identityType) ");
 		builder.append("and act.process_instance_id is not null and pi.end_ is null ");
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide)" );
@@ -570,7 +570,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
-		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
+		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
@@ -652,7 +652,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (!ListUtil.isEmpty(caseStatusesToShow)) {
 			params.add(new Param("statusesToShow", caseStatusesToShow));
 		}
-		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey()));
+		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
 		StringBuilder builder = new StringBuilder(1000);
 		builder
@@ -671,6 +671,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			builder.append("and proc_case.case_status not in (:statusesToHide) " );
 		}
+		
+		//Is thir realy right???
 		if (!ListUtil.isEmpty(caseStatusesToShow)) {
 			builder.append("and proc_case.case_status not in (:statusesToShow) " );
 		}
@@ -683,8 +685,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToShow) " );
 		}
 		builder.append(") order by Created desc");
-		System.out.println(builder.toString());
-		
 		return getResultListByInlineNativeQuery(builder.toString(), Integer.class, "caseId", params
 				.toArray(new Param[params.size()]));
 	}
