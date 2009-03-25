@@ -23,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseHome;
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -61,6 +62,7 @@ public class CasesListSearchCriteriaBean {
 	private IWTimestamp dateTo;
 	private String[] statuses;
 	private List<BPMProcessVariable> processVariables;
+	private List<AdvancedProperty> sortingOptions;
 	
 	@Autowired private CasesBPMDAO casesBPMDAO;
 	@Autowired private RolesManager rolesManager;
@@ -697,5 +699,12 @@ public class CasesListSearchCriteriaBean {
 	public void setInstanceId(String instanceId) {
 		this.instanceId = instanceId;
 	}
-	
+
+	public List<AdvancedProperty> getSortingOptions() {
+		return sortingOptions;
+	}
+
+	public void setSortingOptions(List<AdvancedProperty> sortingOptions) {
+		this.sortingOptions = sortingOptions;
+	}	
 }
