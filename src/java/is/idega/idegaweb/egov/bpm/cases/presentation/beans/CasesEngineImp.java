@@ -8,6 +8,8 @@ import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -24,8 +26,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CaseBusiness;
-import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.CaseManagersProvider;
+import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
@@ -57,18 +59,24 @@ import com.idega.webface.WFUtil;
 
 @Scope("singleton")
 @Service("casesEngineDWR")
-public class CasesEngine {
+public class CasesEngineImp implements BPMCasesEngine {
 	
+	@Autowired
 	private CasesBPMProcessView casesBPMProcessView;
-	private BuilderLogicWrapper builderLogic;
-	private GeneralCasesListBuilder casesListBuilder;
-	@Autowired private CaseManagersProvider caseManagersProvider;
 	
+	@Autowired
+	private BuilderLogicWrapper builderLogic;
+	
+	@Autowired
+	private GeneralCasesListBuilder casesListBuilder;
+	
+	@Autowired
+	private CaseManagersProvider caseManagersProvider;
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
 	
-	private static final Logger logger = Logger.getLogger(CasesEngine.class.getName());
+	private static final Logger logger = Logger.getLogger(CasesEngineImp.class.getName());
 	
 	public Long getProcessInstanceId(String caseId) {
 		
@@ -264,8 +272,6 @@ public class CasesEngine {
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
 	}
 	
-	
-	
 	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
 		
 		final User currentUser;
@@ -295,9 +301,10 @@ public class CasesEngine {
 				caseIdsByUser = filt.doFilter(caseIdsByUser);
 			}
 		}
-			
+		
+		Locale locale = iwc.getCurrentLocale();
 		if (!ListUtil.isEmpty(caseIdsByUser)) {
-			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(caseIdsByUser, iwc.getCurrentLocale());
+			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(caseIdsByUser, locale);
 		}
 		
 		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
@@ -305,28 +312,24 @@ public class CasesEngine {
 		}
 		
 		List<CasePresentation> casesToSort = new ArrayList<CasePresentation>(cases.getCollection());
-		Collections.sort(casesToSort, new CasePresentationComparator());
+		Collections.sort(casesToSort, getCasePresentationComparator(criteriaBean, locale));
 		cases = new PagedDataCollection<CasePresentation>(casesToSort);
 		
 		return cases;
 	}
+	
+	private CasePresentationComparator getCasePresentationComparator(CasesListSearchCriteriaBean searchCriterias, Locale locale) {
+		return (searchCriterias == null || ListUtil.isEmpty(searchCriterias.getSortingOptions())) ?
+				new CasePresentationComparator() :
+				new BPMCasePresentationComparator(locale, searchCriterias);
+	}
 
-	public BuilderLogicWrapper getBuilderLogic() {
+	private BuilderLogicWrapper getBuilderLogic() {
 		return builderLogic;
 	}
 
-	@Autowired
-	public void setBuilderLogic(BuilderLogicWrapper builderLogic) {
-		this.builderLogic = builderLogic;
-	}
-
-	public GeneralCasesListBuilder getCasesListBuilder() {
+	private GeneralCasesListBuilder getCasesListBuilder() {
 		return casesListBuilder;
-	}
-
-	@Autowired
-	public void setCasesListBuilder(GeneralCasesListBuilder casesListBuilder) {
-		this.casesListBuilder = casesListBuilder;
 	}
 
 	private CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
@@ -340,13 +343,8 @@ public class CasesEngine {
 		return null;
 	}
 
-	public CasesBPMProcessView getCasesBPMProcessView() {
+	private CasesBPMProcessView getCasesBPMProcessView() {
 		return casesBPMProcessView;
-	}
-
-	@Autowired
-	public void setCasesBPMProcessView(CasesBPMProcessView casesBPMProcessView) {
-		this.casesBPMProcessView = casesBPMProcessView;
 	}
 	
 	public RenderedComponent getVariablesWindow(String processDefinitionId) {
@@ -461,11 +459,7 @@ public class CasesEngine {
 		return result;
 	}
 
-	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
-		this.caseManagersProvider = caseManagersProvider;
-	}
-
-	public CaseManagersProvider getCaseManagersProvider() {
+	private CaseManagersProvider getCaseManagersProvider() {
 		return caseManagersProvider;
 	}
 	
@@ -474,6 +468,20 @@ public class CasesEngine {
 		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE);
 		
 		return getSearchResultsHolder().clearSearchResults(id);
+	}
+
+	public List<AdvancedProperty> getDefaultSortingOptions(IWContext iwc) {
+		List<AdvancedProperty> defaultSortingOptions = new ArrayList<AdvancedProperty>();
+		
+		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+		
+		defaultSortingOptions.add(new AdvancedProperty("getCaseIdentifier", iwrb.getLocalizedString("case_nr", "Case nr.")));
+		defaultSortingOptions.add(new AdvancedProperty("getSubject", iwrb.getLocalizedString("description", "Description")));
+		defaultSortingOptions.add(new AdvancedProperty("getOwnerName", iwrb.getLocalizedString("sender", "Sender")));
+		defaultSortingOptions.add(new AdvancedProperty("getCreated", iwrb.getLocalizedString("created_date", "Created date")));
+		defaultSortingOptions.add(new AdvancedProperty("getCaseStatusLocalized", iwrb.getLocalizedString("status", "Status")));
+		
+		return defaultSortingOptions;
 	}
 
 }
