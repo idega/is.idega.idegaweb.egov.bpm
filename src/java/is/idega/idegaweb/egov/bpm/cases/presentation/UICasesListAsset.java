@@ -2,7 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.presentation;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngineImp;
 
 import java.io.IOException;
 
@@ -44,12 +44,12 @@ public class UICasesListAsset extends IWBaseComponent {
 		div.getChildren().add(linksContainer);
 		
 		DownloadLink attachmentLink = new DownloadLink();
-		attachmentLink.setStyleClass(CasesEngine.FILE_DOWNLOAD_LINK_STYLE_CLASS);
+		attachmentLink.setStyleClass(CasesEngineImp.FILE_DOWNLOAD_LINK_STYLE_CLASS);
 		attachmentLink.setMediaWriterClass(AttachmentWriter.class);
 		linksContainer.getChildren().add(attachmentLink);
 		
 		DownloadLink pdfLink = new DownloadLink();
-		pdfLink.setStyleClass(CasesEngine.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
+		pdfLink.setStyleClass(CasesEngineImp.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
 		pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
 		linksContainer.getChildren().add(pdfLink);
 		

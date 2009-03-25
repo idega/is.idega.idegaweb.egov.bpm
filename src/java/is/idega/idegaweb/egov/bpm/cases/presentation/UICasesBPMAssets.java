@@ -4,7 +4,7 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.business.CommentsPersistenceManagerImpl;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngine;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngineImp;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.48 $
+ * @version $Revision: 1.49 $
  *
- * Last modified: $Date: 2009/03/19 14:51:05 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/25 13:25:02 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -88,12 +88,12 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		div.getChildren().add(linksContainer);
 		
 		DownloadLink attachmentLink = new DownloadLink();
-		attachmentLink.setStyleClass(CasesEngine.FILE_DOWNLOAD_LINK_STYLE_CLASS);
+		attachmentLink.setStyleClass(CasesEngineImp.FILE_DOWNLOAD_LINK_STYLE_CLASS);
 		attachmentLink.setMediaWriterClass(AttachmentWriter.class);
 		linksContainer.getChildren().add(attachmentLink);
 		
 		DownloadLink pdfLink = new DownloadLink();
-		pdfLink.setStyleClass(CasesEngine.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
+		pdfLink.setStyleClass(CasesEngineImp.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
 		pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
 		linksContainer.getChildren().add(pdfLink);
 		
