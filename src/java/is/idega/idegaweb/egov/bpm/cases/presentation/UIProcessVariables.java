@@ -15,7 +15,6 @@ public class UIProcessVariables extends IWBaseComponent {
 
 	private static final String containerFacet = "container";
 	
-	@SuppressWarnings("unchecked")
 	@Override
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
