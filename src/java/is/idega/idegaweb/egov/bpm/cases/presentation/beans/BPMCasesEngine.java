@@ -10,12 +10,12 @@ import com.idega.core.component.bean.RenderedComponent;
 
 public interface BPMCasesEngine extends CasesEngine {
 
-	public Document getCaseManagerView(CasesBPMAssetProperties properties);
+	public abstract Document getCaseManagerView(CasesBPMAssetProperties properties);
 	
-	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean);
+	public abstract Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean);
 	
-	public Long getProcessInstanceId(String caseId);
+	public abstract Long getProcessInstanceId(String caseId);
 	
-	public RenderedComponent getVariablesWindow(String processDefinitionId);
+	public abstract RenderedComponent getVariablesWindow(String processDefinitionId);
 	
 }
