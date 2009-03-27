@@ -23,6 +23,8 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
     CASE_GRID_STRING_LOADING: 'Loading...'
 };
 
+CasesBPMAssets.processParams = {};
+
 CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 
 CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
@@ -237,6 +239,44 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     							hasRightChangeRights, null);
 };
 
+CasesBPMAssets.pushRowsParams = function(gridEntriesBean) {
+	
+	var params = {
+		rowsParams: gridEntriesBean.rowsParams
+	};
+	CasesBPMAssets.processParams[gridEntriesBean.processInstanceId] = params;
+};
+
+CasesBPMAssets.getRowParam = function(processInstanceId, rowId, paramId) {
+
+	var params = CasesBPMAssets.processParams[processInstanceId];
+	
+	var paramValue = null;
+	
+	if(params != null && params.rowsParams != null) {
+		
+		var rowParams = params.rowsParams[rowId];
+		
+		if(rowParams != null) {
+		
+            paramValue = rowParams[paramId];	
+		}
+	}
+	
+	return paramValue;
+};
+
+CasesBPMAssets.isRowHasViewUI = function(processInstanceId, rowId) {
+	
+	var hasViewUI = CasesBPMAssets.getRowParam(processInstanceId, rowId, "hasViewUI");
+	
+	if(hasViewUI == null)
+	   hasViewUI = true;
+	   
+	return hasViewUI;	
+};
+
+
 CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
 										onFormsInited) {
     var identifier = 'caseForms';
@@ -247,8 +287,12 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
         params.downloadDocument = usePdfDownloadColumn;
         params.allowPDFSigning = allowPDFSigning;
         BPMProcessAssets.getProcessDocumentsList(params, {
-            callback: function(result) {
-                callback(result);
+            callback: function(gridEntriesBean) {
+            	
+            	CasesBPMAssets.pushRowsParams(gridEntriesBean);
+            	
+            	var gridEntries = gridEntriesBean.gridEntries;
+                callback(gridEntries);
                 
                 CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX + piId));
                 
@@ -295,7 +339,13 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     }
     
     var onSelectRowFunction = function(rowId) {
-        CasesBPMAssets.getProcessRersourceView(caseId, rowId);
+    	
+        var hasViewUI = CasesBPMAssets.isRowHasViewUI(piId, rowId);
+        
+    	if(hasViewUI) {
+    	
+    	   CasesBPMAssets.getProcessRersourceView(caseId, rowId);	
+    	}
     };
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction,
