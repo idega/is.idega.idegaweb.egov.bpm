@@ -41,6 +41,7 @@ import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.core.contact.data.Email;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
@@ -52,6 +53,9 @@ import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.presentation.IWContext;
+import com.idega.user.business.NoEmailFoundException;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
@@ -639,6 +643,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				
 				index++;
 			}
+			rowValues.add(getHandlerId(caseBoard));
 			
 			rowBean.setValues(rowValues);
 			bodyRows.add(rowBean);
@@ -654,6 +659,65 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return data;
 	}
 	
+	private String getHandlerId(CaseBoardBean caseBoard) {
+		if (caseBoard == null || StringUtil.isEmpty(caseBoard.getCaseId())) {
+			return null;
+		}
+		
+		Integer handlerId = null;
+		try {
+			Long processInstanceId = getCasesBPMDAO().getCaseProcInstBindByCaseId(Integer.valueOf(caseBoard.getCaseId())).getProcInstId();
+			ProcessInstanceW piw = getBpmFactory().getProcessInstanceW(processInstanceId);
+			handlerId = piw.getHandlerId();
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting handler for case: " + caseBoard.getCaseId(), e);
+		}
+		
+		return handlerId == null ? null : handlerId.toString();
+	}
+	
+	public AdvancedProperty getHandlerInfo(IWContext iwc, String userId) {
+		if (StringUtil.isEmpty(userId)) {
+			return null;
+		}
+		
+		UserBusiness userBusiness = null;
+		try {
+			userBusiness = (UserBusiness) IBOLookup.getServiceInstance(iwc, UserBusiness.class);
+		} catch(RemoteException e) {
+			LOGGER.log(Level.WARNING, "Error getting " + UserBusiness.class, e);
+		}
+		if (userBusiness == null) {
+			return null;
+		}
+		
+		User handler = null;
+		try {
+			handler = userBusiness.getUser(Integer.valueOf(userId));
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting user by ID: " + userId, e);
+		}
+		if (handler == null) {
+			return null;
+		}
+		
+		AdvancedProperty info = new AdvancedProperty(handler.getName());
+		
+		Email email = null;
+		try {
+			email = userBusiness.getUsersMainEmail(handler);
+		} catch (RemoteException e) {
+			LOGGER.log(Level.WARNING, "Error getting email for user: " + handler, e);
+		} catch (NoEmailFoundException e) {
+		}
+		
+		if (email != null) {
+			info.setValue(new StringBuilder("mailto:").append(email.getEmailAddress()).toString());
+		}
+		
+		return info;
+	}
+	
 	private List<String> getTableHeaders(IWResourceBundle iwrb) {
 		String prefix = "case_board_viewer.";
 		List<String> headers = new ArrayList<String>(
@@ -662,6 +726,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			headers.add(iwrb.getLocalizedString(new StringBuilder(prefix)
 			        .append(header.getId()).toString(), header.getValue()));
 		}
+		
+		headers.add(iwrb.getLocalizedString(new StringBuilder(prefix).append("case_handler").toString(), "Case handler"));
+		
 		return headers;
 	}
 	
@@ -686,6 +753,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				values.add(CoreConstants.EMPTY);
 			}
 		}
+		
+		values.add(CoreConstants.EMPTY);
 		
 		return values;
 	}
