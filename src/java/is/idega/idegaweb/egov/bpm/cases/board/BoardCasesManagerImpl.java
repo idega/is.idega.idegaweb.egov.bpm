@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.board;
 
 import is.idega.idegaweb.egov.bpm.cases.CaseProcessInstanceRelationImpl;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
@@ -380,7 +381,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	@Transactional(propagation = Propagation.REQUIRED)
 	public AdvancedProperty setCaseVariableValue(Integer caseId,
-	        String variableName, String value, String role) {
+	        String variableName, String value, String role, String backPage) {
 		if (caseId == null || StringUtil.isEmpty(variableName)
 		        || StringUtil.isEmpty(value)) {
 			return null;
@@ -449,7 +450,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			
 			return new AdvancedProperty(value, getLinkToTheTask(iwc, caseId
 			        .toString(), getPageUriForTaskViewer(iwc),
-			    sharedTaskInstanceId.toString()));
+			    sharedTaskInstanceId.toString(), backPage));
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Error saving variable '" + variableName
 			        + "' with value '" + value + "' for case: " + caseId, e);
@@ -458,7 +459,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return null;
 	}
 	
-	public String getLinkToTheTask(IWContext iwc, String caseId, String basePage) {
+	public String getLinkToTheTask(IWContext iwc, String caseId, String basePage, String backPage) {
 		if (iwc == null || StringUtil.isEmpty(caseId)
 		        || StringUtil.isEmpty(basePage)) {
 			return null;
@@ -471,7 +472,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				return iwc.getRequestURI();
 			}
 			
-			return getLinkToTheTask(iwc, caseId, basePage, taskId);
+			return getLinkToTheTask(iwc, caseId, basePage, taskId, backPage);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Can't get uri to the task: ", e);
 		}
@@ -479,14 +480,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return iwc.getRequestURI();
 	}
 	
-	private String getLinkToTheTask(IWContext iwc, String caseId,
-	        String basePage, String taskId) {
+	private String getLinkToTheTask(IWContext iwc, String caseId, String basePage, String taskId, String backPage) {
 		URIUtil uriUtil = new URIUtil(basePage);
 		
 		uriUtil.setParameter(CasesProcessor.PARAMETER_ACTION, String
 		        .valueOf(UserCases.ACTION_CASE_MANAGER_VIEW));
 		uriUtil.setParameter(CaseViewer.PARAMETER_CASE_PK, caseId);
 		uriUtil.setParameter("tiId", taskId);
+		if (!StringUtil.isEmpty(backPage)) {
+			uriUtil.setParameter(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER, backPage);
+		}
 		
 		return iwc.getIWMainApplication().getTranslatedURIWithContext(
 		    uriUtil.getUri());

@@ -43,9 +43,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.49 $
+ * @version $Revision: 1.50 $
  *
- * Last modified: $Date: 2009/03/25 13:25:02 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/31 13:40:58 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -119,6 +119,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			comments.setAddLoginbyUUIDOnRSSFeedLink(true);
 			comments.setStyleClass("commentsViewerForTaskViewerInCasesList");
 			div.getChildren().add(comments);
+		}
+		
+		IWContext iwc = IWContext.getIWContext(context);
+		if (iwc.isParameterSet(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER)) {
+			stateBean.setSpecialBackPage(iwc.getParameter(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER));
 		}
 		
 		div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);

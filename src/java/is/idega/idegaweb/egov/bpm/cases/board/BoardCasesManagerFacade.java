@@ -16,10 +16,10 @@ public class BoardCasesManagerFacade {
 	private BoardCasesManager boardCasesManager;
 	
 	public AdvancedProperty setCaseVariableValue(Integer caseId,
-	        String variableName, String value, String role) {
+	        String variableName, String value, String role, String backPage) {
 		
 		return getBoardCasesManager().setCaseVariableValue(caseId,
-		    variableName, value, role);
+		    variableName, value, role, backPage);
 	}
 	
 	BoardCasesManager getBoardCasesManager() {

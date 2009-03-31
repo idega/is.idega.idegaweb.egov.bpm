@@ -15,7 +15,10 @@
 	</ui:define>
 	<ui:define name="actions">
 		<div>
-			<h:commandLink value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+			<t:commandLink rendered="#{!casesBPMAssetsState.showSpecialBackPage}" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+			<t:div rendered="#{casesBPMAssetsState.showSpecialBackPage}">
+				<a href="#{casesBPMAssetsState.specialBackPage}">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
+			</t:div>
 			<t:commandLink rendered="#{casesBPMAssetsState.showNextTask}" immediate="true" value="#{casesBPMAssetsState.nextTaskName}" onclick="showLoadingMessage('#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.loading']}');" ondblclick="return false;">
 				<f:param name="prm_case_pk" value="#{casesBPMAssetsState.nextCaseId}" />
 				<f:param name="tiId" value="#{casesBPMAssetsState.nextTaskId}" />

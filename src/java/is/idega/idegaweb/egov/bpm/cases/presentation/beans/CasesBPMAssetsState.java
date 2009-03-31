@@ -7,6 +7,8 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -38,9 +40,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.41 $
+ * @version $Revision: 1.42 $
  *
- * Last modified: $Date: 2009/03/23 09:57:09 $ by $Author: valdas $
+ * Last modified: $Date: 2009/03/31 13:40:58 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -52,6 +54,8 @@ public class CasesBPMAssetsState implements Serializable {
 	private static final Logger LOGGER = Logger.getLogger(CasesBPMAssetsState.class.getName());
 	
 	public static final String beanIdentifier = "casesBPMAssetsState";
+	
+	public static final String CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER = "casesAssetsSpecialBackPage";
 	
 	@Autowired
 	private transient CasesBPMProcessView casesBPMProcessView;
@@ -75,12 +79,14 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean allowPDFSigning = Boolean.TRUE;
 	private Boolean standAloneComponent = Boolean.TRUE;
 	private Boolean hideEmptySection = Boolean.FALSE;
+	private String specialBackPage;
 	
 	private Boolean showNextTask;
 	private Long nextProcessInstanceId;
 	private Long nextTaskId;
 	private Integer nextCaseId;
 	private String currentTaskInstanceName;
+	private boolean specialBackPageDecoded;
 	
 //	private enum FacetRendered {
 //		
@@ -139,6 +145,10 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	public void showAssets() {
 		setViewSelected(null);
+	}
+	
+	public boolean isShowSpecialBackPage() {
+		return !StringUtil.isEmpty(specialBackPage);
 	}
 	
 	protected Long resolveProcessInstanceId() {
@@ -656,4 +666,21 @@ public class CasesBPMAssetsState implements Serializable {
 	private CasesSearchResultsHolder getCasesSearchResultsHolder() {
 		return ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
 	}
+
+	public String getSpecialBackPage() {
+		if (!specialBackPageDecoded) {
+			specialBackPageDecoded = true;
+			try {
+				specialBackPage = URLDecoder.decode(specialBackPage, CoreConstants.ENCODING_UTF8);
+			} catch (UnsupportedEncodingException e) {
+				e.printStackTrace();
+			}
+		}
+		return specialBackPage;
+	}
+
+	public void setSpecialBackPage(String specialBackPage) {
+		this.specialBackPage = specialBackPage;
+	}
+
 }
