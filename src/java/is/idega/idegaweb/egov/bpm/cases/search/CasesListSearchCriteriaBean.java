@@ -286,11 +286,11 @@ public class CasesListSearchCriteriaBean {
 	private List<Integer> getNarrowedResults(List<Integer> casesIds, List<Integer> filterResults) {
 		LOGGER.info("Narroying results: start data: " + casesIds + ", filtered data: " + filterResults);
 		if (ListUtil.isEmpty(casesIds)) {
-			LOGGER.log(Level.INFO, "There are no start data, emptying IDs");
+			LOGGER.info("There are no start data, emptying IDs");
 			return null;
 		}
 		if (ListUtil.isEmpty(filterResults)) {
-			LOGGER.log(Level.INFO, "No results found, emptying IDs");
+			LOGGER.info("No results found, emptying IDs");
 			return null;
 		}
 		
@@ -308,7 +308,7 @@ public class CasesListSearchCriteriaBean {
 			}
 		}
 		
-		LOGGER.warning("Narrowed results: " + ids);
+		LOGGER.info("Narrowed results: " + ids);
 		return ids;
 	}
 	
