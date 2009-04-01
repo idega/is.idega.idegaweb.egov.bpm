@@ -59,7 +59,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.38 $ Last modified: $Date: 2009/03/17 20:53:23 $ by $Author: civilis $
+ * @version $Revision: 1.39 $ Last modified: $Date: 2009/04/01 14:12:16 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -235,8 +235,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					// TODO: if variables submission and process execution fails here,
 					// rollback case proc inst bind
 					
-					getVariablesHandler().submitVariables(caseData, ti.getId(),
-					    false);
+					pi.getContextInstance().setVariables(caseData);
+					
 					submitVariablesAndProceedProcess(ti, viewSubmission
 					        .resolveVariables(), true);
 					
