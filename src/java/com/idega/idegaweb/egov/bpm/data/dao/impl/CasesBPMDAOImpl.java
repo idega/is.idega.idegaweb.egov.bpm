@@ -33,9 +33,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.39 $
+ * @version $Revision: 1.40 $
  *
- * Last modified: $Date: 2009/03/24 16:59:26 $ by $Author: juozas $
+ * Last modified: $Date: 2009/04/01 10:15:39 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -396,61 +396,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				new Param(CaseProcInstBind.processInstanceIdProp, processInstanceId)
 		);
 	}
-	
-	public List<VariableInstance> getVariablesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames) {
-		
-		throw new UnsupportedOperationException("Not supported yet");
-//		if (processInstanceId == null || ListUtil.isEmpty(variablesNames)) {
-//			return null;
-//		}
-//		
-//		List<Param> params = new ArrayList<Param>();
-//		StringBuilder query = new StringBuilder("select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi ")
-//			.append("where pi.id = :").append(CaseProcInstBind.processInstanceIdProp).append(" and (");
-//		for (Iterator<String> variablesIter = variablesNames.iterator(); variablesIter.hasNext();) {
-//			query.append("var.name = :").append(variablesIter.next());
-//			
-//			if (variablesIter.hasNext()) {
-//				query.append(" and ");
-//			}
-//		}
-//		query.append(")");
-//		
-//		return getResultListByInlineNativeQuery(query.toString(), VariableInstance.class, params.toArray());
-	}
-	
-	/*
-	@Transactional(readOnly=true)
-	public List<String> getStringVariablesValuesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames) {
-		List<VariableInstance> variables = getVariablesByVariablesNamesForProcessInstance(processInstanceId, variablesNames);
-		if (ListUtil.isEmpty(variables)) {
-			return null;
-		}
-		
-		String noValueKeyword = "no_value";
-		List<String> values = new ArrayList<String>();
-		for (String name: variablesNames) {
-			boolean addedValue = false;
-			for (VariableInstance variable: variables) {
-				if (variable instanceof StringInstance && name.equals(variable.getName())) {
-					Object value = variable.getValue();
-					if (value == null) {
-						value = noValueKeyword;
-					}
-					values.add(value.toString());
-					addedValue = Boolean.TRUE;
-					
-					break;
-				}
-			}
-			if (!addedValue) {
-				values.add(noValueKeyword);
-			}
-		}
-		
-		return values;
-	}
-	*/
 
 //	TODO: those queries are very similar, make some general query, and just append queries/joins in more special use cases
 	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {

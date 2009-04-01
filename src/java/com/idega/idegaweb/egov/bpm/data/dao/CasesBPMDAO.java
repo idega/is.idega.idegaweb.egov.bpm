@@ -18,9 +18,9 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  *
- * Last modified: $Date: 2009/03/17 20:52:37 $ by $Author: civilis $
+ * Last modified: $Date: 2009/04/01 10:15:39 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
@@ -62,8 +62,6 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName);
 	
 	public abstract List<VariableInstance> getVariablesByProcessInstanceId(Long processInstanceId);
-	
-//	public abstract List<String> getStringVariablesValuesByVariablesNamesForProcessInstance(Long processInstanceId, List<String> variablesNames);
 
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 	
