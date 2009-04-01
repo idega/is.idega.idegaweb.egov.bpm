@@ -69,17 +69,26 @@ import com.idega.util.expression.ELUtil;
 public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private static final List<String> GRADING_VARIABLES = Collections
-	        .unmodifiableList(Arrays.asList("string_ownerInnovationalValue",
-	            "string_ownerCompetitionValue",
-	            "string_ownerEntrepreneursValue",
-	            "string_ownerPossibleDevelopments", "string_ownerNatureStatus",
-	            "string_ownerApplication", "string_ownerOverturn",
-	            "string_ownerProceeds", "string_ownerEconomist",
-	            "string_ownerEmployees", "string_ownerForsvarsmenn",
-	            "string_ownerConstant", "string_ownerNewConstant",
-	            "string_ownerBusiness", "string_ownerProject",
-	            "string_ownerCostValue", "string_ownerProjectedSize",
-	            "string_ownerEntrepreneurCompany"));
+	        .unmodifiableList(Arrays.asList(
+	        		"string_ownerInnovationalValue",	//	0
+	        		"string_ownerCompetitionValue",		//	1
+	        		"string_ownerEntrepreneursValue",	//	2
+	        		"string_ownerPossibleDevelopments",	//	3
+	        		"string_ownerNatureStatus",			//	4
+	        		"string_ownerApplication",			//	5
+	        		"string_ownerOverturn",				//	6
+	        		"string_ownerProceeds",				//	7
+	        		"string_ownerEconomist",			//	8
+	        		"string_ownerEmployees",			//	9
+	        		"string_ownerForsvarsmenn",			//	10
+	        		"string_ownerConstant",				//	11
+	        		"string_ownerNewConstant",			//	12
+	        		"string_ownerBusiness",				//	13
+	        		"string_ownerProject",				//	14
+	        		"string_ownerCostValue",			//	15
+	        		"string_ownerProjectedSize",		//	16
+	            	"string_ownerEntrepreneurCompany"	//	17
+	 ));
 	
 	private static final Logger LOGGER = Logger
 	        .getLogger(BoardCasesManagerImpl.class.getName());
@@ -128,8 +137,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			return null;
 		}
 		
+		List<String> allVariables = new ArrayList<String>(getVariables());
+		allVariables.addAll(GRADING_VARIABLES);
 		List<String> values = getStringVariablesValuesByVariablesNamesForProcessInstance(
-		    new Integer(theCase.getPrimaryKey().toString()), getVariables());
+		    new Integer(theCase.getPrimaryKey().toString()), allVariables);
 		
 		if (ListUtil.isEmpty(values)) {
 			return null;
@@ -149,12 +160,13 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		    true)));
 		
 		boardCase.setNutshell(getStringValue(values.get(6)));
-		// Grading sums should be the 7th
-		boardCase.setCategory(getStringValue(values.get(8)));
 		
+		boardCase.setGradingSum(getGradingSum(boardCase, values.subList(allVariables.size() - GRADING_VARIABLES.size(), allVariables.size())));
+		
+		boardCase.setCategory(getStringValue(values.get(8)));
 		boardCase.setComment(getStringValue(values.get(9)));
-		boardCase
-		        .setGrantAmountSuggestion(getNumberValue(values.get(10), false));
+		
+		boardCase.setGrantAmountSuggestion(getNumberValue(values.get(10), false));
 		boardCase.setBoardAmount(getNumberValue(values.get(11), false));
 		boardCase.setRestrictions(getStringValue(values.get(12)));
 		
@@ -527,29 +539,18 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			    "Error getting grading task instance for caseId=" + caseId, e);
 			return null;
 		}
-		
-		// try {
-		// taskId = getCaseManager().getTaskInstanceIdForTask(
-		// getCasesBusiness(iwc).getCase(caseId), "Grading");
-		// } catch (Exception e) {
-		// LOGGER.log(Level.WARNING, "Error getting task instance for case: "
-		// + caseId, e);
-		// }
-		// if (taskId == null) {
-		// return null;
-		// }
-		// return String.valueOf(taskId.longValue());
 	}
 	
-	public String getGradingSum(IWContext iwc, CaseBoardBean boardCase) {
-		List<String> gradingValues = null;
-		try {
-			gradingValues = getStringVariablesValuesByVariablesNamesForProcessInstance(
-			    new Integer(boardCase.getCaseId()), GRADING_VARIABLES);
-			
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error getting grading values for case: "
-			        + boardCase.getCaseId(), e);
+	public String getGradingSum(CaseBoardBean boardCase, List<String> gradingValues) {
+		if (ListUtil.isEmpty(gradingValues)) {
+			try {
+				gradingValues = getStringVariablesValuesByVariablesNamesForProcessInstance(
+				    new Integer(boardCase.getCaseId()), GRADING_VARIABLES);
+				
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting grading values for case: "
+				        + boardCase.getCaseId(), e);
+			}
 		}
 		if (ListUtil.isEmpty(gradingValues)) {
 			return String.valueOf(0);
@@ -625,9 +626,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				if (index == 2) {
 					// Link to grading task
 					rowValues.add(caseBoard.getCaseIdentifier());
-				} else if (index == 7) {
-					// SUMs for grading variables
-					rowValues.add(getGradingSum(iwc, caseBoard));
 				} else {
 					rowValues.add(value);
 				}
