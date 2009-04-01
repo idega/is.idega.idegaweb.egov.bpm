@@ -75,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2009/03/19 12:43:27 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/01 12:41:09 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -640,11 +640,13 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			} catch (RemoteException e) {
 				bean.setCaseStatus(theCase.getCaseStatus());
 			}
-			try {
-				bean.setLocalizedStatus(getCasesBusiness(iwc).getLocalizedCaseStatusDescription(theCase,
-						bean.getCaseStatus(), locale));
-			} catch (RemoteException e) {
-				e.printStackTrace();
+			
+			if (bean.getCaseStatus() != null) {
+				try {
+					bean.setLocalizedStatus(getCasesBusiness(iwc).getLocalizedCaseStatusDescription(theCase, bean.getCaseStatus(), locale));
+				} catch (RemoteException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 		return bean;
