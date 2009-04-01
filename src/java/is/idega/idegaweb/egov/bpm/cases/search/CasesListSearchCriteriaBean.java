@@ -256,7 +256,7 @@ public class CasesListSearchCriteriaBean {
 					LOGGER.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
 				}
 				else {
-					LOGGER.log(Level.INFO, "Cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
+					LOGGER.log(Level.INFO, "Found cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
 				}
 				casesIds = getNarrowedResults(casesIds, casesByProcessDefinition);
 				
@@ -284,6 +284,7 @@ public class CasesListSearchCriteriaBean {
 	}
 	
 	private List<Integer> getNarrowedResults(List<Integer> casesIds, List<Integer> filterResults) {
+		LOGGER.info("Narroying results: start data: " + casesIds + ", filtered data: " + filterResults);
 		if (ListUtil.isEmpty(casesIds)) {
 			LOGGER.log(Level.INFO, "There are no start data, emptying IDs");
 			return null;
@@ -307,6 +308,7 @@ public class CasesListSearchCriteriaBean {
 			}
 		}
 		
+		LOGGER.warning("Narrowed results: " + ids);
 		return ids;
 	}
 	

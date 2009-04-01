@@ -76,7 +76,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
 	
-	private static final Logger logger = Logger.getLogger(CasesEngineImp.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CasesEngineImp.class.getName());
 	
 	public Long getProcessInstanceId(String caseId) {
 		
@@ -101,7 +101,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		
 		String caseIdStr = properties.getCaseId();
 		if (caseIdStr == null || CoreConstants.EMPTY.equals(caseIdStr) || iwc == null) {
-			logger.log(Level.WARNING, "Either not provided:\n caseId="+caseIdStr+", iwc="+iwc);
+			LOGGER.log(Level.WARNING, "Either not provided:\n caseId="+caseIdStr+", iwc="+iwc);
 			return null;
 		}
 		
@@ -121,7 +121,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 			return rendered;
 			
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "Exception while resolving rendered component for case assets view", e);
+			LOGGER.log(Level.SEVERE, "Exception while resolving rendered component for case assets view", e);
 		}
 		
 		return null;
@@ -136,7 +136,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		try {
 			caseBusiness = (CaseBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
 		} catch (IBOLookupException e) {
-			logger.log(Level.SEVERE, "Error getting CaseBusiness", e);
+			LOGGER.log(Level.SEVERE, "Error getting CaseBusiness", e);
 		}
 		if (caseBusiness == null) {
 			return false;
@@ -146,7 +146,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		try {
 			theCase = caseBusiness.getCase(caseId);
 		} catch (Exception e) {
-			logger.log(Level.SEVERE, "Unable to get case by ID: " + caseId, e);
+			LOGGER.log(Level.SEVERE, "Unable to get case by ID: " + caseId, e);
 		}
 		if (theCase == null) {
 			return false;
@@ -160,14 +160,14 @@ public class CasesEngineImp implements BPMCasesEngine {
 	
 	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean) {
 		if (criteriaBean == null) {
-			logger.log(Level.SEVERE, "Can not execute search - search criterias unknown");
+			LOGGER.log(Level.SEVERE, "Can not execute search - search criterias unknown");
 			return null;
 		}
 		
 		//	Clearing search result before new search
 		clearSearchResults(criteriaBean.getId());
 		
-		logger.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criteriaBean.getCaseNumber()).append(", description: ")
+		LOGGER.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criteriaBean.getCaseNumber()).append(", description: ")
 				.append(criteriaBean.getDescription()).append(", name: ").append(criteriaBean.getName()).append(", personalId: ")
 				.append(criteriaBean.getPersonalId()).append(", processId: ").append(criteriaBean.getProcessId()).append(", statusId: ")
 				.append(criteriaBean.getStatusId()).append(", dateRange: ").append(criteriaBean.getDateRange()).append(", casesListType: ")
@@ -177,6 +177,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
+			LOGGER.warning(IWContext.class + " is unavailable!");
 			return null;
 		}
 		
@@ -209,9 +210,11 @@ public class CasesEngineImp implements BPMCasesEngine {
 			component = getCasesListBuilder().getCasesList(iwc, cases, properties);
 		}
 		if (component == null) {
+			LOGGER.warning("Unable to get UIComponent for cases list!");
 			return null;
 		}
-		
+
+		LOGGER.info("Cases to render: " + cases);
 		return getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, component, true);
 	}
 	
@@ -247,7 +250,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 				bpmCasesManager.setProcessDefinitionId(Long.valueOf(bean.getProcessId()));
 				processName = bpmCasesManager.getProcessName(locale);
 			} catch(Exception e) {
-				logger.log(Level.WARNING, "Error getting process name by: " + bean.getProcessId());
+				LOGGER.log(Level.WARNING, "Error getting process name by: " + bean.getProcessId());
 			}
 			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ? "general_cases" : processName));
 		}
@@ -256,7 +259,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 			try {
 				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(null, getCasesBusiness(iwc).getCaseStatus(bean.getStatusId()), locale);
 			} catch (Exception e) {
-				logger.log(Level.WARNING, "Error getting status name by: " + bean.getStatusId(), e);
+				LOGGER.log(Level.WARNING, "Error getting status name by: " + bean.getStatusId(), e);
 			}
 			searchFields.add(new AdvancedProperty("status", StringUtil.isEmpty(status) ? iwrb.getLocalizedString("unknown_status", "Unknown") : status));
 		}
@@ -337,7 +340,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		}
 		catch (IBOLookupException ile) {
-			logger.log(Level.SEVERE, "Error getting CasesBusiness", ile);
+			LOGGER.log(Level.SEVERE, "Error getting CasesBusiness", ile);
 		}
 		
 		return null;
@@ -367,7 +370,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		fake.setErrorMessage(iwrb.getLocalizedString("cases_search.there_are_no_variables_for_selected_process", fake.getErrorMessage()));
 		
 		if (!iwc.isLoggedOn()) {
-			logger.warning("User must be logged!");
+			LOGGER.warning("User must be logged!");
 			return fake;
 		}
 		
@@ -378,7 +381,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		try {
 			pdId = Long.valueOf(processDefinitionId);
 		} catch(NumberFormatException e) {
-			logger.severe("Unable to convert to Long: " + processDefinitionId);
+			LOGGER.severe("Unable to convert to Long: " + processDefinitionId);
 		}
 		if (pdId == null) {
 			return fake;
@@ -388,7 +391,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		try {
 			variablesBean = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 		} catch(Exception e) {
-			logger.log(Level.SEVERE, "Error getting bean: " + BPMProcessVariablesBean.class.getName(), e);
+			LOGGER.log(Level.SEVERE, "Error getting bean: " + BPMProcessVariablesBean.class.getName(), e);
 		}
 		if (variablesBean == null) {
 			return fake;
@@ -404,7 +407,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		try {
 			resultsHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error getting bean for search results holder: " + CasesSearchResultsHolder.class.getName(), e);
+			LOGGER.log(Level.WARNING, "Error getting bean for search results holder: " + CasesSearchResultsHolder.class.getName(), e);
 		}
 		
 		if (resultsHolder == null) {
