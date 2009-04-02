@@ -75,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.6 $
  *
- * Last modified: $Date: 2009/04/02 08:36:55 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/02 11:56:26 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -256,8 +256,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	public List<Integer> getCaseIds(User user, String type, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
 
 		IWContext iwc = CoreUtil.getIWContext();
-
-		IWMainApplication iwma = IWMainApplication.getDefaultIWMainApplication();
+		IWMainApplication iwma = iwc.getIWMainApplication();
 
 		List<Integer> caseIds = null;
 		
@@ -265,14 +264,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		List<String> statusesToHide = caseStatusesToHide == null ? new ArrayList() : new ArrayList<String>(caseStatusesToHide);
 		
 		try {
-			boolean isSuperAdmin = iwc.isSuperAdmin()
-					|| iwma.getAccessController().hasRole(user, CasesConstants.ROLE_CASES_SUPER_ADMIN);
+			boolean isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
 
-			CasesBusiness casesBusiness = (CasesBusiness) IBOLookup.getServiceInstance(iwma.getIWApplicationContext(),
-					CasesBusiness.class);
-			UserBusiness userBusiness = (UserBusiness) IBOLookup.getServiceInstance(iwma.getIWApplicationContext(),
-					UserBusiness.class);
-
+			CasesBusiness casesBusiness = (CasesBusiness) IBOLookup.getServiceInstance(iwc, CasesBusiness.class);
+			UserBusiness userBusiness = (UserBusiness) IBOLookup.getServiceInstance(iwc, UserBusiness.class);
 
 			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
 
@@ -281,6 +276,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				statusesToHide.addAll(Arrays.asList(casesBusiness.getStatusesForClosedCases()));
 				
 				if (isSuperAdmin) {
+					Logger.getLogger(getClass().getName()).info("Getting CASES by SUPER user: " + user + ", statuses to show: " + statusesToShow +
+							", statuses to hide: " + statusesToHide);
 					caseIds = getCasesBPMDAO().getOpenCasesIdsForAdmin(statusesToShow, statusesToHide);
 				} else {
 					Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
@@ -292,6 +289,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 							groups.add(new Integer(group.getPrimaryKey().toString()));
 						}
 					}
+					Logger.getLogger(getClass().getName()).info("Getting CASES by user: " + user + ", statuses to show: " + statusesToShow +
+							", statuses to hide: " + statusesToHide + ", groups: " + groups + ", roles: " + roles);
 					caseIds = getCasesBPMDAO().getOpenCasesIds(user, statusesToShow, statusesToHide, groups, roles);
 				}
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
@@ -337,8 +336,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			throw new RuntimeException(e);
 		}
 
-		Logger.getLogger(getClass().getName()).info("Cases: " + caseIds + ". FOR user: " + user + ", type: " + type + ", hide statuses: " + caseStatusesToHide +
-				", show statuses: " + caseStatusesToShow);
+		Logger.getLogger(getClass().getName()).info("Cases: " + caseIds + ". FOR user: " + user + ", type: " + type + ", hide statuses: " + statusesToHide +
+				", show statuses: " + statusesToShow);
 		return caseIds;
 	}
 	
