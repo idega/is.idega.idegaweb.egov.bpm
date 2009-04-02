@@ -39,6 +39,7 @@ import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
@@ -77,6 +78,9 @@ public class CasesListSearchCriteriaBean {
 	
 	private String id;
 	private String instanceId;
+	
+	private String statusesToShow;
+	private String statusesToHide;
 	
 	public String getCaseNumber() {
 		return caseNumber;
@@ -708,5 +712,30 @@ public class CasesListSearchCriteriaBean {
 
 	public void setSortingOptions(List<AdvancedProperty> sortingOptions) {
 		this.sortingOptions = sortingOptions;
-	}	
+	}
+
+	public List<String> getStatusesToShowInList() {
+		return statusesToShow == null ? null : StringUtil.getValuesFromString(statusesToShow, CoreConstants.COMMA);
+	}
+
+	public void setStatusesToShow(String statusesToShow) {
+		this.statusesToShow = statusesToShow;
+	}
+
+	public List<String> getStatusesToHideInList() {
+		return statusesToHide == null ? null : StringUtil.getValuesFromString(statusesToHide, CoreConstants.COMMA);
+	}
+	
+	public void setStatusesToHide(String statusesToHide) {
+		this.statusesToHide = statusesToHide;
+	}
+
+	public String getStatusesToShow() {
+		return statusesToShow;
+	}
+
+	public String getStatusesToHide() {
+		return statusesToHide;
+	}
+	
 }

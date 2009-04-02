@@ -189,23 +189,24 @@ public class CasesEngineImp implements BPMCasesEngine {
 		}
 		
 		CaseListPropertiesBean properties = new CaseListPropertiesBean();
+		properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
 		properties.setUsePDFDownloadColumn(criteriaBean.isUsePDFDownloadColumn());
 		properties.setAllowPDFSigning(criteriaBean.isAllowPDFSigning());
 		properties.setShowStatistics(criteriaBean.isShowStatistics());
 		properties.setHideEmptySection(criteriaBean.isHideEmptySection());
 		properties.setPageSize(0);
 		properties.setPage(0);
+		properties.setInstanceId(criteriaBean.getInstanceId());
 		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
 		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
-		properties.setInstanceId(criteriaBean.getInstanceId());
+		properties.setStatusesToShow(criteriaBean.getStatusesToShowInList());
+		properties.setStatusesToHide(criteriaBean.getStatusesToHideInList());
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
-			properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
 			properties.setAddCredentialsToExernalUrls(false);
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, properties);
 		}
 		else {
-			properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
 			properties.setShowCheckBoxes(false);
 			component = getCasesListBuilder().getCasesList(iwc, cases, properties);
 		}
@@ -288,8 +289,8 @@ public class CasesEngineImp implements BPMCasesEngine {
 		LOGGER.info("list type provided: " + criteriaBean.getCaseListType());
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
 		LOGGER.info("using list type: " + casesProcessorType);
-		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, new ArrayList<String>(),
-				new ArrayList<String>());
+		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getStatusesToHideInList(),
+				criteriaBean.getStatusesToShowInList());
 		LOGGER.info("Found initial data set for user ("+currentUser+"): " + caseIdsByUser);
 		if (ListUtil.isEmpty(caseIdsByUser)) {
 			return null;

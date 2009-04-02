@@ -39,11 +39,15 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 	
+	private Collator collator;
+	
 	public BPMCasePresentationComparator(Locale locale, CasesListSearchCriteriaBean searchCriterias) {
 		variables = new HashMap<String, List<VariableInstance>>();
 		
 		this.locale = locale;
 		this.searchCriterias = searchCriterias;
+		
+		collator = Collator.getInstance(this.locale);
 	}
 
 	@Override
@@ -57,7 +61,7 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 		}
 		
 		return (StringUtil.isEmpty(compareValue1.toString()) && StringUtil.isEmpty(compareValue2.toString())) ? 0 :
-			Collator.getInstance(locale).compare(compareValue1.toString(), compareValue2.toString());
+			collator.compare(compareValue1.toString(), compareValue2.toString());
 	}
 	
 	private String getSortableFieldValue(CasePresentation theCase, String sortableIdentifier) {
