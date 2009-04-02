@@ -4,9 +4,9 @@ package is.idega.idegaweb.egov.bpm.cases;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.13 $
+ * @version $Revision: 1.14 $
  * 
- *          Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
+ *          Last modified: $Date: 2009/04/02 09:03:57 $ by $Author: arunas $
  * 
  */
 public class CasesBPMProcessConstants {
@@ -45,4 +45,6 @@ public class CasesBPMProcessConstants {
 	public static final String caseStatusPlaced = "string_caseStatusPlaced";
 	public static final String caseStatusWait = "string_caseStatusWait";
 	public static final String caseStatusInProcess = "string_caseStatusInProcess";
+	public static final String caseStatusDeleted = "string_caseStatusDeleted";
+
 }
