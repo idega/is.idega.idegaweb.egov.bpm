@@ -305,7 +305,7 @@ public class CasesListSearchCriteriaBean {
 			
 			if (o instanceof Integer) {
 				id = Integer.valueOf(o.toString());
-				boolean isInList = isInList(id, casesIds);
+				boolean isInList = casesIds.contains(id);//isInList(id, casesIds);
 				LOGGER.info(casesIds + " contains " + id + ": " + isInList);
 				if (isInList) {
 					ids.add(id);
@@ -320,9 +320,9 @@ public class CasesListSearchCriteriaBean {
 		return ids;
 	}
 	
-	private boolean isInList(Integer value, List<Integer> values) {
+	private boolean isInList(int value, List<Integer> values) {
 		for (Integer listValue: values) {
-			if (listValue.intValue() == value.intValue()) {
+			if (listValue.intValue() == value) {
 				return true;
 			}
 		}
