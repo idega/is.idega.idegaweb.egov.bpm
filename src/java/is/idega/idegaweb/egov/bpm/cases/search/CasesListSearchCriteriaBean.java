@@ -301,8 +301,11 @@ public class CasesListSearchCriteriaBean {
 		Integer id = null;
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Object o: filterResults) {
+			LOGGER.info("Current object: " + o.getClass() + ": " + o);
+			
 			if (o instanceof Integer) {
-				id = (Integer) o;
+				id = Integer.valueOf(o.toString());
+				LOGGER.info(casesIds + " contains " + id + ": " + casesIds.contains(id));
 				if (casesIds.contains(id)) {
 					ids.add(id);
 				}
