@@ -285,9 +285,12 @@ public class CasesEngineImp implements BPMCasesEngine {
 			return null;
 		}
 		
+		LOGGER.info("list type provided: " + criteriaBean.getCaseListType());
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
+		LOGGER.info("using list type: " + casesProcessorType);
 		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, new ArrayList<String>(),
 				new ArrayList<String>());
+		LOGGER.info("Found initial data set for user ("+currentUser+"): " + caseIdsByUser);
 		if (ListUtil.isEmpty(caseIdsByUser)) {
 			return null;
 		}
