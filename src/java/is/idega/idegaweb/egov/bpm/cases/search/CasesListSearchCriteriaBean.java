@@ -288,7 +288,6 @@ public class CasesListSearchCriteriaBean {
 	}
 	
 	private List<Integer> getNarrowedResults(List<Integer> casesIds, List<Integer> filterResults) {
-		LOGGER.info("Narroying results: start data: " + casesIds + ", filtered data: " + filterResults);
 		if (ListUtil.isEmpty(casesIds)) {
 			LOGGER.info("There are no start data, emptying IDs");
 			return null;
@@ -301,13 +300,9 @@ public class CasesListSearchCriteriaBean {
 		Integer id = null;
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Object o: filterResults) {
-			LOGGER.info("Current object: " + o.getClass() + ": " + o);
-			
 			if (o instanceof Integer) {
-				id = Integer.valueOf(o.toString());
-				boolean isInList = casesIds.contains(id);//isInList(id, casesIds);
-				LOGGER.info(casesIds + " contains " + id + ": " + isInList);
-				if (isInList) {
+				id = (Integer) o;
+				if (casesIds.contains(id)) {
 					ids.add(id);
 				}
 			}
@@ -316,17 +311,7 @@ public class CasesListSearchCriteriaBean {
 			}
 		}
 		
-		LOGGER.info("Narrowed results: " + ids);
 		return ids;
-	}
-	
-	private boolean isInList(int value, List<Integer> values) {
-		for (Integer listValue: values) {
-			if (listValue.intValue() == value) {
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	private CaseHome getCaseHome() {

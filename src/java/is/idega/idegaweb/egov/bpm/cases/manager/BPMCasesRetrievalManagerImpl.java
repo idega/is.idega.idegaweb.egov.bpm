@@ -75,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $
+ * @version $Revision: 1.8 $
  *
- * Last modified: $Date: 2009/04/02 12:31:31 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/02 15:29:48 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -224,39 +224,37 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		try {
 			List<Integer> casesIds = getCaseIds(user, type, caseStatusesToHide, caseStatusesToShow);
 
-			if (ListUtil.isEmpty(casesIds)) {
-				return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
-			}
-			
-			int totalCount = casesIds.size();
-			Collection<? extends Case> cases = null;
-			if (startIndex < totalCount) {
-				Collection<Integer> casesToFetch = null;
-				if (startIndex + count < totalCount) {
-					casesToFetch = casesIds.subList(startIndex, (startIndex + count));
+			if (casesIds != null && !casesIds.isEmpty()) {
+				int totalCount = casesIds.size();
+				Collection<? extends Case> cases = null;
+				if (startIndex < totalCount) {
+					Collection<Integer> casesToFetch = null;
+					if (startIndex + count < totalCount) {
+						casesToFetch = casesIds.subList(startIndex, (startIndex + count));
+					} else {
+						casesToFetch = casesIds.subList(startIndex, totalCount);
+					}
+					if (!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
+						cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesToFetch);
+					} else {
+						cases = getCaseBusiness(iwc).getCasesByIds(casesToFetch);
+					}
 				} else {
-					casesToFetch = casesIds.subList(startIndex, totalCount);
+					cases = new ArrayList<Case>();
 				}
-				if (!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
-					cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesToFetch);
-				} else {
-					cases = getCaseBusiness(iwc).getCasesByIds(casesToFetch);
-				}
-			} else {
-				cases = new ArrayList<Case>();
+				return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), totalCount);
 			}
-			return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), totalCount);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
+
+		return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
 	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Integer> getCaseIds(User user, String type, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
-		Logger.getLogger(getClass().getName()).info("CALLED to get cases IDs: user: " + user + ", type: " + type + ", hide statuses: " + caseStatusesToHide +
-				", show statuses: " + caseStatusesToShow);
-		
+
 		IWContext iwc = CoreUtil.getIWContext();
 		IWMainApplication iwma = iwc.getIWMainApplication();
 
@@ -264,6 +262,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		
 		List<String> statusesToShow = caseStatusesToShow == null ? new ArrayList() : new ArrayList<String>(caseStatusesToShow);
 		List<String> statusesToHide = caseStatusesToHide == null ? new ArrayList() : new ArrayList<String>(caseStatusesToHide);
+		statusesToHide = ListUtil.getFilteredList(statusesToHide);
 		
 		try {
 			boolean isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
@@ -275,14 +274,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 				String[] caseStatuses = casesBusiness.getStatusesForOpenCases();
 				statusesToShow.addAll(Arrays.asList(caseStatuses));
-				statusesToHide.addAll(Arrays.asList(casesBusiness.getStatusesForClosedCases()));
-				
 				statusesToShow = ListUtil.getFilteredList(statusesToShow);
+				statusesToHide.addAll(Arrays.asList(casesBusiness.getStatusesForClosedCases()));
 				statusesToHide = ListUtil.getFilteredList(statusesToHide);
 				
 				if (isSuperAdmin) {
-					Logger.getLogger(getClass().getName()).info("Getting CASES by SUPER user: " + user + ", statuses to show: " + statusesToShow +
-							", statuses to hide: " + statusesToHide);
 					caseIds = getCasesBPMDAO().getOpenCasesIdsForAdmin(statusesToShow, statusesToHide);
 				} else {
 					Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
@@ -294,14 +290,13 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 							groups.add(new Integer(group.getPrimaryKey().toString()));
 						}
 					}
-					Logger.getLogger(getClass().getName()).info("Getting CASES by user: " + user + ", statuses to show: " + statusesToShow +
-							", statuses to hide: " + statusesToHide + ", groups: " + groups + ", roles: " + roles);
 					caseIds = getCasesBPMDAO().getOpenCasesIds(user, statusesToShow, statusesToHide, groups, roles);
 				}
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
 
 				String[] caseStatuses = casesBusiness.getStatusesForClosedCases();
 				statusesToShow.addAll(Arrays.asList(caseStatuses));
+				statusesToShow = ListUtil.getFilteredList(statusesToShow);
 				
 				if (isSuperAdmin) {
 					caseIds = getCasesBPMDAO().getClosedCasesIdsForAdmin(statusesToShow, statusesToHide);
@@ -322,11 +317,13 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 				String[] caseStatus = casesBusiness.getStatusesForMyCases();
 				statusesToShow.addAll(Arrays.asList(caseStatus));
-
+				statusesToShow = ListUtil.getFilteredList(statusesToShow);
+				
 				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide);
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 				
+				statusesToShow = ListUtil.getFilteredList(statusesToShow);
 				CaseCode[] caseCodes = getCaseBusiness(iwc).getCaseCodesForUserCasesList();
 				Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
 
@@ -341,7 +338,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			throw new RuntimeException(e);
 		}
 
-		Logger.getLogger(getClass().getName()).info("Result: " + caseIds);
 		return caseIds;
 	}
 	
