@@ -75,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2009/04/01 12:41:09 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/02 08:36:55 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -216,39 +216,39 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseStatusesToHide, List<String> caseStatusesToShow, int startIndex,
-			int count) {
+	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
+			int startIndex, int count) {
 
 		IWContext iwc = CoreUtil.getIWContext();
 
 		try {
 			List<Integer> casesIds = getCaseIds(user, type, caseStatusesToHide, caseStatusesToShow);
 
-			if (casesIds != null && !casesIds.isEmpty()) {
-				int totalCount = casesIds.size();
-				Collection<? extends Case> cases = null;
-				if (startIndex < totalCount) {
-					Collection<Integer> casesToFetch = null;
-					if (startIndex + count < totalCount) {
-						casesToFetch = casesIds.subList(startIndex, (startIndex + count));
-					} else {
-						casesToFetch = casesIds.subList(startIndex, totalCount);
-					}
-					if (!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
-						cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesToFetch);
-					} else {
-						cases = getCaseBusiness(iwc).getCasesByIds(casesToFetch);
-					}
-				} else {
-					cases = new ArrayList<Case>();
-				}
-				return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), totalCount);
+			if (ListUtil.isEmpty(casesIds)) {
+				return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
 			}
+			
+			int totalCount = casesIds.size();
+			Collection<? extends Case> cases = null;
+			if (startIndex < totalCount) {
+				Collection<Integer> casesToFetch = null;
+				if (startIndex + count < totalCount) {
+					casesToFetch = casesIds.subList(startIndex, (startIndex + count));
+				} else {
+					casesToFetch = casesIds.subList(startIndex, totalCount);
+				}
+				if (!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
+					cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesToFetch);
+				} else {
+					cases = getCaseBusiness(iwc).getCasesByIds(casesToFetch);
+				}
+			} else {
+				cases = new ArrayList<Case>();
+			}
+			return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), totalCount);
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-
-		return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
 	}
 	
 	@Override
@@ -337,6 +337,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			throw new RuntimeException(e);
 		}
 
+		Logger.getLogger(getClass().getName()).info("Cases: " + caseIds + ". FOR user: " + user + ", type: " + type + ", hide statuses: " + caseStatusesToHide +
+				", show statuses: " + caseStatusesToShow);
 		return caseIds;
 	}
 	
