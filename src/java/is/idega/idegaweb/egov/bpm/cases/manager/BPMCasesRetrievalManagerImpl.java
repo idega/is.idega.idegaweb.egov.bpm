@@ -75,9 +75,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
+ * @version $Revision: 1.7 $
  *
- * Last modified: $Date: 2009/04/02 11:56:26 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/02 12:31:31 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -254,7 +254,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	@SuppressWarnings("unchecked")
 	public List<Integer> getCaseIds(User user, String type, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
-
+		Logger.getLogger(getClass().getName()).info("CALLED to get cases IDs: user: " + user + ", type: " + type + ", hide statuses: " + caseStatusesToHide +
+				", show statuses: " + caseStatusesToShow);
+		
 		IWContext iwc = CoreUtil.getIWContext();
 		IWMainApplication iwma = iwc.getIWMainApplication();
 
@@ -274,6 +276,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				String[] caseStatuses = casesBusiness.getStatusesForOpenCases();
 				statusesToShow.addAll(Arrays.asList(caseStatuses));
 				statusesToHide.addAll(Arrays.asList(casesBusiness.getStatusesForClosedCases()));
+				
+				statusesToShow = ListUtil.getFilteredList(statusesToShow);
+				statusesToHide = ListUtil.getFilteredList(statusesToHide);
 				
 				if (isSuperAdmin) {
 					Logger.getLogger(getClass().getName()).info("Getting CASES by SUPER user: " + user + ", statuses to show: " + statusesToShow +
@@ -336,8 +341,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			throw new RuntimeException(e);
 		}
 
-		Logger.getLogger(getClass().getName()).info("Cases: " + caseIds + ". FOR user: " + user + ", type: " + type + ", hide statuses: " + statusesToHide +
-				", show statuses: " + statusesToShow);
+		Logger.getLogger(getClass().getName()).info("Result: " + caseIds);
 		return caseIds;
 	}
 	
