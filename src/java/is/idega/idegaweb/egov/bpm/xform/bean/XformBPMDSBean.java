@@ -12,13 +12,15 @@ import com.idega.core.contact.data.Email;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.variables.BinaryVariable;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
+import com.idega.util.IWTimestamp;
 import com.idega.util.text.Item;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.7 $ Last modified: $Date: 2009/03/18 12:36:19 $ by $Author: arunas $
+ * @version $Revision: 1.8 $ Last modified: $Date: 2009/04/07 08:10:07 $ by $Author: juozas $
  */
 
 @Scope("singleton")
@@ -112,13 +114,25 @@ public class XformBPMDSBean implements XformBPM {
 		List<Item> attachments = new ArrayList<Item>();
 		
 		for (BinaryVariable binaryVariable : piw.getAttachements())
-			attachments.add(new Item(binaryVariable.getTaskInstanceId() + ";"
-			        + binaryVariable.getHash(), binaryVariable.getFileName()));
+			if (binaryVariable.getHidden() == null
+			        || binaryVariable.getHidden().equals(false)) {
+				attachments.add(new Item(binaryVariable.getTaskInstanceId()
+				        + ";" + binaryVariable.getHash(), binaryVariable
+				        .getFileName()
+				        + " - "
+				        + new IWTimestamp(getBpmFactory().getTaskInstanceW(
+				            binaryVariable.getTaskInstanceId())
+				                .getTaskInstance().getEnd())
+				                .getLocaleDateAndTime(IWContext
+				                        .getCurrentInstance()
+				                        .getCurrentLocale(), IWTimestamp.SHORT,
+				                    IWTimestamp.SHORT)));
+			}
 		
 		return attachments;
 	}
 	
-	public boolean hasProcessAttachments(String pid){
+	public boolean hasProcessAttachments(String pid) {
 		
 		if (pid.equals(CoreConstants.EMPTY))
 			return Boolean.FALSE;
@@ -132,9 +146,9 @@ public class XformBPMDSBean implements XformBPM {
 	private ProcessInstanceW getProcessInstanceW(Long pid) {
 		
 		ProcessInstanceW piw = getBpmFactory()
-        .getProcessManagerByProcessInstanceId(pid)
-        .getProcessInstance(pid);
-
+		        .getProcessManagerByProcessInstanceId(pid).getProcessInstance(
+		            pid);
+		
 		return piw;
 	}
 	
