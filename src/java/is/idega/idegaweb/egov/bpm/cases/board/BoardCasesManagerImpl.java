@@ -234,7 +234,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
 		for (VariableInstance variable: variables) {
-			if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
+			if (variable instanceof StringInstance || variable instanceof HibernateStringInstance && variable.getValue() != null) {
 				Long processInstanceId = variable.getProcessInstance().getId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
