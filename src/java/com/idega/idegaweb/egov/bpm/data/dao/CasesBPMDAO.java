@@ -18,15 +18,17 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  *
- * Last modified: $Date: 2009/04/01 10:15:39 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/08 09:35:30 $ by $Author: valdas $
  */
 public interface CasesBPMDAO extends GenericDao {
 
 	public abstract List<CaseTypesProcDefBind> getAllCaseTypes();
 	
 	public abstract CaseProcInstBind getCaseProcInstBindByCaseId(Integer caseId);
+	
+	public abstract List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds);
 	
 	public abstract ProcessUserBind getProcessUserBind(long processInstanceId, int userId, boolean createIfNotFound);
 	
@@ -88,4 +90,6 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 	
 	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide);
+	
+	public abstract List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(Collection<Long> processInstanceIds, List<String> variables);
 }

@@ -33,9 +33,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.40 $
+ * @version $Revision: 1.41 $
  *
- * Last modified: $Date: 2009/04/01 10:15:39 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/08 09:35:30 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -63,6 +63,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		
 		return l.iterator().next();
+	}
+
+	public List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds) {
+		List<CaseProcInstBind> binds = getResultList(CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME, CaseProcInstBind.class,
+				new Param(CaseProcInstBind.casesIdsParam, casesIds));
+		
+		return binds;
 	}
 	
 	@Transactional(readOnly = false)
@@ -395,6 +402,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getResultList(CaseProcInstBind.getVariablesByProcessInstanceId, VariableInstance.class,
 				new Param(CaseProcInstBind.processInstanceIdProp, processInstanceId)
 		);
+	}
+	
+	public List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(Collection<Long> processInstanceIds, List<String> variables) {
+		if (ListUtil.isEmpty(processInstanceIds) || ListUtil.isEmpty(variables)) {
+			return null;
+		}
+		
+		return getResultList(CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames, VariableInstance.class,
+				new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds),
+				new Param(CaseProcInstBind.variablesNamesProp, variables));
 	}
 
 //	TODO: those queries are very similar, make some general query, and just append queries/joins in more special use cases

@@ -21,15 +21,16 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.24 $
+ * @version $Revision: 1.25 $
  *
- * Last modified: $Date: 2009/03/15 16:53:29 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/08 09:35:30 $ by $Author: valdas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
 @NamedQueries(
 		{
 			@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
+			@NamedQuery(name=CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId in (:"+CaseProcInstBind.casesIdsParam + ")"),
 			@NamedQuery(name=CaseProcInstBind.getLatestByDateQN, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = :"+CaseProcInstBind.dateCreatedProp+" and cp."+CaseProcInstBind.caseIdentierIDProp+" = (select max(cp2."+CaseProcInstBind.caseIdentierIDProp+") from CaseProcInstBind cp2 where cp2."+CaseProcInstBind.dateCreatedProp+" = cp."+CaseProcInstBind.dateCreatedProp+")"),
 			@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 			@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
@@ -43,7 +44,9 @@ import javax.persistence.TemporalType;
 			//	Query to get variables for a process
 			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessDefinitionName, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp),
 			//	Query to get variables by process instance id
-			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstanceId, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where var.name is not null and pi.id = :" + CaseProcInstBind.processInstanceIdProp)
+			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstanceId, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where var.name is not null and pi.id = :" + CaseProcInstBind.processInstanceIdProp),
+			//	Query to get variables by process instances ids and variables names
+			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where pi.id in (:" + CaseProcInstBind.processInstanceIdsProp + ") and var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance")
 		}
 )
 			/*
@@ -180,6 +183,7 @@ public class CaseProcInstBind implements Serializable {
 	private static final long serialVersionUID = -335682330238243547L;
 	
 	public static final String BIND_BY_CASEID_QUERY_NAME = "CaseProcInstBind.bindByCaseIdQuery";
+	public static final String BIND_BY_CASES_IDS_QUERY_NAME = "CaseProcInstBind.bindByCasesIdsQuery";
 	public static final String getLatestByDateQN = "CaseProcInstBind.getLatestByDate";
 	public static final String getCaseIdByProcessInstanceId="CaseProcInstBind.getCaseIdByPIID";
 	public static final String getCaseIdsByProcessInstanceIds = "CaseProcInstBind.getCaseIdsByPIIDs";
@@ -201,10 +205,12 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
 	public static final String getVariablesByProcessDefinitionName = "CaseProcInstBind.getVariablesByProcessDefinitionName";
 	public static final String getVariablesByProcessInstanceId = "CaseProcInstBind.getVariablesByProcessInstanceId";
+	public static final String getVariablesByProcessInstancesIdsAndVariablesNames = "CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
 	
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
+	public static final String casesIdsParam = "casesIds";
 	
 	public static final String TABLE_NAME = "BPM_CASES_PROCESSINSTANCES";
 	
