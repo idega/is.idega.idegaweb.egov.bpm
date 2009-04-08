@@ -4,6 +4,7 @@ import is.idega.idegaweb.egov.bpm.cases.board.BoardCasesManagerImpl;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.Filter;
@@ -22,15 +23,19 @@ import com.idega.servlet.filter.BaseFilter;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
-public class BPMTaskRedirector extends BaseFilter implements Filter {
+public class TaskViewerRedirector extends BaseFilter implements Filter {
+	
+	private static final Logger LOGGER = Logger.getLogger(TaskViewerRedirector.class.getName());
 	
 	@Autowired
 	private BoardCasesManager casesManager;
 	
 	public void init(FilterConfig arg0) throws ServletException {
+		LOGGER.info("Initializing: " + getClass());
 	}
 	
 	public void destroy() {
+		LOGGER.info("Destroying: " + getClass());
 	}
 
 	public void doFilter(ServletRequest srequest, ServletResponse sresponse, FilterChain chain) throws IOException, ServletException {
@@ -43,8 +48,9 @@ public class BPMTaskRedirector extends BaseFilter implements Filter {
 		}
 		
 		String newUrl = getNewRedirectURL(request, response);
+		LOGGER.info("Trying to redirect to: " + newUrl);
 		if (StringUtil.isEmpty(newUrl)) {
-			Logger.getLogger(getClass().getName()).warning("Couldn't create uri to redirect to task viewer");
+			LOGGER.warning("Couldn't create uri to redirect to task viewer");
 			chain.doFilter(srequest, sresponse);
 			return;
 		}
@@ -92,7 +98,11 @@ public class BPMTaskRedirector extends BaseFilter implements Filter {
 
 	public BoardCasesManager getCasesManager() {
 		if (casesManager == null) {
-			ELUtil.getInstance().autowire(this);
+			try {
+				ELUtil.getInstance().autowire(this);
+			} catch(Exception e) {
+				LOGGER.log(Level.SEVERE, "Error getting instance for: " + BoardCasesManager.class, e);
+			}
 		}
 		return casesManager;
 	}
