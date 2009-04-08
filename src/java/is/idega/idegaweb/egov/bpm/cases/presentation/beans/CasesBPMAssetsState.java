@@ -40,9 +40,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.42 $
+ * @version $Revision: 1.43 $
  *
- * Last modified: $Date: 2009/03/31 13:40:58 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/08 09:37:23 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -56,6 +56,7 @@ public class CasesBPMAssetsState implements Serializable {
 	public static final String beanIdentifier = "casesBPMAssetsState";
 	
 	public static final String CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER = "casesAssetsSpecialBackPage";
+	public static final String TASK_INSTANCE_ID_PARAMETER = "tiId";
 	
 	@Autowired
 	private transient CasesBPMProcessView casesBPMProcessView;
@@ -114,7 +115,7 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	protected Long resolveTaskInstanceId() {
 		
-		String tiIdParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("tiId");
+		String tiIdParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(TASK_INSTANCE_ID_PARAMETER);
 		Long tiId;
 		
 		if(tiIdParam != null && !CoreConstants.EMPTY.equals(tiIdParam)) {

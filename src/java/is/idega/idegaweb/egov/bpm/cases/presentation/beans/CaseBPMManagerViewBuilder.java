@@ -35,7 +35,7 @@ public class CaseBPMManagerViewBuilder implements GeneralCaseManagerViewBuilder 
 		}
 		Long taskInstanceId = null;
 		try {
-			taskInstanceId = Long.valueOf(iwc.getParameter("tiId"));
+			taskInstanceId = Long.valueOf(iwc.getParameter(CasesBPMAssetsState.TASK_INSTANCE_ID_PARAMETER));
 		} catch(NumberFormatException e) {
 			e.printStackTrace();
 		} catch(NullPointerException e) {
