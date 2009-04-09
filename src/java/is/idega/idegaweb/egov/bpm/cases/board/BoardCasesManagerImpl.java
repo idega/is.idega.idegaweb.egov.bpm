@@ -204,17 +204,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
 	private List<CaseBoardView> getStringVariablesValuesByVariablesNamesForCases(Map<Integer, User> casesIdsAndHandlers, List<String> variablesNames) {
-		long start = System.currentTimeMillis();
-		
 		Map<Integer, Long> processes = getCaseProcessInstanceRelation().getCasesProcessInstancesIds(casesIdsAndHandlers.keySet());
-		long end = System.currentTimeMillis();
-		LOGGER.info("Took time to get process instances ids: " + (end - start) + " ms");
-		
-		start = System.currentTimeMillis();
+
 		List<VariableInstance> variables = getCasesBPMDAO().getVariablesByProcessInstanceIdAndVariablesNames(processes.values(), variablesNames);
-		end = System.currentTimeMillis();
-		LOGGER.info("Took time to select variables: " + (end - start) + " ms");
-		start = System.currentTimeMillis();
 		if (ListUtil.isEmpty(variables)) {
 			return null;
 		}
@@ -238,13 +230,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + processes);
 				}
 				else {
-					LOGGER.info("Variable: " + variable);
 					view.addVariable(variable.getName(), variable.getValue().toString());
 				}
 			}
 		}
-		end = System.currentTimeMillis();
-		LOGGER.info("Took time to create views: " + (end - start) + " ms");
 		
 		return views;
 	}
@@ -526,8 +515,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			return data;
 		}
 		
-		long start = System.currentTimeMillis();
-		
 		// Header
 		data.setHeaderLabels(getTableHeaders(iwrb));
 
@@ -562,11 +549,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				index++;
 			}
 			
-			long hstart = System.currentTimeMillis();
 			rowBean.setHandler(caseBoard.getHandler());
 			rowValues.add(caseBoard.getHandler() == null ? String.valueOf(-1) : caseBoard.getHandler().getId());
-			long hend = System.currentTimeMillis();
-			LOGGER.info("Took time to get handler's id: " + (hend - hstart) + " ms");
 			
 			rowBean.setValues(rowValues);
 			bodyRows.add(rowBean);
@@ -579,9 +563,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		
 		// Everything is OK
 		data.setFilledWithData(Boolean.TRUE);
-		
-		long end = System.currentTimeMillis();
-		LOGGER.info("Took time to create data table: " + (end - start) + " ms");
 		
 		return data;
 	}
