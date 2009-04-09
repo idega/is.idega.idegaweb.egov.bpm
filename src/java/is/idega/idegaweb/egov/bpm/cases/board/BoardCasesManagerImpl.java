@@ -221,7 +221,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
 		for (VariableInstance variable: variables) {
-			if (variable instanceof StringInstance || variable instanceof HibernateStringInstance && variable.getValue() != null) {
+			if ((variable instanceof StringInstance || variable instanceof HibernateStringInstance) &&
+				(variable.getName() != null && variable.getValue() != null)) {
 				Long processInstanceId = variable.getProcessInstance().getId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
@@ -237,6 +238,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + processes);
 				}
 				else {
+					LOGGER.info("Variable: " + variable);
 					view.addVariable(variable.getName(), variable.getValue().toString());
 				}
 			}
