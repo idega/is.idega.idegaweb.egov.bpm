@@ -1,7 +1,8 @@
 package is.idega.idegaweb.egov.bpm.servlet;
 
-import is.idega.idegaweb.egov.bpm.cases.board.BoardCasesManagerImpl;
-import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
+import is.idega.idegaweb.egov.bpm.business.TaskViewerHelper;
+import is.idega.idegaweb.egov.bpm.business.TaskViewerHelperImp;
+
 import java.io.IOException;
 import java.util.Map;
 import java.util.logging.Level;
@@ -28,14 +29,12 @@ public class TaskViewerRedirector extends BaseFilter implements Filter {
 	private static final Logger LOGGER = Logger.getLogger(TaskViewerRedirector.class.getName());
 	
 	@Autowired
-	private BoardCasesManager casesManager;
+	private TaskViewerHelper taskViewer;
 	
 	public void init(FilterConfig arg0) throws ServletException {
-		LOGGER.info("Initializing: " + getClass());
 	}
 	
 	public void destroy() {
-		LOGGER.info("Destroying: " + getClass());
 	}
 
 	public void doFilter(ServletRequest srequest, ServletResponse sresponse, FilterChain chain) throws IOException, ServletException {
@@ -48,7 +47,6 @@ public class TaskViewerRedirector extends BaseFilter implements Filter {
 		}
 		
 		String newUrl = getNewRedirectURL(request, response);
-		LOGGER.info("Trying to redirect to: " + newUrl);
 		if (StringUtil.isEmpty(newUrl)) {
 			LOGGER.warning("Couldn't create uri to redirect to task viewer");
 			chain.doFilter(srequest, sresponse);
@@ -60,7 +58,8 @@ public class TaskViewerRedirector extends BaseFilter implements Filter {
 	private boolean canRedirect(HttpServletRequest request) {
 		@SuppressWarnings("unchecked")
 		Map map = request.getParameterMap();
-		return map.containsKey(BoardCasesManagerImpl.PROCESS_INSTANCE_ID_PARAMETER) && map.containsKey(BoardCasesManagerImpl.TASK_NAME_PARAMETER);
+		return map.containsKey(TaskViewerHelperImp.TASK_VIEWER_PAGE_REQUESTED_PARAMETER) &&
+				map.containsKey(TaskViewerHelperImp.PROCESS_INSTANCE_ID_PARAMETER) && map.containsKey(TaskViewerHelperImp.TASK_NAME_PARAMETER);
 	}
 	
 	private String getTaskInstanceId(String processInstanceId, String taskName) {
@@ -75,40 +74,40 @@ public class TaskViewerRedirector extends BaseFilter implements Filter {
 			e.printStackTrace();
 		}
 		
-		return getCasesManager().getTaskInstanceIdForTask(piId, taskName);
+		return getTaskViewer().getTaskInstanceIdForTask(piId, taskName);
 	}
 	
 	private String getNewRedirectURL(HttpServletRequest request, HttpServletResponse response) {
 		IWContext iwc = new IWContext(request, response, request.getSession().getServletContext());
 		
-		String taskInstanceId = getTaskInstanceId(iwc.getParameter(BoardCasesManagerImpl.PROCESS_INSTANCE_ID_PARAMETER),
-				iwc.getParameter(BoardCasesManagerImpl.TASK_NAME_PARAMETER));
+		String taskInstanceId = getTaskInstanceId(iwc.getParameter(TaskViewerHelperImp.PROCESS_INSTANCE_ID_PARAMETER),
+				iwc.getParameter(TaskViewerHelperImp.TASK_NAME_PARAMETER));
 		if (StringUtil.isEmpty(taskInstanceId)) {
 			return null;
 		}
 		
-		String caseId = iwc.getParameter(BoardCasesManagerImpl.CASE_ID_PARAMETER);
+		String caseId = iwc.getParameter(TaskViewerHelperImp.CASE_ID_PARAMETER);
 		if (StringUtil.isEmpty(caseId)) {
 			return null;
 		}
-		String backPage = iwc.getParameter(BoardCasesManagerImpl.BACK_PAGE_PARAMETER);
+		String backPage = iwc.getParameter(TaskViewerHelperImp.BACK_PAGE_PARAMETER);
 		
-		return getCasesManager().getLinkToTheTask(iwc, caseId, taskInstanceId, StringUtil.isEmpty(backPage) ? null : backPage);
+		return getTaskViewer().getLinkToTheTask(iwc, caseId, taskInstanceId, StringUtil.isEmpty(backPage) ? null : backPage);
 	}
 
-	public BoardCasesManager getCasesManager() {
-		if (casesManager == null) {
+	public TaskViewerHelper getTaskViewer() {
+		if (taskViewer == null) {
 			try {
 				ELUtil.getInstance().autowire(this);
 			} catch(Exception e) {
-				LOGGER.log(Level.SEVERE, "Error getting instance for: " + BoardCasesManager.class, e);
+				LOGGER.log(Level.SEVERE, "Error getting instance for: " + TaskViewerHelper.class, e);
 			}
 		}
-		return casesManager;
+		return taskViewer;
 	}
 
-	public void setCasesManager(BoardCasesManager casesManager) {
-		this.casesManager = casesManager;
+	public void setTaskViewer(TaskViewerHelper taskViewer) {
+		this.taskViewer = taskViewer;
 	}
 
 }

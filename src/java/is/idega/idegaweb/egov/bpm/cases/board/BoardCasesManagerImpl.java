@@ -1,14 +1,12 @@
 package is.idega.idegaweb.egov.bpm.cases.board;
 
+import is.idega.idegaweb.egov.bpm.business.TaskViewerHelper;
 import is.idega.idegaweb.egov.bpm.cases.CaseProcessInstanceRelationImpl;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.presentation.CaseViewer;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardBean;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBean;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBodyRowBean;
@@ -37,21 +35,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.data.Case;
-import com.idega.block.process.presentation.UserCases;
 import com.idega.builder.bean.AdvancedProperty;
-import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.core.contact.data.Email;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
-import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
-import com.idega.jbpm.identity.BPMUser;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.presentation.IWContext;
@@ -62,12 +56,11 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
-import com.idega.util.URIUtil;
 import com.idega.util.expression.ELUtil;
 
 @Scope("singleton")
 @Service
-@Transactional/*(propagation = Propagation.SUPPORTS)*/
+@Transactional
 public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private static final List<String> GRADING_VARIABLES = Collections
@@ -92,14 +85,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	            	"string_ownerEntrepreneurCompany"	//	17
 	 ));
 	
-	private static final Logger LOGGER = Logger
-	        .getLogger(BoardCasesManagerImpl.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(BoardCasesManagerImpl.class.getName());
 	
 	public static final String BOARD_CASES_LIST_SORTING_PREFERENCES = "boardCasesListSortingPreferencesAttribute";
-	public static final String PROCESS_INSTANCE_ID_PARAMETER = "processInstanceId";
-	public static final String TASK_NAME_PARAMETER = "taskName";
-	public static final String CASE_ID_PARAMETER = "caseId";
-	public static final String BACK_PAGE_PARAMETER = "backPage";
 	
 	private CasesRetrievalManager caseManager;
 	
@@ -113,12 +101,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private CasesBPMDAO casesBPMDAO;
 	
 	@Autowired
-	private BuilderLogicWrapper builderLogicWrapper;
+	private TaskViewerHelper taskViewer;
 	
 	private List<String> variables;
 	
-	public List<CaseBoardBean> getAllSortedCases(IWContext iwc,
-	        IWResourceBundle iwrb, String caseStatus, String processName) {
+	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName) {
 		
 		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
 		
@@ -239,15 +226,19 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
 					Integer caseId = getMapedCaseId(processes, processInstanceId);
-					if (caseId == null) {
-						break;
+					if (caseId != null) {
+						view = new CaseBoardView(caseId.toString(), processInstanceId);
+						view.setHandler(casesIdsAndHandlers.get(caseId));
+						views.add(view);
 					}
-					view = new CaseBoardView(caseId.toString(), processInstanceId);
-					view.setHandler(casesIdsAndHandlers.get(caseId));
-					views.add(view);
 				}
 				
-				view.addVariable(variable.getName(), variable.getValue().toString());
+				if (view == null) {
+					LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + processes);
+				}
+				else {
+					view.addVariable(variable.getName(), variable.getValue().toString());
+				}
 			}
 		}
 		end = System.currentTimeMillis();
@@ -275,14 +266,12 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			numberValue = Double.valueOf(value);
 			
 			if (dropThousands) {
-				return Long.valueOf(Double.valueOf(
-				    numberValue.doubleValue() / 1000).longValue());
+				return Long.valueOf(Double.valueOf(numberValue.doubleValue() / 1000).longValue());
 			}
 			
 			return Long.valueOf(numberValue.longValue());
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error getting number value from: "
-			        + value);
+			LOGGER.log(Level.WARNING, "Error getting number value from: " + value);
 		}
 		
 		return Long.valueOf(0);
@@ -303,8 +292,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 		
 		List<String> sortingPreferences = null;
-		Object o = iwc
-		        .getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
+		Object o = iwc.getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
 		if (o instanceof List) {
 			sortingPreferences = (List<String>) o;
 		}
@@ -313,13 +301,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 	
 	@SuppressWarnings("unchecked")
-	private Collection<GeneralCase> getCases(IWApplicationContext iwac,
-	        String caseStatus, String processName) {
+	private Collection<GeneralCase> getCases(IWApplicationContext iwac, String caseStatus, String processName) {
 		Collection<Case> allCases = null;
 		if (!StringUtil.isEmpty(processName)) {
 			// Getting cases by application
-			allCases = getCasesByProcessAndCaseStatus(iwac, caseStatus,
-			    processName);
+			allCases = getCasesByProcessAndCaseStatus(iwac, caseStatus, processName);
 		} else {
 			// Getting cases by case status
 			if (StringUtil.isEmpty(caseStatus)) {
@@ -331,11 +317,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				return null;
 			}
 			try {
-				allCases = casesBusiness.getCasesByCriteria(null, null, null,
-				    casesBusiness.getCaseStatus(caseStatus), false);
+				allCases = casesBusiness.getCasesByCriteria(null, null, null, casesBusiness.getCaseStatus(caseStatus), false);
 			} catch (RemoteException e) {
-				LOGGER.log(Level.SEVERE,
-				    "Error getting cases by cases status: " + caseStatus, e);
+				LOGGER.log(Level.SEVERE, "Error getting cases by cases status: " + caseStatus, e);
 			}
 		}
 		
@@ -353,23 +337,19 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return bpmCases;
 	}
 	
-	private Collection<Case> getCasesByProcessAndCaseStatus(
-	        IWApplicationContext iwac, String caseStatus, String processName) {
+	private Collection<Case> getCasesByProcessAndCaseStatus(IWApplicationContext iwac, String caseStatus, String processName) {
 		CasesRetrievalManager caseManager = getCaseManager();
 		if (caseManager == null) {
-			LOGGER.severe(CasesRetrievalManager.class
-			        + " bean was not initialized!");
+			LOGGER.severe(CasesRetrievalManager.class + " bean was not initialized!");
 			return null;
 		}
 		
-		Collection<Long> casesIdsByProcessDefinition = caseManager
-		        .getCasesIdsByProcessDefinitionName(processName);
+		Collection<Long> casesIdsByProcessDefinition = caseManager.getCasesIdsByProcessDefinitionName(processName);
 		if (ListUtil.isEmpty(casesIdsByProcessDefinition)) {
 			return null;
 		}
 		
-		List<Integer> ids = new ArrayList<Integer>(casesIdsByProcessDefinition
-		        .size());
+		List<Integer> ids = new ArrayList<Integer>(casesIdsByProcessDefinition.size());
 		for (Long id : casesIdsByProcessDefinition) {
 			ids.add(id.intValue());
 		}
@@ -395,8 +375,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
-			    CasesBusiness.class);
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		} catch (IBOLookupException e) {
 			LOGGER.log(Level.SEVERE, "Error getting " + CasesBusiness.class, e);
 		}
@@ -407,11 +386,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private CasesRetrievalManager getCaseManager() {
 		if (caseManager == null) {
 			try {
-				caseManager = ELUtil.getInstance().getBean(
-				    "casesBPMCaseHandler");
+				caseManager = ELUtil.getInstance().getBean("casesBPMCaseHandler");
 			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "Error getting Spring bean for: "
-				        + CasesRetrievalManager.class, e);
+				LOGGER.log(Level.SEVERE, "Error getting Spring bean for: " + CasesRetrievalManager.class, e);
 			}
 		}
 		return caseManager;
@@ -419,8 +396,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private List<String> getVariables() {
 		if (variables == null) {
-			variables = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS
-			        .size());
+			variables = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
 			for (AdvancedProperty variable : CasesBoardViewer.CASE_FIELDS) {
 				variables.add(variable.getId());
 			}
@@ -495,58 +471,13 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			
 			viewTIW.submit(viewSubmission);
 			
-			return new AdvancedProperty(value, getLinkToTheTask(iwc, caseId.toString(), sharedTaskInstanceId.toString(), backPage));
+			return new AdvancedProperty(value, getTaskViewer().getLinkToTheTask(iwc, caseId.toString(), sharedTaskInstanceId.toString(), backPage));
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Error saving variable '" + variableName
 			        + "' with value '" + value + "' for case: " + caseId, e);
 		}
 		
 		return null;
-	}
-	
-	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage) {
-		long start = System.currentTimeMillis();
-		if (iwc == null || StringUtil.isEmpty(basePage)) {
-			return null;
-		}
-		
-		URIUtil uriUtil = new URIUtil(basePage);
-		uriUtil.setParameter(CASE_ID_PARAMETER, caseId);
-		uriUtil.setParameter(PROCESS_INSTANCE_ID_PARAMETER, String.valueOf(processInstanceId));
-		uriUtil.setParameter(TASK_NAME_PARAMETER, "Grading");
-		if (!StringUtil.isEmpty(backPage)) {
-			uriUtil.setParameter(BACK_PAGE_PARAMETER, backPage);
-		}
-		
-		long end = System.currentTimeMillis();
-		LOGGER.info("Took time to get link to the task: " + (end - start) + " ms");
-		
-		return iwc.getIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri());
-	}
-	
-	public String getTaskInstanceIdForTask(Long processInstanceId, String taskName) {
-		if (processInstanceId == null || StringUtil.isEmpty(taskName)) {
-			LOGGER.warning("Insufficient data: process instance ID: " + processInstanceId + ", task name: " + taskName);
-			return null;
-		}
-		
-		try {
-			ProcessInstanceW piw = getBpmFactory().getProcessInstanceW(processInstanceId);
-			
-			TaskInstanceW gradingTIW = piw.getSingleUnfinishedTaskInstanceForTask(taskName);
-			
-			if (gradingTIW != null)
-				return String.valueOf(gradingTIW.getTaskInstanceId());
-			else {
-				LOGGER.log(Level.WARNING, "No grading task found for processInstance="+processInstanceId);
-				
-				return null;
-			}
-			
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error getting grading task instance for process = " + processInstanceId, e);
-			return null;
-		}
 	}
 	
 	public String getGradingSum(CaseBoardView view) {
@@ -575,13 +506,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 		
 		return String.valueOf(sum);
-	}
-	
-	public String getPageUriForTaskViewer(IWContext iwc) {
-		String uri = builderLogicWrapper.getBuilderService(iwc)
-		        .getFullPageUrlByPageType(iwc,
-		            BPMUser.defaultAssetsViewPageType, true);
-		return StringUtil.isEmpty(uri) ? iwc.getRequestURI() : uri;
 	}
 	
 	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus,
@@ -849,16 +773,33 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 		
 	}
-	
-	public String getLinkToTheTask(IWContext iwc, String caseId, String taskInstanceId, String backPage) {
-		URIUtil uriUtil = new URIUtil(getPageUriForTaskViewer(iwc));
-		uriUtil.setParameter(CasesProcessor.PARAMETER_ACTION, String.valueOf(UserCases.ACTION_CASE_MANAGER_VIEW));
-		uriUtil.setParameter(CaseViewer.PARAMETER_CASE_PK, caseId);
-		uriUtil.setParameter(CasesBPMAssetsState.TASK_INSTANCE_ID_PARAMETER, taskInstanceId);
-		if (!StringUtil.isEmpty(backPage)) {
-			uriUtil.setParameter(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER, backPage.toString());
-		}
-		
-		return IWMainApplication.getDefaultIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri());
+
+	public TaskViewerHelper getTaskViewer() {
+		return taskViewer;
+	}
+
+	public void setTaskViewer(TaskViewerHelper taskViewer) {
+		this.taskViewer = taskViewer;
+	}
+
+	public void setCaseManager(CasesRetrievalManager caseManager) {
+		this.caseManager = caseManager;
+	}
+
+	public void setBpmFactory(BPMFactory bpmFactory) {
+		this.bpmFactory = bpmFactory;
+	}
+
+	public void setCaseProcessInstanceRelation(
+			CaseProcessInstanceRelationImpl caseProcessInstanceRelation) {
+		this.caseProcessInstanceRelation = caseProcessInstanceRelation;
+	}
+
+	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
+		this.casesBPMDAO = casesBPMDAO;
+	}
+
+	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage, String taskName) {
+		return getTaskViewer().getLinkToTheTaskRedirector(iwc, basePage, caseId, processInstanceId, backPage, taskName);
 	}
 }
