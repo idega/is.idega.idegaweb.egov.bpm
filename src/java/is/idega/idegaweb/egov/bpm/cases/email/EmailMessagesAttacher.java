@@ -4,10 +4,6 @@ import is.idega.idegaweb.egov.bpm.cases.exe.CaseIdentifier;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -53,7 +49,6 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.util.CoreConstants;
-import com.idega.util.IWTimestamp;
 import com.idega.util.StringUtil;
 import com.sun.mail.imap.IMAPNestedMessage;
 
@@ -61,7 +56,7 @@ import com.sun.mail.imap.IMAPNestedMessage;
  * refactor this, now it's total mess
  * 
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.20 $ Last modified: $Date: 2009/02/03 13:05:11 $ by $Author: juozas $
+ * @version $Revision: 1.21 $ Last modified: $Date: 2009/04/16 08:42:05 $ by $Author: valdas $
  */
 @Scope("singleton")
 @Service
