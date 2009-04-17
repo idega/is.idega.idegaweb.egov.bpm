@@ -439,6 +439,18 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
                 
                 CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
                 
+                jQuery.each(jQuery('a.emailSenderLightboxinBPMCasesStyle'), function() {
+                	var link = jQuery(this);
+                	
+                	if (!link.hasClass('emailSenderLightboxinBPMCasesStyleInitialized')) {
+                		link.addClass('emailSenderLightboxinBPMCasesStyleInitialized');
+                		link.fancybox({
+                			frameWidth:		750,
+							frameHeight:	450
+                		});
+                	}
+                });
+                
                 if (onEmailsInited) {
                 	onEmailsInited();
                 }
@@ -1168,4 +1180,15 @@ CasesBPMAssets.assignCase = function(handlerId, processInstanceId) {
             }
         }
     });
+}
+
+CasesBPMAssets.showSendEmailWindow = function(event) {
+	if (!event) {
+		return false;
+	}
+
+	if (event.stopPropagation) {
+		event.stopPropagation();
+	}
+	event.cancelBubble = true;
 }

@@ -22,6 +22,7 @@ import com.idega.block.article.business.CommentsPersistenceManager;
 import com.idega.block.article.component.CommentsViewer;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.Web2Business;
+import com.idega.block.web2.business.Web2BusinessBean;
 import com.idega.bpm.pdf.servlet.XFormToPDFWriter;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -43,9 +44,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.50 $
+ * @version $Revision: 1.51 $
  *
- * Last modified: $Date: 2009/03/31 13:40:58 $ by $Author: valdas $
+ * Last modified: $Date: 2009/04/17 11:24:07 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -252,6 +253,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			cssFiles.add(web2Business.getBundleUtiToGreyBoxStyleSheet());
 		}
 		cssFiles.add(iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getVirtualPathWithFileNameString("style/case.css"));
+		cssFiles.add(web2Business.getBundleURIToFancyBoxStyleFile(Web2BusinessBean.FANCY_BOX_1_2_1_VERSION));
 		PresentationUtil.addStyleSheetsToHeader(iwc, cssFiles);
 		
 		boolean isSingle = CoreUtil.isSingleComponentRenderingProcess(iwc);
@@ -261,6 +263,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		if (!isSingle) {
 			scripts.add(web2Business.getBundleURIToJQueryLib());
 		}
+		scripts.addAll(web2Business.getBundleURIsToFancyBoxScriptFiles(Web2BusinessBean.FANCY_BOX_1_2_1_VERSION));
 		scripts.add(web2Business.getBundleUriToLinkLinksWithFilesScriptFile());
 		scripts.add(web2Business.getBundleURIToJQGrid());
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
