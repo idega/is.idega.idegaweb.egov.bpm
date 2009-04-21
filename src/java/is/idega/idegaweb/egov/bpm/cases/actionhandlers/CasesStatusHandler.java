@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
+import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.logging.Level;
@@ -19,20 +20,20 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.6 $
- *
- * Last modified: $Date: 2009/03/18 20:19:59 $ by $Author: civilis $
+ * @version $Revision: 1.7 $ Last modified: $Date: 2009/04/21 08:38:15 $ by $Author: civilis $
  */
 @Service("casesStatusHandler")
 @Scope("prototype")
 public class CasesStatusHandler implements ActionHandler {
-
+	
 	private static final long serialVersionUID = 7504445907540445936L;
 	
 	/**
@@ -40,85 +41,176 @@ public class CasesStatusHandler implements ActionHandler {
 	 */
 	private String caseStatus;
 	
+	private String caseStatusMappedName;
+	
 	/**
-	 * if set, then it's checked, if the current status matches, and only then the status is changed (for instance, if status specified by ifCaseStatusExp is received, then it may change to in progress) 
+	 * if set, then it's checked, if the current status matches, and only then the status is changed
+	 * (for instance, if status specified by ifCaseStatusExp is received, then it may change to in
+	 * progress)
 	 */
 	private String ifCaseStatus;
+	
+	private String ifCaseStatusMappedName;
+	
 	/**
 	 * performer, if not set, current user is used
 	 */
 	private Integer performerUserId;
+	
 	/**
-	 * caseId, if not set, caseId from econtext process instance id is resolved
+	 * if set - is used. if no caseId or processInstanceId set explicitly, the mainProcessInstanceId
+	 * is used
 	 */
 	private Integer caseId;
+	
+	/**
+	 * used if set and caseId not set. if no caseId or processInstanceId set explicitly, the
+	 * mainProcessInstanceId is used
+	 */
+	private Long processInstanceId;
 	
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 	
+	@Autowired
+	private BPMFactory bpmFactory;
+	
+	@Autowired
+	private CasesStatusMapperHandler casesStatusMapperHandler;
+	
 	public void execute(ExecutionContext ectx) throws Exception {
 		
 		try {
+			Integer caseId = getCaseId(ectx);
+			
+			if (caseId == null) {
+				
+				Logger.getLogger(getClass().getName()).log(Level.WARNING,
+				    "No caseId resolved, skipping case status change");
+				
+				return;
+			}
+			
 			final String status = getCaseStatus();
 			Integer performerUserId = getPerformerUserId();
-			Integer caseId = getCaseId();
 			final String ifCaseStatus = getIfCaseStatus();
-			
-			if(caseId == null) {
-				
-				CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, ectx.getProcessInstance().getId());
-				
-				if(cpi == null) {
-					
-					Logger.getLogger(getClass().getName()).log(Level.WARNING, "No case process instance bind found for process instance id="+ectx.getProcessInstance().getId()+", skipping case status change");
-					return;
-				}
-				
-				caseId = cpi.getCaseId();
-			}
 			
 			IWContext iwc = IWContext.getCurrentInstance();
 			IWApplicationContext iwac = getIWAC(iwc);
-			final Case theCase = getCasesBusiness(iwac).getCase(caseId);
+			CasesBusiness casesBusiness = getCasesBusiness(iwac);
+			final Case theCase = casesBusiness.getCase(caseId);
 			
-			if(ifCaseStatus == null || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
-//				only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
-			
+			if (ifCaseStatus == null
+			        || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
+				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set
+				// (i.e. change always)
+				
 				final User performer;
 				
-				if(performerUserId == null) {
-				
-					if(iwc != null) {
-
-						if(iwc.isLoggedOn())
+				if (performerUserId == null) {
+					
+					if (iwc != null) {
+						
+						if (iwc.isLoggedOn())
 							performer = iwc.getCurrentUser();
 						else
 							performer = null;
 						
 					} else {
 						
-						Logger.getLogger(getClass().getName()).log(Level.WARNING, "Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
+						Logger
+						        .getLogger(getClass().getName())
+						        .log(
+						            Level.WARNING,
+						            "Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
 						performer = null;
 					}
 					
 				} else {
-				
+					
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
 				
-				getCasesBusiness(iwc).changeCaseStatusDoNotSendUpdates(theCase, status, performer);
+				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status,
+				    performer);
 			}
 			
 		} catch (Exception e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "Exception while changing case status", e);
+			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
+			    "Exception while changing case status", e);
 		}
+	}
+	
+	public String getCaseStatus() {
+		
+		if (caseStatus == null) {
+			
+			if (!StringUtil.isEmpty(getCaseStatusMappedName())) {
+				
+				caseStatus = getCasesStatusMapperHandler()
+				        .getStatusCodeByMappedName(getCaseStatusMappedName());
+			}
+		}
+		
+		return caseStatus;
+	}
+	
+	public String getIfCaseStatus() {
+		
+		if (ifCaseStatus == null) {
+			
+			if (!StringUtil.isEmpty(getIfCaseStatusMappedName())) {
+				
+				ifCaseStatus = getCasesStatusMapperHandler()
+				        .getStatusCodeByMappedName(getIfCaseStatusMappedName());
+			}
+		}
+		
+		return ifCaseStatus;
+	}
+	
+	private Integer getCaseId(ExecutionContext ectx) {
+		
+		if (caseId == null) {
+			
+			Long processInstanceIdToUse;
+			
+			if (getProcessInstanceId() != null) {
+				
+				processInstanceIdToUse = getProcessInstanceId();
+			} else {
+				
+				Long currentProcessInstanceId = ectx.getProcessInstance()
+				        .getId();
+				
+				processInstanceIdToUse = getBpmFactory()
+				        .getMainProcessInstance(currentProcessInstanceId)
+				        .getId();
+			}
+			
+			CaseProcInstBind cpi = getCasesBPMDAO()
+			        .getCaseProcInstBindByProcessInstanceId(
+			            processInstanceIdToUse);
+			
+			if (cpi == null) {
+				
+				Logger.getLogger(getClass().getName()).log(
+				    Level.WARNING,
+				    "No case process instance bind found for process instance id="
+				            + processInstanceIdToUse);
+			}
+			
+			caseId = cpi.getCaseId();
+		}
+		
+		return caseId;
 	}
 	
 	private IWApplicationContext getIWAC(final IWContext iwc) {
 		
 		final IWApplicationContext iwac;
 		
-		if(iwc != null) {
+		if (iwc != null) {
 			iwac = iwc;
 		} else {
 			
@@ -130,59 +222,83 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			    CasesBusiness.class);
+		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
 	
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
-		}
-		catch (IBOLookupException ile) {
+			return (UserBusiness) IBOLookup.getServiceInstance(iwac,
+			    UserBusiness.class);
+		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
-
+	
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
-
+	
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
-
-	public String getCaseStatus() {
-		return caseStatus;
-	}
-
+	
 	public void setCaseStatus(String caseStatus) {
 		this.caseStatus = caseStatus;
 	}
-
-	public String getIfCaseStatus() {
-		return ifCaseStatus;
-	}
-
+	
 	public void setIfCaseStatus(String ifCaseStatus) {
 		this.ifCaseStatus = ifCaseStatus;
 	}
-
+	
 	public Integer getPerformerUserId() {
 		return performerUserId;
 	}
-
+	
 	public void setPerformerUserId(Integer performerUserId) {
 		this.performerUserId = performerUserId;
 	}
-
+	
 	public Integer getCaseId() {
 		return caseId;
 	}
-
+	
 	public void setCaseId(Integer caseId) {
 		this.caseId = caseId;
+	}
+	
+	public Long getProcessInstanceId() {
+		return processInstanceId;
+	}
+	
+	public void setProcessInstanceId(Long processInstanceId) {
+		this.processInstanceId = processInstanceId;
+	}
+	
+	public String getCaseStatusMappedName() {
+		return caseStatusMappedName;
+	}
+	
+	public void setCaseStatusMappedName(String caseStatusMappedName) {
+		this.caseStatusMappedName = caseStatusMappedName;
+	}
+	
+	public String getIfCaseStatusMappedName() {
+		return ifCaseStatusMappedName;
+	}
+	
+	public void setIfCaseStatusMappedName(String ifCaseStatusMappedName) {
+		this.ifCaseStatusMappedName = ifCaseStatusMappedName;
+	}
+	
+	BPMFactory getBpmFactory() {
+		return bpmFactory;
+	}
+	
+	CasesStatusMapperHandler getCasesStatusMapperHandler() {
+		return casesStatusMapperHandler;
 	}
 }
