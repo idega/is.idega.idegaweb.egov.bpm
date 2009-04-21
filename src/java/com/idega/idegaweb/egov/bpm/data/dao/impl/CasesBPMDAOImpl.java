@@ -33,7 +33,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.42 $ Last modified: $Date: 2009/04/16 13:28:29 $ by $Author: civilis $
+ * @version $Revision: 1.43 $ Last modified: $Date: 2009/04/21 08:38:00 $ by $Author: civilis $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -64,6 +64,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		
 		return l.iterator().next();
+	}
+	
+	public CaseProcInstBind getCaseProcInstBindByProcessInstanceId(
+	        Long processInstanceId) {
+		
+		return find(CaseProcInstBind.class, processInstanceId);
 	}
 	
 	public List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(

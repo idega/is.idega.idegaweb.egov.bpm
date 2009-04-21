@@ -18,36 +18,45 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.26 $
- *
- * Last modified: $Date: 2009/04/08 09:35:30 $ by $Author: valdas $
+ * @version $Revision: 1.27 $ Last modified: $Date: 2009/04/21 08:38:00 $ by $Author: civilis $
  */
 public interface CasesBPMDAO extends GenericDao {
-
+	
 	public abstract List<CaseTypesProcDefBind> getAllCaseTypes();
 	
 	public abstract CaseProcInstBind getCaseProcInstBindByCaseId(Integer caseId);
 	
-	public abstract List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds);
+	public abstract CaseProcInstBind getCaseProcInstBindByProcessInstanceId(
+	        Long processInstanceId);
 	
-	public abstract ProcessUserBind getProcessUserBind(long processInstanceId, int userId, boolean createIfNotFound);
+	public abstract List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(
+	        List<Integer> casesIds);
 	
-	public abstract List<ProcessUserBind> getProcessUserBinds(int userId, Collection<Integer> casesIds);
+	public abstract ProcessUserBind getProcessUserBind(long processInstanceId,
+	        int userId, boolean createIfNotFound);
 	
-	public abstract CaseTypesProcDefBind getCaseTypesProcDefBindByPDName(String processDefinitionName);
+	public abstract List<ProcessUserBind> getProcessUserBinds(int userId,
+	        Collection<Integer> casesIds);
+	
+	public abstract CaseTypesProcDefBind getCaseTypesProcDefBindByPDName(
+	        String processDefinitionName);
 	
 	public abstract void updateCaseTypesProcDefBind(CaseTypesProcDefBind bind);
 	
 	public abstract CaseProcInstBind getCaseProcInstBindLatestByDateQN(Date date);
 	
-	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs);
+	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
+	        Collection<Date> dates, Collection<Integer> identifierIDs);
 	
-	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
+	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(
+	        Long processInstanceId);
 	
-	public abstract List<Long> getCaseIdsByProcessDefinition(String processDefinitionName);
+	public abstract List<Long> getCaseIdsByProcessDefinition(
+	        String processDefinitionName);
 	
-	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
-			List<BPMProcessVariable> variables);
+	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(
+	        List<Long> processDefinitionIds, String processDefinitionName,
+	        List<BPMProcessVariable> variables);
 	
 	public abstract List<Long> getCaseIdsByCaseNumber(String caseNumber);
 	
@@ -57,39 +66,52 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<Long> getCaseIdsByUserIds(String userId);
 	
-	public abstract List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
+	public abstract List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom,
+	        IWTimestamp dateTo);
 	
-	public abstract List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
+	public abstract List<Long> getCaseIdsByProcessInstanceIds(
+	        List<Long> processInstanceIds);
 	
-	public abstract List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName);
+	public abstract List<VariableInstance> getVariablesByProcessDefinition(
+	        String processDefinitionName);
 	
-	public abstract List<VariableInstance> getVariablesByProcessInstanceId(Long processInstanceId);
-
-	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
+	public abstract List<VariableInstance> getVariablesByProcessInstanceId(
+	        Long processInstanceId);
 	
-	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<Integer> groups,
-			Collection<String> roles);
+	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(
+	        Collection<String> identifiers);
 	
-	public abstract List<Integer> getClosedCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<Integer> groups,
-			Collection<String> roles);
+	public abstract List<Integer> getOpenCasesIds(User user,
+	        List<String> caseStatuses, List<String> caseStatusesToHide,
+	        Collection<Integer> groups, Collection<String> roles);
+	
+	public abstract List<Integer> getClosedCasesIds(User user,
+	        List<String> caseStatuses, List<String> caseStatusesToHide,
+	        Collection<Integer> groups, Collection<String> roles);
 	
 	/**
-	 * 
 	 * @param user
 	 * @param caseStatuses
 	 * @param caseStatusesToHide
-	 * @return cases of not ended processes (end_ is null) whose user provided is handler of, or what user is watching
+	 * @return cases of not ended processes (end_ is null) whose user provided is handler of, or
+	 *         what user is watching
 	 */
-	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide);
+	public abstract List<Integer> getMyCasesIds(User user,
+	        List<String> caseStatuses, List<String> caseStatusesToHide);
 	
-	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes,
-			Collection<String> roles);
+	public abstract List<Integer> getUserCasesIds(User user,
+	        List<String> caseStatuses, List<String> caseStatusesToHide,
+	        List<String> caseCodes, Collection<String> roles);
 	
-	public abstract List<Integer> getCasesIdsByStatusForAdmin(List<String> caseStatuses, List<String> caseStatusesToHide);
+	public abstract List<Integer> getCasesIdsByStatusForAdmin(
+	        List<String> caseStatuses, List<String> caseStatusesToHide);
 	
-	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide);
+	public List<Integer> getOpenCasesIdsForAdmin(
+	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 	
-	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide);
+	public List<Integer> getClosedCasesIdsForAdmin(
+	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 	
-	public abstract List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(Collection<Long> processInstanceIds, List<String> variables);
+	public abstract List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(
+	        Collection<Long> processInstanceIds, List<String> variables);
 }
