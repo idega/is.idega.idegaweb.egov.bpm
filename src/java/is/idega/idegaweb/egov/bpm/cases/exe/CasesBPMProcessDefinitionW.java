@@ -4,7 +4,7 @@ import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
-import is.idega.idegaweb.egov.bpm.cases.CasesStatusVariables;
+import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
 import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
@@ -59,7 +59,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.39 $ Last modified: $Date: 2009/04/01 14:12:16 $ by $Author: civilis $
+ * @version $Revision: 1.40 $ Last modified: $Date: 2009/04/21 08:16:13 $ by $Author: arunas $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -195,7 +195,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					        .getCaseStatuses();
 					
 					for (CaseStatus caseStatus : allStatuses)
-						caseData.put(CasesStatusVariables
+						caseData.put(CasesStatusMapperHandler
 						        .evaluateStatusVariableName(caseStatus
 						                .getStatus()), caseStatus.getStatus());
 					

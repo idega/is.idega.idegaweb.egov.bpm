@@ -1,14 +1,19 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+
 import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.5 $
+ * @version $Revision: 1.1 $
  *
- * Last modified: $Date: 2009/04/02 09:03:57 $ by $Author: arunas $
+ * Last modified: $Date: 2009/04/21 08:16:13 $ by $Author: arunas $
  */
-public class CasesStatusVariables {
+@Service("casesStatusMapperHandler")
+@Scope("singleton")
+public class CasesStatusMapperHandler {
 	
 	private static final String CASE_STATUS_OPEN_KEY = "UBEH";
 	private static final String CASE_STATUS_INACTIVE_KEY = "TYST";
@@ -64,6 +69,29 @@ public class CasesStatusVariables {
 		return result.equals(CoreConstants.EMPTY) ? new StringBuilder().append(STATUS_EXP).append(status).toString() : result;
 	     
 	 }
+	
+	public String getStatusCode(String status) {
+		String statusKey = CoreConstants.EMPTY;
+			
+		if ("caseStatusGranted".equals(status))
+			statusKey = CASE_STATUS_GRANTED_KEY;
+		else if ("caseStatusDeny".equals(status))
+			statusKey = CASE_STATUS_DENIED_KEY;
+		else if ("caseStatusInactive".equals(status))
+			statusKey = CASE_STATUS_INACTIVE_KEY;
+		else if ("caseStatusMoved".equals(status))
+			statusKey = CASE_STATUS_MOVED_KEY;
+		else if ("caseStatusOpened".equals(status))
+			statusKey = CASE_STATUS_OPEN_KEY;
+		else if ("caseStatusInProgress".equals(status))
+			statusKey = CASE_STATUS_IN_PROGRESS;
+		else if ("caseStatusPreliminary".equals(status))
+			statusKey = CASE_STATUS_PRELIMINARY_KEY;
+		
+		
+		
+		return statusKey;
+	}
 	
 	
 }
