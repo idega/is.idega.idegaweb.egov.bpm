@@ -4,9 +4,9 @@ package is.idega.idegaweb.egov.bpm.cases;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.14 $
+ * @version $Revision: 1.15 $
  * 
- *          Last modified: $Date: 2009/04/02 09:03:57 $ by $Author: arunas $
+ *          Last modified: $Date: 2009/04/21 13:00:15 $ by $Author: arunas $
  * 
  */
 public class CasesBPMProcessConstants {
@@ -30,7 +30,8 @@ public class CasesBPMProcessConstants {
 	public static final String caseCategoryIdActionVariableName = "caseCategoryId";
 	public static final String caseTypeActionVariableName = "caseType";
 	public static final String caseCreationDateParam = "caseCreationDate";
-
+	
+	// case status variable names
 	public static final String caseStatusClosedVariableName = "string_caseStatusClosed";
 	public static final String caseStatusDenied = "string_caseStatusDenied";
 	public static final String caseStatusGranted = "string_caseStatusGranted";
@@ -46,5 +47,21 @@ public class CasesBPMProcessConstants {
 	public static final String caseStatusWait = "string_caseStatusWait";
 	public static final String caseStatusInProcess = "string_caseStatusInProcess";
 	public static final String caseStatusDeleted = "string_caseStatusDeleted";
+	
+	// mapped case status names
+	public static final String CASE_STATUS_GRANTED_MAPNAME  	= "caseStatusGranted";
+	public static final String CASE_STATUS_DENIED_MAPNAME  		= "caseStatusDenied";
+	public static final String CASE_STATUS_INACTIVE_MAPNAME  	= "caseStatusInactive";
+	public static final String CASE_STATUS_MOVED_MAPNAME  		= "caseStatusMoved";
+	public static final String CASE_STATUS_OPENED_MAPNAME  		= "caseStatusOpened";
+	public static final String CASE_STATUS_INPROGRESS_MAPNAME  	= "caseStatusInProgress";
+	public static final String CASE_STATUS_PRELIMINARY_MAPNAME  = "caseStatusPreliminary";
+	public static final String CASE_STATUS_READY_MAPNAME  		= "caseStatusReady";
+	public static final String CASE_STATUS_REVIEW_MAPNAME  		= "caseStatusReview";
+	public static final String CASE_STATUS_PLACED_MAPNAME  		= "caseStatusPlaced";
+	public static final String CASE_STATUS_WAIT_MAPNAME  		= "caseStatusWait";
+	public static final String CASE_STATUS_INPROCESS_MAPNAME  	= "caseStatusInProcess";
+	public static final String CASE_STATUS_DELETED_MAPNAME  	= "caseStatusDeleted";
+
 
 }

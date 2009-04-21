@@ -59,7 +59,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.40 $ Last modified: $Date: 2009/04/21 08:16:13 $ by $Author: arunas $
+ * @version $Revision: 1.41 $ Last modified: $Date: 2009/04/21 13:00:15 $ by $Author: arunas $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -71,6 +71,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	private CasesBPMDAO casesBPMDAO;
 	@Autowired
 	private CaseIdentifier caseIdentifier;
+	
+	@Autowired
+	private CasesStatusMapperHandler casesStatusMapperHandler;
 	
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = false)
@@ -194,9 +197,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					Collection<CaseStatus> allStatuses = casesBusiness
 					        .getCaseStatuses();
 					
+					CasesStatusMapperHandler casesStatusMapper = getCasesStatusMapperHandler();
+					
 					for (CaseStatus caseStatus : allStatuses)
-						caseData.put(CasesStatusMapperHandler
-						        .evaluateStatusVariableName(caseStatus
+						caseData.put(casesStatusMapper.getStatusVariableNameFromStatusCode(caseStatus
 						                .getStatus()), caseStatus.getStatus());
 					
 					final Locale dateLocale;
@@ -555,4 +559,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		
 		return null;
 	}
+	
+	public CasesStatusMapperHandler getCasesStatusMapperHandler() {
+    	return casesStatusMapperHandler;
+    }
 }

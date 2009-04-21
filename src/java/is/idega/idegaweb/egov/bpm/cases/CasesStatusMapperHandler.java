@@ -7,9 +7,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2009/04/21 08:31:20 $ by $Author: arunas $
+ * Last modified: $Date: 2009/04/21 13:00:15 $ by $Author: arunas $
  */
 @Service("casesStatusMapperHandler")
 @Scope("singleton")
@@ -32,72 +32,73 @@ public class CasesStatusMapperHandler {
 	private static final String STATUS_EXP = "string_";
 
 	
-	public static String evaluateStatusVariableName(String status){
+	public String getStatusVariableNameFromStatusCode(String statusCode){
 		
-		String result = CoreConstants.EMPTY;
+		String caseStatusVariableName = CoreConstants.EMPTY;
 	
-		if (CASE_STATUS_DENIED_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusDenied;
-		else if (CASE_STATUS_GRANTED_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusGranted;
-		else if (CASE_STATUS_INACTIVE_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusInactive;
-		else if (CASE_STATUS_MOVED_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusMoved;
-		else if (CASE_STATUS_OPEN_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusReceived;
-		else if (CASE_STATUS_IN_PROGRESS.equals(status))
-			result = CasesBPMProcessConstants.caseStatusInProgress;
-		else if (CASE_STATUS_PRELIMINARY_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusPreliminary;
-		else if (CASE_STATUS_READY_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusReady;
-		else if (CASE_STATUS_REVIEW_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusReview;
-		else if (CASE_STATUS_GROU.equals(status))
-			result = CasesBPMProcessConstants.caseStatusGrou;
-		else if (CASE_STATUS_PLACED_KEY.equals(status))
-			result = CasesBPMProcessConstants.caseStatusPlaced;
-		else if (CASE_STATUS_WAIT.equals(status))
-			result = CasesBPMProcessConstants.caseStatusWait;
-		else if (CASE_STATUS_IN_PROCESS.equals(status))
-			result = CasesBPMProcessConstants.caseStatusInProcess;
-		else if (CASE_STATUS_DELETED.equals(status))
-			result = CasesBPMProcessConstants.caseStatusDeleted;
+		if (CASE_STATUS_DENIED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusDenied;
+		else if (CASE_STATUS_GRANTED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusGranted;
+		else if (CASE_STATUS_INACTIVE_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusInactive;
+		else if (CASE_STATUS_MOVED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusMoved;
+		else if (CASE_STATUS_OPEN_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusReceived;
+		else if (CASE_STATUS_IN_PROGRESS.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusInProgress;
+		else if (CASE_STATUS_PRELIMINARY_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusPreliminary;
+		else if (CASE_STATUS_READY_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusReady;
+		else if (CASE_STATUS_REVIEW_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusReview;
+		else if (CASE_STATUS_GROU.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusGrou;
+		else if (CASE_STATUS_PLACED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusPlaced;
+		else if (CASE_STATUS_WAIT.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusWait;
+		else if (CASE_STATUS_IN_PROCESS.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusInProcess;
+		else if (CASE_STATUS_DELETED.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusDeleted;
 
 		
-		return result.equals(CoreConstants.EMPTY) ? new StringBuilder().append(STATUS_EXP).append(status).toString() : result;
+		return caseStatusVariableName.equals(CoreConstants.EMPTY) ? new StringBuilder().append(STATUS_EXP).append(statusCode).toString() : caseStatusVariableName;
 	     
 	 }
 	
 	public String getStatusCodeByMappedName (String statusMappedName) {
+		
 		String statusKey = CoreConstants.EMPTY;
-			
-		if ("caseStatusGranted".equals(statusMappedName))
+		
+		if (CasesBPMProcessConstants.CASE_STATUS_GRANTED_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_GRANTED_KEY;
-		else if ("caseStatusDenied".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_DENIED_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_DENIED_KEY;
-		else if ("caseStatusInactive".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_INACTIVE_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_INACTIVE_KEY;
-		else if ("caseStatusMoved".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_MOVED_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_MOVED_KEY;
-		else if ("caseStatusOpened".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_OPENED_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_OPEN_KEY;
-		else if ("caseStatusInProgress".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_INPROGRESS_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_IN_PROGRESS;
-		else if ("caseStatusPreliminary".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_PRELIMINARY_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_PRELIMINARY_KEY;
-		else if ("caseStatusReady".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_READY_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_READY_KEY;
-		else if ("caseStatusReview".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_REVIEW_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_REVIEW_KEY;
-		else if ("caseStatusPlaced".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_PLACED_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_PLACED_KEY;
-		else if ("caseStatusWait".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_WAIT_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_WAIT;
-		else if ("caseStatusInProcess".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_INPROCESS_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_IN_PROCESS;
-		else if ("caseStatusDeleted".equals(statusMappedName))
+		else if (CasesBPMProcessConstants.CASE_STATUS_DELETED_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_DELETED;
 		
 		return statusKey;
