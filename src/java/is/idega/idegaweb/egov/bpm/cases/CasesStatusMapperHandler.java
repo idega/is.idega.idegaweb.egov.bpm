@@ -7,9 +7,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  *
- * Last modified: $Date: 2009/04/21 08:16:13 $ by $Author: arunas $
+ * Last modified: $Date: 2009/04/21 08:31:20 $ by $Author: arunas $
  */
 @Service("casesStatusMapperHandler")
 @Scope("singleton")
@@ -70,25 +70,35 @@ public class CasesStatusMapperHandler {
 	     
 	 }
 	
-	public String getStatusCode(String status) {
+	public String getStatusCodeByMappedName (String statusMappedName) {
 		String statusKey = CoreConstants.EMPTY;
 			
-		if ("caseStatusGranted".equals(status))
+		if ("caseStatusGranted".equals(statusMappedName))
 			statusKey = CASE_STATUS_GRANTED_KEY;
-		else if ("caseStatusDeny".equals(status))
+		else if ("caseStatusDenied".equals(statusMappedName))
 			statusKey = CASE_STATUS_DENIED_KEY;
-		else if ("caseStatusInactive".equals(status))
+		else if ("caseStatusInactive".equals(statusMappedName))
 			statusKey = CASE_STATUS_INACTIVE_KEY;
-		else if ("caseStatusMoved".equals(status))
+		else if ("caseStatusMoved".equals(statusMappedName))
 			statusKey = CASE_STATUS_MOVED_KEY;
-		else if ("caseStatusOpened".equals(status))
+		else if ("caseStatusOpened".equals(statusMappedName))
 			statusKey = CASE_STATUS_OPEN_KEY;
-		else if ("caseStatusInProgress".equals(status))
+		else if ("caseStatusInProgress".equals(statusMappedName))
 			statusKey = CASE_STATUS_IN_PROGRESS;
-		else if ("caseStatusPreliminary".equals(status))
+		else if ("caseStatusPreliminary".equals(statusMappedName))
 			statusKey = CASE_STATUS_PRELIMINARY_KEY;
-		
-		
+		else if ("caseStatusReady".equals(statusMappedName))
+			statusKey = CASE_STATUS_READY_KEY;
+		else if ("caseStatusReview".equals(statusMappedName))
+			statusKey = CASE_STATUS_REVIEW_KEY;
+		else if ("caseStatusPlaced".equals(statusMappedName))
+			statusKey = CASE_STATUS_PLACED_KEY;
+		else if ("caseStatusWait".equals(statusMappedName))
+			statusKey = CASE_STATUS_WAIT;
+		else if ("caseStatusInProcess".equals(statusMappedName))
+			statusKey = CASE_STATUS_IN_PROCESS;
+		else if ("caseStatusDeleted".equals(statusMappedName))
+			statusKey = CASE_STATUS_DELETED;
 		
 		return statusKey;
 	}
