@@ -7,9 +7,9 @@ import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.3 $
+ * @version $Revision: 1.4 $
  *
- * Last modified: $Date: 2009/04/21 13:00:15 $ by $Author: arunas $
+ * Last modified: $Date: 2009/04/22 13:17:06 $ by $Author: arunas $
  */
 @Service("casesStatusMapperHandler")
 @Scope("singleton")
@@ -20,7 +20,7 @@ public class CasesStatusMapperHandler {
 	private static final String CASE_STATUS_GRANTED_KEY = "BVJD";
 	private static final String CASE_STATUS_DENIED_KEY = "AVSL";
 	private static final String CASE_STATUS_REVIEW_KEY = "OMPR";
-	private static final String CASE_STATUS_GROU = "GROU";
+	private static final String CASE_STATUS_GROUPED_KEY = "GROU";
 	private static final String CASE_STATUS_PRELIMINARY_KEY = "PREL";
 	private static final String CASE_STATUS_READY_KEY = "KLAR";
 	private static final String CASE_STATUS_MOVED_KEY = "FLYT";
@@ -54,8 +54,8 @@ public class CasesStatusMapperHandler {
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusReady;
 		else if (CASE_STATUS_REVIEW_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusReview;
-		else if (CASE_STATUS_GROU.equals(statusCode))
-			caseStatusVariableName = CasesBPMProcessConstants.caseStatusGrou;
+		else if (CASE_STATUS_GROUPED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusGrouped;
 		else if (CASE_STATUS_PLACED_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusPlaced;
 		else if (CASE_STATUS_WAIT.equals(statusCode))
