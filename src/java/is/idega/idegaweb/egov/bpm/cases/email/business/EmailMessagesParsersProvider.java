@@ -48,9 +48,7 @@ import com.sun.mail.imap.IMAPNestedMessage;
  * Provides e-mails' parsers
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version Revision: 1.00
- *
- * Last modified: 2009.04.22 15:42:13 by: valdas
+ * @version $Revision: 1.2 $ Last modified: $Date: 2009/04/22 13:02:52 $ by $Author: valdas $
  */
 
 @Service
