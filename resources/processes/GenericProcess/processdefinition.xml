@@ -97,7 +97,6 @@ This might not work correctly now
 			<variable name="string_ownerApplicantBackground"			access="write"></variable>
 			<variable name="string_ownerPotentialDevelopment"			access="write"></variable>
 			<variable name="string_ownerProjectPresentStatus"			access="write"></variable>
-			<variable name="list_ownerSupportForProject"				access="write,required"></variable>
 			<variable name="string_ownerBusinessConceptDetail"			access="write"></variable>
 			<variable name="string_ownerCompetitions"					access="write"></variable>
 			<variable name="objlist_ownerCostsAndMainTasks"				access="write"></variable>
@@ -392,8 +391,10 @@ This might not work correctly now
         <action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>casesStatusHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-			   	<entry><key>caseStatus</key><value>#{string_caseStatusInProgress}</value></entry>
-			  	<entry><key>ifCaseStatus</key><value>#{string_caseStatusReceived}</value></entry>
+			   	   	<entry><key>caseStatusMappedName</key><value>caseStatusInProgress</value></entry>
+			  	<entry><key>ifCaseStatusMappedName</key><value>caseStatusOpened</value></entry>
+			  	<entry><key>processInstanceId</key><value>#{mainProcessInstanceId}</value></entry>
+		
 			</propertyMap>
 		</action>
     </event>
@@ -707,8 +708,8 @@ This might not work correctly now
 		<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 			<handlerName>casesStatusHandler</handlerName>
 			<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-			   	<entry><key>caseStatus</key><value>#{string_caseStatusDenied}</value></entry>
-			</propertyMap>
+				<entry><key>caseStatusMappedName</key><value>caseStatusDenied</value></entry>
+                <entry><key>processInstanceId</key><value>#{mainProcessInstanceId}</value></entry>			</propertyMap>
 		</action>
 		</event>
 		<transition to="sendRulingMessages"></transition>
@@ -719,7 +720,8 @@ This might not work correctly now
 			<action class="com.idega.jbpm.proxy.JbpmHandlerProxy"> 
 				<handlerName>casesStatusHandler</handlerName>
 				<propertyMap key-type='java.lang.String' value-type='java.lang.String'>
-				   	<entry><key>caseStatus</key><value>#{string_caseStatusGranted}</value></entry>
+					<entry><key>caseStatusMappedName</key><value>caseStatusGranted</value></entry>
+                    <entry><key>processInstanceId</key><value>#{mainProcessInstanceId}</value></entry>
 				</propertyMap>
 			</action>
         </event>
