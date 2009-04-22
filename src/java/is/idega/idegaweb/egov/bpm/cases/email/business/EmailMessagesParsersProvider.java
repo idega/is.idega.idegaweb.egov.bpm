@@ -48,7 +48,7 @@ import com.sun.mail.imap.IMAPNestedMessage;
  * Provides e-mails' parsers
  * 
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
- * @version $Revision: 1.2 $ Last modified: $Date: 2009/04/22 13:02:52 $ by $Author: valdas $
+ * @version $Revision: 1.3 $ Last modified: $Date: 2009/04/22 14:44:40 $ by $Author: valdas $
  */
 
 @Service
@@ -366,6 +366,9 @@ public class EmailMessagesParsersProvider implements EmailsParsersProvider {
 				
 				bpmMessage.setSenderName(message.getSenderName());
 				bpmMessage.setFromAddress(message.getFrom());
+				
+				bpmMessage.setReplyToAddress(message.getReplyTo());
+				
 				bpmMessage.setCcAddress(message.getRecipientCc());
 				bpmMessage.setBccAddress(message.getRecipientBcc());
 				
