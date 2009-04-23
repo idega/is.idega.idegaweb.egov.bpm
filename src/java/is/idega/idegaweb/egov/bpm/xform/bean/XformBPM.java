@@ -4,13 +4,19 @@ import java.util.List;
 import com.idega.util.text.Item;
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.2 $
+ * @version $Revision: 1.3 $
  *
- * Last modified: $Date: 2008/12/16 17:33:30 $ by $Author: arunas $
+ * Last modified: $Date: 2009/04/23 08:11:01 $ by $Author: arunas $
  */
 
 public interface XformBPM {
 	
 	public abstract List<Item> getUsersConnectedToProcess(String pid);
+	
+	public abstract List<Item> getUsersConnectedToProcessEmails(String pid);
+	
+	public abstract List<Item> getProcessAttachments(String pid);
+	
+	public abstract boolean hasProcessAttachments(String pid);
 
 }
