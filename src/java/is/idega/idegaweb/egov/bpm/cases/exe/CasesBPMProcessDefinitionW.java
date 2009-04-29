@@ -3,6 +3,8 @@ package is.idega.idegaweb.egov.bpm.cases.exe;
 import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.bpm.application.AppSupportsManager;
+import is.idega.idegaweb.egov.bpm.application.AppSupportsManagerFactory;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
 import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
@@ -11,6 +13,7 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -59,7 +62,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.41 $ Last modified: $Date: 2009/04/21 13:00:15 $ by $Author: arunas $
+ * @version $Revision: 1.42 $ Last modified: $Date: 2009/04/29 13:39:27 $ by $Author: civilis $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -71,9 +74,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	private CasesBPMDAO casesBPMDAO;
 	@Autowired
 	private CaseIdentifier caseIdentifier;
-	
 	@Autowired
 	private CasesStatusMapperHandler casesStatusMapperHandler;
+	@Autowired
+	private AppSupportsManagerFactory appSupportsManagerFactory;
 	
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = false)
@@ -200,7 +204,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					CasesStatusMapperHandler casesStatusMapper = getCasesStatusMapperHandler();
 					
 					for (CaseStatus caseStatus : allStatuses)
-						caseData.put(casesStatusMapper.getStatusVariableNameFromStatusCode(caseStatus
+						caseData.put(casesStatusMapper
+						        .getStatusVariableNameFromStatusCode(caseStatus
 						                .getStatus()), caseStatus.getStatus());
 					
 					final Locale dateLocale;
@@ -227,8 +232,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					
 					Date caseCreated;
 					
-					if(!StringUtil.isEmpty(realCaseCreationDate)) {
-						caseCreated = new IWTimestamp(realCaseCreationDate).getDate();
+					if (!StringUtil.isEmpty(realCaseCreationDate)) {
+						caseCreated = new IWTimestamp(realCaseCreationDate)
+						        .getDate();
 					} else
 						caseCreated = new Date();
 					
@@ -344,32 +350,15 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Transactional(readOnly = true)
 	public List<String> getRolesCanStartProcess(Object context) {
 		
-		if(true)
-			return null;
+		final Integer applicationId = new Integer(context.toString());
 		
-		final Integer appId = new Integer(context.toString());
+		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory()
+		        .getAppSupportsManager(applicationId,
+		            getProcessDefinition().getName());
 		
-		return getBpmContext().execute(new JbpmCallback() {
-			
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				
-				ProcessDefinition pd = getProcessDefinition();
-				
-				AppProcBindDefinition def = (AppProcBindDefinition) pd
-				        .getDefinition(AppProcBindDefinition.class);
-				
-				final List<String> rolesCanStart;
-				
-				if (def != null) {
-					
-					rolesCanStart = def.getRolesCanStartProcess(appId);
-				} else
-					rolesCanStart = null;
-				
-				return rolesCanStart;
-			}
-			
-		});
+		List<String> rolesCanStartProcess = appSupportsManager
+		        .getRolesCanStartProcess();
+		return rolesCanStartProcess;
 	}
 	
 	/**
@@ -378,7 +367,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	 * </p>
 	 * sets roles, whose users can start process (and see application).
 	 * 
-	 * @param roles
+	 * @param rolesKeys
 	 *            - idega roles keys (<b>not</b> process roles)
 	 * @param processContext
 	 *            - some context depending implementation, e.g., roles can start process using
@@ -386,48 +375,19 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	 */
 	@Override
 	@Transactional(readOnly = false)
-	public void setRolesCanStartProcess(final List<String> roles,
+	public void setRolesCanStartProcess(List<String> rolesKeys,
 	        Object processContext) {
 		
-		final Integer appId = new Integer(processContext.toString());
+		if (rolesKeys == null)
+			rolesKeys = Collections.emptyList();
 		
-		getBpmContext().execute(new JbpmCallback() {
-			
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				
-				ProcessDefinition pd = getProcessDefinition();
-				AppProcBindDefinition def = (AppProcBindDefinition) pd
-				        .getDefinition(AppProcBindDefinition.class);
-				
-				if (def != null || !ListUtil.isEmpty(roles)) {
-					
-					logger
-					        .finer("Will set roles, that can start process for the process (id="
-					                + getProcessDefinitionId()
-					                + ") name = "
-					                + getProcessDefinition().getName());
-					
-					if (def == null) {
-						
-						def = new AppProcBindDefinition();
-						context.getSession().merge(def);
-						
-						pd = context.getGraphSession().getProcessDefinition(
-						    getProcessDefinitionId());
-						pd.addDefinition(def);
-						
-						pd = context.getGraphSession().loadProcessDefinition(
-						    getProcessDefinitionId());
-						def = (AppProcBindDefinition) pd
-						        .getDefinition(AppProcBindDefinition.class);
-					}
-					
-					def.updateRolesCanStartProcess(appId, roles);
-				}
-				
-				return null;
-			}
-		});
+		final Integer applicationId = new Integer(processContext.toString());
+		
+		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory()
+		        .getAppSupportsManager(applicationId,
+		            getProcessDefinition().getName());
+		
+		appSupportsManager.updateRolesCanStartProcess(rolesKeys);
 	}
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
@@ -480,7 +440,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		this.caseIdentifier = caseIdentifier;
 	}
 	
-	
 	@Override
 	public String getProcessName(Locale locale) {
 		
@@ -492,19 +451,22 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 	
 	@Transactional(readOnly = true)
-	public String getProcessName(final Long processDefinitionId, final Locale locale) {
+	public String getProcessName(final Long processDefinitionId,
+	        final Locale locale) {
 		
 		if (processDefinitionId == null) {
 			return null;
 		}
 		
 		return getBpmContext().execute(new JbpmCallback() {
-
+			
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				
-				ProcessDefinition pd = context.getGraphSession().getProcessDefinition(processDefinitionId);
+				ProcessDefinition pd = context.getGraphSession()
+				        .getProcessDefinition(processDefinitionId);
 				try {
-					return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+					return getProcessDefinitionLocalizedName(pd, locale,
+					    (ApplicationHome) IDOLookup.getHome(Application.class));
 					
 				} catch (IDOLookupException e) {
 					e.printStackTrace();
@@ -514,7 +476,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		});
 	}
 	
-	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, Locale locale, ApplicationHome appHome) {
+	private String getProcessDefinitionLocalizedName(ProcessDefinition pd,
+	        Locale locale, ApplicationHome appHome) {
 		if (pd == null || locale == null || appHome == null) {
 			return null;
 		}
@@ -526,14 +489,19 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			e.printStackTrace();
 		}
 		if (ListUtil.isEmpty(apps)) {
-			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName() + ", returning standard name!");
+			Logger.getLogger(this.getClass().getName()).log(
+			    Level.WARNING,
+			    "Didn't find any application by URL: " + pd.getName()
+			            + ", returning standard name!");
 			return pd.getName();
 		}
 		
 		ApplicationBusiness applicationBusiness = null;
 		try {
-			applicationBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
-																															ApplicationBusiness.class);
+			applicationBusiness = (ApplicationBusiness) IBOLookup
+			        .getServiceInstance(IWMainApplication
+			                .getDefaultIWApplicationContext(),
+			            ApplicationBusiness.class);
 		} catch (IBOLookupException e) {
 			e.printStackTrace();
 		}
@@ -541,18 +509,21 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			return pd.getName();
 		}
 		
-		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
+		return applicationBusiness.getApplicationName(apps.iterator().next(),
+		    locale);
 	}
 	
 	@Transactional(readOnly = true)
 	public String getProcessName(String processName, Locale locale) {
-		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(processName);
+		ProcessDefinition pd = getBpmFactory().getBPMDAO()
+		        .findLatestProcessDefinition(processName);
 		if (pd == null) {
 			return null;
 		}
 		
 		try {
-			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+			return getProcessDefinitionLocalizedName(pd, locale,
+			    (ApplicationHome) IDOLookup.getHome(Application.class));
 		} catch (IDOLookupException e) {
 			e.printStackTrace();
 		}
@@ -561,6 +532,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 	
 	public CasesStatusMapperHandler getCasesStatusMapperHandler() {
-    	return casesStatusMapperHandler;
-    }
+		return casesStatusMapperHandler;
+	}
+	
+	AppSupportsManagerFactory getAppSupportsManagerFactory() {
+		return appSupportsManagerFactory;
+	}
 }
