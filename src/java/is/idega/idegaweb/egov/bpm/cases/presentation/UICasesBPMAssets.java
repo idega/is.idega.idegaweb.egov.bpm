@@ -17,12 +17,13 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.FacesContext;
 
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.article.business.CommentsPersistenceManager;
 import com.idega.block.article.component.CommentsViewer;
 import com.idega.block.process.presentation.beans.CaseManagerState;
+import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
-import com.idega.block.web2.business.Web2BusinessBean;
 import com.idega.bpm.pdf.servlet.XFormToPDFWriter;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -44,9 +45,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.51 $
+ * @version $Revision: 1.52 $
  *
- * Last modified: $Date: 2009/04/17 11:24:07 $ by $Author: valdas $
+ * Last modified: $Date: 2009/05/05 09:02:46 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -65,10 +66,17 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private Long processInstanceId;
 	private Integer caseId;
 
+	@Autowired
+	private JQuery jQuery;
+	@Autowired
+	private Web2Business web2;
+	
 	@Override
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
 
+		ELUtil.getInstance().autowire(this);
+		
 //		<assets grid component>
 		HtmlTag div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		String clientId = null;
@@ -240,20 +248,36 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		this.caseId = caseId;
 	}
 	
+	private Web2Business getWeb2Business() {
+		if (web2 == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return web2;
+	}
+	
+	private JQuery getJQuery() {
+		if (jQuery == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return jQuery;
+	}
+	
 	private void addClientResources(IWContext iwc, UIComponent container) {
-		Web2Business web2Business = ELUtil.getInstance().getBean(Web2Business.SPRING_BEAN_IDENTIFIER);
 		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
+		
+		Web2Business web2 = getWeb2Business();
+		JQuery jQuery = getJQuery();
 		
 		//	CSS sources
 		List<String> cssFiles = new ArrayList<String>();
-		cssFiles.add(web2Business.getBundleUriToLinkLinksWithFilesStyleFile());
-		cssFiles.add(web2Business.getBundleURIToJQGridStyles());
-		cssFiles.add(web2Business.getBundleUriToHumanizedMessagesStyleSheet());
+		cssFiles.add(web2.getBundleUriToLinkLinksWithFilesStyleFile());
+		cssFiles.add(web2.getBundleURIToJQGridStyles());
+		cssFiles.add(web2.getBundleUriToHumanizedMessagesStyleSheet());
 		if (isAllowPDFSigning()) {
-			cssFiles.add(web2Business.getBundleUtiToGreyBoxStyleSheet());
+			cssFiles.add(web2.getBundleUtiToGreyBoxStyleSheet());
 		}
 		cssFiles.add(iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getVirtualPathWithFileNameString("style/case.css"));
-		cssFiles.add(web2Business.getBundleURIToFancyBoxStyleFile(Web2BusinessBean.FANCY_BOX_1_2_1_VERSION));
+		cssFiles.add(web2.getBundleURIToFancyBoxStyleFile());
 		PresentationUtil.addStyleSheetsToHeader(iwc, cssFiles);
 		
 		boolean isSingle = CoreUtil.isSingleComponentRenderingProcess(iwc);
@@ -261,20 +285,20 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		//	JS sources
 		List<String> scripts = new ArrayList<String>();
 		if (!isSingle) {
-			scripts.add(web2Business.getBundleURIToJQueryLib());
+			scripts.add(jQuery.getBundleURIToJQueryLib());
 		}
-		scripts.addAll(web2Business.getBundleURIsToFancyBoxScriptFiles(Web2BusinessBean.FANCY_BOX_1_2_1_VERSION));
-		scripts.add(web2Business.getBundleUriToLinkLinksWithFilesScriptFile());
-		scripts.add(web2Business.getBundleURIToJQGrid());
+		scripts.addAll(web2.getBundleURIsToFancyBoxScriptFiles());
+		scripts.add(web2.getBundleUriToLinkLinksWithFilesScriptFile());
+		scripts.add(web2.getBundleURIToJQGrid());
 		scripts.add(CoreConstants.DWR_ENGINE_SCRIPT);
 		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
 		if (isAllowPDFSigning()) {
-			scripts.add(web2Business.getBundleUtiToGreyBoxScript());
+			scripts.add(web2.getBundleUtiToGreyBoxScript());
 			scripts.add("/dwr/interface/PDFGeneratorFromProcess.js");
 		}
-		scripts.add(web2Business.getBundleUriToHumanizedMessagesScript());
-		scripts.add(bundle.getResourcesVirtualPath()+"/javascript/CasesBPMAssets.js");
+		scripts.add(web2.getBundleUriToHumanizedMessagesScript());
+		scripts.add(bundle.getVirtualPathWithFileNameString("javascript/CasesBPMAssets.js"));
 		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, scripts);
 
 		//	JS actions
