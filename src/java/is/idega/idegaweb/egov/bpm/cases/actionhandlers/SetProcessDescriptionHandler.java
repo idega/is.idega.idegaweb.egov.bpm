@@ -1,6 +1,11 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+
+import java.util.Collection;
+import java.util.Iterator;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
@@ -10,9 +15,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
+import com.idega.block.process.data.CaseCode;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -20,6 +27,7 @@ import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.presentation.IWContext;
+import com.idega.util.ListUtil;
 
 /**
  * 
@@ -63,8 +71,39 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 		CasesBusiness casesBusiness = getCasesBusiness(getIWAC());
 		final Case theCase = casesBusiness.getCase(caseId);
 
+		setCaseCode(theCase, piw.getProcessDefinitionW().getProcessDefinition().getName());
 		theCase.setSubject(processDescription);
 		theCase.store();
+	}
+	
+	private void setCaseCode(Case theCase, String processDefinitionName) {
+		ApplicationHome applicationHome = null;
+		try {
+			applicationHome = (ApplicationHome) IDOLookup.getHome(Application.class);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		if (applicationHome == null) {
+			return;
+		}
+		
+		Collection<Application> applications = null;
+		try {
+			applications = applicationHome.findAllByApplicationUrl(processDefinitionName);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		if (ListUtil.isEmpty(applications)) {
+			return;
+		}
+		
+		CaseCode code = null;
+		for (Iterator<Application> appsIter = applications.iterator(); (appsIter.hasNext() && code == null);) {
+			code = appsIter.next().getCaseCode();
+		}
+		if (code != null) {
+			theCase.setCaseCode(code);
+		}
 	}
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
