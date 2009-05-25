@@ -10,8 +10,10 @@ import org.apache.webdav.lib.WebdavResource;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.article.business.CommentsPersistenceManager;
 import com.idega.block.rss.business.RSSBusiness;
@@ -31,6 +33,7 @@ import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
 import com.sun.syndication.feed.WireFeed;
 import com.sun.syndication.feed.atom.Feed;
@@ -38,13 +41,11 @@ import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.io.FeedException;
 import com.sun.syndication.io.WireFeedOutput;
 
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(CommentsPersistenceManagerImpl.SPRING_BEAN_IDENTIFIER)
-public class CommentsPersistenceManagerImpl implements
-        CommentsPersistenceManager {
+public class CommentsPersistenceManagerImpl implements CommentsPersistenceManager {
 	
-	private static final Logger logger = Logger
-	        .getLogger(CommentsPersistenceManagerImpl.class.getName());
+	private static final Logger logger = Logger.getLogger(CommentsPersistenceManagerImpl.class.getName());
 	
 	public static final String SPRING_BEAN_IDENTIFIER = "bpmCommentsPersistenceManagerImpl";
 	
@@ -101,7 +102,20 @@ public class CommentsPersistenceManagerImpl implements
 		        .getProcessManagerByProcessInstanceId(processInstanceId)
 		        .getProcessInstance(processInstanceId);
 		
-		return piw.hasRight(Right.processHandler);
+		if (piw.hasRight(Right.processHandler)) {
+			return true;
+		}
+		
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc != null && iwc.isLoggedOn()) {
+			return hasRightToViewComments(piw, iwc.getCurrentUser());
+		}
+		
+		return  false;
+	}
+	
+	private boolean hasRightToViewComments(ProcessInstanceW piw, User user) {
+		return getBpmFactory().getRolesManager().canSeeComments(piw.getProcessInstanceId(), user);
 	}
 	
 	private Long getConvertedValue(String value) {
