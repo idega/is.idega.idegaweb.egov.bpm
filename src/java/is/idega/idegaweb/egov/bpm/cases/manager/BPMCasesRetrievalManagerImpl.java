@@ -76,9 +76,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.9 $
+ * @version $Revision: 1.10 $
  *
- * Last modified: $Date: 2009/05/19 13:17:46 $ by $Author: valdas $
+ * Last modified: $Date: 2009/05/25 13:46:01 $ by $Author: valdas $
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -220,8 +220,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
 			int startIndex, int count) {
 
-		IWContext iwc = CoreUtil.getIWContext();
-
 		try {
 			List<Integer> casesIds = getCaseIds(user, type, caseStatusesToHide, caseStatusesToShow);
 
@@ -236,9 +234,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 						casesToFetch = casesIds.subList(startIndex, totalCount);
 					}
 					if (!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
-						cases = getCasesBusiness(iwc).getGeneralCaseHome().findAllByIds(casesToFetch);
+						cases = getCasesBusiness().getGeneralCaseHome().findAllByIds(casesToFetch);
 					} else {
-						cases = getCaseBusiness(iwc).getCasesByIds(casesToFetch);
+						cases = getCaseBusiness().getCasesByIds(casesToFetch);
 					}
 				} else {
 					cases = new ArrayList<Case>();
@@ -325,7 +323,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 				
 				statusesToShow = ListUtil.getFilteredList(statusesToShow);
-				CaseCode[] caseCodes = getCaseBusiness(iwc).getCaseCodesForUserCasesList();
+				CaseCode[] caseCodes = getCaseBusiness().getCaseCodesForUserCasesList();
 				Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
 
 				List<String> codes = new ArrayList<String>(caseCodes.length);
@@ -342,10 +340,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return caseIds;
 	}
 	
-	public CasesBusiness getCasesBusiness(IWContext iwc) {
-		
+	public CasesBusiness getCasesBusiness() {
 		try {
-			return (CasesBusiness)IBOLookup.getServiceInstance(iwc, CasesBusiness.class);
+			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
 		}
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -569,16 +566,20 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale) {
-		Collection<Case> cases = getCasesBusiness(CoreUtil.getIWContext()).getCasesByIds(ids);
-		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), cases.size());
+		Collection<Case> cases = getCasesBusiness().getCasesByIds(ids);
+		return getCasesByEntities(cases, locale);
 	}
 	
+	@Override
+	public PagedDataCollection<CasePresentation> getCasesByEntities(Collection<Case> cases, Locale locale) {
+		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), cases.size());
+	}
 	
 	@Override
 	@SuppressWarnings("unchecked")
 	public PagedDataCollection<CasePresentation> getClosedCases(Collection groups) {
 		try {
-			Collection<Case> closedCases = getCasesBusiness(CoreUtil.getIWContext()).getClosedCases(groups);
+			Collection<Case> closedCases = getCasesBusiness().getClosedCases(groups);
 			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<CasePresentation>(presentationBeans);
 		} catch (RemoteException e) {
@@ -591,7 +592,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public PagedDataCollection<CasePresentation> getMyCases(User user) {
 		try {
-			Collection<GeneralCase> closedCases = getCasesBusiness(CoreUtil.getIWContext()).getMyCases(user);
+			Collection<GeneralCase> closedCases = getCasesBusiness().getMyCases(user);
 			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<CasePresentation>(presentationBeans);
 		}
@@ -605,8 +606,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		if (bean == null) {
 			bean = new CasePresentation();
 		}
-		
-		IWContext iwc = CoreUtil.getIWContext();
 		
 		bean = super.convertToPresentation(theCase, bean, locale);
 		
@@ -637,7 +636,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				bean.setCategoryId(caseCategory.getPrimaryKey().toString());
 			}
 			try {
-				bean.setCaseStatus(getCasesBusiness(iwc).getCaseStatus(
+				bean.setCaseStatus(getCasesBusiness().getCaseStatus(
 								theCase.getStatus()));
 			} catch (RemoteException e) {
 				bean.setCaseStatus(theCase.getCaseStatus());
@@ -645,7 +644,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			
 			if (bean.getCaseStatus() != null) {
 				try {
-					bean.setLocalizedStatus(getCasesBusiness(iwc).getLocalizedCaseStatusDescription(theCase, bean.getCaseStatus(), locale));
+					bean.setLocalizedStatus(getCasesBusiness().getLocalizedCaseStatusDescription(theCase, bean.getCaseStatus(), locale));
 				} catch (RemoteException e) {
 					e.printStackTrace();
 				}
