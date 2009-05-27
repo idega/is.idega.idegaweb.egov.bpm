@@ -1,7 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.business.CommentsPersistenceManagerImpl;
+import is.idega.idegaweb.egov.bpm.business.BPMCommentsPersistenceManager;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngineImp;
@@ -45,9 +45,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.52 $
+ * @version $Revision: 1.53 $
  *
- * Last modified: $Date: 2009/05/05 09:02:46 $ by $Author: valdas $
+ * Last modified: $Date: 2009/05/27 16:15:33 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -117,11 +117,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 //		<asset view>
 		
 		CasesBPMAssetsState stateBean = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
-		CommentsPersistenceManager commentsManager = ELUtil.getInstance().getBean(CommentsPersistenceManagerImpl.SPRING_BEAN_IDENTIFIER);
+		CommentsPersistenceManager commentsManager = ELUtil.getInstance().getBean(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER);
 		if (commentsManager.hasRightsToViewComments(stateBean.getProcessInstanceId())) {
 			CommentsViewer comments = new CommentsViewer();
 			comments.setShowViewController(false);
-			comments.setSpringBeanIdentifier(CommentsPersistenceManagerImpl.SPRING_BEAN_IDENTIFIER);
+			comments.setSpringBeanIdentifier(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER);
 			comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
 			comments.setNewestEntriesOnTop(true);
 			comments.setShowCommentsList(false);
