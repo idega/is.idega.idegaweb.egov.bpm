@@ -26,11 +26,13 @@ import com.idega.block.article.business.DefaultCommentsPersistenceManager;
 import com.idega.block.article.data.Comment;
 import com.idega.block.article.data.CommentHome;
 import com.idega.block.rss.business.RSSBusiness;
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.content.business.ContentConstants;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.business.NotLoggedOnException;
+import com.idega.core.contact.data.Email;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.BPMContext;
@@ -385,37 +387,62 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		for (Comment comment: commentsByProcessInstance) {
 			Entry entry = entries.get(comment.getEntryId());
 			if (entry != null && !filteredEntries.contains(entry)) {
+				CommentEntry commentEntry = new CommentEntry(entry);
 				if (comment.isPrivateComment()) {
 					if (hasFullRights) {
 						//	Handler
-						CommentEntry commentEntry = new CommentEntry(entry);
 						commentEntry.setPublishable(!comment.isAnnouncedToPublic());
 						commentEntry.setReplyable(isReplyable(comment, currentUser));
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
+						fillWithReaders(comment, commentEntry);
 						filteredEntries.add(commentEntry);
 					} else if (comment.getAuthorId().intValue() == userId) {
 						//	Comment's author 
 						filteredEntries.add(entry);
 					} else if (comment.isAnnouncedToPublic()) {
 						//	Comment was announced to public
-						CommentEntry commentEntry = new CommentEntry(entry);
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						commentEntry.setReadable(!isCommentRead(comment, currentUser));
 						filteredEntries.add(commentEntry);
 					} else if (isReplyToPrivateComment(comment, currentUser)) {
 						//	This is a reply-comment to private comment
-						CommentEntry commentEntry = new CommentEntry(entry);
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						commentEntry.setReadable(!isCommentRead(comment, currentUser));
 						filteredEntries.add(commentEntry);
 					}
 				} else {
-					filteredEntries.add(entry);
+					if (!hasFullRights && comment.isAnnouncedToPublic()) {
+						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
+						commentEntry.setReadable(!isCommentRead(comment, currentUser));
+					}
+					if (hasFullRights) {
+						fillWithReaders(comment, commentEntry);
+					}
+					filteredEntries.add(commentEntry);
 				}
 			}
 		}
 		
 		return filteredEntries;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private void fillWithReaders(Comment comment, CommentEntry commentEntry) {
+		Collection<User> readBy = comment.getReadBy();
+		if (ListUtil.isEmpty(readBy)) {
+			return;
+		}
+		
+		for (User reader: readBy) {
+			AdvancedProperty readerInfo = new AdvancedProperty(reader.getName());
+			
+			Collection<Email> emails = reader.getEmails();
+			if (!ListUtil.isEmpty(emails)) {
+				readerInfo.setValue(emails.iterator().next().getEmailAddress());
+			}
+			
+			commentEntry.addReader(readerInfo);
+		}
 	}
 	
 	private boolean isReplyToPrivateComment(Comment comment, User user) {
