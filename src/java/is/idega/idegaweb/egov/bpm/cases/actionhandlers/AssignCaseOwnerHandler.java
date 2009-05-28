@@ -1,5 +1,8 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
@@ -9,26 +12,26 @@ import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.accesscontrol.business.LoginSession;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.2 $ Last modified: $Date: 2009/01/21 10:29:35 $ by $Author: juozas $
+ * @version $Revision: 1.3 $ Last modified: $Date: 2009/05/28 14:12:01 $ by $Author: valdas $
  */
 @Service("assignCaseOwnerHandler")
 @Scope("prototype")
@@ -61,7 +64,13 @@ public class AssignCaseOwnerHandler implements ActionHandler {
 		JBPMConstants.bpmLogger.fine("Setting new owner for a case (" + caseId
 		        + ") to be user id = " + getOwnerUserId());
 		
-		User ownerUser = getUserBusiness(iwac).getUser(getOwnerUserId());
+		User ownerUser = null;
+		if (getOwnerUserId() == null) {
+			ownerUser = getLoggedInUser();
+		}
+		else {
+			ownerUser = getUserBusiness(iwac).getUser(getOwnerUserId());
+		}
 		genCase.setOwner(ownerUser);
 		genCase.store();
 		
@@ -73,6 +82,16 @@ public class AssignCaseOwnerHandler implements ActionHandler {
 		taskInstance.setActorId(ownerUser.getId());
 		
 		getBpmContext().saveProcessEntity(taskInstance);
+	}
+	
+	protected User getLoggedInUser() {
+		try {
+			LoginSession loginSession = ELUtil.getInstance().getBean(LoginSession.class);
+			return loginSession.isLoggedIn() ? loginSession.getUser() : null;
+		} catch(Exception e) {
+			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error getting logged in user", e);
+		}
+		return null;
 	}
 	
 	public Long getProcessInstanceId() {
