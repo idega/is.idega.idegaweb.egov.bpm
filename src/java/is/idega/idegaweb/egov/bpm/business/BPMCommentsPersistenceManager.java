@@ -387,12 +387,27 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			if (entry != null && !filteredEntries.contains(entry)) {
 				if (comment.isPrivateComment()) {
 					if (hasFullRights) {
+						//	Handler
 						CommentEntry commentEntry = new CommentEntry(entry);
 						commentEntry.setPublishable(!comment.isAnnouncedToPublic());
+						commentEntry.setReplyable(isReplyable(comment, currentUser));
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						filteredEntries.add(commentEntry);
-					} else if (comment.getAuthorId().intValue() == userId || comment.isAnnouncedToPublic()) {
+					} else if (comment.getAuthorId().intValue() == userId) {
+						//	Comment's author 
 						filteredEntries.add(entry);
+					} else if (comment.isAnnouncedToPublic()) {
+						//	Comment was announced to public
+						CommentEntry commentEntry = new CommentEntry(entry);
+						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
+						commentEntry.setReadable(!isCommentRead(comment, currentUser));
+						filteredEntries.add(commentEntry);
+					} else if (isReplyToPrivateComment(comment, currentUser)) {
+						//	This is a reply-comment to private comment
+						CommentEntry commentEntry = new CommentEntry(entry);
+						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
+						commentEntry.setReadable(!isCommentRead(comment, currentUser));
+						filteredEntries.add(commentEntry);
 					}
 				} else {
 					filteredEntries.add(entry);
@@ -401,6 +416,35 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 		
 		return filteredEntries;
+	}
+	
+	private boolean isReplyToPrivateComment(Comment comment, User user) {
+		Integer replyToId = comment.getReplyForCommentId();
+		if (replyToId == null || replyToId < 0) {
+			return false;
+		}
+		
+		Comment originalComment = getComment(replyToId);
+		if (originalComment == null) {
+			return false;
+		}
+		
+		//	We might want to do recursion here
+		return String.valueOf(originalComment.getAuthorId()).equals(user.getId());
+	}
+	
+	private boolean isReplyable(Comment comment, User user) {
+		if (comment.isAnnouncedToPublic()) {
+			return false;
+		}
+		
+		Integer replyToId = comment.getReplyForCommentId();
+		return replyToId == null || replyToId == -1 ? true : false;
+	}
+	
+	private boolean isCommentRead(Comment comment, User user) {
+		Collection<User> readers = comment.getReadBy();
+		return (ListUtil.isEmpty(readers)) ? false : readers.contains(user);
 	}
 	
 }
