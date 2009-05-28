@@ -61,7 +61,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.43 $ Last modified: $Date: 2009/04/29 13:40:29 $ by $Author: civilis $
+ * @version $Revision: 1.44 $ Last modified: $Date: 2009/05/28 18:29:08 $ by $Author: laddi $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -171,7 +171,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					                        null,
 					                        iwma
 					                                .getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)),
-					            false, caseIdentifier);
+					            false, caseIdentifier, true);
 					
 					logger.log(Level.INFO, "Case (id="
 					        + genCase.getPrimaryKey()
