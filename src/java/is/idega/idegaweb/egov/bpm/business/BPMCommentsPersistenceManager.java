@@ -398,6 +398,8 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 				
 				fillWithAttachments(comment, commentEntry);
 				
+				boolean visible = true;
+				boolean checkIfRead = false;
 				if (comment.isPrivateComment()) {
 					if (hasFullRights) {
 						//	Handler
@@ -405,29 +407,36 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 						commentEntry.setReplyable(isReplyable(comment, currentUser));
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						fillWithReaders(comment, commentEntry);
-						filteredEntries.add(commentEntry);
-					} else if (comment.getAuthorId().intValue() == userId) {
-						//	Comment's author 
-						filteredEntries.add(commentEntry);
 					} else if (comment.isAnnouncedToPublic()) {
 						//	Comment was announced to public
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
-						commentEntry.setReadable(!isCommentRead(comment, currentUser));
-						filteredEntries.add(commentEntry);
+						checkIfRead = true;
 					} else if (isReplyToPrivateComment(comment, currentUser)) {
 						//	This is a reply-comment to private comment
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
-						commentEntry.setReadable(!isCommentRead(comment, currentUser));
-						filteredEntries.add(commentEntry);
+						checkIfRead = true;
+					} else if (comment.getAuthorId().intValue() != userId) {
+						//	Not this user's private comment
+						visible = false;
 					}
 				} else {
 					if (!hasFullRights && comment.isAnnouncedToPublic()) {
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
-						commentEntry.setReadable(!isCommentRead(comment, currentUser));
+						checkIfRead = true;
 					}
 					if (hasFullRights) {
 						fillWithReaders(comment, commentEntry);
 					}
+				}
+				
+				if (visible) {
+					if (checkIfRead) {
+						if (!isCommentRead(comment, currentUser)) {
+							commentEntry.setReadable(true);
+							markAsRead(comment, currentUser, commentEntry);
+						}
+					}
+					
 					filteredEntries.add(commentEntry);
 				}
 			}
@@ -482,6 +491,16 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 	}
 	
+	private void markAsRead(Comment comment, User user, CommentEntry commentEntry) {
+		try {
+			comment.addReadBy(user);
+			comment.store();
+			commentEntry.setReadable(false);
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error marking as read", e);
+		}
+	}
+	
 	private boolean isReplyToPrivateComment(Comment comment, User user) {
 		Integer replyToId = comment.getReplyForCommentId();
 		if (replyToId == null || replyToId < 0) {
@@ -493,8 +512,14 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return false;
 		}
 		
-		//	We might want to do recursion here
-		return String.valueOf(originalComment.getAuthorId()).equals(user.getId());
+		try {
+			if (originalComment.getAuthorId().intValue() == Integer.valueOf(user.getId()).intValue()) {
+				return true;
+			}
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error checking if current user is author of comment: " + originalComment, e);
+		}
+		return false;
 	}
 	
 	private boolean isReplyable(Comment comment, User user) {
