@@ -408,7 +408,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 						filteredEntries.add(commentEntry);
 					} else if (comment.getAuthorId().intValue() == userId) {
 						//	Comment's author 
-						filteredEntries.add(entry);
+						filteredEntries.add(commentEntry);
 					} else if (comment.isAnnouncedToPublic()) {
 						//	Comment was announced to public
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
