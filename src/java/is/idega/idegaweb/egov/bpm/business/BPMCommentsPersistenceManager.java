@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.business;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +26,7 @@ import com.idega.block.article.business.CommentsPersistenceManager;
 import com.idega.block.article.business.DefaultCommentsPersistenceManager;
 import com.idega.block.article.data.Comment;
 import com.idega.block.article.data.CommentHome;
+import com.idega.block.article.media.CommentAttachmentDownloader;
 import com.idega.block.rss.business.RSSBusiness;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
@@ -33,8 +35,10 @@ import com.idega.content.business.ContentConstants;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.business.NotLoggedOnException;
 import com.idega.core.contact.data.Email;
+import com.idega.core.file.data.ICFile;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.io.MediaWritable;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
@@ -48,6 +52,7 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.URIUtil;
 import com.sun.syndication.feed.WireFeed;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
@@ -72,19 +77,21 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	
 	@Override
 	public String getLinkToCommentsXML(final String processInstanceIdStr) {
-		
-		if (StringUtil.isEmpty(processInstanceIdStr)) {
+		return getLinkToCommentFolder(processInstanceIdStr) + "comments.xml";
+	}
+	
+	private String getLinkToCommentFolder(final String prcInstId) {
+		if (StringUtil.isEmpty(prcInstId)) {
 			return null;
 		}
 		
-		final Long processInstanceId = new Long(processInstanceIdStr);
+		final Long processInstanceId = Long.valueOf(prcInstId);
 		final String storePath = getBpmContext().execute(new JbpmCallback() {
-			
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				
 				String processName = context.getProcessInstance(processInstanceId).getProcessDefinition().getName();
 				String storePath = new StringBuilder(JBPMConstants.BPM_PATH).append(CoreConstants.SLASH).append(processName).append("/processComments/")
-					.append(processInstanceIdStr).append("/comments.xml").toString();
+					.append(prcInstId).append(CoreConstants.SLASH).toString();
 				
 				return storePath;
 			}
@@ -388,6 +395,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			Entry entry = entries.get(comment.getEntryId());
 			if (entry != null && !filteredEntries.contains(entry)) {
 				CommentEntry commentEntry = new CommentEntry(entry);
+				
+				fillWithAttachments(comment, commentEntry);
+				
 				if (comment.isPrivateComment()) {
 					if (hasFullRights) {
 						//	Handler
@@ -424,6 +434,33 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 		
 		return filteredEntries;
+	}
+	
+	private void fillWithAttachments(Comment comment, CommentEntry commentEntry) {
+		Collection<ICFile> attachments = comment.getAllAttachments();
+		if (ListUtil.isEmpty(attachments)) {
+			return;
+		}
+		
+		String commentId = comment.getPrimaryKey().toString();
+		for (ICFile attachment: attachments) {
+			try {
+				String name = URLDecoder.decode(attachment.getName(), CoreConstants.ENCODING_UTF8);
+				commentEntry.addAttachment(new AdvancedProperty(name, getUriToAttachment(commentId, attachment)));
+			} catch(Exception e) {
+				logger.log(Level.WARNING, "Error adding attachment's link: " + attachment.getFileUri(), e);
+			}
+		}
+	}
+	
+	private String getUriToAttachment(String commentId, ICFile attachment) {
+		URIUtil uri = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
+		
+		uri.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(CommentAttachmentDownloader.class));
+		uri.setParameter(CommentAttachmentDownloader.COMMENT_ID_PARAMETER, commentId);
+		uri.setParameter(CommentAttachmentDownloader.COMMENT_ATTACHMENT_ID_PARAMETER, attachment.getPrimaryKey().toString());
+		
+		return uri.getUri();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -472,6 +509,15 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	private boolean isCommentRead(Comment comment, User user) {
 		Collection<User> readers = comment.getReadBy();
 		return (ListUtil.isEmpty(readers)) ? false : readers.contains(user);
+	}
+	
+	@Override
+	public String getCommentFilesPath(CommentsViewerProperties properties) {
+		if (properties == null) {
+			return null;
+		}
+		
+		return new StringBuilder(getLinkToCommentFolder(properties.getIdentifier())).append("files/").toString();
 	}
 	
 }
