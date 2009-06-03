@@ -1,6 +1,8 @@
 package is.idega.idegaweb.egov.bpm.business;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -27,6 +29,8 @@ import com.idega.block.article.business.DefaultCommentsPersistenceManager;
 import com.idega.block.article.data.Comment;
 import com.idega.block.article.data.CommentHome;
 import com.idega.block.article.media.CommentAttachmentDownloader;
+import com.idega.block.process.variables.Variable;
+import com.idega.block.process.variables.VariableDataType;
 import com.idega.block.rss.business.RSSBusiness;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
@@ -43,6 +47,7 @@ import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.rights.Right;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
@@ -50,6 +55,7 @@ import com.idega.slide.business.IWSlideService;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
@@ -543,6 +549,99 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 		
 		return new StringBuilder(getLinkToCommentFolder(properties.getIdentifier())).append("files/").toString();
+	}
+
+	@Override
+	public Object addComment(CommentsViewerProperties properties) {
+		Object commentId = super.addComment(properties);
+		if (commentId == null) {
+			return null;
+		}
+		
+		Comment comment = getComment(commentId);
+		if (comment == null) {
+			return commentId;
+		}
+		
+		Collection<ICFile> attachments = comment.getAllAttachments();
+		if (ListUtil.isEmpty(attachments)) {
+			return commentId;
+		}
+		
+		Long prcInsId = null;
+		try {
+			prcInsId = Long.valueOf(properties.getIdentifier());
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error parsing id from: " + properties.getIdentifier(), e);
+		}
+		if (prcInsId == null) {
+			return commentId;
+		}
+		
+		if (!hasFullRightsForComments(prcInsId)) {
+			return commentId;
+		}
+		
+		ProcessInstanceW piw = null;
+		try {
+			piw = getBpmFactory().getProcessManagerByProcessInstanceId(prcInsId).getProcessInstance(prcInsId);
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error getting process instance by: " + prcInsId, e);
+		}
+		if (piw == null) {
+			return commentId;
+		}
+		
+		TaskInstanceW task = getSubmittedTaskInstance(piw, "Register New Tender");
+		if (task == null) {
+			return commentId;
+		}
+		
+		for (ICFile attachment: attachments) {
+			InputStream is = getInputStreamForAttachment(attachment.getFileUri());
+			if (is == null) {
+				logger.warning("Unable to attach file " + attachment.getFileUri() + " for task: " + task.getTaskInstanceId() + " in process: "
+						+ piw.getProcessInstanceId());
+			} else {
+				Variable variable = new Variable("cmnt_attch", VariableDataType.FILE);
+				String name = getAttachmentName(attachment.getName());
+				task.addAttachment(variable, name, name, is);
+				IOUtil.closeInputStream(is);
+			}
+		}
+		
+		return commentId;
+	}
+	
+	private InputStream getInputStreamForAttachment(String uri) {
+		try {
+			IWSlideService slide = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
+			WebdavResource resource = slide.getWebdavResourceAuthenticatedAsRoot(URLDecoder.decode(uri, CoreConstants.ENCODING_UTF8));
+			if (resource != null && resource.exists()) {
+				return resource.getMethodData();
+			}
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error getting InputStream from: " + uri, e);
+		}
+		return null;
+	}
+	
+	private String getAttachmentName(String defaultName) {
+		try {
+			return URLDecoder.decode(defaultName, CoreConstants.ENCODING_UTF8);
+		} catch (UnsupportedEncodingException e) {
+			logger.log(Level.WARNING, "Error decoding: " + defaultName);
+		}
+		return defaultName;
+	}
+	
+	private TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
+		for (TaskInstanceW task: piw.getSubmittedTaskInstances()) {
+			if (taskName.equals(task.getTaskInstance().getName())) {
+				return task;
+			}
+		}
+		return null;
 	}
 	
 }
