@@ -57,6 +57,7 @@ import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.rights.Right;
 import com.idega.jbpm.utils.JBPMConstants;
+import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
 import com.idega.user.data.User;
@@ -356,8 +357,20 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return false;
 		}
 		
-		ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
+		ProcessInstanceW piw = getProcessInstance(processInstanceId);
 		return piw.hasRight(Right.processHandler);
+	}
+	
+	private ProcessInstanceW getProcessInstance(String processInstanceId) {
+		if (StringUtil.isEmpty(processInstanceId)) {
+			return null;
+		}
+		
+		return getProcessInstance(Long.valueOf(processInstanceId));
+	}
+	
+	private ProcessInstanceW getProcessInstance(Long processInstanceId) {
+		return getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
 	}
 
 	public void setBpmContext(BPMContext bpmContext) {
@@ -464,32 +477,58 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return;
 		}
 		
+		List<BinaryVariable> processAttachments = fullRights ? null : getAllProcessAttachments(properties.getIdentifier());
 		String commentId = comment.getPrimaryKey().toString();
 		for (ICFile attachment: attachments) {
-			try {
-				String name = URLDecoder.decode(attachment.getName(), CoreConstants.ENCODING_UTF8);
-				ArticleCommentAttachmentInfo info = new ArticleCommentAttachmentInfo();
-				info.setName(name);
-				info.setUri(getUriToAttachment(commentId, attachment));
-				
-				if (fullRights) {
-					info.setCommentId(commentId);
-					String attachmentId = attachment.getPrimaryKey().toString();
-					info.setAttachmentId(attachmentId);
-					info.setBeanIdentifier(properties.getSpringBeanIdentifier());
-					info.setIdentifier(properties.getIdentifier());
-					info.setStatisticsUri(BuilderLogic.getInstance().getUriToObject(ArticleCommentAttachmentStatisticsViewer.class, Arrays.asList(
-							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.COMMENT_ID_PARAMETER, commentId),
-							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.COMMENT_ATTACHMENT_ID_PARAMETER, attachmentId),
-							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.IDENTIFIER_PARAMETER, properties.getIdentifier()),
-							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.BEAN_IDENTIFIER_PARAMETER, properties.getSpringBeanIdentifier())
-					)));
+			if (fullRights || isAttachmentVisible(processAttachments, attachment.getHash())) {
+				try {
+					String name = URLDecoder.decode(attachment.getName(), CoreConstants.ENCODING_UTF8);
+					ArticleCommentAttachmentInfo info = new ArticleCommentAttachmentInfo();
+					info.setName(name);
+					info.setUri(getUriToAttachment(commentId, attachment));
+					
+					if (fullRights) {
+						info.setCommentId(commentId);
+						String attachmentId = attachment.getPrimaryKey().toString();
+						info.setAttachmentId(attachmentId);
+						info.setBeanIdentifier(properties.getSpringBeanIdentifier());
+						info.setIdentifier(properties.getIdentifier());
+						info.setStatisticsUri(BuilderLogic.getInstance().getUriToObject(ArticleCommentAttachmentStatisticsViewer.class, Arrays.asList(
+								new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.COMMENT_ID_PARAMETER, commentId),
+								new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.COMMENT_ATTACHMENT_ID_PARAMETER, attachmentId),
+								new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.IDENTIFIER_PARAMETER, properties.getIdentifier()),
+								new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.BEAN_IDENTIFIER_PARAMETER, properties.getSpringBeanIdentifier())
+						)));
+					}
+					
+					commentEntry.addAttachment(info);
+				} catch(Exception e) {
+					logger.log(Level.WARNING, "Error adding attachment's link: " + attachment.getFileUri(), e);
 				}
-				commentEntry.addAttachment(info);
-			} catch(Exception e) {
-				logger.log(Level.WARNING, "Error adding attachment's link: " + attachment.getFileUri(), e);
 			}
 		}
+	}
+	
+	private boolean isAttachmentVisible(List<BinaryVariable> processAttachments, Integer hash) {
+		if (ListUtil.isEmpty(processAttachments) || hash == null) {
+			return false;
+		}
+		
+		for (BinaryVariable processAttachment: processAttachments) {
+			if (hash.intValue() == processAttachment.getHash().intValue()) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private List<BinaryVariable> getAllProcessAttachments(String processInstanceId) {
+		ProcessInstanceW piw = getProcessInstance(processInstanceId);
+		if (piw == null) {
+			return null;
+		}
+		return piw.getAttachments();
 	}
 	
 	private String getUriToAttachment(String commentId, ICFile attachment) {
@@ -639,8 +678,14 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			} else {
 				Variable variable = new Variable("cmnt_attch", VariableDataType.FILE);
 				String name = getAttachmentName(attachment.getName());
-				task.addAttachment(variable, name,
+				BinaryVariable binVariable = task.addAttachment(variable, name,
 						new StringBuilder(description).append(CoreConstants.COLON).append(CoreConstants.SPACE).append(subject).toString(), is);
+				
+				if (binVariable != null) {
+					attachment.setHash(binVariable.getHash());
+					attachment.store();
+				}
+				
 				IOUtil.closeInputStream(is);
 			}
 		}
