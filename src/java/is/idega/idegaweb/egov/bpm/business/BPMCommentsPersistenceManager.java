@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -24,10 +25,12 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.article.bean.ArticleCommentAttachmentInfo;
 import com.idega.block.article.bean.CommentEntry;
 import com.idega.block.article.bean.CommentsViewerProperties;
 import com.idega.block.article.business.CommentsPersistenceManager;
 import com.idega.block.article.business.DefaultCommentsPersistenceManager;
+import com.idega.block.article.component.ArticleCommentAttachmentStatisticsViewer;
 import com.idega.block.article.data.Comment;
 import com.idega.block.article.data.CommentHome;
 import com.idega.block.article.media.CommentAttachmentDownloader;
@@ -35,6 +38,7 @@ import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.block.rss.business.RSSBusiness;
 import com.idega.builder.bean.AdvancedProperty;
+import com.idega.builder.business.BuilderLogic;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.content.business.ContentConstants;
@@ -405,7 +409,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			if (entry != null && !filteredEntries.contains(entry)) {
 				CommentEntry commentEntry = new CommentEntry(entry);
 				
-				fillWithAttachments(comment, commentEntry);
+				fillWithAttachments(comment, commentEntry, properties, hasFullRights);
 				
 				boolean visible = true;
 				boolean checkIfRead = false;
@@ -454,7 +458,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return filteredEntries;
 	}
 	
-	private void fillWithAttachments(Comment comment, CommentEntry commentEntry) {
+	private void fillWithAttachments(Comment comment, CommentEntry commentEntry, CommentsViewerProperties properties, boolean fullRights) {
 		Collection<ICFile> attachments = comment.getAllAttachments();
 		if (ListUtil.isEmpty(attachments)) {
 			return;
@@ -464,7 +468,24 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		for (ICFile attachment: attachments) {
 			try {
 				String name = URLDecoder.decode(attachment.getName(), CoreConstants.ENCODING_UTF8);
-				commentEntry.addAttachment(new AdvancedProperty(name, getUriToAttachment(commentId, attachment)));
+				ArticleCommentAttachmentInfo info = new ArticleCommentAttachmentInfo();
+				info.setName(name);
+				info.setUri(getUriToAttachment(commentId, attachment));
+				
+				if (fullRights) {
+					info.setCommentId(commentId);
+					String attachmentId = attachment.getPrimaryKey().toString();
+					info.setAttachmentId(attachmentId);
+					info.setBeanIdentifier(properties.getSpringBeanIdentifier());
+					info.setIdentifier(properties.getIdentifier());
+					info.setStatisticsUri(BuilderLogic.getInstance().getUriToObject(ArticleCommentAttachmentStatisticsViewer.class, Arrays.asList(
+							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.COMMENT_ID_PARAMETER, commentId),
+							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.COMMENT_ATTACHMENT_ID_PARAMETER, attachmentId),
+							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.IDENTIFIER_PARAMETER, properties.getIdentifier()),
+							new AdvancedProperty(ArticleCommentAttachmentStatisticsViewer.BEAN_IDENTIFIER_PARAMETER, properties.getSpringBeanIdentifier())
+					)));
+				}
+				commentEntry.addAttachment(info);
 			} catch(Exception e) {
 				logger.log(Level.WARNING, "Error adding attachment's link: " + attachment.getFileUri(), e);
 			}
@@ -475,8 +496,8 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		URIUtil uri = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
 		
 		uri.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(CommentAttachmentDownloader.class));
-		uri.setParameter(CommentAttachmentDownloader.COMMENT_ID_PARAMETER, commentId);
-		uri.setParameter(CommentAttachmentDownloader.COMMENT_ATTACHMENT_ID_PARAMETER, attachment.getPrimaryKey().toString());
+		uri.setParameter(ArticleCommentAttachmentStatisticsViewer.COMMENT_ID_PARAMETER, commentId);
+		uri.setParameter(ArticleCommentAttachmentStatisticsViewer.COMMENT_ATTACHMENT_ID_PARAMETER, attachment.getPrimaryKey().toString());
 		
 		return uri.getUri();
 	}
