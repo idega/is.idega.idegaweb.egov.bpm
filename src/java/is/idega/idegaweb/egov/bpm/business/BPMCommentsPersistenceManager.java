@@ -1,5 +1,7 @@
 package is.idega.idegaweb.egov.bpm.business;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
@@ -42,6 +44,7 @@ import com.idega.core.contact.data.Email;
 import com.idega.core.file.data.ICFile;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
@@ -597,6 +600,16 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return commentId;
 		}
 		
+		IWResourceBundle iwrb = null;
+		try {
+			iwrb = IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(CoreUtil.getIWContext());
+		} catch(Exception e) {
+			logger.log(Level.WARNING, "Error getting " + IWResourceBundle.class, e);
+		}
+		String description = iwrb == null ? "Attached file for" : iwrb.getLocalizedString("attached_file_for", "Attached file for");
+		String subject = StringUtil.isEmpty(properties.getSubject()) ?
+				iwrb == null ? "comment" : iwrb.getLocalizedString("comment", "comment") :
+				properties.getSubject();
 		for (ICFile attachment: attachments) {
 			InputStream is = getInputStreamForAttachment(attachment.getFileUri());
 			if (is == null) {
@@ -605,7 +618,8 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			} else {
 				Variable variable = new Variable("cmnt_attch", VariableDataType.FILE);
 				String name = getAttachmentName(attachment.getName());
-				task.addAttachment(variable, name, name, is);
+				task.addAttachment(variable, name,
+						new StringBuilder(description).append(CoreConstants.COLON).append(CoreConstants.SPACE).append(subject).toString(), is);
 				IOUtil.closeInputStream(is);
 			}
 		}
