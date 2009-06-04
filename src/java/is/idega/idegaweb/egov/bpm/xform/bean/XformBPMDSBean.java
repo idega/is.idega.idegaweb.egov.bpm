@@ -20,7 +20,7 @@ import com.idega.util.text.Item;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.8 $ Last modified: $Date: 2009/04/07 08:10:07 $ by $Author: juozas $
+ * @version $Revision: 1.9 $ Last modified: $Date: 2009/06/04 12:29:55 $ by $Author: valdas $
  */
 
 @Scope("singleton")
@@ -113,7 +113,7 @@ public class XformBPMDSBean implements XformBPM {
 		
 		List<Item> attachments = new ArrayList<Item>();
 		
-		for (BinaryVariable binaryVariable : piw.getAttachements())
+		for (BinaryVariable binaryVariable : piw.getAttachments())
 			if (binaryVariable.getHidden() == null
 			        || binaryVariable.getHidden().equals(false)) {
 				attachments.add(new Item(binaryVariable.getTaskInstanceId()
@@ -140,7 +140,7 @@ public class XformBPMDSBean implements XformBPM {
 		long processInstanceId = Long.valueOf(pid);
 		ProcessInstanceW piw = getProcessInstanceW(processInstanceId);
 		
-		return piw.getAttachements().size() != 0 ? Boolean.TRUE : Boolean.FALSE;
+		return piw.getAttachments().size() != 0 ? Boolean.TRUE : Boolean.FALSE;
 	}
 	
 	private ProcessInstanceW getProcessInstanceW(Long pid) {
