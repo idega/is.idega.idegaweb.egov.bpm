@@ -33,7 +33,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.44 $ Last modified: $Date: 2009/06/10 11:48:54 $ by $Author: laddi $
+ * @version $Revision: 1.45 $ Last modified: $Date: 2009/06/10 11:57:28 $ by $Author: laddi $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -500,7 +500,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		StringBuilder builder = new StringBuilder(1000);
 		builder
-						.append("select comm_case_id as caseId from comm_case c, proc_case p ")
+						.append("select distinct comm_case_id as caseId from comm_case c, proc_case p ")
 						.append("where c.comm_case_id = p.proc_case_id and c.comm_case_id in (")
 		        .append(
 		            "select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
@@ -558,7 +558,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		StringBuilder builder = new StringBuilder(1000);
 		builder
-		        .append("select comm_case_id as caseId from comm_case c, proc_case p "
+		        .append("select distinct comm_case_id as caseId from comm_case c, proc_case p "
 		        				+ "where c.comm_case_id = p.proc_case_id and c.comm_case_id in "
 		        				+ "(select distinct comm_case.comm_case_id  from comm_case "
 		                + "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
@@ -646,7 +646,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		StringBuilder builder = new StringBuilder(1000);
 		builder
-						.append("select comm_case_id as caseId from comm_case c, proc_case p ")
+						.append("select distinct comm_case_id as caseId from comm_case c, proc_case p ")
 						.append("where c.comm_case_id = p.proc_case_id and c.comm_case_id in ")
 		        .append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 		                + "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
