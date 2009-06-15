@@ -22,6 +22,7 @@ import javax.faces.component.UIComponent;
 
 import org.jdom.Document;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -35,6 +36,7 @@ import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
+import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
 import com.idega.builder.bean.AdvancedProperty;
@@ -57,7 +59,7 @@ import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service("casesEngineDWR")
 public class CasesEngineImp implements BPMCasesEngine {
 	
@@ -72,6 +74,12 @@ public class CasesEngineImp implements BPMCasesEngine {
 	
 	@Autowired
 	private CaseManagersProvider caseManagersProvider;
+	
+	@Autowired
+	private Web2Business web2;
+	
+	@Autowired
+	private JQuery jQuery;
 	
 	public static final String FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader";
 	public static final String PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader";
@@ -111,6 +119,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 				stateBean.setUsePDFDownloadColumn(properties.isUsePDFDownloadColumn());
 				stateBean.setAllowPDFSigning(properties.isAllowPDFSigning());
 				stateBean.setHideEmptySection(properties.isHideEmptySection());
+				stateBean.setCommentsPersistenceManagerIdentifier(properties.getCommentsPersistenceManagerIdentifier());
 			}
 			
 			Integer caseId = new Integer(caseIdStr);
@@ -359,10 +368,9 @@ public class CasesEngineImp implements BPMCasesEngine {
 			return fake;
 		}
 		
-		Web2Business web2 = ELUtil.getInstance().getBean(Web2Business.SPRING_BEAN_IDENTIFIER);
 		List<String> resources = new ArrayList<String>();
 		resources.add(web2.getBundleUriToHumanizedMessagesStyleSheet());
-		resources.add(web2.getBundleURIToJQueryLib());
+		resources.add(jQuery.getBundleURIToJQueryLib());
 		resources.add(web2.getBundleUriToHumanizedMessagesScript());
 		fake.setResources(resources);
 		

@@ -76,9 +76,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.10 $
+ * @version $Revision: 1.11 $
  *
- * Last modified: $Date: 2009/05/25 13:46:01 $ by $Author: valdas $
+ * Last modified: $Date: 2009/06/15 10:00:16 $ by $Author: valdas $
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -187,16 +187,13 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		if (!caseHandlerType.equals(caseManagerType)) {
 			return super.getView(iwc, caseId, type, caseManagerType);
 		}
+		
 		CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 		stateBean.setDisplayPropertyForStyleAttribute(Boolean.FALSE);
 		stateBean.setStandAloneComponent(Boolean.FALSE);
 		
 		CaseManagerState managerState = ELUtil.getInstance().getBean(CaseManagerState.beanIdentifier);
-		
-		if(!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type))
-			managerState.setFullView(true);
-		else
-			managerState.setFullView(false);
+		managerState.setFullView(!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type));
 		
 		UICasesBPMAssets casesAssets = (UICasesBPMAssets)iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
 		UIViewRoot viewRoot = iwc.getViewRoot();
@@ -207,11 +204,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		casesAssets.setUsePdfDownloadColumn(stateBean.getUsePDFDownloadColumn() == null ? false : stateBean.getUsePDFDownloadColumn());
 		casesAssets.setAllowPDFSigning(stateBean.getAllowPDFSigning() == null ? false : stateBean.getAllowPDFSigning());
 		casesAssets.setHideEmptySection(stateBean.getHideEmptySection() == null ? false : stateBean.getHideEmptySection());
+		casesAssets.setCommentsPersistenceManagerIdentifier(stateBean.getCommentsPersistenceManagerIdentifier());
 		
 		if (caseId != null) {
 			casesAssets.setCaseId(caseId);
 		}
-		
 		
 		return casesAssets;
 	}

@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessWatch;
@@ -40,9 +41,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.43 $
+ * @version $Revision: 1.44 $
  *
- * Last modified: $Date: 2009/04/08 09:37:23 $ by $Author: valdas $
+ * Last modified: $Date: 2009/06/15 10:00:16 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -73,14 +74,13 @@ public class CasesBPMAssetsState implements Serializable {
 	private Long processInstanceId;
 	private Long viewSelected;
 	private Boolean isWatched;
-	//private Integer tabSelected;
-	//private FacetRendered facetRendered = FacetRendered.ASSETS_GRID;
 	private String displayPropertyForStyleAttribute = "block";
 	private Boolean usePDFDownloadColumn = Boolean.TRUE;
 	private Boolean allowPDFSigning = Boolean.TRUE;
 	private Boolean standAloneComponent = Boolean.TRUE;
 	private Boolean hideEmptySection = Boolean.FALSE;
 	private String specialBackPage;
+	private String commentsPersistenceManagerIdentifier;
 	
 	private Boolean showNextTask;
 	private Long nextProcessInstanceId;
@@ -88,12 +88,6 @@ public class CasesBPMAssetsState implements Serializable {
 	private Integer nextCaseId;
 	private String currentTaskInstanceName;
 	private boolean specialBackPageDecoded;
-	
-//	private enum FacetRendered {
-//		
-//		ASSETS_GRID,
-//		ASSET_VIEW
-//	}
 	
 	public Long getViewSelected() {
 		if (viewSelected == null) {
@@ -154,7 +148,7 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	protected Long resolveProcessInstanceId() {
 		
-		String piIdParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get("piId");
+		String piIdParam = FacesContext.getCurrentInstance().getExternalContext().getRequestParameterMap().get(ProcessManagerBind.processInstanceIdParam);
 		Long piId;
 		
 		if(piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
@@ -682,6 +676,14 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setSpecialBackPage(String specialBackPage) {
 		this.specialBackPage = specialBackPage;
+	}
+
+	public String getCommentsPersistenceManagerIdentifier() {
+		return commentsPersistenceManagerIdentifier;
+	}
+
+	public void setCommentsPersistenceManagerIdentifier(String commentsPersistenceManagerIdentifier) {
+		this.commentsPersistenceManagerIdentifier = commentsPersistenceManagerIdentifier;
 	}
 
 }

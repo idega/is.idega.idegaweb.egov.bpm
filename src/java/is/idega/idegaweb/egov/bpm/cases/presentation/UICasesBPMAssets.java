@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.article.business.CommentsPersistenceManager;
 import com.idega.block.article.component.CommentsViewer;
+import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
@@ -33,21 +34,23 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
+import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.text.DownloadLink;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.PresentationUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.53 $
+ * @version $Revision: 1.54 $
  *
- * Last modified: $Date: 2009/05/27 16:15:33 $ by $Author: valdas $
+ * Last modified: $Date: 2009/06/15 10:00:16 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -62,6 +65,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private boolean usePdfDownloadColumn = true;
 	private boolean allowPDFSigning = true;
 	private boolean hideEmptySection = true;
+	
+	private String commentsPersistenceManagerIdentifier;
 	
 	private Long processInstanceId;
 	private Integer caseId;
@@ -117,11 +122,18 @@ public class UICasesBPMAssets extends IWBaseComponent {
 //		<asset view>
 		
 		CasesBPMAssetsState stateBean = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
-		CommentsPersistenceManager commentsManager = ELUtil.getInstance().getBean(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER);
+		
+		String commentsManagerIdentifier = StringUtil.isEmpty(commentsPersistenceManagerIdentifier) ? BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER :
+			commentsPersistenceManagerIdentifier;
+		IWContext iwc = IWContext.getIWContext(context);
+		if (iwc.isParameterSet(CasesRetrievalManager.COMMENTS_PERSISTENCE_MANAGER_IDENTIFIER)) {
+			commentsManagerIdentifier = iwc.getParameter(CasesRetrievalManager.COMMENTS_PERSISTENCE_MANAGER_IDENTIFIER);
+		}
+		CommentsPersistenceManager commentsManager = ELUtil.getInstance().getBean(commentsManagerIdentifier);
 		if (commentsManager.hasRightsToViewComments(stateBean.getProcessInstanceId())) {
 			CommentsViewer comments = new CommentsViewer();
 			comments.setShowViewController(false);
-			comments.setSpringBeanIdentifier(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER);
+			comments.setSpringBeanIdentifier(commentsManagerIdentifier);
 			comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
 			comments.setNewestEntriesOnTop(true);
 			comments.setShowCommentsList(false);
@@ -130,7 +142,6 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			div.getChildren().add(comments);
 		}
 		
-		IWContext iwc = IWContext.getIWContext(context);
 		if (iwc.isParameterSet(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER)) {
 			stateBean.setSpecialBackPage(iwc.getParameter(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER));
 		}
@@ -200,7 +211,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	
 	protected Long resolveProcessInstanceId(FacesContext fctx) {
 		
-		String piIdParam = fctx.getExternalContext().getRequestParameterMap().get("piId");
+		String piIdParam = fctx.getExternalContext().getRequestParameterMap().get(ProcessManagerBind.processInstanceIdParam);
 		Long piId;
 		
 		if(piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
@@ -372,6 +383,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setHideEmptySection(boolean hideEmptySection) {
 		this.hideEmptySection = hideEmptySection;
+	}
+
+	public String getCommentsPersistenceManagerIdentifier() {
+		return commentsPersistenceManagerIdentifier;
+	}
+
+	public void setCommentsPersistenceManagerIdentifier(String commentsPersistenceManagerIdentifier) {
+		this.commentsPersistenceManagerIdentifier = commentsPersistenceManagerIdentifier;
 	}
 	
 }
