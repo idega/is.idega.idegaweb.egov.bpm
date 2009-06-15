@@ -77,7 +77,7 @@ import com.sun.syndication.io.WireFeedOutput;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER)
 public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceManager implements CommentsPersistenceManager {
-	
+
 	private static final Logger logger = Logger.getLogger(BPMCommentsPersistenceManager.class.getName());
 	
 	public static final String SPRING_BEAN_IDENTIFIER = "bpmCommentsPersistenceManagerImpl";
@@ -361,7 +361,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return piw.hasRight(Right.processHandler);
 	}
 	
-	private ProcessInstanceW getProcessInstance(String processInstanceId) {
+	protected ProcessInstanceW getProcessInstance(String processInstanceId) {
 		if (StringUtil.isEmpty(processInstanceId)) {
 			return null;
 		}
@@ -369,7 +369,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return getProcessInstance(Long.valueOf(processInstanceId));
 	}
 	
-	private ProcessInstanceW getProcessInstance(Long processInstanceId) {
+	protected ProcessInstanceW getProcessInstance(Long processInstanceId) {
 		return getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
 	}
 
@@ -655,7 +655,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return commentId;
 		}
 		
-		TaskInstanceW task = getSubmittedTaskInstance(piw, "Register New Tender");
+		TaskInstanceW task = getSubmittedTaskInstance(piw, getTaskNameForAttachments());
 		if (task == null) {
 			return commentId;
 		}
@@ -715,13 +715,22 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return defaultName;
 	}
 	
-	private TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
+	protected TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
 		for (TaskInstanceW task: piw.getSubmittedTaskInstances()) {
 			if (taskName.equals(task.getTaskInstance().getName())) {
 				return task;
 			}
 		}
 		return null;
+	}
+	
+	@Override
+	public boolean useFilesUploader(CommentsViewerProperties properties) {
+		if (properties == null) {
+			return false;
+		}
+		
+		return true;
 	}
 	
 }
