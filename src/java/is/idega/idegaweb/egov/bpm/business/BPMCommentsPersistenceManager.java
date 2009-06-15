@@ -78,7 +78,7 @@ import com.sun.syndication.io.WireFeedOutput;
 @Service(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER)
 public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceManager implements CommentsPersistenceManager {
 
-	private static final Logger logger = Logger.getLogger(BPMCommentsPersistenceManager.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(BPMCommentsPersistenceManager.class.getName());
 	
 	public static final String SPRING_BEAN_IDENTIFIER = "bpmCommentsPersistenceManagerImpl";
 	
@@ -212,7 +212,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		try {
 			currentUser = iwc.getCurrentUser();
 		} catch (NotLoggedOnException e) {
-			logger.log(Level.SEVERE, "User must be logged!", e);
+			LOGGER.log(Level.SEVERE, "User must be logged!", e);
 		}
 		if (currentUser == null) {
 			return null;
@@ -225,16 +225,16 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			e.printStackTrace();
 		}
 		if (StringUtil.isEmpty(pathToFeed)) {
-			logger.log(Level.SEVERE, "Error creating path to comments feed!");
+			LOGGER.log(Level.SEVERE, "Error creating path to comments feed!");
 			return null;
 		}
 		SyndFeed comments = rss.getFeedAuthenticatedByUser(pathToFeed, currentUser);
 		if (comments == null) {
-			logger.log(Level.WARNING, "Unable to get comments feed ('"+pathToFeed+"') by current ("+currentUser+") user, trying with admin user");
+			LOGGER.log(Level.WARNING, "Unable to get comments feed ('"+pathToFeed+"') by current ("+currentUser+") user, trying with admin user");
 			comments = rss.getFeedAuthenticatedByAdmin(pathToFeed);
 		}
 		if (comments == null) {
-			logger.log(Level.SEVERE, "Error getting comments feed ('"+pathToFeed+"') by super admin!");
+			LOGGER.log(Level.SEVERE, "Error getting comments feed ('"+pathToFeed+"') by super admin!");
 			return null;
 		}
 		
@@ -284,7 +284,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			            fileName, commentsContent,
 			            ContentConstants.XML_MIME_TYPE, true);
 		} catch (RemoteException e) {
-			logger.log(Level.SEVERE, "Error storing comments feed", e);
+			LOGGER.log(Level.SEVERE, "Error storing comments feed", e);
 		}
 		
 		return false;
@@ -296,7 +296,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			    IWMainApplication.getDefaultIWApplicationContext(),
 			    IWSlideService.class);
 		} catch (IBOLookupException e) {
-			logger.log(Level.SEVERE, "Error getting repository", e);
+			LOGGER.log(Level.SEVERE, "Error getting repository", e);
 		}
 		return null;
 	}
@@ -306,7 +306,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return (RSSBusiness) IBOLookup.getServiceInstance(IWMainApplication
 			        .getDefaultIWApplicationContext(), RSSBusiness.class);
 		} catch (IBOLookupException e) {
-			logger.log(Level.SEVERE, "Error getting RSSBusiness", e);
+			LOGGER.log(Level.SEVERE, "Error getting RSSBusiness", e);
 		}
 		return null;
 	}
@@ -395,7 +395,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		try {
 			userId = Integer.valueOf(currentUser.getId());
 		} catch(NumberFormatException e) {
-			logger.warning("Error converting to number " + currentUser.getId());
+			LOGGER.warning("Error converting to number " + currentUser.getId());
 			return null;
 		}
 		
@@ -410,7 +410,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			CommentHome commentHome = (CommentHome) IDOLookup.getHome(Comment.class);
 			commentsByProcessInstance = commentHome.findAllCommentsByHolder(properties.getIdentifier());
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error getting comments by holder: " + properties.getIdentifier(), e);
+			LOGGER.log(Level.WARNING, "Error getting comments by holder: " + properties.getIdentifier(), e);
 			return null;
 		}
 		if (ListUtil.isEmpty(commentsByProcessInstance)) {
@@ -422,7 +422,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			if (entry != null && !filteredEntries.contains(entry)) {
 				CommentEntry commentEntry = new CommentEntry(entry);
 				
-				fillWithAttachments(comment, commentEntry, properties, hasFullRights);
+				if (properties.isFetchFully()) {
+					fillWithAttachments(comment, commentEntry, properties, hasFullRights);
+				}
 				
 				boolean visible = true;
 				boolean checkIfRead = false;
@@ -432,7 +434,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 						commentEntry.setPublishable(!comment.isAnnouncedToPublic());
 						commentEntry.setReplyable(isReplyable(comment, currentUser));
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
-						fillWithReaders(comment, commentEntry);
+						fillWithReaders(properties, comment, commentEntry);
 					} else if (comment.isAnnouncedToPublic()) {
 						//	Comment was announced to public
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
@@ -451,7 +453,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 						checkIfRead = true;
 					}
 					if (hasFullRights) {
-						fillWithReaders(comment, commentEntry);
+						fillWithReaders(properties, comment, commentEntry);
 					}
 				}
 				
@@ -477,10 +479,10 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return;
 		}
 		
-		List<BinaryVariable> processAttachments = fullRights ? null : getAllProcessAttachments(properties.getIdentifier());
+		List<BinaryVariable> processAttachments = getAllProcessAttachments(properties.getIdentifier());
 		String commentId = comment.getPrimaryKey().toString();
 		for (ICFile attachment: attachments) {
-			if (fullRights || isAttachmentVisible(processAttachments, attachment.getHash())) {
+			if (fullRights || isAttachmentVisible(processAttachments, attachment.getHash(), comment.isPrivateComment())) {
 				try {
 					String name = URLDecoder.decode(attachment.getName(), CoreConstants.ENCODING_UTF8);
 					ArticleCommentAttachmentInfo info = new ArticleCommentAttachmentInfo();
@@ -503,14 +505,23 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 					
 					commentEntry.addAttachment(info);
 				} catch(Exception e) {
-					logger.log(Level.WARNING, "Error adding attachment's link: " + attachment.getFileUri(), e);
+					LOGGER.log(Level.WARNING, "Error adding attachment's link: " + attachment.getFileUri(), e);
 				}
 			}
 		}
 	}
 	
-	private boolean isAttachmentVisible(List<BinaryVariable> processAttachments, Integer hash) {
-		if (ListUtil.isEmpty(processAttachments) || hash == null) {
+	private boolean isAttachmentVisible(List<BinaryVariable> processAttachments, Integer hash, boolean privateComment) {
+		if (privateComment) {
+			return true;
+		}
+		
+		if (ListUtil.isEmpty(processAttachments)) {
+			//	No attachments for the process
+			return true;
+		}
+		
+		if (hash == null) {
 			return false;
 		}
 		
@@ -542,7 +553,11 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	}
 	
 	@SuppressWarnings("unchecked")
-	private void fillWithReaders(Comment comment, CommentEntry commentEntry) {
+	private void fillWithReaders(CommentsViewerProperties properties, Comment comment, CommentEntry commentEntry) {
+		if (!properties.isFetchFully()) {
+			return;
+		}
+		
 		Collection<User> readBy = comment.getReadBy();
 		if (ListUtil.isEmpty(readBy)) {
 			return;
@@ -566,7 +581,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			comment.store();
 			commentEntry.setReadable(false);
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error marking as read", e);
+			LOGGER.log(Level.WARNING, "Error marking as read", e);
 		}
 	}
 	
@@ -586,7 +601,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 				return true;
 			}
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error checking if current user is author of comment: " + originalComment, e);
+			LOGGER.log(Level.WARNING, "Error checking if current user is author of comment: " + originalComment, e);
 		}
 		return false;
 	}
@@ -635,7 +650,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		try {
 			prcInsId = Long.valueOf(properties.getIdentifier());
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error parsing id from: " + properties.getIdentifier(), e);
+			LOGGER.log(Level.WARNING, "Error parsing id from: " + properties.getIdentifier(), e);
 		}
 		if (prcInsId == null) {
 			return commentId;
@@ -649,7 +664,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		try {
 			piw = getBpmFactory().getProcessManagerByProcessInstanceId(prcInsId).getProcessInstance(prcInsId);
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error getting process instance by: " + prcInsId, e);
+			LOGGER.log(Level.WARNING, "Error getting process instance by: " + prcInsId, e);
 		}
 		if (piw == null) {
 			return commentId;
@@ -664,7 +679,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		try {
 			iwrb = IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(CoreUtil.getIWContext());
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error getting " + IWResourceBundle.class, e);
+			LOGGER.log(Level.WARNING, "Error getting " + IWResourceBundle.class, e);
 		}
 		String description = iwrb == null ? "Attached file for" : iwrb.getLocalizedString("attached_file_for", "Attached file for");
 		String subject = StringUtil.isEmpty(properties.getSubject()) ?
@@ -673,7 +688,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		for (ICFile attachment: attachments) {
 			InputStream is = getInputStreamForAttachment(attachment.getFileUri());
 			if (is == null) {
-				logger.warning("Unable to attach file " + attachment.getFileUri() + " for task: " + task.getTaskInstanceId() + " in process: "
+				LOGGER.warning("Unable to attach file " + attachment.getFileUri() + " for task: " + task.getTaskInstanceId() + " in process: "
 						+ piw.getProcessInstanceId());
 			} else {
 				Variable variable = new Variable("cmnt_attch", VariableDataType.FILE);
@@ -701,7 +716,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 				return resource.getMethodData();
 			}
 		} catch(Exception e) {
-			logger.log(Level.WARNING, "Error getting InputStream from: " + uri, e);
+			LOGGER.log(Level.WARNING, "Error getting InputStream from: " + uri, e);
 		}
 		return null;
 	}
@@ -710,7 +725,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		try {
 			return URLDecoder.decode(defaultName, CoreConstants.ENCODING_UTF8);
 		} catch (UnsupportedEncodingException e) {
-			logger.log(Level.WARNING, "Error decoding: " + defaultName);
+			LOGGER.log(Level.WARNING, "Error decoding: " + defaultName);
 		}
 		return defaultName;
 	}
