@@ -33,7 +33,6 @@ import com.idega.block.article.business.DefaultCommentsPersistenceManager;
 import com.idega.block.article.component.ArticleCommentAttachmentStatisticsViewer;
 import com.idega.block.article.data.Comment;
 import com.idega.block.article.data.CommentHome;
-import com.idega.block.article.media.CommentAttachmentDownloader;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.block.rss.business.RSSBusiness;
@@ -49,7 +48,6 @@ import com.idega.core.file.data.ICFile;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.io.MediaWritable;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
@@ -66,7 +64,6 @@ import com.idega.util.CoreUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
-import com.idega.util.URIUtil;
 import com.sun.syndication.feed.WireFeed;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
@@ -487,7 +484,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 					String name = URLDecoder.decode(attachment.getName(), CoreConstants.ENCODING_UTF8);
 					ArticleCommentAttachmentInfo info = new ArticleCommentAttachmentInfo();
 					info.setName(name);
-					info.setUri(getUriToAttachment(commentId, attachment));
+					info.setUri(getUriToAttachment(commentId, attachment, null));
 					
 					if (fullRights) {
 						info.setCommentId(commentId);
@@ -540,16 +537,6 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return null;
 		}
 		return piw.getAttachments();
-	}
-	
-	private String getUriToAttachment(String commentId, ICFile attachment) {
-		URIUtil uri = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
-		
-		uri.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(CommentAttachmentDownloader.class));
-		uri.setParameter(ArticleCommentAttachmentStatisticsViewer.COMMENT_ID_PARAMETER, commentId);
-		uri.setParameter(ArticleCommentAttachmentStatisticsViewer.COMMENT_ATTACHMENT_ID_PARAMETER, attachment.getPrimaryKey().toString());
-		
-		return uri.getUri();
 	}
 	
 	@SuppressWarnings("unchecked")
