@@ -515,7 +515,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		
 		if (ListUtil.isEmpty(processAttachments)) {
 			//	No attachments for the process
-			return true;
+			return false;
 		}
 		
 		if (hash == null) {
