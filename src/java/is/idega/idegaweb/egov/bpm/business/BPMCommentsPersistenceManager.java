@@ -455,7 +455,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 				}
 				
 				if (visible) {
-					if (checkIfRead) {
+					if (properties.isFetchFully()&& checkIfRead) {
 						if (!isCommentRead(comment, currentUser)) {
 							commentEntry.setReadable(true);
 							markAsRead(comment, currentUser, commentEntry);
