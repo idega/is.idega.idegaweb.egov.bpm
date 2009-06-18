@@ -1108,8 +1108,8 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 	});
 }
 
-CasesBPMAssets.closeAccessRightsSetterBox = function(element) {
-	
+CasesBPMAssets.closeAccessRightsSetterBox = function(event) {
+	var element = event.target;
 	var rightsBoxCands = jQuery(element).parents(".caseProcessResourceAccessRightsSetterStyle");
 	
 	if (rightsBoxCands == null || rightsBoxCands.length == 0) {
@@ -1125,7 +1125,9 @@ CasesBPMAssets.closeAccessRightsSetterBox = function(element) {
 	);
 }
 
-CasesBPMAssets.setRoleDefaultContactsForUser = function(element, processInstanceId, userId) {
+CasesBPMAssets.setRoleDefaultContactsForUser = function(event, processInstanceId, userId) {
+	var element = event.target;
+	
 	showLoadingMessage(CasesBPMAssets.Loc.CASE_GRID_STRING_LOADING);
 	
 	var rightsBoxCands = jQuery(element).parents(".caseProcessResourceAccessRightsSetterStyle");
