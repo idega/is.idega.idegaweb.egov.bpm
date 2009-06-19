@@ -28,6 +28,7 @@ import org.jbpm.context.exe.VariableInstance;
 import org.jbpm.context.exe.variableinstance.HibernateStringInstance;
 import org.jbpm.context.exe.variableinstance.StringInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -58,7 +59,7 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service
 @Transactional
 public class BoardCasesManagerImpl implements BoardCasesManager {
