@@ -374,6 +374,16 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		this.bpmContext = bpmContext;
 	}
 	
+	@Override
+	public String getHandlerRoleKey() {
+		return null;	//	Should be defined by extended class
+	}
+
+	@Override
+	public List<String> getPersonsToNotifyAboutComment(CommentsViewerProperties properties, Object commentId, boolean justPublished) {
+		return null;	//	No implementation here
+	}
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public List<? extends Entry> getEntriesToFormat(Feed comments, CommentsViewerProperties properties) {
