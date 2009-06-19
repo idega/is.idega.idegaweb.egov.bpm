@@ -65,6 +65,11 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 	}
 	
 	private String getSortableFieldValue(CasePresentation theCase, String sortableIdentifier) {
+		if (theCase == null || StringUtil.isEmpty(sortableIdentifier)) {
+			Logger.getLogger(getClass().getName()).warning("Some parameters are not provided: case presentation: " + theCase + ", method: " + sortableIdentifier);
+			return CoreConstants.EMPTY;
+		}
+		
 		if (isDefaultField(sortableIdentifier)) {
 			try {
 				return MethodInvoker.getInstance().invokeMethodWithNoParameters(theCase, sortableIdentifier).toString();
