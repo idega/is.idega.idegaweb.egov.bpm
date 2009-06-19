@@ -728,12 +728,23 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	}
 	
 	protected TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
-		for (TaskInstanceW task: piw.getSubmittedTaskInstances()) {
-			if (taskName.equals(task.getTaskInstance().getName())) {
-				return task;
+		List<TaskInstanceW> submittedTasks = piw.getSubmittedTaskInstances();
+		if (ListUtil.isEmpty(submittedTasks)) {
+			return null;
+		}
+
+		TaskInstanceW latestTask = null;
+		for (TaskInstanceW taskInstance: submittedTasks) {
+			if (taskName.equals(taskInstance.getTaskInstance().getName())) {
+				if (latestTask == null) {
+					latestTask = taskInstance;
+				} else if (taskInstance.getTaskInstance().getCreate().after(latestTask.getTaskInstance().getCreate())) {
+					latestTask = taskInstance;
+				}
 			}
 		}
-		return null;
+		
+		return latestTask;
 	}
 	
 	@Override
