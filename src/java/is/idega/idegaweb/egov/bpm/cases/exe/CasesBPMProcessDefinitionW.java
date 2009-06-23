@@ -62,7 +62,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.47 $ Last modified: $Date: 2009/06/23 10:22:46 $ by $Author: valdas $
+ * @version $Revision: 1.48 $ Last modified: $Date: 2009/06/23 12:45:23 $ by $Author: laddi $
  */
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -185,7 +185,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					        + genCase.getPrimaryKey()
 					        + ") created for process instance " + pi.getId());
 					
-					pi.setStart(caseCreated);
+					pi.setStart(new Date());
 					
 					Map<String, Object> caseData = new HashMap<String, Object>();
 					caseData.put(CasesBPMProcessConstants.caseIdVariableName,
