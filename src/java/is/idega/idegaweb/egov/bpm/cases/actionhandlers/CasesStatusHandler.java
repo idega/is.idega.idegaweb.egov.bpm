@@ -9,6 +9,7 @@ import java.util.logging.Logger;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -28,10 +29,10 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.7 $ Last modified: $Date: 2009/04/21 08:38:15 $ by $Author: civilis $
+ * @version $Revision: 1.8 $ Last modified: $Date: 2009/06/23 10:22:22 $ by $Author: valdas $
  */
 @Service("casesStatusHandler")
-@Scope("prototype")
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class CasesStatusHandler implements ActionHandler {
 	
 	private static final long serialVersionUID = 7504445907540445936L;
@@ -100,8 +101,7 @@ public class CasesStatusHandler implements ActionHandler {
 			CasesBusiness casesBusiness = getCasesBusiness(iwac);
 			final Case theCase = casesBusiness.getCase(caseId);
 			
-			if (ifCaseStatus == null
-			        || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
+			if (ifCaseStatus == null || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
 				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set
 				// (i.e. change always)
 				
@@ -131,8 +131,7 @@ public class CasesStatusHandler implements ActionHandler {
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
 				
-				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status,
-				    performer);
+				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer);
 			}
 			
 		} catch (Exception e) {
