@@ -61,7 +61,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.44 $ Last modified: $Date: 2009/05/28 18:29:08 $ by $Author: laddi $
+ * @version $Revision: 1.45 $ Last modified: $Date: 2009/06/23 09:58:42 $ by $Author: laddi $
  */
 @Scope("prototype")
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -112,6 +112,14 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		        .get(CasesBPMProcessConstants.caseIdentifier);
 		final String realCaseCreationDate = parameters
 		        .get(CasesBPMProcessConstants.caseCreationDateParam);
+		
+		final Date caseCreated;
+		
+		if (!StringUtil.isEmpty(realCaseCreationDate)) {
+			caseCreated = new IWTimestamp(realCaseCreationDate)
+			        .getDate();
+		} else
+			caseCreated = new Date();
 		
 		getBpmContext().execute(new JbpmCallback() {
 			
@@ -171,13 +179,13 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					                        null,
 					                        iwma
 					                                .getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)),
-					            false, caseIdentifier, true);
+					            false, caseIdentifier, true, new IWTimestamp(caseCreated).getTimestamp());
 					
 					logger.log(Level.INFO, "Case (id="
 					        + genCase.getPrimaryKey()
 					        + ") created for process instance " + pi.getId());
 					
-					pi.setStart(new Date());
+					pi.setStart(caseCreated);
 					
 					Map<String, Object> caseData = new HashMap<String, Object>();
 					caseData.put(CasesBPMProcessConstants.caseIdVariableName,
@@ -228,14 +236,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					        .toString()));
 					piBind.setProcInstId(pi.getId());
 					piBind.setCaseIdentierID(caseIdentifierNumber);
-					
-					Date caseCreated;
-					
-					if (!StringUtil.isEmpty(realCaseCreationDate)) {
-						caseCreated = new IWTimestamp(realCaseCreationDate)
-						        .getDate();
-					} else
-						caseCreated = new Date();
 					
 					piBind.setDateCreated(caseCreated);
 					piBind.setCaseIdentifier(caseIdentifier);
