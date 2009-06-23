@@ -4,9 +4,9 @@ package is.idega.idegaweb.egov.bpm.cases;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.16 $
+ * @version $Revision: 1.17 $
  * 
- *          Last modified: $Date: 2009/04/22 13:17:06 $ by $Author: arunas $
+ *          Last modified: $Date: 2009/06/23 10:22:01 $ by $Author: valdas $
  * 
  */
 public class CasesBPMProcessConstants {
@@ -47,6 +47,8 @@ public class CasesBPMProcessConstants {
 	public static final String caseStatusWait = "string_caseStatusWait";
 	public static final String caseStatusInProcess = "string_caseStatusInProcess";
 	public static final String caseStatusDeleted = "string_caseStatusDeleted";
+	public static final String caseStatusCreated = "string_caseStatusCreated";
+	public static final String caseStatusFinished = "string_caseStatusFinished";
 	
 	// mapped case status names
 	public static final String CASE_STATUS_GRANTED_MAPNAME  	= "caseStatusGranted";
@@ -62,6 +64,7 @@ public class CasesBPMProcessConstants {
 	public static final String CASE_STATUS_WAIT_MAPNAME  		= "caseStatusWait";
 	public static final String CASE_STATUS_INPROCESS_MAPNAME  	= "caseStatusInProcess";
 	public static final String CASE_STATUS_DELETED_MAPNAME  	= "caseStatusDeleted";
-
+	public static final String CASE_STATUS_CREATED_MAPNAME  	= "caseStatusCreated";
+	public static final String CASE_STATUS_FINISHED_MAPNAME  	= "caseStatusFinished";
 
 }

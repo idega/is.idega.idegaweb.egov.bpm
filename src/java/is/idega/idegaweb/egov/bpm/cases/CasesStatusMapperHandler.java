@@ -1,34 +1,39 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.data.CaseBMPBean;
 import com.idega.util.CoreConstants;
 
 /**
  * @author <a href="mailto:arunas@idega.com">Arūnas Vasmanas</a>
- * @version $Revision: 1.4 $
+ * @version $Revision: 1.5 $
  *
- * Last modified: $Date: 2009/04/22 13:17:06 $ by $Author: arunas $
+ * Last modified: $Date: 2009/06/23 10:22:01 $ by $Author: valdas $
  */
 @Service("casesStatusMapperHandler")
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 public class CasesStatusMapperHandler {
 	
-	private static final String CASE_STATUS_OPEN_KEY = "UBEH";
-	private static final String CASE_STATUS_INACTIVE_KEY = "TYST";
-	private static final String CASE_STATUS_GRANTED_KEY = "BVJD";
-	private static final String CASE_STATUS_DENIED_KEY = "AVSL";
-	private static final String CASE_STATUS_REVIEW_KEY = "OMPR";
-	private static final String CASE_STATUS_GROUPED_KEY = "GROU";
-	private static final String CASE_STATUS_PRELIMINARY_KEY = "PREL";
-	private static final String CASE_STATUS_READY_KEY = "KLAR";
-	private static final String CASE_STATUS_MOVED_KEY = "FLYT";
-	private static final String CASE_STATUS_IN_PROGRESS = "PEND";
-	private static final String CASE_STATUS_PLACED_KEY = "PLAC";
-	private static final String CASE_STATUS_WAIT = "WAIT";
-	private static final String CASE_STATUS_IN_PROCESS = "INPR";
-	private static final String CASE_STATUS_DELETED = "DELE";
+	private static final String CASE_STATUS_OPEN_KEY = CaseBMPBean.CASE_STATUS_OPEN_KEY;
+	private static final String CASE_STATUS_CREATED_KEY = CaseBMPBean.CASE_STATUS_CREATED_KEY;
+	private static final String CASE_STATUS_INACTIVE_KEY = CaseBMPBean.CASE_STATUS_INACTIVE_KEY;
+	private static final String CASE_STATUS_GRANTED_KEY = CaseBMPBean.CASE_STATUS_GRANTED_KEY;
+	private static final String CASE_STATUS_DENIED_KEY = CaseBMPBean.CASE_STATUS_DENIED_KEY;
+	private static final String CASE_STATUS_REVIEW_KEY = CaseBMPBean.CASE_STATUS_REVIEW_KEY;
+	private static final String CASE_STATUS_GROUPED_KEY = CaseBMPBean.CASE_STATUS_GROUPED_KEY;
+	private static final String CASE_STATUS_PRELIMINARY_KEY = CaseBMPBean.CASE_STATUS_PRELIMINARY_KEY;
+	private static final String CASE_STATUS_READY_KEY = CaseBMPBean.CASE_STATUS_READY_KEY;
+	private static final String CASE_STATUS_MOVED_KEY = CaseBMPBean.CASE_STATUS_MOVED_KEY;
+	private static final String CASE_STATUS_IN_PROGRESS = CaseBMPBean.CASE_STATUS_PENDING_KEY;
+	private static final String CASE_STATUS_PLACED_KEY = CaseBMPBean.CASE_STATUS_PLACED_KEY;
+	private static final String CASE_STATUS_WAIT_KEY = CaseBMPBean.CASE_STATUS_WAITING_KEY;
+	private static final String CASE_STATUS_IN_PROCESS_KEY = CaseBMPBean.CASE_STATUS_IN_PROCESS_KEY;
+	private static final String CASE_STATUS_DELETED_KEY = CaseBMPBean.CASE_STATUS_DELETED_KEY;
+	private static final String CASE_STATUS_FINISHED_KEY = CaseBMPBean.CASE_STATUS_FINISHED_KEY;
+	
 	private static final String STATUS_EXP = "string_";
 
 	
@@ -58,13 +63,16 @@ public class CasesStatusMapperHandler {
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusGrouped;
 		else if (CASE_STATUS_PLACED_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusPlaced;
-		else if (CASE_STATUS_WAIT.equals(statusCode))
+		else if (CASE_STATUS_WAIT_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusWait;
-		else if (CASE_STATUS_IN_PROCESS.equals(statusCode))
+		else if (CASE_STATUS_IN_PROCESS_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusInProcess;
-		else if (CASE_STATUS_DELETED.equals(statusCode))
+		else if (CASE_STATUS_DELETED_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusDeleted;
-
+		else if (CASE_STATUS_CREATED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusCreated;
+		else if (CASE_STATUS_FINISHED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusFinished;
 		
 		return caseStatusVariableName.equals(CoreConstants.EMPTY) ? new StringBuilder().append(STATUS_EXP).append(statusCode).toString() : caseStatusVariableName;
 	     
@@ -95,11 +103,15 @@ public class CasesStatusMapperHandler {
 		else if (CasesBPMProcessConstants.CASE_STATUS_PLACED_MAPNAME.equals(statusMappedName))
 			statusKey = CASE_STATUS_PLACED_KEY;
 		else if (CasesBPMProcessConstants.CASE_STATUS_WAIT_MAPNAME.equals(statusMappedName))
-			statusKey = CASE_STATUS_WAIT;
+			statusKey = CASE_STATUS_WAIT_KEY;
 		else if (CasesBPMProcessConstants.CASE_STATUS_INPROCESS_MAPNAME.equals(statusMappedName))
-			statusKey = CASE_STATUS_IN_PROCESS;
+			statusKey = CASE_STATUS_IN_PROCESS_KEY;
 		else if (CasesBPMProcessConstants.CASE_STATUS_DELETED_MAPNAME.equals(statusMappedName))
-			statusKey = CASE_STATUS_DELETED;
+			statusKey = CASE_STATUS_DELETED_KEY;
+		else if (CasesBPMProcessConstants.CASE_STATUS_CREATED_MAPNAME.equals(statusMappedName))
+			statusKey = CASE_STATUS_CREATED_KEY;
+		else if (CasesBPMProcessConstants.CASE_STATUS_FINISHED_MAPNAME.equals(statusMappedName))
+			statusKey = CASE_STATUS_FINISHED_KEY;
 		
 		return statusKey;
 	}
