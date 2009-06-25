@@ -30,11 +30,11 @@ import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.block.process.data.CaseBMPBean;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
 import com.idega.bpm.xformsview.XFormsView;
@@ -62,9 +62,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.49 $ Last modified: $Date: 2009/06/23 14:08:46 $ by $Author: laddi $
+ * @version $Revision: 1.50 $ Last modified: $Date: 2009/06/25 14:44:45 $ by $Author: laddi $
  */
-@Scope("prototype")
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
 public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	
@@ -88,31 +88,38 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		        .getProcessDefinitionId();
 		
 		if (!processDefinitionId.equals(getProcessDefinitionId())) {
-			throw new IllegalArgumentException(
-			        "View submission was for different process definition id than tried to submit to");
+			throw new IllegalArgumentException("View submission was for different process definition id than tried to submit to");
 		}
 		
-		logger.finer("Starting process for process definition id = "
-		        + processDefinitionId);
+		logger.finer("Starting process for process definition id = " + processDefinitionId);
 		
 		Map<String, String> parameters = viewSubmission.resolveParameters();
 		
 		logger.finer("Params " + parameters);
 		
 		final Integer userId;
-		if (parameters
-		        .containsKey(CasesBPMProcessConstants.userIdActionVariableName))
-			userId = Integer.parseInt(parameters
-			        .get(CasesBPMProcessConstants.userIdActionVariableName));
+		if (parameters.containsKey(CasesBPMProcessConstants.userIdActionVariableName))
+			userId = Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName));
 		else
 			userId = null;
 		
-		final Integer caseIdentifierNumber = Integer.parseInt(parameters
-		        .get(CasesBPMProcessConstants.caseIdentifierNumberParam));
-		final String caseIdentifier = parameters
-		        .get(CasesBPMProcessConstants.caseIdentifier);
-		final String realCaseCreationDate = parameters
-		        .get(CasesBPMProcessConstants.caseCreationDateParam);
+		final String caseStatusKey;
+		if (parameters.containsKey(CasesBPMProcessConstants.caseStatusVariableName))
+			caseStatusKey = parameters.get(CasesBPMProcessConstants.caseStatusVariableName);
+		else
+			caseStatusKey = null;
+		
+		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
+		final String caseIdentifier = parameters.get(CasesBPMProcessConstants.caseIdentifier);
+		final String realCaseCreationDate = parameters.get(CasesBPMProcessConstants.caseCreationDateParam);
+		
+		final Date caseCreated;
+		
+		if (!StringUtil.isEmpty(realCaseCreationDate)) {
+			caseCreated = new IWTimestamp(realCaseCreationDate)
+			        .getDate();
+		} else
+			caseCreated = new Date();
 		
 		getBpmContext().execute(new JbpmCallback() {
 			
@@ -155,8 +162,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					Long caseCategoryId = bind.getCasesCategoryId();
 					Long caseTypeId = bind.getCasesTypeId();
 					
-					GeneralCase genCase = casesBusiness
-					        .storeGeneralCase(
+					GeneralCase genCase = casesBusiness.storeGeneralCase(
 					            user,
 					            caseCategoryId,
 					            caseTypeId,
@@ -172,7 +178,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					                        null,
 					                        iwma
 					                                .getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)),
-					            false, caseIdentifier, true, CaseBMPBean.CASE_STATUS_OPEN_KEY, null);
+					            false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
+					);
 					
 					logger.log(Level.INFO, "Case (id="
 					        + genCase.getPrimaryKey()
@@ -229,14 +236,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					        .toString()));
 					piBind.setProcInstId(pi.getId());
 					piBind.setCaseIdentierID(caseIdentifierNumber);
-					
-					Date caseCreated;
-					
-					if (!StringUtil.isEmpty(realCaseCreationDate)) {
-						caseCreated = new IWTimestamp(realCaseCreationDate)
-						        .getDate();
-					} else
-						caseCreated = new Date();
 					
 					piBind.setDateCreated(caseCreated);
 					piBind.setCaseIdentifier(caseIdentifier);
