@@ -276,10 +276,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			fileName = url.substring(index + 1);
 		}
 		try {
-			return service
-			        .uploadFileAndCreateFoldersFromStringAsRoot(fileBase,
-			            fileName, commentsContent,
-			            ContentConstants.XML_MIME_TYPE, true);
+			return service.uploadFileAndCreateFoldersFromStringAsRoot(fileBase, fileName, commentsContent, ContentConstants.XML_MIME_TYPE, true);
 		} catch (RemoteException e) {
 			LOGGER.log(Level.SEVERE, "Error storing comments feed", e);
 		}
@@ -381,7 +378,15 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 	@Override
 	public List<String> getPersonsToNotifyAboutComment(CommentsViewerProperties properties, Object commentId, boolean justPublished) {
-		return null;	//	No implementation here
+		Integer authorId = null;
+		try {
+			Comment comment = getComment(commentId);
+			authorId = comment.getAuthorId();
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting author for comment: " + commentId, e);
+		}
+		
+		return getAllFeedSubscribers(properties.getIdentifier(), authorId);
 	}
 
 	@SuppressWarnings("unchecked")
@@ -669,6 +674,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		
 		TaskInstanceW task = getSubmittedTaskInstance(piw, getTaskNameForAttachments());
 		if (task == null) {
+			LOGGER.warning("Do not know for which task to attach file(s)");
 			return commentId;
 		}
 		
@@ -728,6 +734,10 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	}
 	
 	protected TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
+		if (piw == null || StringUtil.isEmpty(taskName)) {
+			return null;
+		}
+		
 		List<TaskInstanceW> submittedTasks = piw.getSubmittedTaskInstances();
 		if (ListUtil.isEmpty(submittedTasks)) {
 			return null;
