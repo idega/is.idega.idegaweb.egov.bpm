@@ -20,7 +20,8 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
     CASE_GRID_STRING_FILE_SIZE: 'File size',
     CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by',
     CASE_GRID_STRING_GENERATING_PDF: 'Downloading PDF',
-    CASE_GRID_STRING_LOADING: 'Loading...'
+    CASE_GRID_STRING_LOADING: 'Loading...',
+    CASE_GRID_STRING_ARE_YOU_SURE: 'Are you sure?'
 };
 
 CasesBPMAssets.processParams = {};
@@ -1193,4 +1194,18 @@ CasesBPMAssets.showSendEmailWindow = function(event) {
 		event.stopPropagation();
 	}
 	event.cancelBubble = true;
+}
+
+CasesBPMAssets.disableAttachmentForAllRoles = function(event, fileHash, processInstanceId, taskInstanceId) {
+	if (!window.confirm(CasesBPMAssets.Loc.CASE_GRID_STRING_ARE_YOU_SURE)) {
+		return false;
+	}
+	
+	BPMProcessAssets.disableAttachmentForAllRoles(fileHash, processInstanceId, taskInstanceId, {
+		callback: function(result) {
+			if (result) {
+				CasesBPMAssets.closeAccessRightsSetterBox(event);
+			}
+		}
+	});
 }
