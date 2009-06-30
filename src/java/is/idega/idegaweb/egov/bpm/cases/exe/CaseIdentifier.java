@@ -3,6 +3,8 @@ package is.idega.idegaweb.egov.bpm.cases.exe;
 import java.util.Date;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -13,18 +15,21 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.1 $
+ * @version $Revision: 1.2 $
  * 
- *          Last modified: $Date: 2008/09/09 13:55:14 $ by $Author: civilis $
+ *          Last modified: $Date: 2009/06/30 13:17:35 $ by $Author: valdas $
  */
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service
+@Qualifier("defaultCaseIdentifier")
 public class CaseIdentifier {
 	
 	public static final String IDENTIFIER_PREFIX = "P";
 	
 	private CaseIdentifierBean lastCaseIdentifierNumber;
-	@Autowired private CasesBPMDAO casesBPMDAO;
+	
+	@Autowired
+	private CasesBPMDAO casesBPMDAO;
 	
 	public synchronized Object[] generateNewCaseIdentifier() {
 
@@ -62,10 +67,10 @@ public class CaseIdentifier {
 		return new Object[] { scopedCI.number, generated };
 	}
 	
-	class CaseIdentifierBean {
+	protected class CaseIdentifierBean {
 		
-		IWTimestamp time;
-		Integer number;
+		private IWTimestamp time;
+		private Integer number;
 		
 		String generate() {
 			
@@ -85,6 +90,18 @@ public class CaseIdentifier {
 			.append(nr)
 			.toString();
 		}
+
+		public IWTimestamp getTime() {
+			return time;
+		}
+
+		public Integer getNumber() {
+			return number;
+		}
+	}
+	
+	protected CaseIdentifierBean getCaseIdentifierBean() {
+		return lastCaseIdentifierNumber;
 	}
 
 	public CasesBPMDAO getCasesBPMDAO() {

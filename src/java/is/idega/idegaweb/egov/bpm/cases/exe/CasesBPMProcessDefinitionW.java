@@ -30,6 +30,7 @@ import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -62,7 +63,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.51 $ Last modified: $Date: 2009/06/26 14:43:58 $ by $Author: laddi $
+ * @version $Revision: 1.52 $ Last modified: $Date: 2009/06/30 13:17:35 $ by $Author: valdas $
  */
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
@@ -72,8 +73,11 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+	
 	@Autowired
+	@Qualifier("defaultCaseIdentifier")
 	private CaseIdentifier caseIdentifier;
+	
 	@Autowired
 	private CasesStatusMapperHandler casesStatusMapperHandler;
 	@Autowired
