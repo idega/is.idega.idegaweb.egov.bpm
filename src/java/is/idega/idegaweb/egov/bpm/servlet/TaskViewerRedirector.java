@@ -78,7 +78,7 @@ public class TaskViewerRedirector extends BaseFilter implements Filter {
 	}
 	
 	private String getNewRedirectURL(HttpServletRequest request, HttpServletResponse response) {
-		IWContext iwc = new IWContext(request, response, request.getSession().getServletContext());
+		IWContext iwc = getIWContext(request, response);
 		
 		String taskInstanceId = getTaskInstanceId(iwc.getParameter(TaskViewerHelperImp.PROCESS_INSTANCE_ID_PARAMETER),
 				iwc.getParameter(TaskViewerHelperImp.TASK_NAME_PARAMETER));
