@@ -41,9 +41,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.45 $
+ * @version $Revision: 1.46 $
  *
- * Last modified: $Date: 2009/07/03 10:44:43 $ by $Author: valdas $
+ * Last modified: $Date: 2009/07/03 10:46:47 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -537,8 +537,7 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public boolean getRenderCaseEmailContainer() {
-		String emailAdress = getCaseEmailSubject();
-		return getStandAloneComponent() && !StringUtil.isEmpty(emailAdress);
+		return getStandAloneComponent() && !StringUtil.isEmpty(getCaseEmailSubject());
 	}
 
 	public Boolean getHideEmptySection() {
