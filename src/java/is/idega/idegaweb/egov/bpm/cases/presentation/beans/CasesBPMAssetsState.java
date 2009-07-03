@@ -41,9 +41,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.44 $
+ * @version $Revision: 1.45 $
  *
- * Last modified: $Date: 2009/06/15 10:00:16 $ by $Author: valdas $
+ * Last modified: $Date: 2009/07/03 10:44:43 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -88,6 +88,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Integer nextCaseId;
 	private String currentTaskInstanceName;
 	private boolean specialBackPageDecoded;
+	private String systemEmailAddress;
 	
 	public Long getViewSelected() {
 		if (viewSelected == null) {
@@ -500,15 +501,27 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public String getCaseEmailSubject() {
+		if (systemEmailAddress == null) {
+			systemEmailAddress = CoreConstants.EMPTY;
+			
+			Long processInstanceId = getProcessInstanceId();
+			String processIdentifier = getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId)
+				.getProcessIdentifier();
+			if (StringUtil.isEmpty(processIdentifier)) {
+				LOGGER.warning("Unkown process identifier for process instance: " + processInstanceId);
+				return null;
+			}
+			
+			String emailAdress = getCasesListBuilder().getEmailAddressMailtoFormattedWithSubject(processIdentifier);
+			if (StringUtil.isEmpty(emailAdress) || emailAdress.equals(processIdentifier)) {
+				LOGGER.warning("Email adress is invalid: " + emailAdress);
+				return null;
+			}
+			
+			systemEmailAddress = emailAdress;
+		}
 		
-		Long processInstanceId = getProcessInstanceId();
-		String processIdentifier = 
-			getBpmFactory()
-			.getProcessManagerByProcessInstanceId(processInstanceId)
-			.getProcessInstance(processInstanceId)
-			.getProcessIdentifier();
-		
-		return getCasesListBuilder().getEmailAddressMailtoFormattedWithSubject(processIdentifier);
+		return systemEmailAddress;
 	}
 	
 	public String getSendEmailTitle() {
@@ -524,7 +537,8 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public boolean getRenderCaseEmailContainer() {
-		return getStandAloneComponent();
+		String emailAdress = getCaseEmailSubject();
+		return getStandAloneComponent() && !StringUtil.isEmpty(emailAdress);
 	}
 
 	public Boolean getHideEmptySection() {
