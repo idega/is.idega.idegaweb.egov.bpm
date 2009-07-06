@@ -76,9 +76,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.11 $
+ * @version $Revision: 1.12 $
  *
- * Last modified: $Date: 2009/06/15 10:00:16 $ by $Author: valdas $
+ * Last modified: $Date: 2009/07/06 16:55:26 $ by $Author: laddi $
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -214,11 +214,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
+	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
 			int startIndex, int count) {
 
 		try {
-			List<Integer> casesIds = getCaseIds(user, type, caseStatusesToHide, caseStatusesToShow);
+			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow);
 
 			if (casesIds != null && !casesIds.isEmpty()) {
 				int totalCount = casesIds.size();
@@ -249,7 +249,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<Integer> getCaseIds(User user, String type, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
+	public List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
 
 		IWContext iwc = CoreUtil.getIWContext();
 		IWMainApplication iwma = iwc.getIWMainApplication();
@@ -275,7 +275,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				statusesToHide = ListUtil.getFilteredList(statusesToHide);
 				
 				if (isSuperAdmin) {
-					caseIds = getCasesBPMDAO().getOpenCasesIdsForAdmin(statusesToShow, statusesToHide);
+					caseIds = getCasesBPMDAO().getOpenCasesIdsForAdmin(caseCodes, statusesToShow, statusesToHide);
 				} else {
 					Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
 					List<Integer> groups = null;
@@ -286,7 +286,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 							groups.add(new Integer(group.getPrimaryKey().toString()));
 						}
 					}
-					caseIds = getCasesBPMDAO().getOpenCasesIds(user, statusesToShow, statusesToHide, groups, roles);
+					caseIds = getCasesBPMDAO().getOpenCasesIds(user, caseCodes, statusesToShow, statusesToHide, groups, roles);
 				}
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
 
@@ -320,11 +320,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 				
 				statusesToShow = ListUtil.getFilteredList(statusesToShow);
-				CaseCode[] caseCodes = getCaseBusiness().getCaseCodesForUserCasesList();
+				CaseCode[] casecodes = getCaseBusiness().getCaseCodesForUserCasesList();
 				Set<String> roles = iwma.getAccessController().getAllRolesForUser(user);
 
-				List<String> codes = new ArrayList<String>(caseCodes.length);
-				for (CaseCode code : caseCodes) {
+				List<String> codes = new ArrayList<String>(casecodes.length);
+				for (CaseCode code : casecodes) {
 					codes.add(code.getCode());
 				}
 				caseIds = getCasesBPMDAO().getUserCasesIds(user, statusesToShow, statusesToHide, codes, roles);

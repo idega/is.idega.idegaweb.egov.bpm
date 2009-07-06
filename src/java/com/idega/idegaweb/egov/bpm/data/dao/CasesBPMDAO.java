@@ -18,7 +18,7 @@ import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.27 $ Last modified: $Date: 2009/04/21 08:38:00 $ by $Author: civilis $
+ * @version $Revision: 1.28 $ Last modified: $Date: 2009/07/06 16:55:26 $ by $Author: laddi $
  */
 public interface CasesBPMDAO extends GenericDao {
 	
@@ -81,7 +81,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(
 	        Collection<String> identifiers);
 	
-	public abstract List<Integer> getOpenCasesIds(User user,
+	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseCodes,
 	        List<String> caseStatuses, List<String> caseStatusesToHide,
 	        Collection<Integer> groups, Collection<String> roles);
 	
@@ -106,7 +106,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(
 	        List<String> caseStatuses, List<String> caseStatusesToHide);
 	
-	public List<Integer> getOpenCasesIdsForAdmin(
+	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes,
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 	
 	public List<Integer> getClosedCasesIdsForAdmin(

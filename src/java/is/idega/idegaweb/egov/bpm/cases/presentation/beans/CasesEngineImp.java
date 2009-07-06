@@ -208,6 +208,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		properties.setInstanceId(criteriaBean.getInstanceId());
 		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
 		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
+		properties.setCaseCodes(criteriaBean.getCaseCodesInList());
 		properties.setStatusesToShow(criteriaBean.getStatusesToShowInList());
 		properties.setStatusesToHide(criteriaBean.getStatusesToHideInList());
 		UIComponent component = null;
@@ -295,8 +296,8 @@ public class CasesEngineImp implements BPMCasesEngine {
 		}
 		
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
-		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getStatusesToHideInList(),
-				criteriaBean.getStatusesToShowInList());
+		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(), 
+				criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList());
 		if (ListUtil.isEmpty(caseIdsByUser)) {
 			return null;
 		}

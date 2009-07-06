@@ -79,6 +79,7 @@ public class CasesListSearchCriteriaBean {
 	private String id;
 	private String instanceId;
 	
+	private String caseCodes;
 	private String statusesToShow;
 	private String statusesToHide;
 	
@@ -736,4 +737,15 @@ public class CasesListSearchCriteriaBean {
 		return statusesToHide;
 	}
 	
+	public List<String> getCaseCodesInList() {
+		return caseCodes == null ? null : StringUtil.getValuesFromString(caseCodes, CoreConstants.COMMA);
+	}
+
+	public void setCaseCodes(String caseCodes) {
+		this.caseCodes = caseCodes;
+	}
+
+	public String getCaseCodes() {
+		return caseCodes;
+	}
 }

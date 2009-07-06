@@ -33,7 +33,7 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.48 $ Last modified: $Date: 2009/06/19 07:59:57 $ by $Author: laddi $
+ * @version $Revision: 1.49 $ Last modified: $Date: 2009/07/06 16:55:26 $ by $Author: laddi $
  */
 @Scope("singleton")
 @Repository("casesBPMDAO")
@@ -541,7 +541,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		    Integer.class, "caseId", params.toArray(new Param[params.size()]));
 	}
 	
-	public List<Integer> getOpenCasesIds(User user,
+	public List<Integer> getOpenCasesIds(User user, List<String> caseCodes,
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide,
 	        Collection<Integer> groups, Collection<String> roles) {
 		
@@ -554,6 +554,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
 		}
+		if (!ListUtil.isEmpty(caseCodes)) {
+			params.add(new Param("caseCodes", caseCodes));
+		}
+
 		StringBuilder builder = new StringBuilder(1000);
 		builder
 		        .append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
@@ -578,6 +582,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder
 			        .append("and proc_case.case_status not in (:statusesToHide)");
 		}
+		if (!ListUtil.isEmpty(caseCodes)) {
+			builder.append(" and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes))");
+		}
 		builder
 		        .append(") union"
 		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
@@ -586,6 +593,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.handler_group_id in (:groups) ");
 			params.add(new Param("groups", groups));
 		}
+		if (!ListUtil.isEmpty(caseCodes)) {
+			builder.append("and proc_case.case_code in (:caseCodes) ");
+		}
 		builder
 		        .append("and proc_case.case_manager_type is null) order by Created desc");
 		
@@ -593,13 +603,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		    Integer.class, "caseId", params.toArray(new Param[params.size()]));
 	}
 	
-	public List<Integer> getOpenCasesIdsForAdmin(
+	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes,
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
 		
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
+		}
+		if (!ListUtil.isEmpty(caseCodes)) {
+			params.add(new Param("caseCodes", caseCodes));
 		}
 		StringBuilder builder = new StringBuilder(1000);
 		builder
@@ -616,10 +629,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder
 			        .append("and proc_case.case_status not in (:statusesToHide)");
 		}
+		if (!ListUtil.isEmpty(caseCodes)) {
+			builder.append(" and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes))");
+		}
 		builder
 		        .append(") union"
 		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 		                + "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where proc_case.case_status in (:statusesToShow) ");
+		if (!ListUtil.isEmpty(caseCodes)) {
+			builder.append("and proc_case.case_code in (:caseCodes) ");
+		}
 		builder
 		        .append("and proc_case.case_manager_type is null) order by Created desc");
 		
