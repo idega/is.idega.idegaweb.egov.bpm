@@ -2,6 +2,7 @@ package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -12,6 +13,7 @@ import java.util.logging.Logger;
 
 import org.jbpm.context.exe.VariableInstance;
 import org.jbpm.graph.exe.Token;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -33,9 +35,9 @@ import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.49 $ Last modified: $Date: 2009/07/06 16:55:26 $ by $Author: laddi $
+ * @version $Revision: 1.50 $ Last modified: $Date: 2009/07/07 12:14:10 $ by $Author: valdas $
  */
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Repository("casesBPMDAO")
 @Transactional(readOnly = true)
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
@@ -254,14 +256,28 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			
 			// Date
 			if (variable.isDateType()) {
-				if (value instanceof Date) {
-					variableResults = getCaseIdsByVariable(
-					    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables,
-					    processDefinitionIds, processDefinitionName, variable
-					            .getName(), value,
-					    BPMProcessVariable.DATE_TYPES);
+				if (value instanceof Timestamp) {
+					IWTimestamp valueStart = new IWTimestamp((Timestamp) value);
+					valueStart.setHour(0);
+					valueStart.setMinute(0);
+					valueStart.setSecond(0);
+					valueStart.setMilliSecond(0);
+					IWTimestamp valueEnd = new IWTimestamp((Timestamp) value);
+					valueEnd.setHour(23);
+					valueEnd.setMinute(59);
+					valueEnd.setSecond(59);
+					valueEnd.setMilliSecond(999);
+					variableResults = getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, Long.class,
+						    new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
+						    new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
+						    new Param(CaseProcInstBind.variablesNamesProp, variable.getName()),
+						    new Param(CaseProcInstBind.variablesValuesProp, valueStart.getTimestamp()),
+						    new Param(CaseProcInstBind.variablesValuesPropEnd, valueEnd.getTimestamp()),
+						    new Param(CaseProcInstBind.variablesTypesProp, new HashSet<String>(BPMProcessVariable.DATE_TYPES))
+					);
 				}
-				// Double
+			
+			// Double
 			} else if (variable.isDoubleType()) {
 				if (value instanceof Double) {
 					variableResults = getCaseIdsByVariable(
@@ -270,7 +286,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					            .getName(), value,
 					    BPMProcessVariable.DOUBLE_TYPES);
 				}
-				// Long
+			
+			// Long
 			} else if (variable.isLongType()) {
 				if (value instanceof Long) {
 					variableResults = getCaseIdsByVariable(
@@ -279,7 +296,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					            .getName(), value,
 					    BPMProcessVariable.LONG_TYPES);
 				}
-				// String
+			
+			// String
 			} else if (variable.isStringType()) {
 				if (value instanceof String) {
 					variableResults = getCaseIdsByVariable(
@@ -288,7 +306,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					            .getName(), value,
 					    BPMProcessVariable.STRING_TYPES);
 				}
-				// Unsupported variable
+			
+			// Unsupported variable
 			} else {
 				LOGGER.warning(new StringBuilder("Unsupported variable: ")
 				        .append(variable).append(", terminating search!")
@@ -328,18 +347,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		            processDefinitionName));
 	}
 	
-	private List<Long> getCaseIdsByVariable(String queryName,
-	        List<Long> processDefinitionIds, String processDefinitionName,
-	        String variableName, Object value, List<String> types) {
+	private List<Long> getCaseIdsByVariable(String queryName, List<Long> processDefinitionIds, String processDefinitionName, String variableName, Object value,
+			List<String> types) {
 		return getResultList(queryName, Long.class,
-		    new Param(CaseProcInstBind.processDefinitionIdsProp,
-		            processDefinitionIds), new Param(
-		            CaseProcInstBind.processDefinitionNameProp,
-		            processDefinitionName), new Param(
-		            CaseProcInstBind.variablesNamesProp, variableName),
-		    new Param(CaseProcInstBind.variablesValuesProp, value), new Param(
-		            CaseProcInstBind.variablesTypesProp, new HashSet<String>(
-		                    types)));
+			    new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
+			    new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
+			    new Param(CaseProcInstBind.variablesNamesProp, variableName),
+			    new Param(CaseProcInstBind.variablesValuesProp, value),
+			    new Param(CaseProcInstBind.variablesTypesProp, new HashSet<String>(types))
+		);
 	}
 	
 	private Object getVariableValue(BPMProcessVariable variable) {
@@ -348,16 +364,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		
 		if (variable.isDateType()) {
-			return IWDatePickerHandler.getParsedDateByCurrentLocale(variable
-			        .getValue());
+			try {
+				return IWDatePickerHandler.getParsedTimestampByCurrentLocale(variable.getValue());
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error converting string to timestamp: "+ variable.getValue(), e);
+			}
 		}
 		
 		if (variable.isDoubleType()) {
 			try {
 				return Double.valueOf(variable.getValue());
 			} catch (NumberFormatException e) {
-				LOGGER.log(Level.WARNING, "Error converting string to double: "
-				        + variable.getValue(), e);
+				LOGGER.log(Level.WARNING, "Error converting string to double: "+ variable.getValue(), e);
 			}
 		}
 		
@@ -365,8 +383,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			try {
 				return Long.valueOf(variable.getValue());
 			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "Error converting string to long: "
-				        + variable.getValue(), e);
+				LOGGER.log(Level.WARNING, "Error converting string to long: " + variable.getValue(), e);
 			}
 		}
 		

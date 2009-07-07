@@ -21,9 +21,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.25 $
+ * @version $Revision: 1.26 $
  *
- * Last modified: $Date: 2009/04/08 09:35:30 $ by $Author: valdas $
+ * Last modified: $Date: 2009/07/07 12:14:10 $ by $Author: valdas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -120,7 +120,8 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
 				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and var.DATEVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+				CaseProcInstBind.variablesNamesProp + " and var.DATEVALUE_ between :" + CaseProcInstBind.variablesValuesProp + " and :" +
+				CaseProcInstBind.variablesValuesPropEnd + " group by cp.case_id"
 			),
 			//	Query to case ids by DOUBLE variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, resultSetMapping="caseId", 
@@ -252,6 +253,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String processInstanceIdProp = "processInstanceIdProp";
 	public static final String variablesNamesProp = "variablesSelectProp";
 	public static final String variablesValuesProp = "variablesValuesProp";
+	public static final String variablesValuesPropEnd = "variablesValuesPropEnd";
 	public static final String variablesTypesProp = "variablesTypesProp";
 
 	public CaseProcInstBind() { }
