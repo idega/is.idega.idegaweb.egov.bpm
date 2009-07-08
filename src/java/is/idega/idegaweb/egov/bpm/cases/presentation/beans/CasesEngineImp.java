@@ -56,6 +56,7 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.URIUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
@@ -291,7 +292,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		
 		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			
-			Logger.getLogger(getClass().getName()).log(Level.INFO, "Not logged in, skipping searching");
+			LOGGER.log(Level.INFO, "Not logged in, skipping searching");
 			return null;
 		}
 		
@@ -465,9 +466,11 @@ public class CasesEngineImp implements BPMCasesEngine {
 		}
 		
 		result.setId(Boolean.TRUE.toString());
-		result.setValue(new StringBuilder(iwc.getIWMainApplication().getMediaServletURI()).append("?").append(MediaWritable.PRM_WRITABLE_CLASS).append("=")
-				.append(IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class)).append("&").append(CasesSearchResultsExporter.ID_PARAMETER)
-				.append("=").append(id).toString());
+		URIUtil uriUtil = new URIUtil(iwc.getIWMainApplication().getMediaServletURI());
+		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class));
+		uriUtil.setParameter(CasesSearchResultsExporter.ID_PARAMETER, id);
+		result.setValue(uriUtil.getUri());
+		
 		return result;
 	}
 
