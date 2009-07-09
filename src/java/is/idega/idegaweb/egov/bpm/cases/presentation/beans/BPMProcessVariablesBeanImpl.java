@@ -187,13 +187,13 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		if (variable instanceof DateInstance) {
 			return BPMProcessVariable.DATE_TYPES.get(0);
 		}
-		if (variable instanceof DoubleInstance) {
+		else if (variable instanceof DoubleInstance) {
 			return BPMProcessVariable.DOUBLE_TYPES.get(0);
 		}
-		if (variable instanceof LongInstance || variable instanceof HibernateLongInstance) {
+		else if (variable instanceof LongInstance || variable instanceof HibernateLongInstance) {
 			return BPMProcessVariable.LONG_TYPES.get(0);
 		}
-		if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
+		else if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
 			return BPMProcessVariable.STRING_TYPES.get(0);
 		}
 		
@@ -201,20 +201,24 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	}
 	
 	private String getVariableRealValue(VariableInstance variable, Locale locale) {
-		if (variable instanceof DateInstance) {
-			IWTimestamp date = new IWTimestamp((Date) variable.getValue());
-			return date.getLocaleDate(locale, DateFormat.SHORT);
-		}
-		if (variable instanceof DoubleInstance) {
-			return variable.getValue().toString();	//	TODO: is this OK?
-		}
-		if (variable instanceof LongInstance || variable instanceof HibernateLongInstance) {
-			return variable.getValue().toString();
-		}
-		if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
-			return variable.getValue().toString();
-		}
+		Object value = variable.getValue();
 		
+		if(value!=null){
+			if (variable instanceof DateInstance) {
+				IWTimestamp date = new IWTimestamp((Date) value);
+				return date.getLocaleDate(locale, DateFormat.SHORT);
+			}
+			else if (variable instanceof DoubleInstance) {
+				//perhaps add some options for decimals later
+				return value.toString();
+			}
+			else if (variable instanceof LongInstance || variable instanceof HibernateLongInstance) {
+				return value.toString();
+			}
+			else if (variable instanceof StringInstance || variable instanceof HibernateStringInstance) {
+				return value.toString();
+			}
+		}
 		return null;	//	We do not support other types
 	}
 	
