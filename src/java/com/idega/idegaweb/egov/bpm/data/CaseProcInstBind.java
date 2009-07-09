@@ -21,9 +21,9 @@ import javax.persistence.TemporalType;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.26 $
+ * @version $Revision: 1.27 $
  *
- * Last modified: $Date: 2009/07/07 12:14:10 $ by $Author: valdas $
+ * Last modified: $Date: 2009/07/09 15:09:11 $ by $Author: valdas $
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
@@ -148,7 +148,7 @@ import javax.persistence.TemporalType;
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
 				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and var.STRINGVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+				CaseProcInstBind.variablesNamesProp + " and var.STRINGVALUE_ like :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
 			/** Variable queries end **/
 			
