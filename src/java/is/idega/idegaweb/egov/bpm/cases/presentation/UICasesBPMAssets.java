@@ -48,9 +48,9 @@ import com.idega.webface.WFUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.55 $
+ * @version $Revision: 1.56 $
  *
- * Last modified: $Date: 2009/06/30 09:37:09 $ by $Author: valdas $
+ * Last modified: $Date: 2009/07/14 16:26:58 $ by $Author: valdas $
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
@@ -65,6 +65,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private boolean usePdfDownloadColumn = true;
 	private boolean allowPDFSigning = true;
 	private boolean hideEmptySection = true;
+	private boolean showAttachmentStatistics;
 	
 	private String commentsPersistenceManagerIdentifier;
 	
@@ -353,7 +354,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		String mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
 			.append(processInstanceId == null ? String.valueOf(-1) : processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ")
-			.append(isUsePdfDownloadColumn()).append(", ").append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(");").toString();
+			.append(isUsePdfDownloadColumn()).append(", ").append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(", ")
+			.append(isShowAttachmentStatistics()).append(");").toString();
 		
 		if (!isSingle) {
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction).append("\n});").toString();
@@ -392,6 +394,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setCommentsPersistenceManagerIdentifier(String commentsPersistenceManagerIdentifier) {
 		this.commentsPersistenceManagerIdentifier = commentsPersistenceManagerIdentifier;
+	}
+
+	public boolean isShowAttachmentStatistics() {
+		return showAttachmentStatistics;
+	}
+
+	public void setShowAttachmentStatistics(boolean showAttachmentStatistics) {
+		this.showAttachmentStatistics = showAttachmentStatistics;
 	}
 	
 }

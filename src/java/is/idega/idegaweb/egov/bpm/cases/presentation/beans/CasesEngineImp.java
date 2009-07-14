@@ -121,6 +121,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 				stateBean.setAllowPDFSigning(properties.isAllowPDFSigning());
 				stateBean.setHideEmptySection(properties.isHideEmptySection());
 				stateBean.setCommentsPersistenceManagerIdentifier(properties.getCommentsPersistenceManagerIdentifier());
+				stateBean.setShowAttachmentStatistics(properties.isShowAttachmentStatistics());
 			}
 			
 			Integer caseId = new Integer(caseIdStr);

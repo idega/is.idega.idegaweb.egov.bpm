@@ -41,9 +41,9 @@ import com.idega.util.expression.ELUtil;
 /**
  * 
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.46 $
+ * @version $Revision: 1.47 $
  *
- * Last modified: $Date: 2009/07/03 10:46:47 $ by $Author: valdas $
+ * Last modified: $Date: 2009/07/14 16:26:58 $ by $Author: valdas $
  *
  */
 @Scope("request")
@@ -79,6 +79,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean allowPDFSigning = Boolean.TRUE;
 	private Boolean standAloneComponent = Boolean.TRUE;
 	private Boolean hideEmptySection = Boolean.FALSE;
+	private Boolean showAttachmentStatistics = Boolean.FALSE;
 	private String specialBackPage;
 	private String commentsPersistenceManagerIdentifier;
 	
@@ -697,6 +698,14 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setCommentsPersistenceManagerIdentifier(String commentsPersistenceManagerIdentifier) {
 		this.commentsPersistenceManagerIdentifier = commentsPersistenceManagerIdentifier;
+	}
+
+	public Boolean getShowAttachmentStatistics() {
+		return showAttachmentStatistics;
+	}
+
+	public void setShowAttachmentStatistics(Boolean showAttachmentStatistics) {
+		this.showAttachmentStatistics = showAttachmentStatistics;
 	}
 
 }
