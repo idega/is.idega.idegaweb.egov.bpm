@@ -58,6 +58,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -76,9 +77,9 @@ import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
- * @version $Revision: 1.12 $
+ * @version $Revision: 1.13 $
  *
- * Last modified: $Date: 2009/07/06 16:55:26 $ by $Author: laddi $
+ * Last modified: $Date: 2009/07/14 16:25:04 $ by $Author: valdas $
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
@@ -205,6 +206,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		casesAssets.setAllowPDFSigning(stateBean.getAllowPDFSigning() == null ? false : stateBean.getAllowPDFSigning());
 		casesAssets.setHideEmptySection(stateBean.getHideEmptySection() == null ? false : stateBean.getHideEmptySection());
 		casesAssets.setCommentsPersistenceManagerIdentifier(stateBean.getCommentsPersistenceManagerIdentifier());
+		casesAssets.setShowAttachmentStatistics(stateBean.getShowAttachmentStatistics() == null ? false : stateBean.getShowAttachmentStatistics());
 		
 		if (caseId != null) {
 			casesAssets.setCaseId(caseId);
@@ -717,6 +719,28 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 	public void setVariablesHandler(VariablesHandler variablesHandler) {
 		this.variablesHandler = variablesHandler;
+	}
+	
+	@Override
+	public String resolveCaseId(IWContext iwc) {
+		String caseId = super.resolveCaseId(iwc);
+		if (!StringUtil.isEmpty(caseId)) {
+			return caseId;
+		}
+		
+		String processInstanceId = iwc.getParameter(ProcessManagerBind.processInstanceIdParam);
+		if (StringUtil.isEmpty(processInstanceId)) {
+			return null;
+		}
+		
+		CaseProcInstBind bind = null;
+		try {
+			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(Long.valueOf(processInstanceId));
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+		
+		return bind == null ? null : bind.getCaseId().toString();
 	}
 	
 }
