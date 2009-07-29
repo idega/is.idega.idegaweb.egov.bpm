@@ -23,7 +23,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
-
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.jbpm.graph.def.ProcessDefinition;
@@ -35,6 +34,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.idega.block.process.data.CaseStatus;
 import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
@@ -57,6 +57,7 @@ import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -75,7 +76,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	private CasesBPMDAO casesBPMDAO;
 	
 	@Autowired
-	@Qualifier("defaultCaseIdentifier")
+	@Qualifier(CaseIdentifier.QUALIFIER)
 	private CaseIdentifier caseIdentifier;
 	
 	@Autowired
@@ -413,18 +414,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	
 	private IWApplicationContext getIWAC() {
 		
-		final IWContext iwc = IWContext.getCurrentInstance();
-		final IWApplicationContext iwac;
-		
-		if (iwc != null) {
-			
-			iwac = iwc;
-			
-		} else {
-			iwac = IWMainApplication.getDefaultIWApplicationContext();
-		}
-		
-		return iwac;
+		IWContext iwc = CoreUtil.getIWContext();
+		return iwc == null ? IWMainApplication.getDefaultIWApplicationContext() : iwc;
 	}
 	
 	public CasesBPMDAO getCasesBPMDAO() {
@@ -435,12 +426,30 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 	
+	@SuppressWarnings("unchecked")
 	public CaseIdentifier getCaseIdentifier() {
+		String qualifier = CaseIdentifier.QUALIFIER;
+		
+		Map<String, ? extends CaseIdentifier> identifierGenerators = WebApplicationContextUtils.getWebApplicationContext(getIWAC().getIWMainApplication()
+				.getServletContext()).getBeansOfType(CaseIdentifier.class);
+		
+		if (identifierGenerators == null || identifierGenerators.isEmpty()) {
+			logger.warning("There are no beans (type of '"+CaseIdentifier.class+"') to generate case identifier!");
+			return caseIdentifier;
+		} else if (identifierGenerators.values().size() == 1) {
+			return caseIdentifier;
+		}
+
+		for (CaseIdentifier identifierGenerator: identifierGenerators.values()) {
+			//	TODO: provide name for custom qualifier
+			Qualifier qualifierAnnotation = identifierGenerator.getClass().getAnnotation(Qualifier.class);
+			if (qualifierAnnotation != null && !qualifier.equals(qualifierAnnotation.value())) {
+				logger.info("Using identifier generator: " + identifierGenerator.getClass());
+				return identifierGenerator;
+			}
+		}
+		
 		return caseIdentifier;
-	}
-	
-	public void setCaseIdentifier(CaseIdentifier caseIdentifier) {
-		this.caseIdentifier = caseIdentifier;
 	}
 	
 	@Override
