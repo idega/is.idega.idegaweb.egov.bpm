@@ -171,6 +171,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return b;
 	}
 	
+	@SuppressWarnings("unchecked")
+	public CaseProcInstBind getLastCreatedCaseProcInstBind() {
+		List<CaseProcInstBind> binds = getEntityManager().createNamedQuery(CaseProcInstBind.getLastCreatedCase).getResultList();
+		CaseProcInstBind bind = ListUtil.isEmpty(binds) ? null : binds.get(binds.size() - 1);
+		return bind;
+	}
+	
 	public List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
 	        Collection<Date> dates, Collection<Integer> identifierIDs) {
 		

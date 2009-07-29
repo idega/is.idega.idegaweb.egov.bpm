@@ -45,6 +45,8 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract CaseProcInstBind getCaseProcInstBindLatestByDateQN(Date date);
 	
+	public abstract CaseProcInstBind getLastCreatedCaseProcInstBind();
+	
 	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
 	        Collection<Date> dates, Collection<Integer> identifierIDs);
 	
