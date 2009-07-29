@@ -21,8 +21,10 @@ import com.idega.util.IWTimestamp;
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service
-@Qualifier("defaultCaseIdentifier")
+@Qualifier(CaseIdentifier.QUALIFIER)
 public class CaseIdentifier {
+	
+	static final String QUALIFIER = "defaultCaseIdentifier";
 	
 	public static final String IDENTIFIER_PREFIX = "P";
 	
