@@ -80,6 +80,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean standAloneComponent = Boolean.TRUE;
 	private Boolean hideEmptySection = Boolean.FALSE;
 	private Boolean showAttachmentStatistics = Boolean.FALSE;
+	private Boolean showOnlyCreatorInContacts = Boolean.FALSE;
 	private String specialBackPage;
 	private String commentsPersistenceManagerIdentifier;
 	
@@ -706,6 +707,14 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setShowAttachmentStatistics(Boolean showAttachmentStatistics) {
 		this.showAttachmentStatistics = showAttachmentStatistics;
+	}
+
+	public Boolean getShowOnlyCreatorInContacts() {
+		return showOnlyCreatorInContacts;
+	}
+
+	public void setShowOnlyCreatorInContacts(Boolean showOnlyCreatorInContacts) {
+		this.showOnlyCreatorInContacts = showOnlyCreatorInContacts;
 	}
 
 }

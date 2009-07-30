@@ -41,11 +41,12 @@ CasesBPMAssets.openedCase = {
 	hasRightChangeRights: false,
 	usePdfDownloadColumn: false,
 	allowPDFSigning: false,
-	showAttachmentStatistics: false
+	showAttachmentStatistics: false,
+	showOnlyCreatorInContacts: false
 }
 
 CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-										showAttachmentStatistics) {
+										showAttachmentStatistics, showOnlyCreatorInContacts) {
 	CasesBPMAssets.openedCase.caseId = caseId || null;
 	CasesBPMAssets.openedCase.piId = piId || null;
 	CasesBPMAssets.openedCase.container = container || null;
@@ -55,6 +56,7 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeR
 	CasesBPMAssets.openedCase.allowPDFSigning = allowPDFSigning || false;
 	CasesBPMAssets.openedCase.hideEmptySection = hideEmptySection || false;
 	CasesBPMAssets.openedCase.showAttachmentStatistics = showAttachmentStatistics || false;
+	CasesBPMAssets.openedCase.showOnlyCreatorInContacts = showOnlyCreatorInContacts || false;
 }
 
 CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics) {
@@ -63,11 +65,13 @@ CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDown
 			return;
 		}
 		
-		CasesBPMAssets.setOpenedCase(caseId, piId, container, null, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics);
+		CasesBPMAssets.setOpenedCase(caseId, piId, container, null, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
+			showOnlyCreatorInContacts);
 	});
 }
 
-CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics) {
+CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
+									showOnlyCreatorInContacts) {
 	if (container == null) {
 		return false;
 	}
@@ -132,14 +136,14 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 						onGridInitedFunction('caseEmailsPart', jQuery('div.caseEmailsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
 					}
 				);
-				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, hideEmptySection,
+				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts,
 					function() {
 						onGridInitedFunction('caseContactsPart', jQuery('div.caseContactsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
 					}
 				);
 				
 				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-											showAttachmentStatistics);
+											showAttachmentStatistics, showOnlyCreatorInContacts);
 			}
 		});
 	});
@@ -493,11 +497,12 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     							hasRightChangeRights, null);
 };
 
-CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, hideEmptySection, onContactsInited) {
+CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, onContactsInited) {
     var identifier = 'caseContacts';
     
     var populatingFunction = function(params, callback) {
         params.piId = piId;
+        params.showOnlyCreatorInContacts = showOnlyCreatorInContacts;
         
         BPMProcessAssets.getProcessContactsList(params, {
             callback: function(result) {
