@@ -207,6 +207,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		casesAssets.setHideEmptySection(stateBean.getHideEmptySection() == null ? false : stateBean.getHideEmptySection());
 		casesAssets.setCommentsPersistenceManagerIdentifier(stateBean.getCommentsPersistenceManagerIdentifier());
 		casesAssets.setShowAttachmentStatistics(stateBean.getShowAttachmentStatistics() == null ? false : stateBean.getShowAttachmentStatistics());
+		casesAssets.setShowOnlyCreatorInContacts(stateBean.getShowOnlyCreatorInContacts() == null ? false : stateBean.getShowOnlyCreatorInContacts());
 		
 		if (caseId != null) {
 			casesAssets.setCaseId(caseId);
@@ -733,14 +734,31 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			return null;
 		}
 		
+		try {
+			return getCaseId(Long.valueOf(processInstanceId));
+		} catch(NumberFormatException e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+	
+	private String getCaseId(Long processInstanceId) {
 		CaseProcInstBind bind = null;
 		try {
-			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(Long.valueOf(processInstanceId));
+			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceId);
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-		
 		return bind == null ? null : bind.getCaseId().toString();
+	}
+
+	@Override
+	public User getCaseOwner(Object entityId) {
+		String caseId = null;
+		if (entityId instanceof Long) {
+			caseId = getCaseId((Long) entityId);
+		}
+		return super.getCaseOwner(caseId == null ? entityId : caseId);
 	}
 	
 }
