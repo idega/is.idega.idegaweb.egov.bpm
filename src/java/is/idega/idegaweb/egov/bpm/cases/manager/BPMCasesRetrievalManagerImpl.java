@@ -217,11 +217,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
-			int startIndex, int count) {
+	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes, List<String> caseStatusesToHide,
+			List<String> caseStatusesToShow, int startIndex, int count, boolean onlySubscribedCases) {
 
 		try {
-			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow);
+			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases);
 
 			if (casesIds != null && !casesIds.isEmpty()) {
 				int totalCount = casesIds.size();
@@ -252,7 +252,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	
 	@Override
 	@SuppressWarnings("unchecked")
-	public List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow) {
+	public List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
+			boolean onlySubscribedCases) {
 
 		IWContext iwc = CoreUtil.getIWContext();
 		IWMainApplication iwma = iwc.getIWMainApplication();
@@ -289,7 +290,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 							groups.add(new Integer(group.getPrimaryKey().toString()));
 						}
 					}
-					caseIds = getCasesBPMDAO().getOpenCasesIds(user, caseCodes, statusesToShow, statusesToHide, groups, roles);
+					caseIds = getCasesBPMDAO().getOpenCasesIds(user, caseCodes, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases);
 				}
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
 
@@ -309,7 +310,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 							groups.add(new Integer(group.getPrimaryKey().toString()));
 						}
 					}
-					caseIds = getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles);
+					caseIds = getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases);
 				}
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
@@ -318,7 +319,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				statusesToShow.addAll(Arrays.asList(caseStatus));
 				statusesToShow = ListUtil.getFilteredList(statusesToShow);
 				
-				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide);
+				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide, onlySubscribedCases);
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 				
@@ -330,7 +331,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				for (CaseCode code : casecodes) {
 					codes.add(code.getCode());
 				}
-				caseIds = getCasesBPMDAO().getUserCasesIds(user, statusesToShow, statusesToHide, codes, roles);
+				caseIds = getCasesBPMDAO().getUserCasesIds(user, statusesToShow, statusesToHide, codes, roles, onlySubscribedCases);
 				
 			}
 		} catch (Exception e) {

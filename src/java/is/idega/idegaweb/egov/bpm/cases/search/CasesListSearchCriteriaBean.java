@@ -75,6 +75,7 @@ public class CasesListSearchCriteriaBean {
 	private boolean hideEmptySection;
 	private boolean showCaseNumberColumn = true;
 	private boolean showCreationTimeInDateColumn = true;
+	private boolean onlySubscribedCases;
 	
 	private String id;
 	private String instanceId;
@@ -748,4 +749,13 @@ public class CasesListSearchCriteriaBean {
 	public String getCaseCodes() {
 		return caseCodes;
 	}
+
+	public boolean isOnlySubscribedCases() {
+		return onlySubscribedCases;
+	}
+
+	public void setOnlySubscribedCases(boolean onlySubscribedCases) {
+		this.onlySubscribedCases = onlySubscribedCases;
+	}
+	
 }

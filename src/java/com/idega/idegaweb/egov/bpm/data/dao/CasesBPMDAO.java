@@ -85,11 +85,11 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseCodes,
 	        List<String> caseStatuses, List<String> caseStatusesToHide,
-	        Collection<Integer> groups, Collection<String> roles);
+	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases);
 	
 	public abstract List<Integer> getClosedCasesIds(User user,
 	        List<String> caseStatuses, List<String> caseStatusesToHide,
-	        Collection<Integer> groups, Collection<String> roles);
+	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases);
 	
 	/**
 	 * @param user
@@ -98,12 +98,11 @@ public interface CasesBPMDAO extends GenericDao {
 	 * @return cases of not ended processes (end_ is null) whose user provided is handler of, or
 	 *         what user is watching
 	 */
-	public abstract List<Integer> getMyCasesIds(User user,
-	        List<String> caseStatuses, List<String> caseStatusesToHide);
+	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, boolean onlySubscribedCases);
 	
 	public abstract List<Integer> getUserCasesIds(User user,
 	        List<String> caseStatuses, List<String> caseStatusesToHide,
-	        List<String> caseCodes, Collection<String> roles);
+	        List<String> caseCodes, Collection<String> roles, boolean onlySubscribedCases);
 	
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(
 	        List<String> caseStatuses, List<String> caseStatusesToHide);

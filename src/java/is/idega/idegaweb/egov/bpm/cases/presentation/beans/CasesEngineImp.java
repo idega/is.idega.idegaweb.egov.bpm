@@ -300,7 +300,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
 		List<Integer> caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(), 
-				criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList());
+				criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases());
 		if (ListUtil.isEmpty(caseIdsByUser)) {
 			return null;
 		}
