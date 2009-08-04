@@ -214,6 +214,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		properties.setCaseCodes(criteriaBean.getCaseCodesInList());
 		properties.setStatusesToShow(criteriaBean.getStatusesToShowInList());
 		properties.setStatusesToHide(criteriaBean.getStatusesToHideInList());
+		properties.setOnlySubscribedCases(criteriaBean.isOnlySubscribedCases());
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
 			properties.setAddCredentialsToExernalUrls(false);
