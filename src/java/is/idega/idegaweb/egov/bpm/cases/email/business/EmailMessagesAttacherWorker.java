@@ -6,9 +6,11 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,9 +27,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
-import com.idega.block.email.business.EmailParser;
+import com.idega.block.email.bean.FoundMessagesInfo;
+import com.idega.block.email.bean.MessageParserType;
 import com.idega.block.email.business.EmailsParsersProvider;
 import com.idega.block.email.client.business.ApplicationEmailEvent;
+import com.idega.block.email.client.business.EmailParams;
+import com.idega.block.email.parser.EmailParser;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.core.messaging.EmailMessage;
@@ -74,6 +79,17 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 	@SuppressWarnings("unchecked")
 	private void parseAndAttachMessages() {
+		Map<String, FoundMessagesInfo> messagesToParse = new HashMap<String, FoundMessagesInfo>();
+		
+		Map<String, FoundMessagesInfo> messagesInfo = emailEvent.getMessages();
+		if (messagesInfo != null && !messagesInfo.isEmpty()) {
+			for (Entry<String, FoundMessagesInfo> entry: messagesInfo.entrySet()) {
+				if (entry.getValue().getParserType() == MessageParserType.BPM) {
+					messagesToParse.put(entry.getKey(), entry.getValue());
+				}
+			}
+		}
+		
 		Map<Object, Object> parsersProviders = null;
 		try {
 			parsersProviders = WebApplicationContextUtils.getWebApplicationContext(IWMainApplication.getDefaultIWMainApplication()
@@ -85,18 +101,17 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return;
 		}
 		
-		List<BPMEmailMessage> allParsedMessages = new ArrayList<BPMEmailMessage>();
+		EmailParams params = emailEvent.getEmailParams();
+		
+		Collection<BPMEmailMessage> allParsedMessages = new ArrayList<BPMEmailMessage>();
 		for (Object bean: parsersProviders.values()) {
 			if (bean instanceof EmailsParsersProvider) {
 				for (EmailParser parser: ((EmailsParsersProvider) bean).getAllParsers()) {
-					List<? extends EmailMessage> parsedMessages = parser.getParsedMessages(emailEvent);
-					if (!ListUtil.isEmpty(parsedMessages)) {
-						for (EmailMessage message: parsedMessages) {
-							if (message instanceof BPMEmailMessage && !allParsedMessages.contains(message)) {
-								allParsedMessages.add((BPMEmailMessage) message);
-							}
-						}
-					}
+					Collection<? extends EmailMessage> parsedMessages = parser.getParsedMessagesCollection(messagesToParse, params);
+					addParsedMessages(allParsedMessages, parsedMessages);
+					
+					parsedMessages = parser.getParsedMessages(emailEvent);
+					addParsedMessages(allParsedMessages, parsedMessages);
 				}
 			}
 		}
@@ -105,7 +120,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return;
 		}
 		
-		final List<BPMEmailMessage> messagesToAttach = allParsedMessages;
+		final Collection<BPMEmailMessage> messagesToAttach = allParsedMessages;
 		getIdegaJbpmContext().execute(new JbpmCallback() {
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				for (BPMEmailMessage message: messagesToAttach) {
@@ -116,6 +131,18 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				return null;
 			}
 		});
+	}
+	
+	private void addParsedMessages(Collection<BPMEmailMessage> allParsedMessages, Collection<? extends EmailMessage> parsedMessages) {
+		if (ListUtil.isEmpty(parsedMessages)) {
+			return;
+		}
+		
+		for (EmailMessage message: parsedMessages) {
+			if (message instanceof BPMEmailMessage && !allParsedMessages.contains(message)) {
+				allParsedMessages.add((BPMEmailMessage) message);
+			}
+		}
 	}
 	
 	@Transactional
@@ -171,13 +198,18 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					taskInstance.submit(emailViewSubmission, false);
 					
 					Map<String, InputStream> attachments = message.getAttachments();
-					File attachment = message.getAttachedFile();
-					if (attachment != null) {
-						if (attachments == null) {
-							attachments = new HashMap<String, InputStream>(1);
+					Collection<File> attachedFiles = message.getAttachedFiles();
+					if (!ListUtil.isEmpty(attachedFiles)) {
+						for (File attachedFile: attachedFiles) {
+							if (attachedFile != null) {
+								if (attachments == null) {
+									attachments = new HashMap<String, InputStream>(1);
+								}
+								attachments.put(attachedFile.getName(), new FileInputStream(attachedFile));
+							}
 						}
-						attachments.put(attachment.getName(), new FileInputStream(attachment));
 					}
+					
 					if (attachments != null && !attachments.isEmpty()) {
 						Variable variable = new Variable("attachments", VariableDataType.FILES);
 						
@@ -190,8 +222,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 								LOGGER.log(Level.SEVERE, "Unable to set binary variable for task instance: " + ti.getId(), e);
 							} finally {
 								IOUtil.closeInputStream(fileStream);
-								if (attachment != null) {
-									attachment.delete();
+								if (!ListUtil.isEmpty(attachedFiles)) {
+									for (File attachedFile: attachedFiles) {
+										attachedFile.delete();
+									}
 								}
 							}
 						}

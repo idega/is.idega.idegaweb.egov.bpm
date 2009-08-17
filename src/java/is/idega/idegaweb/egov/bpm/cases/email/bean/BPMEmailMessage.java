@@ -18,10 +18,27 @@ public class BPMEmailMessage extends EmailMessage {
 	
 	private Map<String, InputStream> attachments;
 	
-	public BPMEmailMessage(Long processInstanceId) {
+	public BPMEmailMessage() {
 		super();
+	}
+	
+	public BPMEmailMessage(Long processInstanceId) {
+		this();
 		
 		this.processInstanceId = processInstanceId;
+	}
+	
+	public BPMEmailMessage(EmailMessage message, Long processInstanceId) {
+		super(message);
+		
+		setProcessInstanceId(processInstanceId);
+	}
+	
+	protected BPMEmailMessage(BPMEmailMessage message) {
+		super(message);
+		
+		setProcessInstanceId(message.getProcessInstanceId());
+		setTaskInstanceId(message.getTaskInstanceId());
 	}
 	
 	public BPMEmailMessage(Long processInstanceId, Long taskInstanceId) {
@@ -43,10 +60,16 @@ public class BPMEmailMessage extends EmailMessage {
 		this.taskInstanceId = taskInstanceId;
 	}
 
+	@Override
+	protected Object clone() throws CloneNotSupportedException {
+		return new BPMEmailMessage(this);
+	}
+
 	public Map<String, InputStream> getAttachments() {
 		return attachments;
 	}
 
+	@Override
 	public void setAttachments(Map<String, InputStream> attachments) {
 		this.attachments = attachments;
 	}
