@@ -757,13 +757,4 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return latestTask;
 	}
 	
-	@Override
-	public boolean useFilesUploader(CommentsViewerProperties properties) {
-		if (properties == null) {
-			return false;
-		}
-		
-		return true;
-	}
-	
 }
