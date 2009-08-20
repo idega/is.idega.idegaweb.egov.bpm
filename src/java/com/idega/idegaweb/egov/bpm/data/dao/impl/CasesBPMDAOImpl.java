@@ -541,8 +541,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToHide) ");
 		}
 		if (onlySubscribedCases) {
-			builder.append(" and proc_case_subscribers.ic_user_id = :subscriber");
+			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
+			params.add(new Param("caseAuthor", user.getPrimaryKey()));
 		}
 		builder.append(") UNION (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 		                + "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where ");
@@ -596,8 +597,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append(" and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes))");
 		}
 		if (onlySubscribedCases) {
-			builder.append(" and proc_case_subscribers.ic_user_id = :subscriber");
+			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber)");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
+			params.add(new Param("caseAuthor", user.getPrimaryKey()));
 		}
 		builder.append(") union"
 		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
@@ -692,8 +694,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToHide)");
 		}
 		if (onlySubscribedCases) {
-			builder.append(" and proc_case_subscribers.ic_user_id = :subscriber");
+			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
+			params.add(new Param("caseAuthor", user.getPrimaryKey().toString()));
 		}
 		builder.append(") union"
 		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
@@ -788,8 +791,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToShow) ");
 		}
 		if (onlySubscribedCases) {
-			builder.append(" and proc_case_subscribers.ic_user_id = :subscriber");
+			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
+			params.add(new Param("caseAuthor", user.getPrimaryKey().toString()));
 		}
 		builder.append(") union (select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case "
 		                + "where user_id=:identityId and proc_case.case_code not in (:caseCodes) ");
