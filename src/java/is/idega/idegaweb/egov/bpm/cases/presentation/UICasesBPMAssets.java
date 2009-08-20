@@ -57,6 +57,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	
 	public static final String COMPONENT_TYPE = "com.idega.UICasesBPMAssets";
 
+	public static final String AUTO_SHOW_COMMENTS = "autoShowComments";
+	
 	private static final String assetsFacet = "assets";
 	private static final String assetViewFacet = "assetView";
 	
@@ -138,7 +140,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			comments.setSpringBeanIdentifier(commentsManagerIdentifier);
 			comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
 			comments.setNewestEntriesOnTop(true);
-			comments.setShowCommentsList(false);
+			comments.setShowCommentsList(iwc.isParameterSet(AUTO_SHOW_COMMENTS) && iwc.getParameter(AUTO_SHOW_COMMENTS).equals(Boolean.TRUE.toString()));
 			comments.setAddLoginbyUUIDOnRSSFeedLink(true);
 			comments.setStyleClass("commentsViewerForTaskViewerInCasesList");
 			div.getChildren().add(comments);
