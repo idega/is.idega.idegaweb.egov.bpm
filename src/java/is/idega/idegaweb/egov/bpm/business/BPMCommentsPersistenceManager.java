@@ -1,6 +1,8 @@
 package is.idega.idegaweb.egov.bpm.business;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
+import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +60,7 @@ import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
+import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -83,6 +86,8 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	private BPMFactory bpmFactory;
 	@Autowired
 	private BPMContext bpmContext;
+	@Autowired
+	private CaseUserFactory caseUserFactory;
 	
 	private WireFeedOutput wfo = new WireFeedOutput();
 	
@@ -757,4 +762,33 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return latestTask;
 	}
 	
+	@Override
+	protected String getLinkForRecipient(String recipient, CommentsViewerProperties properties) {
+		ProcessInstanceW piw = getProcessInstance(properties.getIdentifier());
+		if (piw == null) {
+			return super.getLinkForRecipient(recipient, properties);
+		}
+		
+		UserBusiness userBusiness = getUserBusiness();
+		if (userBusiness == null) {
+			return super.getLinkForRecipient(recipient, properties);
+		}
+		
+		Collection<User> recipients = userBusiness.getUsersByEmail(recipient);
+		if (ListUtil.isEmpty(recipients)) {
+			return super.getLinkForRecipient(recipient, properties);
+		}
+		
+		CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(recipients.iterator().next(), piw);
+		String url = caseUser.getUrlToTheCase();
+		return StringUtil.isEmpty(url) ? super.getLinkForRecipient(recipient, properties) : url;
+	}
+
+	public CaseUserFactory getCaseUserFactory() {
+		return caseUserFactory;
+	}
+
+	public void setCaseUserFactory(CaseUserFactory caseUserFactory) {
+		this.caseUserFactory = caseUserFactory;
+	}
 }
