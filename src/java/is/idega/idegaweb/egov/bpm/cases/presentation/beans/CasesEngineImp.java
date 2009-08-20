@@ -123,6 +123,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 				stateBean.setCommentsPersistenceManagerIdentifier(properties.getCommentsPersistenceManagerIdentifier());
 				stateBean.setShowAttachmentStatistics(properties.isShowAttachmentStatistics());
 				stateBean.setShowOnlyCreatorInContacts(properties.isShowOnlyCreatorInContacts());
+				stateBean.setAutoShowComments(properties.isAutoShowComments());
 			}
 			
 			Integer caseId = new Integer(caseIdStr);

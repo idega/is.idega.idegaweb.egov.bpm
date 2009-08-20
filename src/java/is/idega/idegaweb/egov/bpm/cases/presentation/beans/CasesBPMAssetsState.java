@@ -91,6 +91,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private String currentTaskInstanceName;
 	private boolean specialBackPageDecoded;
 	private String systemEmailAddress;
+	private boolean autoShowComments;
 	
 	public Long getViewSelected() {
 		if (viewSelected == null) {
@@ -715,6 +716,14 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setShowOnlyCreatorInContacts(Boolean showOnlyCreatorInContacts) {
 		this.showOnlyCreatorInContacts = showOnlyCreatorInContacts;
+	}
+
+	public boolean isAutoShowComments() {
+		return autoShowComments;
+	}
+
+	public void setAutoShowComments(boolean autoShowComments) {
+		this.autoShowComments = autoShowComments;
 	}
 
 }
