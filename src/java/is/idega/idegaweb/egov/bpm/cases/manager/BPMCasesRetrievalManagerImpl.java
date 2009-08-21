@@ -38,6 +38,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.CasesRetrievalManagerImpl;
 import com.idega.block.process.data.Case;
@@ -67,6 +68,7 @@ import com.idega.presentation.IWContext;
 import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.data.Group;
 import com.idega.user.data.GroupBMPBean;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
@@ -341,14 +343,23 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return caseIds;
 	}
 	
-	public CasesBusiness getCasesBusiness() {
+	@Override
+	protected CaseBusiness getCaseBusiness() {
 		try {
-			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
+			return (CaseBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
 		}
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
+	
+	private CasesBusiness getCasesBusiness() {
+		try {
+			return (CasesBusiness) getCaseBusiness();
+		} catch (Exception e) {
+			throw new IBORuntimeException(e);
+		}
+	}	
 	
 	public UserBusiness getUserBusiness(IWContext iwc) {
 		
@@ -576,9 +587,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), cases.size());
 	}
 	
-	@Override
 	@SuppressWarnings("unchecked")
-	public PagedDataCollection<CasePresentation> getClosedCases(Collection groups) {
+	@Override
+	public PagedDataCollection<CasePresentation> getClosedCases(Collection<Group> groups) {
 		try {
 			Collection<Case> closedCases = getCasesBusiness().getClosedCases(groups);
 			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
@@ -637,18 +648,13 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				bean.setCategoryId(caseCategory.getPrimaryKey().toString());
 			}
 			try {
-				bean.setCaseStatus(getCasesBusiness().getCaseStatus(
-								theCase.getStatus()));
+				bean.setCaseStatus(getCasesBusiness().getCaseStatus(theCase.getStatus()));
 			} catch (RemoteException e) {
 				bean.setCaseStatus(theCase.getCaseStatus());
 			}
 			
 			if (bean.getCaseStatus() != null) {
-				try {
-					bean.setLocalizedStatus(getCasesBusiness().getLocalizedCaseStatusDescription(theCase, bean.getCaseStatus(), locale));
-				} catch (RemoteException e) {
-					e.printStackTrace();
-				}
+				bean.setLocalizedStatus(getLocalizedStatus(theCase, theCase.getCaseStatus(), locale));
 			}
 		}
 		return bean;
@@ -679,36 +685,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		
 		return null;
 	}
-	
-	/*
-	@Override
-	public boolean setCaseVariable(Long taskInstanceId, String variableName, String variableValue) {
-		if (taskInstanceId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(variableValue)) {
-			return false;
-		}
-		
-		try {
-			Map<String, Object> variables = getVariablesHandler().populateVariables(taskInstanceId);
-			variables.put(variableName, variableValue);
-			getVariablesHandler().submitVariablesExplicitly(variables, taskInstanceId);
-		} catch(Exception e) {
-			e.printStackTrace();
-		}
-		
-		return true;
-	}
-	
-	
-	@Override
-	public String submitCaseTaskInstance(Long taskInstanceId) {
-		return getBpmFactory().getProcessManagerByTaskInstanceId(taskInstanceId).getTaskInstance(taskInstanceId).submit();
-	}
-	
-	@Override
-	public Long createNewTaskForCase(Long taskInstanceId, String tokenName) {
-		return getBpmFactory().getProcessManagerByTaskInstanceId(taskInstanceId).getTaskInstance(taskInstanceId).creatTask(tokenName);
-	}
-	*/
 
 	@Override
 	public List<Long> getCasesIdsByProcessDefinitionName(String processDefinitionName) {
