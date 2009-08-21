@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.business;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
+import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -67,6 +68,7 @@ import com.idega.util.CoreUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.URIUtil;
 import com.sun.syndication.feed.WireFeed;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
@@ -781,7 +783,13 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		
 		CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(recipients.iterator().next(), piw);
 		String url = caseUser.getUrlToTheCase();
-		return StringUtil.isEmpty(url) ? super.getLinkForRecipient(recipient, properties) : url;
+		if (StringUtil.isEmpty(url)) {
+			return super.getLinkForRecipient(recipient, properties);
+		}
+		
+		URIUtil uriUtil = new URIUtil(url);
+		uriUtil.setParameter(UICasesBPMAssets.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
+		return uriUtil.getUri();
 	}
 
 	public CaseUserFactory getCaseUserFactory() {
