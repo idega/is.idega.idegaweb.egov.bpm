@@ -1254,7 +1254,7 @@ CasesBPMAssets.notifyToDownloadAttachment = function(properties) {
 	var fullHref = window.location.href;
 	properties.server = fullHref.substring(0, fullHref.indexOf(window.location.pathname));
 	properties.url = properties.server + window.location.pathname + '?prm_case_pk=' + CasesBPMAssets.openedCase.caseId;
-	BPMAttachmentDownloadNotifier.sendDownloadNotifications(properties, {
+	ProcessAttachmentDownloadNotifier.sendDownloadNotifications(new BPMAttachmentDownloadNotificationProperties(properties), {
 		callback: function(result) {
 			if (result == null) {
 				return false;
@@ -1263,4 +1263,15 @@ CasesBPMAssets.notifyToDownloadAttachment = function(properties) {
 			humanMsg.displayMsg(result.value, null);
 		}
 	});
+}
+
+function BPMAttachmentDownloadNotificationProperties(properties) {
+	this.file = properties.file;
+	this.url = properties.url;
+	this.server = properties.server;
+	
+	this.users = properties.users;
+	
+	this.taskId = properties.taskId;
+	this.hash = properties.hash;
 }

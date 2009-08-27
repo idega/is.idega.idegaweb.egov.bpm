@@ -60,4 +60,9 @@ public class BPMAttachmentDownloadNotificationProperties extends FileDownloadNot
 		return super.getUrl();
 	}
 	
+	@Override
+	@RemoteProperty
+	public String getCommentsManagerIdentifier() {
+		return super.getCommentsManagerIdentifier();
+	}
 }

@@ -1,6 +1,6 @@
 package is.idega.idegaweb.egov.bpm.artifacts;
 
-import is.idega.idegaweb.egov.bpm.business.BPMAttachmentDownloadNotifier;
+import is.idega.idegaweb.egov.bpm.business.ProcessAttachmentDownloadNotifier;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -61,7 +61,7 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 		
 		return PresentationUtil.getJavaScriptLinesLoadedLazily(Arrays.asList(
 				CoreConstants.DWR_ENGINE_SCRIPT,
-				"/dwr/interface/" + BPMAttachmentDownloadNotifier.DWR_OBJECT + ".js"
+				"/dwr/interface/" + ProcessAttachmentDownloadNotifier.DWR_OBJECT + ".js"
 		), realAction.toString());
 	}
 

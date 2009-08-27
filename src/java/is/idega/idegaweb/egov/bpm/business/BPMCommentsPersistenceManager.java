@@ -48,6 +48,7 @@ import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogic;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.business.file.FileDownloadNotificationProperties;
 import com.idega.content.business.ContentConstants;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.business.NotLoggedOnException;
@@ -906,5 +907,46 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			LOGGER.log(Level.WARNING, "Error getting: " + ApplicationBusiness.class, e);
 		}
 		return null;
+	}
+	
+	@Override
+	public Map<String, String> getUriToDocument(FileDownloadNotificationProperties properties, String identifier, List<User> users) {
+		if (StringUtil.isEmpty(identifier)) {
+			return super.getUriToDocument(properties, identifier, users);
+		}
+		
+		ProcessInstanceW piw = getProcessInstance(identifier);
+		if (piw == null) {
+			return super.getUriToDocument(properties, identifier, users);
+		}
+		
+		Map<String, String> linksForUsers = new HashMap<String, String>();
+		for (User user: users) {
+			CaseUserImpl caseUser = null;
+			try {
+				caseUser = caseUserFactory.getCaseUser(user, piw);
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting url to user's case for user " + user + " and process instance: " + piw.getProcessInstanceId(), e);
+			}
+			
+			String uri = null;
+			if (caseUser == null) {
+				uri = properties.getUrl();
+			} else {
+				String url = caseUser.getUrlToTheCase();
+				if (StringUtil.isEmpty(url)) {
+					uri = properties.getUrl();
+				} else {
+					URIUtil uriUtil = new URIUtil(url);
+					uriUtil.setParameter(UICasesBPMAssets.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
+					uri = uriUtil.getUri();
+				}
+			}
+			
+			uri = StringUtil.isEmpty(uri) ? properties.getUrl() : uri;
+			linksForUsers.put(user.getId(), uri);
+		}
+		
+		return linksForUsers;
 	}
 }

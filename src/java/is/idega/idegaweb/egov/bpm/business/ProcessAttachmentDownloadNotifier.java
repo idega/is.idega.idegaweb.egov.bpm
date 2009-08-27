@@ -17,8 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.file.FileDownloadNotificationProperties;
 import com.idega.business.file.FileDownloadNotifier;
@@ -37,18 +35,18 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
 
+@Service(ProcessAttachmentDownloadNotifier.BEAN_IDENTIFIER)
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-@Service(BPMAttachmentDownloadNotifier.BEAN_IDENTIFIER)
 @RemoteProxy(creator=SpringCreator.class, creatorParams={
-	@Param(name="beanName", value=BPMAttachmentDownloadNotifier.BEAN_IDENTIFIER),
-	@Param(name="javascript", value=BPMAttachmentDownloadNotifier.DWR_OBJECT)
-}, name=BPMAttachmentDownloadNotifier.DWR_OBJECT)
-public class BPMAttachmentDownloadNotifier extends FileDownloadNotifier implements DWRAnnotationPersistance {
+	@Param(name="beanName", value=ProcessAttachmentDownloadNotifier.BEAN_IDENTIFIER),
+	@Param(name="javascript", value=ProcessAttachmentDownloadNotifier.DWR_OBJECT)
+}, name=ProcessAttachmentDownloadNotifier.DWR_OBJECT)
+public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier implements DWRAnnotationPersistance {
 
-	private static final long serialVersionUID = -6038272277947394981L;
+	private static final long serialVersionUID = 6760529129704014601L;
 
-	public static final String BEAN_IDENTIFIER = "bpmAttachmentDownloadNotifier";
-	public static final String DWR_OBJECT = "BPMAttachmentDownloadNotifier";
+	public static final String BEAN_IDENTIFIER = "processAttachmentDownloadNotifier";
+	public static final String DWR_OBJECT = "ProcessAttachmentDownloadNotifier";
 	
 	@Autowired
 	private CaseUserFactory caseUserFactory;
@@ -57,7 +55,7 @@ public class BPMAttachmentDownloadNotifier extends FileDownloadNotifier implemen
 	private BPMFactory bpmFactory;
 	
 	@RemoteMethod
-	public AdvancedProperty sendDownloadNotifications(BPMAttachmentDownloadNotificationProperties properties) { 
+	public AdvancedProperty sendDownloadNotifications(BPMAttachmentDownloadNotificationProperties properties) {
 		return super.sendNotifications(properties);
 	}
 
@@ -94,7 +92,6 @@ public class BPMAttachmentDownloadNotifier extends FileDownloadNotifier implemen
 		return file;
 	}
 
-	@Transactional(readOnly = true)
 	@Override
 	public Map<String, String> getUriToDocument(FileDownloadNotificationProperties properties, List<User> users) {
 		if (ListUtil.isEmpty(users) || !(properties instanceof BPMAttachmentDownloadNotificationProperties)) {
@@ -103,13 +100,22 @@ public class BPMAttachmentDownloadNotifier extends FileDownloadNotifier implemen
 		
 		BPMAttachmentDownloadNotificationProperties realProperties = (BPMAttachmentDownloadNotificationProperties) properties;
 		
+		ProcessInstanceW piw = null;
+		try {
+			ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
+			TaskInstanceW tiw = processManager.getTaskInstance(realProperties.getTaskId());
+			piw = tiw.getProcessInstanceW();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		if (piw == null) {
+			return null;
+		}
+		
 		Map<String, String> linksForUsers = new HashMap<String, String>();
 		for (User user: users) {
 			CaseUserImpl caseUser = null;
 			try {
-				ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
-				TaskInstanceW tiw = processManager.getTaskInstance(realProperties.getTaskId());
-				ProcessInstanceW piw = tiw.getProcessInstanceW();
 				caseUser = caseUserFactory.getCaseUser(user, piw);
 			} catch (Exception e) {
 				e.printStackTrace();
