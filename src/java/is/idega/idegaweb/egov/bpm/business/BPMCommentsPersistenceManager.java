@@ -1,5 +1,7 @@
 package is.idega.idegaweb.egov.bpm.business;
 
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
@@ -27,6 +29,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.article.bean.ArticleCommentAttachmentInfo;
 import com.idega.block.article.bean.CommentEntry;
@@ -36,6 +39,8 @@ import com.idega.block.article.business.DefaultCommentsPersistenceManager;
 import com.idega.block.article.component.ArticleCommentAttachmentStatisticsViewer;
 import com.idega.block.article.data.Comment;
 import com.idega.block.article.data.CommentHome;
+import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.data.Case;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.block.rss.business.RSSBusiness;
@@ -49,8 +54,11 @@ import com.idega.core.accesscontrol.business.NotLoggedOnException;
 import com.idega.core.contact.data.Email;
 import com.idega.core.file.data.ICFile;
 import com.idega.data.IDOLookup;
+import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
@@ -86,10 +94,15 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	
 	@Autowired
 	private BPMFactory bpmFactory;
+	
 	@Autowired
 	private BPMContext bpmContext;
+	
 	@Autowired
 	private CaseUserFactory caseUserFactory;
+	
+	@Autowired
+	private CasesBPMDAO casesDAO;
 	
 	private WireFeedOutput wfo = new WireFeedOutput();
 	
@@ -168,16 +181,36 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		this.bpmFactory = bpmFactory;
 	}
 	
+	private IWResourceBundle getResourceBundle(IWContext iwc) {
+		return iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+	}
+	
+	@Transactional(readOnly = true)
 	@Override
 	public String getFeedTitle(IWContext iwc, String processInstanceId) {
-		// TODO: return application (BPM process name)?
-		return "Comments of process";
+		String defaultTitle = "Comments of process";
+		String localizedTitle = null;
+		try {
+			ProcessInstanceW piw = getProcessInstance(processInstanceId);
+			ApplicationBusiness appBusiness = getApplicationBusiness(iwc);
+			Collection<Application> apps = appBusiness.getApplicationHome().findAllByApplicationUrl(piw.getProcessDefinitionW().getProcessDefinition().getName());
+			if (ListUtil.isEmpty(apps)) {
+				return defaultTitle;
+			}
+			
+			localizedTitle = appBusiness.getApplicationName(apps.iterator().next(), iwc.getCurrentLocale());
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting localized name for process instance's ('"+defaultTitle+"') application", e);
+		}
+		
+		localizedTitle = StringUtil.isEmpty(localizedTitle) ? defaultTitle : localizedTitle;
+		return getResourceBundle(iwc).getLocalizedString("feed.comments_of_process", defaultTitle) + (defaultTitle.equals(localizedTitle) ?
+				CoreConstants.EMPTY : (" " + localizedTitle));
 	}
 	
 	@Override
 	public String getFeedSubtitle(IWContext iwc, String processInstanceId) {
-		// TODO: return more precise explanation
-		return "All process comments";
+		return getResourceBundle(iwc).getLocalizedString("feed.all_comments_of_a_process", "All comments of a process");
 	}
 	
 	@Override
@@ -798,5 +831,80 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 	public void setCaseUserFactory(CaseUserFactory caseUserFactory) {
 		this.caseUserFactory = caseUserFactory;
+	}
+
+	@Override
+	protected List<User> getCaseHandlers(String identifier) {
+		ProcessInstanceW piw = getProcessInstance(identifier);
+		if (piw == null) {
+			return null;
+		}
+		
+		Integer handlerId = piw.getHandlerId();
+		if (handlerId == null) {
+			return null;
+		}
+		
+		UserBusiness userBusiness = getUserBusiness();
+		User handler = null;
+		try {
+			handler = userBusiness.getUser(handlerId);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting user by id: " + handlerId, e);
+		}
+		
+		if (handler == null) {
+			return null;
+		}
+		
+		List<User> handlers = new ArrayList<User>();
+		handlers.add(handler);
+		return handlers;
+	}
+	
+	protected Case getCase(Long processInstanceId) {
+		CaseProcInstBind bind = null;
+		try {
+			bind = getCasesDAO().getCaseProcInstBindByProcessInstanceId(processInstanceId);
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting case for process instance: " + processInstanceId);
+		}
+		if (bind == null) {
+			return null;
+		}
+		
+		try {
+			return getCaseBusiness(IWMainApplication.getDefaultIWApplicationContext()).getCase(bind.getCaseId());
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting case by id: " + bind.getCaseId(), e);
+		}
+		
+		return null;
+	}
+
+	public CasesBPMDAO getCasesDAO() {
+		return casesDAO;
+	}
+
+	public void setCasesDAO(CasesBPMDAO casesDAO) {
+		this.casesDAO = casesDAO;
+	}
+	
+	protected CaseBusiness getCaseBusiness(IWApplicationContext iwac) {
+		try {
+			return IBOLookup.getServiceInstance(iwac == null ? IWMainApplication.getDefaultIWApplicationContext() : iwac, CaseBusiness.class);
+		} catch (IBOLookupException e) {
+			LOGGER.log(Level.WARNING, "Error getting: " + CaseBusiness.class, e);
+		}
+		return null;
+	}
+	
+	protected ApplicationBusiness getApplicationBusiness(IWApplicationContext iwac) {
+		try {
+			return IBOLookup.getServiceInstance(iwac == null ? IWMainApplication.getDefaultIWApplicationContext() : iwac, ApplicationBusiness.class);
+		} catch (IBOLookupException e) {
+			LOGGER.log(Level.WARNING, "Error getting: " + ApplicationBusiness.class, e);
+		}
+		return null;
 	}
 }
