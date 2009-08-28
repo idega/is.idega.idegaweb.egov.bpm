@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -21,7 +22,6 @@ import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.file.FileDownloadNotificationProperties;
 import com.idega.business.file.FileDownloadNotifier;
 import com.idega.core.accesscontrol.business.LoginBusinessBean;
-import com.idega.core.file.data.ICFile;
 import com.idega.dwr.business.DWRAnnotationPersistance;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.io.MediaWritable;
@@ -30,6 +30,7 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.user.data.User;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -82,11 +83,30 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 	}
 
 	@Override
-	protected ICFile getFile(FileDownloadNotificationProperties properties) {
-		ICFile file = super.getFile(properties);
+	protected AdvancedProperty getFile(FileDownloadNotificationProperties properties) {
+		AdvancedProperty file = super.getFile(properties);
 		
 		if (file == null && properties instanceof BPMAttachmentDownloadNotificationProperties) {
-			return getFile(((BPMAttachmentDownloadNotificationProperties) properties).getHash());
+			BPMAttachmentDownloadNotificationProperties realProperties = (BPMAttachmentDownloadNotificationProperties) properties;
+			
+			file = getFile(realProperties.getHash());
+		
+			Integer fileHash = realProperties.getHash();
+			if (file == null && fileHash != null) {
+				ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
+				TaskInstanceW tiw = processManager.getTaskInstance(realProperties.getTaskId());
+				List<BinaryVariable> attachments = tiw.getAttachments();
+				if (!ListUtil.isEmpty(attachments)) {
+					for (Iterator<BinaryVariable> variablesIter = attachments.iterator(); (variablesIter.hasNext() && file == null);) {
+						BinaryVariable attachment = variablesIter.next();
+						
+						Integer attachmenHash = attachment.getHash();
+						if (attachmenHash != null && attachmenHash.intValue() == fileHash.intValue()) {
+							file = new AdvancedProperty(String.valueOf(fileHash), attachment.getFileName());
+						}
+					}
+				}
+			}
 		}
 		
 		return file;
