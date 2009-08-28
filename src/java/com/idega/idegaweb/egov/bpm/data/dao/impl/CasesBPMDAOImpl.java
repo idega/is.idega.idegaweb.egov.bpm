@@ -508,6 +508,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		            CaseProcInstBind.variablesNamesProp, variables));
 	}
 	
+	public List<VariableInstance> getVariablesByNames(List<String> names) {
+		if (ListUtil.isEmpty(names)) {
+			return null;
+		}
+		
+		return getResultList(CaseProcInstBind.getVariablesByNames, VariableInstance.class, new Param(CaseProcInstBind.variablesNamesProp, names));
+	}
+	
 	// TODO: those queries are very similar, make some general query, and just append queries/joins
 	// in more special use cases
 	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, boolean onlySubscribedCases) {

@@ -47,7 +47,9 @@ import javax.persistence.TemporalType;
 			//	Query to get variables by process instance id
 			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstanceId, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where var.name is not null and pi.id = :" + CaseProcInstBind.processInstanceIdProp),
 			//	Query to get variables by process instances ids and variables names
-			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where pi.id in (:" + CaseProcInstBind.processInstanceIdsProp + ") and var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance")
+			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where pi.id in (:" + CaseProcInstBind.processInstanceIdsProp + ") and var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance"),
+			//	Query to get variables by names
+			@NamedQuery(name=CaseProcInstBind.getVariablesByNames, query="select var from org.jbpm.context.exe.VariableInstance var where var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance")
 		}
 )
 			/*
@@ -209,6 +211,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getVariablesByProcessDefinitionName = "CaseProcInstBind.getVariablesByProcessDefinitionName";
 	public static final String getVariablesByProcessInstanceId = "CaseProcInstBind.getVariablesByProcessInstanceId";
 	public static final String getVariablesByProcessInstancesIdsAndVariablesNames = "CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames";
+	public static final String getVariablesByNames = "CaseProcInstBind.getVariablesByNames";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
 	
 	public static final String subProcessNameParam = "subProcessName";

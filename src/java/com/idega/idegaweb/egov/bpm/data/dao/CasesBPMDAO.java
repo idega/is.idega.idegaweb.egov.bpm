@@ -115,4 +115,6 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(
 	        Collection<Long> processInstanceIds, List<String> variables);
+	
+	public abstract List<VariableInstance> getVariablesByNames(List<String> names);
 }
