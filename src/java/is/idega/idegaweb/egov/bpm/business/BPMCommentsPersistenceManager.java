@@ -5,7 +5,7 @@ import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
+import is.idega.idegaweb.egov.bpm.servlet.CommentViewerRedirector;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +37,7 @@ import com.idega.block.article.bean.CommentsViewerProperties;
 import com.idega.block.article.business.CommentsPersistenceManager;
 import com.idega.block.article.business.DefaultCommentsPersistenceManager;
 import com.idega.block.article.component.ArticleCommentAttachmentStatisticsViewer;
+import com.idega.block.article.component.CommentsViewer;
 import com.idega.block.article.data.Comment;
 import com.idega.block.article.data.CommentHome;
 import com.idega.block.process.business.CaseBusiness;
@@ -62,6 +63,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -827,7 +829,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 		
 		URIUtil uriUtil = new URIUtil(url);
-		uriUtil.setParameter(UICasesBPMAssets.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
+		uriUtil.setParameter(CommentsViewer.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
 		return uriUtil.getUri();
 	}
 
@@ -943,7 +945,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 					uri = properties.getUrl();
 				} else {
 					URIUtil uriUtil = new URIUtil(url);
-					uriUtil.setParameter(UICasesBPMAssets.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
+					uriUtil.setParameter(CommentsViewer.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
 					uri = uriUtil.getUri();
 				}
 			}
@@ -954,4 +956,23 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		
 		return linksForUsers;
 	}
+
+	@Override
+	public String getUriForCommentLink(CommentsViewerProperties properties) {
+		if (properties == null) {
+			return super.getUriForCommentLink(properties);
+		}
+		
+		String processInstanceId = properties.getIdentifier();
+		if (StringUtil.isEmpty(processInstanceId)) {
+			return super.getUriForCommentLink(properties);
+		}
+		
+		URIUtil uriUtil = new URIUtil(new StringBuilder(CoreConstants.SLASH).append(CommentViewerRedirector.class.getSimpleName()).append(CoreConstants.SLASH)
+				.toString());
+		uriUtil.setParameter(CommentViewerRedirector.PARAMETER_REDIRECT_TO_COMMENT, Boolean.TRUE.toString());
+		uriUtil.setParameter(ProcessManagerBind.processInstanceIdParam, processInstanceId);
+		return uriUtil.getUri();
+	}
+	
 }

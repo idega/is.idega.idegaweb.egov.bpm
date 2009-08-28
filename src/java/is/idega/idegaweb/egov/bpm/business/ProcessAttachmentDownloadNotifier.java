@@ -3,7 +3,6 @@ package is.idega.idegaweb.egov.bpm.business;
 import is.idega.idegaweb.egov.bpm.bean.BPMAttachmentDownloadNotificationProperties;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 
 import java.util.HashMap;
 import java.util.Iterator;
@@ -18,6 +17,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
+import com.idega.block.article.component.CommentsViewer;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.file.FileDownloadNotificationProperties;
 import com.idega.business.file.FileDownloadNotifier;
@@ -150,7 +151,7 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 					uri = properties.getUrl();
 				} else {
 					URIUtil uriUtil = new URIUtil(url);
-					uriUtil.setParameter(UICasesBPMAssets.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
+					uriUtil.setParameter(CommentsViewer.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
 					uri = uriUtil.getUri();
 				}
 			}
