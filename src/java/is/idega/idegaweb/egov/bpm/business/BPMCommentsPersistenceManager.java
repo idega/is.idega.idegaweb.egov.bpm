@@ -484,7 +484,8 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 				if (comment.isPrivateComment()) {
 					if (hasFullRights) {
 						//	Handler
-						commentEntry.setPublishable(!comment.isAnnouncedToPublic());
+						commentEntry.setPublishable(isRelyToComment(comment) != null);
+						commentEntry.setPublished(comment.isAnnouncedToPublic());
 						commentEntry.setReplyable(isReplyable(comment, currentUser));
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						fillWithReaders(properties, comment, commentEntry);
@@ -628,13 +629,17 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 	}
 	
-	private boolean isReplyToPrivateComment(Comment comment, User user) {
+	private Comment isRelyToComment(Comment comment) {
 		Integer replyToId = comment.getReplyForCommentId();
 		if (replyToId == null || replyToId < 0) {
-			return false;
+			return null;
 		}
 		
-		Comment originalComment = getComment(replyToId);
+		return getComment(replyToId);
+	}
+	
+	private boolean isReplyToPrivateComment(Comment comment, User user) {
+		Comment originalComment = isRelyToComment(comment);
 		if (originalComment == null) {
 			return false;
 		}
