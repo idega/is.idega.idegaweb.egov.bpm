@@ -794,7 +794,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToHide) ");
 		}
 		
-		// Is thir realy right???
+		// Is this really right???
 		if (!ListUtil.isEmpty(caseStatusesToShow)) {
 			builder.append("and proc_case.case_status not in (:statusesToShow) ");
 		}
