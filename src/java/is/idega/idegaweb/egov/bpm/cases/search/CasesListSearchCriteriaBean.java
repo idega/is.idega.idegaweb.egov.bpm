@@ -757,5 +757,25 @@ public class CasesListSearchCriteriaBean {
 	public void setOnlySubscribedCases(boolean onlySubscribedCases) {
 		this.onlySubscribedCases = onlySubscribedCases;
 	}
+
+	@Override
+	public String toString() {
+		return new StringBuilder("Case number: " + caseNumber).append("\n")
+			.append("Description: " + description).append("\n")
+			.append("Name: " + name).append("\n")
+			.append("Personal ID: " + personalId).append("\n")
+			.append("Process ID: " + processId).append("\n")
+			.append("Status ID: " + statusId).append("\n")
+			.append("Date range: " + dateRange).append("\n")
+			.append("Case list type: " + caseListType).append("\n")
+			.append("Contact: " + contact).append("\n")
+			.append("Date from: " + dateFrom).append("\n")
+			.append("Date to: " + dateTo).append("\n")
+			.append("Statuses: " + statuses).append("\n")
+			.append("Case codes: " + caseCodes).append("\n")
+			.append("Statuses to show: " + statusesToShow).append("\n")
+			.append("Statuses to hide: " + statusesToHide).append("\n")
+		.toString();
+	}
 	
 }
