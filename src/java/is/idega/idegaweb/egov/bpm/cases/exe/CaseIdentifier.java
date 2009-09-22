@@ -12,6 +12,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
+import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -22,7 +23,7 @@ import com.idega.util.IWTimestamp;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service
 @Qualifier(CaseIdentifier.QUALIFIER)
-public class CaseIdentifier {
+public class CaseIdentifier extends DefaultIdentifierGenerator {
 	
 	static final String QUALIFIER = "defaultCaseIdentifier";
 	
@@ -33,8 +34,13 @@ public class CaseIdentifier {
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 	
+	@Override
 	public synchronized Object[] generateNewCaseIdentifier() {
-
+		return generateNewCaseIdentifier(null);
+	}
+	
+	@Override
+	protected synchronized Object[] generateNewCaseIdentifier(String usedIdentifier) {
 		IWTimestamp currentTime = new IWTimestamp();
 		currentTime.setAsDate();
 		
@@ -44,18 +50,14 @@ public class CaseIdentifier {
 
 			lastCaseIdentifierNumber = new CaseIdentifierBean();
 
-			CaseProcInstBind b = getCasesBPMDAO()
-					.getCaseProcInstBindLatestByDateQN(new Date());
+			CaseProcInstBind b = getCasesBPMDAO().getCaseProcInstBindLatestByDateQN(new Date());
 
-			if (b != null && b.getDateCreated() != null
-					&& b.getCaseIdentierID() != null) {
+			if (b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
 
-				lastCaseIdentifierNumber.time = new IWTimestamp(b
-						.getDateCreated());
+				lastCaseIdentifierNumber.time = new IWTimestamp(b.getDateCreated());
 				lastCaseIdentifierNumber.time.setAsDate();
 				lastCaseIdentifierNumber.number = b.getCaseIdentierID();
 			} else {
-
 				lastCaseIdentifierNumber.time = currentTime;
 				lastCaseIdentifierNumber.time.setAsDate();
 				lastCaseIdentifierNumber.number = 0;
@@ -64,7 +66,20 @@ public class CaseIdentifier {
 		
 		scopedCI = lastCaseIdentifierNumber;
 
+		//	Will try to use used identifier's number (increased by 1)
+		if (!StringUtil.isEmpty(usedIdentifier)) {
+			String[] parts = usedIdentifier.split(CoreConstants.MINUS);
+			String numberValue = parts[parts.length - 1];
+			Integer number = Integer.valueOf(numberValue);
+			if (number > scopedCI.number) {
+				scopedCI.number = number;
+			}
+		}
+		
 		String generated = scopedCI.generate();
+		while (!canUseIdentifier(generated)) {
+			generated = scopedCI.generate();
+		}
 
 		return new Object[] { scopedCI.number, generated };
 	}
@@ -106,10 +121,12 @@ public class CaseIdentifier {
 		return lastCaseIdentifierNumber;
 	}
 
+	@Override
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
 
+	@Override
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
