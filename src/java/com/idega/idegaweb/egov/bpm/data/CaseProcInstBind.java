@@ -49,7 +49,7 @@ import javax.persistence.TemporalType;
 			//	Query to get variables by process instances ids and variables names
 			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where pi.id in (:" + CaseProcInstBind.processInstanceIdsProp + ") and var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance"),
 			//	Query to get variables by names
-			@NamedQuery(name=CaseProcInstBind.getVariablesByNames, query="select var from org.jbpm.context.exe.VariableInstance var where var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance")
+			@NamedQuery(name=CaseProcInstBind.getVariablesByNames, query="select var from org.jbpm.context.exe.VariableInstance var where var.name in (:" + CaseProcInstBind.variablesNamesProp + ")")
 		}
 )
 			/*
