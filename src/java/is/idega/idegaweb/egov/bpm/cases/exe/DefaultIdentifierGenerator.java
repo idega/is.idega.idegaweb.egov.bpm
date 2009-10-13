@@ -91,7 +91,14 @@ public abstract class DefaultIdentifierGenerator {
 	}
 	
 	private boolean isStoredInVariables(String identifier) throws Exception {
-		Collection<VariableInstance> variables = getCasesBPMDAO().getVariablesByNames(Arrays.asList(CasesBPMProcessConstants.caseIdentifier));
+		Collection<VariableInstance> variables = null;
+		try {
+			variables = getCasesBPMDAO().getVariablesByNames(Arrays.asList(CasesBPMProcessConstants.caseIdentifier));
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstance.class + " objects by variable name: " +
+					CasesBPMProcessConstants.caseIdentifier, e);
+		}
+		
 		if (ListUtil.isEmpty(variables)) {
 			return false;
 		}
