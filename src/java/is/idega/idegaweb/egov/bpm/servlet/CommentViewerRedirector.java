@@ -21,7 +21,6 @@ import com.idega.block.article.component.CommentsViewer;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
-import com.idega.presentation.IWContext;
 import com.idega.servlet.filter.BaseFilter;
 import com.idega.user.data.User;
 import com.idega.util.URIUtil;
@@ -44,14 +43,23 @@ public class CommentViewerRedirector extends BaseFilter implements Filter {
 	public void init(FilterConfig arg) throws ServletException {}
 
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		IWContext iwc = getIWContext((HttpServletRequest) request, (HttpServletResponse) response);
+		String redirectToComment = request.getParameter(PARAMETER_REDIRECT_TO_COMMENT);
+		String piId = request.getParameter(ProcessManagerBind.processInstanceIdParam);
 		
-		if (!iwc.isParameterSet(PARAMETER_REDIRECT_TO_COMMENT) || !iwc.isParameterSet(ProcessManagerBind.processInstanceIdParam)) {
+		if (redirectToComment == null || piId == null) {
+			chain.doFilter(request, response);
+			return;
+		}
+
+		if (!(request instanceof HttpServletRequest) || !(response instanceof HttpServletResponse)) {
 			chain.doFilter(request, response);
 			return;
 		}
 		
-		User currentUser = iwc.isLoggedOn() ? iwc.getCurrentUser() : null;
+		HttpServletRequest httpRequest = (HttpServletRequest) request;
+		HttpServletResponse httpResponse = (HttpServletResponse) response;
+		
+		User currentUser = getCurrentUser(httpRequest, httpResponse);
 		if (currentUser == null) {
 			LOGGER.warning("Can not redirect to comments page because user is not loged in!");
 			chain.doFilter(request, response);
@@ -60,9 +68,10 @@ public class CommentViewerRedirector extends BaseFilter implements Filter {
 		
 		Long processInstanceId = null;
 		try {
-			processInstanceId = Long.valueOf(iwc.getParameter(ProcessManagerBind.processInstanceIdParam));
+			processInstanceId = Long.valueOf(piId);
 		} catch (NumberFormatException e) {
-			LOGGER.warning("Error coverting to Long: " + iwc.getParameter(ProcessManagerBind.processInstanceIdParam));
+			LOGGER.warning("Error coverting to Long: " + piId);
+			chain.doFilter(request, response);
 			return;
 		}
 		
@@ -72,7 +81,7 @@ public class CommentViewerRedirector extends BaseFilter implements Filter {
 			URIUtil uriUtil = new URIUtil(url);
 			uriUtil.setParameter(ProcessManagerBind.processInstanceIdParam, processInstanceId.toString());
 			uriUtil.setParameter(CommentsViewer.AUTO_SHOW_COMMENTS, Boolean.TRUE.toString());
-			((HttpServletResponse) response).sendRedirect(uriUtil.getUri());
+			httpResponse.sendRedirect(uriUtil.getUri());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error while redirecting to user comments", e);
 			chain.doFilter(request, response);
