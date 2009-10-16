@@ -31,15 +31,26 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.presentation.beans.CasePresentation;
+import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.builder.bean.AdvancedProperty;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.core.contact.data.Email;
+import com.idega.core.contact.data.Phone;
 import com.idega.data.IDOLookup;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MemoryFileBuffer;
 import com.idega.io.MemoryOutputStream;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
+import com.idega.user.business.NoEmailFoundException;
+import com.idega.user.business.NoPhoneFoundException;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IOUtil;
@@ -56,6 +67,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private static final short DEFAULT_CELL_WIDTH = (short) (40 * 256);
 	
 	private Map<String, Collection<CasePresentation>> cases = new HashMap<String, Collection<CasePresentation>>();
+	private Map<String, CasesSearchCriteriaBean> criterias = new HashMap<String, CasesSearchCriteriaBean>();
+	
 	private MemoryFileBuffer memory;
 
 	@Autowired
@@ -64,9 +77,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private CasesBPMDAO casesBinder;
 	@Autowired
 	private BPMFactory bpmFactory;
+	@Autowired
+	private RolesManager rolesManager;
 	
-	public void setSearchResults(String id, Collection<CasePresentation> cases) {
+	public void setSearchResults(String id, Collection<CasePresentation> cases, CasesSearchCriteriaBean criteriaBean) {
 		this.cases.put(id, cases);
+		this.criterias.put(id, criteriaBean);
 	}
 
 	public boolean doExport(String id) {
@@ -112,7 +128,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 		
 	private String getCaseCreator(CasePresentation caze) {
-				
 		String name = null;
 		if (caze.getOwner() != null) {
 			name = caze.getOwner().getName();
@@ -125,7 +140,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 	
 	private String getCaseCreatorPersonalId(CasePresentation caze) {
-		
 		String personalId = null;
 		if (caze.getOwner() != null) {
 			personalId = caze.getOwner().getPersonalID();
@@ -136,7 +150,34 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		
 		return personalId;
 	}
+	
+	private String getCaseCreatorEmail(CasePresentation theCase) {
+		String emailAddress = null;
 		
+		User owner = theCase.getOwner();
+		if (owner != null) {
+			try {
+				UserBusiness userBusiness = getUserBusiness();
+				Email email = userBusiness.getUsersMainEmail(owner);
+				emailAddress = email == null ? null : email.getEmailAddress();
+			} catch (NoEmailFoundException e) {
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting main email for user: " + owner, e);
+			}
+		}
+		
+		return StringUtil.isEmpty(emailAddress) ?
+				getResourceBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getLocalizedString("cases.unknown_owner_email", "Unkown") : emailAddress;
+	}
+	
+	private UserBusiness getUserBusiness() {
+		try {
+			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), UserBusiness.class);
+		} catch (IBOLookupException e) {
+			LOGGER.log(Level.WARNING, "Error getting " + UserBusiness.class, e);
+		}
+		return null;
+	}
 	
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessDefinition(Locale locale, String processDefinition, boolean isAdmin) {
@@ -172,7 +213,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return variablesProvider.getAvailableVariables(variables, locale, isAdmin, useRealValue);
 	}
 	
-	private List<AdvancedProperty> createHeaders(HSSFSheet sheet, HSSFCellStyle bigStyle, Locale locale, String processName, boolean isAdmin) {
+	private List<AdvancedProperty> createHeaders(HSSFSheet sheet, HSSFCellStyle bigStyle, Locale locale, String processName, boolean isAdmin,
+			List<String> standardFieldsInfo) {
 		IWResourceBundle iwrb = getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 		
 		short cellIndexInRow = 0;
@@ -197,6 +239,18 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		cell = row.createCell(cellIndex++);
 		cell.setCellValue(iwrb.getLocalizedString("personal_id", "Personal ID"));
 		cell.setCellStyle(bigStyle);
+		
+		cell = row.createCell(cellIndex++);
+		cell.setCellValue(iwrb.getLocalizedString("sender_e-mail", "E-mail"));
+		cell.setCellStyle(bigStyle);
+		
+		if (!ListUtil.isEmpty(standardFieldsInfo)) {
+			for (String standardFieldLabel: standardFieldsInfo) {
+				cell = row.createCell(cellIndex++);
+				cell.setCellValue(standardFieldLabel);
+				cell.setCellStyle(bigStyle);
+			}
+		}
 		
 		List<AdvancedProperty> availableVariables = getAvailableVariablesByProcessDefinition(locale, processName, isAdmin);
 		if (!ListUtil.isEmpty(availableVariables)) {
@@ -291,11 +345,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (locale == null) {
 			locale = Locale.ENGLISH;
 		}
+		
+		List<String> standardFieldsLabels = getStandardFieldsLabels(id, locale);
+		
 		for (String processName: casesByProcessDefinition.keySet()) {
 			cases = casesByProcessDefinition.get(processName);
 			
 			HSSFSheet sheet = workBook.createSheet(StringHandler.shortenToLength(getSheetName(locale, processName), 30));
-			List<AdvancedProperty> variablesByProcessDefinition = createHeaders(sheet, bigStyle, locale, processName, isAdmin);
+			List<AdvancedProperty> variablesByProcessDefinition = createHeaders(sheet, bigStyle, locale, processName, isAdmin, standardFieldsLabels);
 			List<Integer> fileCellsIndexes = null;
 			int rowNumber = 1;
 			
@@ -308,6 +365,16 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				row.createCell(cellIndex++).setCellValue(theCase.getCaseIdentifier());
 				row.createCell(cellIndex++).setCellValue(getCaseCreator(theCase));
 				row.createCell(cellIndex++).setCellValue(getCaseCreatorPersonalId(theCase));
+				row.createCell(cellIndex++).setCellValue(getCaseCreatorEmail(theCase));
+				
+				if (!ListUtil.isEmpty(standardFieldsLabels)) {
+					List<String> standardFieldsValues = getStandardFieldsValues(id, theCase);
+					if (!ListUtil.isEmpty(standardFieldsValues)) {
+						for (String standardFieldValue: standardFieldsValues) {
+							row.createCell(cellIndex++).setCellValue(standardFieldValue);
+						}
+					}
+				}
 				
 				//	Variable values
 				addVariables(variablesByProcessDefinition, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes, fileNameLabel);
@@ -324,6 +391,138 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 		
 		return memory;
+	}
+	
+	private List<String> getStandardFieldsLabels(String id, Locale locale) {
+		CasesSearchCriteriaBean criteria = getSearchCriteria(id);
+		if (criteria == null) {
+			return null;
+		}
+		
+		IWResourceBundle iwrb = null;
+		List<String> labels = new ArrayList<String>();
+		if (!StringUtil.isEmpty(criteria.getDescription())) {
+			iwrb = getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER);
+			labels.add(iwrb.getLocalizedString("description", "Description"));
+		}
+		
+		if (!StringUtil.isEmpty(criteria.getContact())) {
+			iwrb = iwrb == null ? getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER) : iwrb;
+			labels.add(iwrb.getLocalizedString("contact", "Contact"));
+		}
+		
+		if (!StringUtil.isEmpty(criteria.getStatusId())) {
+			iwrb = iwrb == null ? getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER) : iwrb;
+			labels.add(iwrb.getLocalizedString("status", "Status"));
+		}
+		
+		if (!StringUtil.isEmpty(criteria.getDateRange())) {
+			iwrb = iwrb == null ? getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER) : iwrb;
+			labels.add(iwrb.getLocalizedString("date_range", "Date range"));
+		}
+		
+		return ListUtil.isEmpty(labels) ? null : labels;
+	}
+	
+	private List<String> getStandardFieldsValues(String id, CasePresentation theCase) {
+		CasesSearchCriteriaBean criteria = getSearchCriteria(id);
+		if (criteria == null) {
+			return null;
+		}
+		
+		List<String> values = new ArrayList<String>();
+		if (!StringUtil.isEmpty(criteria.getDescription())) {
+			values.add(theCase.getSubject());
+		}
+		
+		if (!StringUtil.isEmpty(criteria.getContact())) {
+			Collection<User> usersByContactInfo = null;
+			UserBusiness userBusiness = getUserBusiness();
+			if (userBusiness != null) {
+				try {
+					usersByContactInfo = userBusiness.getUsersByNameOrEmailOrPhone(criteria.getContact());
+				} catch (Exception e) {
+					LOGGER.log(Level.WARNING, "Error getting users by name, email or phone by fraze: " + criteria.getContact(), e);
+				}
+			}
+			
+			if (ListUtil.isEmpty(usersByContactInfo)) {
+				values.add(CoreConstants.MINUS);
+			} else {
+				StringBuilder info = new StringBuilder();
+				for (Iterator<User> usersIter = usersByContactInfo.iterator(); usersIter.hasNext();) {
+					User user = usersIter.next();
+					
+					if (isUserConnectedToCase(user, theCase)) {
+						info.append(user.getName());
+						
+						Email email = null;
+						try {
+							email = userBusiness.getUsersMainEmail(user);
+						} catch (NoEmailFoundException e) {
+						} catch (Exception e) {
+							LOGGER.log(Level.WARNING, "Error getting main email for: " + user, e);
+						}
+						String emailAddress = email == null ? null : email.getEmailAddress();
+						if (!StringUtil.isEmpty(emailAddress)) {
+							info.append(CoreConstants.SPACE).append(emailAddress);
+						}
+						
+						Phone workPhone = null;
+						try {
+							workPhone = userBusiness.getUsersWorkPhone(user);
+						} catch (NoPhoneFoundException e) {
+						} catch (Exception e) {
+							LOGGER.log(Level.WARNING, "Error getting work phone for user: " + user, e);
+						}
+						String workPhoneNumber = workPhone == null ? null : workPhone.getNumber();
+						if (!StringUtil.isEmpty(workPhoneNumber)) {
+							info.append(CoreConstants.SPACE).append(workPhoneNumber);
+						}
+						
+						if (usersIter.hasNext()) {
+							info.append(CoreConstants.COMMA);
+						}
+					}
+				}
+				values.add(StringUtil.isEmpty(info.toString()) ? CoreConstants.MINUS : info.toString());
+			}
+		}
+		
+		if (!StringUtil.isEmpty(criteria.getStatusId())) {
+			values.add(theCase.getLocalizedStatus());
+		}
+		
+		if (!StringUtil.isEmpty(criteria.getDateRange())) {
+			values.add(criteria.getDateRange());
+		}
+		
+		return ListUtil.isEmpty(values) ? null : values;
+	}
+	
+	private boolean isUserConnectedToCase(User user, CasePresentation theCase) {
+		List<Long> ids = null;
+		try {
+			ids = getCasesBinder().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(null, user, false));
+		} catch(Exception e) {
+			LOGGER.log(Level.SEVERE, "Error getting case IDs for user: " + user, e);
+		}
+		
+		if (ListUtil.isEmpty(ids)) {
+			return false;
+		}
+		
+		for (Object id: ids) {
+			if (theCase.getId().equals(id.toString())) {
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	private IWResourceBundle getResourceBundle(Locale locale, String bundleIdentifier) {
+		return IWMainApplication.getDefaultIWMainApplication().getBundle(bundleIdentifier).getResourceBundle(locale);
 	}
 	
 	private IWResourceBundle getResourceBundle(String bundleIdentifier) {
@@ -449,12 +648,24 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	public boolean clearSearchResults(String id) {
-		setSearchResults(id, null);
+		setSearchResults(id, null, null);
 		return Boolean.TRUE;
 	}
 
 	public Collection<CasePresentation> getSearchResults(String id) {
 		return cases.get(id);
+	}
+	
+	public CasesSearchCriteriaBean getSearchCriteria(String id) {
+		return criterias.get(id);
+	}
+
+	public RolesManager getRolesManager() {
+		return rolesManager;
+	}
+
+	public void setRolesManager(RolesManager rolesManager) {
+		this.rolesManager = rolesManager;
 	}
 
 }

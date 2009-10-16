@@ -34,6 +34,7 @@ import com.idega.block.process.data.Case;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
+import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.JQuery;
@@ -198,7 +199,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		
 		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean);
 		if (cases != null) {
-			setSearchResults(iwc, cases.getCollection(), criteriaBean.getId());
+			setSearchResults(iwc, cases.getCollection(), criteriaBean);
 		}
 		
 		CaseListPropertiesBean properties = new CaseListPropertiesBean();
@@ -436,7 +437,7 @@ public class CasesEngineImp implements BPMCasesEngine {
 		return resultsHolder;
 	}
 	
-	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, String id) {
+	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, CasesSearchCriteriaBean criteriaBean) {
 		CasesSearchResultsHolder resultsHolder = null;
 		try {
 			resultsHolder = getSearchResultsHolder();
@@ -444,7 +445,8 @@ public class CasesEngineImp implements BPMCasesEngine {
 			return false;
 		}
 		
-		resultsHolder.setSearchResults(id, cases);
+		String id = criteriaBean.getId();
+		resultsHolder.setSearchResults(id, cases, criteriaBean);
 		return true;
 	}
 	

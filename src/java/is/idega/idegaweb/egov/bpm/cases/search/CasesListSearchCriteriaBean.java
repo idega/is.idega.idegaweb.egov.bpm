@@ -9,9 +9,7 @@ import is.idega.idegaweb.egov.cases.util.CasesConstants;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseHome;
-import com.idega.builder.bean.AdvancedProperty;
+import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -35,39 +33,32 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
-import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
-import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
-public class CasesListSearchCriteriaBean {
+public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	
+	private static final long serialVersionUID = 8071978111646904945L;
+
 	private static final Logger LOGGER = Logger.getLogger(CasesListSearchCriteriaBean.class.getName());
 	
-	private String caseNumber;
-	private String description;
-	private String name;
-	private String personalId;
 	private String processId;
-	private String statusId;
-	private String dateRange;
 	private String caseListType;
-	private String contact;
-	private IWTimestamp dateFrom;
-	private IWTimestamp dateTo;
-	private String[] statuses;
-	private List<BPMProcessVariable> processVariables;
-	private List<AdvancedProperty> sortingOptions;
 	
-	@Autowired private CasesBPMDAO casesBPMDAO;
-	@Autowired private RolesManager rolesManager;
-	@Autowired private BPMFactory bpmFactory;
+	private List<BPMProcessVariable> processVariables;
+	
+	@Autowired
+	private CasesBPMDAO casesBPMDAO;
+	@Autowired
+	private RolesManager rolesManager;
+	@Autowired
+	private BPMFactory bpmFactory;
 	
 	private boolean usePDFDownloadColumn = true;
 	private boolean allowPDFSigning = true;
@@ -77,21 +68,12 @@ public class CasesListSearchCriteriaBean {
 	private boolean showCreationTimeInDateColumn = true;
 	private boolean onlySubscribedCases;
 	
-	private String id;
-	private String instanceId;
-	
 	private String caseCodes;
 	private String statusesToShow;
 	private String statusesToHide;
 	
-	public String getCaseNumber() {
-		return caseNumber;
-	}
-	
 	public CasesListSearchFilter getCaseNumberFilter() {
-		
 		return new CasesListSearchFilter() {
-
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
 				if (ListUtil.isEmpty(casesIds)) {
@@ -152,7 +134,6 @@ public class CasesListSearchCriteriaBean {
 	
 	public CasesListSearchFilter getGeneralCasesFilter() {
 		return new CasesListSearchFilter() {
-
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
 				if (ListUtil.isEmpty(casesIds)) {
@@ -198,9 +179,7 @@ public class CasesListSearchCriteriaBean {
 	}
 	
 	public CasesListSearchFilter getContactFilter() {
-		
 		return new CasesListSearchFilter() {
-
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
 				if (ListUtil.isEmpty(casesIds)) {
@@ -223,14 +202,11 @@ public class CasesListSearchCriteriaBean {
 				
 				return casesIds;
 			}
-			
 		};
 	}
 	
 	public CasesListSearchFilter getProcessFilter() {
-		
 		return new CasesListSearchFilter() {
-
 			public List<Integer> doFilter(List<Integer> casesIds) {
 				
 				if (ListUtil.isEmpty(casesIds)) {
@@ -247,7 +223,8 @@ public class CasesListSearchCriteriaBean {
 				if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
 					//	Getting ONLY none "BPM" cases
 					try {
-						casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+						casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds,
+								CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
 					}
 					catch (RemoteException e) {
 						e.printStackTrace();
@@ -396,7 +373,6 @@ public class CasesListSearchCriteriaBean {
 	}
 		
 	private List<Long> getCasesByProcessDefinition(String processDefinitionId, List<BPMProcessVariable> variables) {
-		
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
 		
@@ -423,44 +399,11 @@ public class CasesListSearchCriteriaBean {
 		return null;
 	}
 	
-	public void setCaseNumber(String caseNumber) {
-		this.caseNumber = caseNumber;
-	}
-	public String getDescription() {
-		return description;
-	}
-	public void setDescription(String description) {
-		this.description = description;
-	}
-	public String getName() {
-		return name;
-	}
-	public void setName(String name) {
-		this.name = name;
-	}
-	public String getPersonalId() {
-		return personalId;
-	}
-	public void setPersonalId(String personalId) {
-		this.personalId = personalId;
-	}
 	public String getProcessId() {
 		return processId;
 	}
 	public void setProcessId(String processId) {
 		this.processId = processId;
-	}
-	public String getStatusId() {
-		return statusId;
-	}
-	public void setStatusId(String statusId) {
-		this.statusId = statusId;
-	}
-	public String getDateRange() {
-		return dateRange;
-	}
-	public void setDateRange(String dateRange) {
-		this.dateRange = dateRange;
 	}
 	public String getCaseListType() {
 		return caseListType;
@@ -468,15 +411,8 @@ public class CasesListSearchCriteriaBean {
 	public void setCaseListType(String caseListType) {
 		this.caseListType = caseListType;
 	}
-	public String getContact() {
-		return contact;
-	}
-	public void setContact(String contact) {
-		this.contact = contact;
-	}
 
 	public List<CasesListSearchFilter> getFilters() {
-		
 		List<CasesListSearchFilter> filters = new ArrayList<CasesListSearchFilter>();
 		
 		filters.add(getCaseNumberFilter());
@@ -488,8 +424,7 @@ public class CasesListSearchCriteriaBean {
 	}
 
 	public CasesBPMDAO getCasesBPMDAO() {
-		
-		if(casesBPMDAO == null)
+		if (casesBPMDAO == null)
 			ELUtil.getInstance().autowire(this);
 		
 		return casesBPMDAO;
@@ -499,61 +434,9 @@ public class CasesListSearchCriteriaBean {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
-	public IWTimestamp getDateFrom() {
-		
-		if(dateFrom == null)
-			parseDateString();
-		
-		return dateFrom;
-	}
-
-	public void setDateFrom(IWTimestamp dateFrom) {
-		this.dateFrom = dateFrom;
-	}
-
-	public IWTimestamp getDateTo() {
-		
-		if(dateTo == null)
-			parseDateString();
-		
-		return dateTo;
-	}
-
-	public void setDateTo(IWTimestamp dateTo) {
-		this.dateTo = dateTo;
-	}
-	
-	private void parseDateString() {
-		
-		Locale locale = IWContext.getCurrentInstance().getCurrentLocale();
-		
-		String dateRange = getDateRange();
-		if (dateRange != null) {
-			String splitter = " - ";
-			if (dateRange.indexOf(splitter) == -1) {
-				Date date = IWDatePickerHandler.getParsedDate(dateRange, locale);
-				dateFrom = date == null ? null : new IWTimestamp(date);
-			}
-			else {
-				String[] dateRangeParts = dateRange.split(splitter);
-				
-				Date date = IWDatePickerHandler.getParsedDate(dateRangeParts[0], locale);
-				dateFrom = date == null ? null : new IWTimestamp(date);
-				date = IWDatePickerHandler.getParsedDate(dateRangeParts[1], locale);
-				dateTo = date == null ? null : new IWTimestamp(date);
-				if (dateTo != null) {
-					dateTo.setHour(23);
-					dateTo.setMinute(59);
-					dateTo.setSecond(59);
-					dateTo.setMilliSecond(999);
-				}
-			}
-		}
-	}
-	
 	private CasesBusiness getCasesBusiness() {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
+			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
 		}
 		catch (IBOLookupException e) {
 			throw new IBORuntimeException(e);
@@ -562,14 +445,13 @@ public class CasesListSearchCriteriaBean {
 	
 	private UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException e) {
 			throw new IBORuntimeException(e);
 		}
 	}
 	
 	private List<Integer> getCasesByContactQuery(IWContext iwc, String contact) {
-		
 		if (StringUtil.isEmpty(contact))
 			return null;
 		
@@ -603,8 +485,7 @@ public class CasesListSearchCriteriaBean {
 	}
 
 	public RolesManager getRolesManager() {
-		
-		if(rolesManager == null)
+		if (rolesManager == null)
 			ELUtil.getInstance().autowire(this);
 		
 		return rolesManager;
@@ -615,8 +496,7 @@ public class CasesListSearchCriteriaBean {
 	}
 
 	public BPMFactory getBpmFactory() {
-		
-		if(bpmFactory == null)
+		if (bpmFactory == null)
 			ELUtil.getInstance().autowire(this);
 		
 		return bpmFactory;
@@ -624,14 +504,6 @@ public class CasesListSearchCriteriaBean {
 
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
-	}
-
-	public String[] getStatuses() {
-		return statuses;
-	}
-
-	public void setStatuses(String[] statuses) {
-		this.statuses = statuses;
 	}
 
 	public boolean isUsePDFDownloadColumn() {
@@ -690,30 +562,6 @@ public class CasesListSearchCriteriaBean {
 		this.showCreationTimeInDateColumn = showCreationTimeInDateColumn;
 	}
 
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-	
-	public String getInstanceId() {
-		return instanceId;
-	}
-
-	public void setInstanceId(String instanceId) {
-		this.instanceId = instanceId;
-	}
-
-	public List<AdvancedProperty> getSortingOptions() {
-		return sortingOptions;
-	}
-
-	public void setSortingOptions(List<AdvancedProperty> sortingOptions) {
-		this.sortingOptions = sortingOptions;
-	}
-
 	public List<String> getStatusesToShowInList() {
 		return statusesToShow == null ? null : StringUtil.getValuesFromString(statusesToShow, CoreConstants.COMMA);
 	}
@@ -760,18 +608,18 @@ public class CasesListSearchCriteriaBean {
 
 	@Override
 	public String toString() {
-		return new StringBuilder("Case number: " + caseNumber).append("\n")
-			.append("Description: " + description).append("\n")
-			.append("Name: " + name).append("\n")
-			.append("Personal ID: " + personalId).append("\n")
+		return new StringBuilder("Case number: " + getCaseNumber()).append("\n")
+			.append("Description: " + getDescription()).append("\n")
+			.append("Name: " + getName()).append("\n")
+			.append("Personal ID: " + getPersonalId()).append("\n")
 			.append("Process ID: " + processId).append("\n")
-			.append("Status ID: " + statusId).append("\n")
-			.append("Date range: " + dateRange).append("\n")
+			.append("Status ID: " + getStatusId()).append("\n")
+			.append("Date range: " + getDateRange()).append("\n")
 			.append("Case list type: " + caseListType).append("\n")
-			.append("Contact: " + contact).append("\n")
-			.append("Date from: " + dateFrom).append("\n")
-			.append("Date to: " + dateTo).append("\n")
-			.append("Statuses: " + statuses).append("\n")
+			.append("Contact: " + getContact()).append("\n")
+			.append("Date from: " + getDateFrom()).append("\n")
+			.append("Date to: " + getDateTo()).append("\n")
+			.append("Statuses: " + getStatuses()).append("\n")
 			.append("Case codes: " + caseCodes).append("\n")
 			.append("Statuses to show: " + statusesToShow).append("\n")
 			.append("Statuses to hide: " + statusesToHide).append("\n")
