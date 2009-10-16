@@ -32,7 +32,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
-import com.idega.block.process.variables.VariableDataType;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWResourceBundle;
@@ -40,9 +39,6 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MemoryFileBuffer;
 import com.idega.io.MemoryOutputStream;
 import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.exe.ProcessInstanceW;
-import com.idega.jbpm.exe.TaskInstanceW;
-import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -249,49 +245,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		for (AdvancedProperty processVariable: variablesByProcessDefinition) {
 			variable = getVariableByValue(variablesByProcessInstance, processVariable.getValue());
 			row.createCell(cellIndex++).setCellValue(variable == null ? CoreConstants.EMPTY : variable.getId());
-		}
-		
-		ProcessInstanceW pi = null;
-		try {
-			pi = getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
-		} catch(Exception e) {
-			LOGGER.log(Level.WARNING, "Error getting " + ProcessInstanceW.class + " by ID: " + processInstanceId, e);
-		}
-		if (pi == null) {
-			return;
-		}
-		
-		if(false) {
-			
-//			FIXME: disabled resolving attachments for the moment
-			List<TaskInstanceW> submittedTasks = pi.getSubmittedTaskInstances();
-			if (ListUtil.isEmpty(submittedTasks)) {
-				return;
-			}
-			List<BinaryVariable> attachments = null;
-			for (TaskInstanceW task: submittedTasks) {
-				attachments = task.getAttachments();
-				if (!ListUtil.isEmpty(attachments)) {
-					for (BinaryVariable attachment: attachments) {
-						VariableDataType dataType = attachment.getVariable().getDataType();
-						if (dataType.equals(VariableDataType.FILES) || dataType.equals(VariableDataType.FILE)) {
-							if (ListUtil.isEmpty(fileCellsIndexes) || !fileCellsIndexes.contains(Integer.valueOf(cellIndex))) {
-								//	Header row
-								sheet.setColumnWidth(cellIndex, DEFAULT_CELL_WIDTH);
-								HSSFCell cell = sheet.getRow(0).createCell(cellIndex);
-								cell.setCellValue(localizedFileLabel);
-								cell.setCellStyle(bigStyle);
-								
-								fileCellsIndexes.add(Integer.valueOf(cellIndex));
-							}
-							
-							//	Body row
-							row.createCell(cellIndex).setCellValue(attachment.getFileName());
-							cellIndex++;
-						}
-					}
-				}
-			}
 		}
 	}
 	
