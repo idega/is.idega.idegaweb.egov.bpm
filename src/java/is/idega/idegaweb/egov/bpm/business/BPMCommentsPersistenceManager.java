@@ -7,7 +7,6 @@ import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
 import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
 import is.idega.idegaweb.egov.bpm.servlet.CommentViewerRedirector;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -21,7 +20,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.commons.httpclient.HttpException;
 import org.apache.webdav.lib.WebdavResource;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
@@ -230,17 +228,13 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		if (slide == null) {
 			return null;
 		}
-		WebdavResource commentsResource = null;
+		
 		try {
-			commentsResource = slide.getWebdavResourceAuthenticatedAsRoot(uri);
-		} catch (HttpException e) {
-			e.printStackTrace();
-		} catch (RemoteException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		if (commentsResource == null || !commentsResource.getExistence()) {
+			if (!slide.getExistence(uri)) {
+				return null;
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error checking resource's existence", e);
 			return null;
 		}
 		
@@ -270,11 +264,11 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 		SyndFeed comments = rss.getFeedAuthenticatedByUser(pathToFeed, currentUser);
 		if (comments == null) {
-			LOGGER.log(Level.WARNING, "Unable to get comments feed ('"+pathToFeed+"') by current ("+currentUser+") user, trying with admin user");
+			LOGGER.log(Level.WARNING, "Unable to get comments feed ('" + pathToFeed + "') by current (" + currentUser + ") user, trying with admin user");
 			comments = rss.getFeedAuthenticatedByAdmin(pathToFeed);
 		}
 		if (comments == null) {
-			LOGGER.log(Level.SEVERE, "Error getting comments feed ('"+pathToFeed+"') by super admin!");
+			LOGGER.log(Level.SEVERE, "Error getting comments feed ('" + pathToFeed + "') by super admin!");
 			return null;
 		}
 		
