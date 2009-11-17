@@ -19,6 +19,7 @@ import com.idega.data.MetaDataHome;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 public abstract class DefaultIdentifierGenerator {
@@ -45,6 +46,12 @@ public abstract class DefaultIdentifierGenerator {
 	protected abstract Object[] generateNewCaseIdentifier(String usedIdentifier);
 	
 	protected synchronized boolean canUseIdentifier(String identifier) {
+		//	0.	Checking if identifier is not empty
+		if (StringUtil.isEmpty(identifier)) {
+			LOGGER.warning("Identifier is empty or null!");
+			return false;
+		}
+		
 		//	1.	Will check record in meta data table for the given identifier
 		try {
 			if (isStoredInMetaData(identifier)) {
@@ -67,9 +74,11 @@ public abstract class DefaultIdentifierGenerator {
 		try {
 			storeIdentifier(identifier);
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Error saving taken identifier!", e);
+			LOGGER.log(Level.SEVERE, "Error saving identifier: '" + identifier + "'", e);
 			CoreUtil.sendExceptionNotification(e);
+			return false;
 		}
+		
 		return true;
 	}
 	
