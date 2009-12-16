@@ -49,7 +49,9 @@ import javax.persistence.TemporalType;
 			//	Query to get variables by process instances ids and variables names
 			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where pi.id in (:" + CaseProcInstBind.processInstanceIdsProp + ") and var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance"),
 			//	Query to get variables by names
-			@NamedQuery(name=CaseProcInstBind.getVariablesByNames, query="select var from org.jbpm.context.exe.VariableInstance var where var.name in (:" + CaseProcInstBind.variablesNamesProp + ")")
+			@NamedQuery(name=CaseProcInstBind.getVariablesByNames, query="select var from org.jbpm.context.exe.VariableInstance var where var.name in (:" + CaseProcInstBind.variablesNamesProp + ")"),
+			//	Query to get variable by name and string value
+			@NamedQuery(name=CaseProcInstBind.getVariableByNameAndValue, query="select var from org.jbpm.context.exe.variableinstance.StringInstance var where var.name = :" + CaseProcInstBind.variablesNamesProp + " and var.value like :" + CaseProcInstBind.variablesValuesProp)
 		}
 )
 			/*
@@ -212,6 +214,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getVariablesByProcessInstanceId = "CaseProcInstBind.getVariablesByProcessInstanceId";
 	public static final String getVariablesByProcessInstancesIdsAndVariablesNames = "CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames";
 	public static final String getVariablesByNames = "CaseProcInstBind.getVariablesByNames";
+	public static final String getVariableByNameAndValue = "CaseProcInstBind.getVariableByNameAndValue";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
 	
 	public static final String subProcessNameParam = "subProcessName";

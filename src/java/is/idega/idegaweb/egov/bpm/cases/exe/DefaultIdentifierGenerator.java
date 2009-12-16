@@ -2,7 +2,6 @@ package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -84,40 +83,30 @@ public abstract class DefaultIdentifierGenerator {
 	
 	private boolean isStoredInMetaData(String identifier) throws Exception {
 		MetaDataHome metaDataHome = (MetaDataHome) IDOLookup.getHome(MetaData.class);
-		Collection<MetaData> metaData = null;
 		try {
-			metaData = metaDataHome.findAllByMetaDataNameAndType(IDENTIFIER_META_DATA, String.class.getName());
-		} catch (FinderException e) {}
-		if (ListUtil.isEmpty(metaData)) {
+			metaDataHome.findByMetaDataNameAndValueAndType(IDENTIFIER_META_DATA, identifier, String.class.getName());
+			return true;
+		}
+		catch (FinderException e) {
 			return false;
 		}
-		for (MetaData metaDataEntry: metaData) {
-			if (identifier.equals(metaDataEntry.getValue())) {
-				return true;
-			}
-		}
-		return false;
 	}
 	
 	private boolean isStoredInVariables(String identifier) throws Exception {
 		Collection<VariableInstance> variables = null;
 		try {
-			variables = getCasesBPMDAO().getVariablesByNames(Arrays.asList(CasesBPMProcessConstants.caseIdentifier));
+			variables = getCasesBPMDAO().getVariblesByNameAndValue(CasesBPMProcessConstants.caseIdentifier, identifier);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstance.class + " objects by variable name: " +
-					CasesBPMProcessConstants.caseIdentifier, e);
+					CasesBPMProcessConstants.caseIdentifier + " and value: " + identifier, e);
 		}
 		
 		if (ListUtil.isEmpty(variables)) {
 			return false;
 		}
-		
-		for (VariableInstance variable: variables) {
-			if (identifier.equals(variable.getValue())) {
-				return true;
-			}
+		else {
+			return true;
 		}
-		return false;
 	}
 	
 	private void storeIdentifier(String identifier) throws Exception {
