@@ -10,7 +10,6 @@ import is.idega.idegaweb.egov.bpm.servlet.CommentViewerRedirector;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,8 +44,6 @@ import com.idega.block.process.variables.VariableDataType;
 import com.idega.block.rss.business.RSSBusiness;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogic;
-import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
 import com.idega.business.file.FileDownloadNotificationProperties;
 import com.idega.content.business.ContentConstants;
 import com.idega.core.accesscontrol.business.AccessController;
@@ -82,7 +79,6 @@ import com.sun.syndication.feed.WireFeed;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
 import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.io.FeedException;
 import com.sun.syndication.io.WireFeedOutput;
 
 @Scope(BeanDefinition.SCOPE_SINGLETON)
@@ -276,32 +272,35 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		if (wireFeed instanceof Feed) {
 			return (Feed) wireFeed;
 		}
+		
+		LOGGER.warning("Object " + wireFeed + " (" + wireFeed.getClass() + ") is not instance of: " + Feed.class);
 		return null;
 	}
 	
 	@Override
 	public boolean storeFeed(String processInstanceId, Feed comments) {
 		if (comments == null) {
+			LOGGER.warning("Comments feed is undefined!");
 			return false;
 		}
+		
 		String url = getLinkToCommentsXML(processInstanceId);
 		if (StringUtil.isEmpty(url)) {
+			LOGGER.warning("Unable to resolve link to comments using process instance id: " + processInstanceId + " for comments feed: " + comments);
 			return false;
 		}
 		
 		IWSlideService service = getRepository();
 		if (service == null) {
+			LOGGER.warning("Repository is undefined!");
 			return false;
 		}
 		
 		String commentsContent = null;
 		try {
 			commentsContent = wfo.outputString(comments);
-		} catch (IllegalArgumentException e) {
-			e.printStackTrace();
-			return false;
-		} catch (FeedException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error while outputing feed to string: " + comments, e);
 			return false;
 		}
 		
@@ -313,33 +312,24 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			fileName = url.substring(index + 1);
 		}
 		try {
-			return service.uploadFileAndCreateFoldersFromStringAsRoot(fileBase, fileName, commentsContent, ContentConstants.XML_MIME_TYPE, true);
-		} catch (RemoteException e) {
+			if (service.uploadFileAndCreateFoldersFromStringAsRoot(fileBase, fileName, commentsContent, ContentConstants.XML_MIME_TYPE, true)) {
+				LOGGER.warning("Comments feed " + commentsContent + " was uploaded to: " + fileBase + fileName);
+				return true;
+			}
+		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Error storing comments feed", e);
 		}
 		
+		LOGGER.warning("Unable to upload comments " + commentsContent + " to: " + fileBase + fileName);
 		return false;
 	}
 	
 	private IWSlideService getRepository() {
-		try {
-			return (IWSlideService) IBOLookup.getServiceInstance(
-			    IWMainApplication.getDefaultIWApplicationContext(),
-			    IWSlideService.class);
-		} catch (IBOLookupException e) {
-			LOGGER.log(Level.SEVERE, "Error getting repository", e);
-		}
-		return null;
+		return getServiceInstance(IWSlideService.class);
 	}
 	
 	private RSSBusiness getRSSBusiness() {
-		try {
-			return (RSSBusiness) IBOLookup.getServiceInstance(IWMainApplication
-			        .getDefaultIWApplicationContext(), RSSBusiness.class);
-		} catch (IBOLookupException e) {
-			LOGGER.log(Level.SEVERE, "Error getting RSSBusiness", e);
-		}
-		return null;
+		return getServiceInstance(RSSBusiness.class);
 	}
 	
 	// TODO: When access rights (to Slide resources) are fixed, use current user!
@@ -677,6 +667,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	public Object addComment(CommentsViewerProperties properties) {
 		Object commentId = super.addComment(properties);
 		if (commentId == null) {
+			LOGGER.warning("Unable to create comment in DB table!");
 			return null;
 		}
 		
@@ -755,7 +746,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	
 	private InputStream getInputStreamForAttachment(String uri) {
 		try {
-			IWSlideService slide = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), IWSlideService.class);
+			IWSlideService slide = getRepository();
 			WebdavResource resource = slide.getWebdavResourceAuthenticatedAsRoot(URLDecoder.decode(uri, CoreConstants.ENCODING_UTF8));
 			if (resource != null && resource.exists()) {
 				return resource.getMethodData();
@@ -893,21 +884,11 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	}
 	
 	protected CaseBusiness getCaseBusiness(IWApplicationContext iwac) {
-		try {
-			return IBOLookup.getServiceInstance(iwac == null ? IWMainApplication.getDefaultIWApplicationContext() : iwac, CaseBusiness.class);
-		} catch (IBOLookupException e) {
-			LOGGER.log(Level.WARNING, "Error getting: " + CaseBusiness.class, e);
-		}
-		return null;
+		return getServiceInstance(iwac, CaseBusiness.class);
 	}
 	
 	protected ApplicationBusiness getApplicationBusiness(IWApplicationContext iwac) {
-		try {
-			return IBOLookup.getServiceInstance(iwac == null ? IWMainApplication.getDefaultIWApplicationContext() : iwac, ApplicationBusiness.class);
-		} catch (IBOLookupException e) {
-			LOGGER.log(Level.WARNING, "Error getting: " + ApplicationBusiness.class, e);
-		}
-		return null;
+		return getServiceInstance(iwac, ApplicationBusiness.class);
 	}
 	
 	@Override
