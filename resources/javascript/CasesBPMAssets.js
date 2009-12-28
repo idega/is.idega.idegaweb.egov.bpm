@@ -971,7 +971,9 @@ CasesBPMAssets.setCurrentWindowToDownloadCaseResource = function(uri, styleClass
 };
 
 CasesBPMAssets.downloadCaseDocument = function(event, taskId) {
-	CasesBPMAssets.showHumanizedMessage(CasesBPMAssets.Loc.CASE_GRID_STRING_GENERATING_PDF);
+	CasesBPMAssets.showHumanizedMessage(CasesBPMAssets.Loc.CASE_GRID_STRING_GENERATING_PDF, {
+		timeout: 3000
+	});
 	
 	var uri = '&taskInstanceId=' + taskId;
 	CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS);
@@ -1040,8 +1042,8 @@ CasesBPMAssets.openDocumentSignerWindow = function(uri, lightBoxTitle, closeLigh
 	closeAllLoadingMessages();
 }
 
-CasesBPMAssets.showHumanizedMessage = function(message) {
-	humanMsg.displayMsg(message);
+CasesBPMAssets.showHumanizedMessage = function(message, params) {
+	humanMsg.displayMsg(message, params);
 }
 
 CasesBPMAssets.takeCurrentProcessTask = function(event, taskInstanceId, id, allowReAssign) {
