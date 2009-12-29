@@ -19,6 +19,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.webdav.lib.Ace;
+import org.apache.webdav.lib.Privilege;
 import org.apache.webdav.lib.WebdavResource;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
@@ -67,6 +69,10 @@ import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.presentation.IWContext;
 import com.idega.slide.business.IWSlideService;
+import com.idega.slide.util.AccessControlEntry;
+import com.idega.slide.util.AccessControlList;
+import com.idega.slide.util.IWSlideConstants;
+import com.idega.slide.util.WebdavRootResource;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -79,7 +85,6 @@ import com.sun.syndication.feed.WireFeed;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
 import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.io.WireFeedOutput;
 
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER)
@@ -100,8 +105,6 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	
 	@Autowired
 	private CasesBPMDAO casesDAO;
-	
-	private WireFeedOutput wfo = new WireFeedOutput();
 	
 	@Override
 	public String getLinkToCommentsXML(final String processInstanceIdStr) {
@@ -144,9 +147,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return true;
 		}
 		
-		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc != null && iwc.isLoggedOn()) {
-			return hasRightToViewComments(processInstanceId, iwc.getCurrentUser());
+		User currentUser = getCurrentUser();
+		if (currentUser != null) {
+			return hasRightToViewComments(processInstanceId, currentUser);
 		}
 		
 		return  false;
@@ -210,18 +213,35 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return getResourceBundle(iwc).getLocalizedString("feed.all_comments_of_a_process", "All comments of a process");
 	}
 	
-	@Override
-	public Feed getCommentsFeed(IWContext iwc, String processInstanceId) {
-		if (iwc == null) {
-			return null;
+	private void updateAccessRights(IWSlideService slide, String uri) {
+		AccessControlList acl = null;
+		try {
+			acl = slide.getAccessControlList(uri);
+			if (acl == null) {
+				return;
+			}
+			
+			Ace ace = new Ace(IWSlideConstants.SUBJECT_URI_AUTHENTICATED);
+			ace.addPrivilege(Privilege.READ);
+			acl.add(new AccessControlEntry(ace, AccessControlEntry.PRINCIPAL_TYPE_STANDARD));
+			
+			slide.storeAccessControlList(acl, new WebdavRootResource(slide.getWebdavResourceAuthenticatedAsRoot(uri)));
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error while updating access rights for: " + uri, e);
 		}
+	}
+	
+	@Override
+	public Feed getCommentsFeed(String processInstanceId) {
 		String uri = getLinkToCommentsXML(processInstanceId);
 		if (StringUtil.isEmpty(uri)) {
+			LOGGER.warning("URI to comments feed was not constructed!");
 			return null;
 		}
 		
 		IWSlideService slide = getRepository();
 		if (slide == null) {
+			LOGGER.warning("Repository is unknown!");
 			return null;
 		}
 		
@@ -233,18 +253,17 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			LOGGER.log(Level.WARNING, "Error checking resource's existence", e);
 			return null;
 		}
+
+		updateAccessRights(slide, uri);
 		
 		RSSBusiness rss = getRSSBusiness();
 		if (rss == null) {
+			LOGGER.warning(RSSBusiness.class + " service is not available!");
 			return null;
 		}
-		User currentUser = null;
-		try {
-			currentUser = iwc.getCurrentUser();
-		} catch (NotLoggedOnException e) {
-			LOGGER.log(Level.SEVERE, "User must be logged!", e);
-		}
+		User currentUser = getCurrentUser();
 		if (currentUser == null) {
+			LOGGER.warning("User is not logged in!");
 			return null;
 		}
 		
@@ -266,6 +285,10 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		if (comments == null) {
 			LOGGER.log(Level.SEVERE, "Error getting comments feed ('" + pathToFeed + "') by super admin!");
 			return null;
+		}
+
+		if (comments instanceof Feed) {
+			return (Feed) comments;
 		}
 		
 		WireFeed wireFeed = comments.createWireFeed();
@@ -296,11 +319,8 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return false;
 		}
 		
-		String commentsContent = null;
-		try {
-			commentsContent = wfo.outputString(comments);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error while outputing feed to string: " + comments, e);
+		String commentsContent = getFeedContent(comments);
+		if (commentsContent == null) {
 			return false;
 		}
 		
@@ -312,10 +332,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			fileName = url.substring(index + 1);
 		}
 		try {
-			if (service.uploadFileAndCreateFoldersFromStringAsRoot(fileBase, fileName, commentsContent, ContentConstants.XML_MIME_TYPE, true)) {
-				LOGGER.warning("Comments feed " + commentsContent + " was uploaded to: " + fileBase + fileName);
-				return true;
-			}
+			return service.uploadFileAndCreateFoldersFromStringAsRoot(fileBase, fileName, commentsContent, ContentConstants.XML_MIME_TYPE, true);
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Error storing comments feed", e);
 		}
