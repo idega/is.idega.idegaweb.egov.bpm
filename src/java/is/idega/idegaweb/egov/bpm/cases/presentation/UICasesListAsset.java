@@ -17,6 +17,7 @@ import com.idega.idegaweb.IWBundle;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.text.DownloadLink;
+import com.idega.webface.WFUtil;
 
 public class UICasesListAsset extends IWBaseComponent {
 	
@@ -58,7 +59,7 @@ public class UICasesListAsset extends IWBaseComponent {
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesListAsset.xhtml"));
 		div.getChildren().add(facelet);
 		
-		div.setValueBinding(renderedAtt, context.getApplication().createValueBinding("#{casesBPMAssetsState.assetsRendered}"));
+		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetsRendered}", Boolean.class));
 		getFacets().put(CASES_LIST_COMPONENT, div);
 	}
 
