@@ -16,7 +16,7 @@ import javax.faces.context.FacesContext;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.idega.block.web2.business.Web2Business;
+import com.idega.block.web2.business.JQuery;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.data.ICRole;
 import com.idega.idegaweb.IWBundle;
@@ -49,9 +49,14 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 	private Application application;
 	static final String MENU_PARAM = "procDefId";
 	
-	@Autowired private BPMFactory bpmFactory;
-	@Autowired private ApplicationTypeBPM applicationTypeBPM;
-	@Autowired private Web2Business web2business;
+	@Autowired
+	private BPMFactory bpmFactory;
+	
+	@Autowired
+	private ApplicationTypeBPM applicationTypeBPM;
+	
+	@Autowired
+	private JQuery jQuery;
 
 	@Override
 	public void main(IWContext iwc) throws Exception {
@@ -87,8 +92,6 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		container.add(rolesContainer);
 		
 		CheckBox cb = new CheckBox(rolesToStartCaseNeedToBeCheckedParam, Boolean.TRUE.toString());
-		
-		Web2Business w2b = getWeb2business();
 		
 		label = new Label("Only roles selected can submit application", cb);
 		
@@ -162,7 +165,7 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		
 		IWBundle bundle = getBundle(iwc);
 		
-		String includeJs1 = "'"+w2b.getBundleURIToJQueryLib()+"', '"+bundle.getVirtualPathWithFileNameString("javascript/ApplicationTypeBPMHandler.js")+"'";
+		String includeJs1 = "'"+getjQuery().getBundleURIToJQueryLib()+"', '"+bundle.getVirtualPathWithFileNameString("javascript/ApplicationTypeBPMHandler.js")+"'";
 		
 		String act = "LazyLoader.loadMultiple(["+includeJs1+"], function() {AppTypeBPM.processRolesCheckbox('"+cb.getId()+"', '"+rolesSpan.getId()+"', '"+rolesMenu.getId()+"')});";
 			
@@ -234,15 +237,14 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		return applicationTypeBPM;
 	}
 
-	public Web2Business getWeb2business() {
-		
-		if(web2business == null)
+	public JQuery getjQuery() {
+		if (jQuery == null) {
 			ELUtil.getInstance().autowire(this);
-		
-		return web2business;
+		}
+		return jQuery;
 	}
 
-	public void setWeb2business(Web2Business web2business) {
-		this.web2business = web2business;
+	public void setjQuery(JQuery jQuery) {
+		this.jQuery = jQuery;
 	}
 }

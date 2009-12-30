@@ -678,26 +678,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			return caseId;
 		}
 
-		public void setCaseId(String caseId) {
-			this.caseId = caseId;
-		}
-
 		public Long getProcessInstanceId() {
 			return processInstanceId;
-		}
-
-		public void setProcessInstanceId(Long processInstanceId) {
-			this.processInstanceId = processInstanceId;
 		}
 
 		public List<AdvancedProperty> getVariables() {
 			return variables;
 		}
 
-		public void setVariables(List<AdvancedProperty> variables) {
-			this.variables = variables;
-		}
-		
 		public void addVariable(String name, String value) {
 			if (StringUtil.isEmpty(name) || StringUtil.isEmpty(value)) {
 				return;

@@ -26,7 +26,6 @@ public class UICasesBPMProcessMgmt extends IWBaseComponent {
 	private static final String containerFacet = "container";
 
 	@Override
-	@SuppressWarnings("unchecked")
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
 		
