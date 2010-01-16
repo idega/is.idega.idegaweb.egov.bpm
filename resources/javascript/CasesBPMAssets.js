@@ -1145,10 +1145,16 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 	});
 }
 
-CasesBPMAssets.closeAccessRightsSetterBox = function(event) {
-	var element = event.target;
-	var rightsBoxCands = jQuery(element).parents('div.caseProcessResourceAccessRightsSetterStyle');
+CasesBPMAssets.closeAccessRightsSetterBox = function(event, id) {
+	var element = event == null ? null : event.target;
+	if (element == null && id != null) {
+		element = jQuery('#' + id);
+	}
+	if (element == null) {
+		return false;
+	}
 	
+	var rightsBoxCands = jQuery(element).parents('div.caseProcessResourceAccessRightsSetterStyle');
 	if (rightsBoxCands == null || rightsBoxCands.length == 0) {
 		return false;
 	}
@@ -1242,7 +1248,7 @@ CasesBPMAssets.disableAttachmentForAllRoles = function(event, fileHash, processI
 	BPMProcessAssets.disableAttachmentForAllRoles(fileHash, processInstanceId, taskInstanceId, {
 		callback: function(result) {
 			if (result) {
-				CasesBPMAssets.closeAccessRightsSetterBox(event);
+				CasesBPMAssets.closeAccessRightsSetterBox(event, null);
 			}
 		}
 	});
