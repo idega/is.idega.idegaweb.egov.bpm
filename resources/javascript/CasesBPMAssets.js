@@ -1138,8 +1138,7 @@ CasesBPMAssets.setAccessRightsForBpmRelatedResource = function(id, processId, ta
 			if (message == null) {
 				return false;
 			} else {
-				if (setSameRightsForAttachments) 
-					humanMsg.displayMsg(message);	
+				humanMsg.displayMsg(message);
 			}
 		}
 	});
