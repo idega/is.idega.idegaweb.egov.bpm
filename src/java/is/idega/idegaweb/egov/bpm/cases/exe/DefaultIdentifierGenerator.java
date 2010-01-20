@@ -73,8 +73,9 @@ public abstract class DefaultIdentifierGenerator {
 		try {
 			storeIdentifier(identifier);
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Error saving identifier: '" + identifier + "'", e);
-			CoreUtil.sendExceptionNotification(e);
+			String errorMessage = "Error saving identifier: '" + identifier + "'";
+			LOGGER.log(Level.SEVERE, errorMessage, e);
+			CoreUtil.sendExceptionNotification(errorMessage, e);
 			return false;
 		}
 		
