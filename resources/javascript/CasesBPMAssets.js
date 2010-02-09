@@ -250,6 +250,9 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
 };
 
 CasesBPMAssets.pushRowsParams = function(gridEntriesBean) {
+	if (gridEntriesBean == null) {
+		return;
+	}
 	
 	var params = {
 		rowsParams: gridEntriesBean.rowsParams
@@ -300,8 +303,10 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
             	
             	CasesBPMAssets.pushRowsParams(gridEntriesBean);
             	
-            	var gridEntries = gridEntriesBean.gridEntries;
-                callback(gridEntries);
+            	if (gridEntriesBean != null) {
+            		var gridEntries = gridEntriesBean.gridEntries;
+                	callback(gridEntries);
+            	}
                 
                 CasesBPMAssets.openAllAttachmentsForCase(jQuery('#' + params.identifier + CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX + piId));
                 
