@@ -462,8 +462,10 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
                 	if (!link.hasClass('emailSenderLightboxinBPMCasesStyleInitialized')) {
                 		link.addClass('emailSenderLightboxinBPMCasesStyleInitialized');
                 		link.fancybox({
-                			frameWidth:		750,
-							frameHeight:	450
+                			autoScale: false,
+							autoDimensions: false,
+                			width:	750,
+							height:	450
                 		});
                 	}
                 });
@@ -781,8 +783,10 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, ro
                 	if (!link.hasClass('BPMCaseAttachmentStatisticsInfoInitialized')) {
                 		link.addClass('BPMCaseAttachmentStatisticsInfoInitialized');
                 		link.fancybox({
-                			frameWidth:		400,
-							frameHeight:	300,
+                			autoScale: false,
+							autoDimensions: false,
+                			width:	400,
+							height:	300,
 							hideOnContentClick: false
                 		});
                 	}
