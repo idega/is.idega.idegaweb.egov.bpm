@@ -1,8 +1,5 @@
 package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
-
-import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -22,7 +19,6 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
-import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
@@ -413,27 +409,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			caseNumber = caseNumber + CoreConstants.PERCENT;
 		}
 		
-		/*return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber, Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));*/
-		List<Serializable[]> data = null;
-		try {
-			data = SimpleQuerier.executeQuery("select cp.case_id from " + CaseProcInstBind.TABLE_NAME + " cp where cp." + CaseProcInstBind.procInstIdColumnName +
-					" in (select pv.PROCESSINSTANCE_ from JBPM_VARIABLEINSTANCE pv where pv.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' and " +
-					"lower(pv.STRINGVALUE_) like '" + caseNumber + "')", 1);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error getting cases IDs by number: " + caseNumber, e);
-		}
-		if (ListUtil.isEmpty(data)) {
-			return null;
-		}
-		
-		List<Long> ids = new ArrayList<Long>(data.size());
-		for (Serializable[] dataSet: data) {
-			Serializable temp = dataSet[0];
-			if (temp instanceof Number) {
-				ids.add(((Number) temp).longValue());
-			}
-		}
-		return ids;
+		return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber, Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));
 	}
 	
 	public List<Long> getCaseIdsByProcessUserStatus(String status) {

@@ -161,9 +161,9 @@ import org.hibernate.annotations.Index;
 			
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumber, resultSetMapping="caseId", 
 					query=
-				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE pv on cp." +
-				CaseProcInstBind.procInstIdColumnName + " = pv.PROCESSINSTANCE_ where pv.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' and " +
-				"lower(pv.STRINGVALUE_) like :" + CaseProcInstBind.caseNumberProp + " group by cp.case_id"
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp where cp." + CaseProcInstBind.procInstIdColumnName + " in " +
+				"(select var.PROCESSINSTANCE_ from JBPM_VARIABLEINSTANCE var where var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' and " +
+				"lower(var.STRINGVALUE_) like :" + CaseProcInstBind.caseNumberProp + ")"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 
 					query=
