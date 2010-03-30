@@ -19,6 +19,8 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.Index;
+
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.27 $
@@ -227,10 +229,12 @@ public class CaseProcInstBind implements Serializable {
 
 	public static final String procInstIdProp = "procInstId";
 	@Id
+	@Index(columnNames={procInstIdColumnName}, name="procInstIdIndex")
 	@Column(name=procInstIdColumnName)
     private Long procInstId;
 	
 	public static final String caseIdProp = "caseId";
+	@Index(columnNames={"case_id"}, name="caseIdIndex")
 	@Column(name="case_id", nullable=false, unique=true)
 	private Integer caseId;
 	
