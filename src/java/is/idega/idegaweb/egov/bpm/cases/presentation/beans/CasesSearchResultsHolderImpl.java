@@ -23,7 +23,6 @@ import org.apache.poi.hssf.usermodel.HSSFFont;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.jbpm.context.exe.VariableInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -44,6 +43,8 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MemoryFileBuffer;
 import com.idega.io.MemoryOutputStream;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
@@ -79,6 +80,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private BPMFactory bpmFactory;
 	@Autowired
 	private RolesManager rolesManager;
+	@Autowired
+	private VariableInstanceQuerier variablesQuerier;
 	
 	public void setSearchResults(String id, Collection<CasePresentation> cases, CasesSearchCriteriaBean criteriaBean) {
 		this.cases.put(id, cases);
@@ -181,9 +184,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessDefinition(Locale locale, String processDefinition, boolean isAdmin) {
-		List<VariableInstance> variablesByProcessDefinition = null;
+		Collection<VariableInstanceInfo> variablesByProcessDefinition = null;
 		try {
-			variablesByProcessDefinition = getNumber(processDefinition) == null ? getCasesBinder().getVariablesByProcessDefinition(processDefinition) : null;
+			variablesByProcessDefinition = getNumber(processDefinition) == null ? getVariablesQuerier().getVariablesByProcessDefinition(processDefinition) : null;
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variables for process: " + processDefinition, e);
 		}
@@ -193,9 +196,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessInstanceId(Locale locale, Long processInstanceId, boolean isAdmin) {
-		List<VariableInstance> variablesByProcessInstance = null;
+		Collection<VariableInstanceInfo> variablesByProcessInstance = null;
 		try {
-			variablesByProcessInstance = getCasesBinder().getVariablesByProcessInstanceId(processInstanceId);
+			variablesByProcessInstance = getVariablesQuerier().getFullVariablesByProcessInstanceId(processInstanceId);
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variables for process instance: " + processInstanceId, e);
 		}
@@ -204,7 +207,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 	
 	@Transactional(readOnly=true)
-	private List<AdvancedProperty> getAvailableVariables(List<VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
+	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
 		if (ListUtil.isEmpty(variables)) {
 			return null;
 		}
@@ -666,6 +669,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	public void setRolesManager(RolesManager rolesManager) {
 		this.rolesManager = rolesManager;
+	}
+
+	public VariableInstanceQuerier getVariablesQuerier() {
+		return variablesQuerier;
+	}
+
+	public void setVariablesQuerier(VariableInstanceQuerier variablesQuerier) {
+		this.variablesQuerier = variablesQuerier;
 	}
 
 }

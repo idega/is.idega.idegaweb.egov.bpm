@@ -1,7 +1,5 @@
 package com.idega.idegaweb.egov.bpm.data.dao;
 
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable;
-
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -14,6 +12,8 @@ import com.idega.core.user.data.User;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
+import com.idega.jbpm.bean.BPMProcessVariable;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.util.IWTimestamp;
 
 /**
@@ -74,11 +74,21 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Long> getCaseIdsByProcessInstanceIds(
 	        List<Long> processInstanceIds);
 	
-	public abstract List<VariableInstance> getVariablesByProcessDefinition(
-	        String processDefinitionName);
+	/**
+	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByProcessDefinition or {@link VariableInstanceQuerier} getFullVariablesByProcessDefinition
+	 * @param processDefinitionName
+	 * @return
+	 */
+	@Deprecated
+	public abstract List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName);
 	
-	public abstract List<VariableInstance> getVariablesByProcessInstanceId(
-	        Long processInstanceId);
+	/**
+	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByProcessInstanceId or {@link VariableInstanceQuerier} getFullVariablesByProcessInstanceId
+	 * @param processInstanceId
+	 * @return
+	 */
+	@Deprecated
+	public abstract List<VariableInstance> getVariablesByProcessInstanceId(Long processInstanceId);
 	
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(
 	        Collection<String> identifiers);
@@ -113,10 +123,29 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Integer> getClosedCasesIdsForAdmin(
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 	
-	public abstract List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(
-	        Collection<Long> processInstanceIds, List<String> variables);
+	/**
+	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByProcessInstanceIdAndVariablesNames
+	 * @param processInstanceIds
+	 * @param variables
+	 * @return
+	 */
+	@Deprecated
+	public abstract List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(Collection<Long> processInstanceIds, List<String> variables);
 	
+	/**
+	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByNames
+	 * @param names
+	 * @return
+	 */
+	@Deprecated
 	public abstract Collection<VariableInstance> getVariablesByNames(List<String> names);
 	
-	public List<VariableInstance> getVariblesByNameAndValue(String name, String value);
+	/**
+	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByNameAndValue
+	 * @param name
+	 * @param value
+	 * @return
+	 */
+	@Deprecated
+	public List<VariableInstance> getVariablesByNameAndValue(String name, String value);
 }

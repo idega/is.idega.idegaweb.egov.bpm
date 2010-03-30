@@ -49,6 +49,7 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.io.MediaWritable;
+import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.paging.PagedDataCollection;
@@ -292,11 +293,8 @@ public class CasesEngineImp implements BPMCasesEngine {
 	}
 	
 	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
-		
 		final User currentUser;
-		
 		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
-			
 			LOGGER.log(Level.INFO, "Not logged in, skipping searching");
 			return null;
 		}

@@ -24,9 +24,6 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jbpm.context.exe.VariableInstance;
-import org.jbpm.context.exe.variableinstance.HibernateStringInstance;
-import org.jbpm.context.exe.variableinstance.StringInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -44,6 +41,9 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.bean.VariableStringInstance;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -102,6 +102,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private CasesBPMDAO casesBPMDAO;
 	
 	@Autowired
+	private VariableInstanceQuerier variablesQuerier;
+	
+	@Autowired
 	private TaskViewerHelper taskViewer;
 	
 	private List<String> variables;
@@ -144,7 +147,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		List<String> allVariables = new ArrayList<String>(getVariables());
 		allVariables.addAll(GRADING_VARIABLES);
 		List<CaseBoardView> boardViews = getStringVariablesValuesByVariablesNamesForCases(casesIdsAndHandlers, allVariables);
-		
 		if (ListUtil.isEmpty(boardViews)) {
 			return null;
 		}
@@ -207,16 +209,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private List<CaseBoardView> getStringVariablesValuesByVariablesNamesForCases(Map<Integer, User> casesIdsAndHandlers, List<String> variablesNames) {
 		Map<Integer, Long> processes = getCaseProcessInstanceRelation().getCasesProcessInstancesIds(casesIdsAndHandlers.keySet());
 
-		List<VariableInstance> variables = getCasesBPMDAO().getVariablesByProcessInstanceIdAndVariablesNames(processes.values(), variablesNames);
+		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(processes.values(), variablesNames);
 		if (ListUtil.isEmpty(variables)) {
 			return null;
 		}
 		
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
-		for (VariableInstance variable: variables) {
-			if ((variable instanceof StringInstance || variable instanceof HibernateStringInstance) &&
-				(variable.getName() != null && variable.getValue() != null)) {
-				Long processInstanceId = variable.getProcessInstance().getId();
+		for (VariableInstanceInfo variable: variables) {
+			if (variable instanceof VariableStringInstance && (variable.getValue() != null && variable.getProcessInstanceId() != null)) {
+				
+				Long processInstanceId = variable.getProcessInstanceId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
 					Integer caseId = getMapedCaseId(processes, processInstanceId);
@@ -229,8 +231,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				
 				if (view == null) {
 					LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + processes);
-				}
-				else {
+				} else {
 					view.addVariable(variable.getName(), variable.getValue().toString());
 				}
 			}
@@ -397,10 +398,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 	
 	@Transactional(propagation = Propagation.REQUIRED)
-	public AdvancedProperty setCaseVariableValue(Integer caseId,
-	        String variableName, String value, String role, String backPage) {
-		if (caseId == null || StringUtil.isEmpty(variableName)
-		        || StringUtil.isEmpty(value)) {
+	public AdvancedProperty setCaseVariableValue(Integer caseId, String variableName, String value, String role, String backPage) {
+		if (caseId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(value)) {
 			return null;
 		}
 		
@@ -417,30 +416,23 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				value = CoreConstants.EMPTY;
 			}
 			
-			Long processInstanceId = getCaseProcessInstanceRelation()
-			        .getCaseProcessInstanceId(caseId);
+			Long processInstanceId = getCaseProcessInstanceRelation().getCaseProcessInstanceId(caseId);
 			
 			ProcessInstanceW piw = getBpmFactory().getProcessInstanceW(processInstanceId);
 			
 			String taskName = "Grading";
-			List<TaskInstanceW> allTasks = piw
-			        .getUnfinishedTaskInstancesForTask(taskName);
+			List<TaskInstanceW> allTasks = piw.getUnfinishedTaskInstancesForTask(taskName);
 			
 			if (ListUtil.isEmpty(allTasks)) {
-				LOGGER.log(Level.WARNING,
-				    "No tasks instances were found for task = " + taskName
-				            + " by process instance: " + processInstanceId);
+				LOGGER.warning("No tasks instances were found for task = " + taskName + " by process instance: " + processInstanceId);
 				return null;
 			}
 			
 			// should be only one task instance
 			if (allTasks.size() > 1)
-				LOGGER.log(Level.WARNING,
-				    "More than one task instance found for task = " + taskName
-				            + " when only one expected");
+				LOGGER.warning("More than one task instance found for task = " + taskName + " when only one expected");
 			
 			TaskInstanceW sharedTIW = allTasks.iterator().next();
-			
 			Long sharedTaskInstanceId = sharedTIW.getTaskInstanceId();
 			View view = sharedTIW.loadView();
 			
@@ -457,16 +449,13 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			
 			Long viewTaskInstanceId = view.getTaskInstanceId();
 			
-			TaskInstanceW viewTIW = getBpmFactory()
-			        .getProcessManagerByTaskInstanceId(viewTaskInstanceId)
-			        .getTaskInstance(viewTaskInstanceId);
+			TaskInstanceW viewTIW = getBpmFactory().getProcessManagerByTaskInstanceId(viewTaskInstanceId).getTaskInstance(viewTaskInstanceId);
 			
 			viewTIW.submit(viewSubmission);
 			
 			return new AdvancedProperty(value, getTaskViewer().getLinkToTheTask(iwc, caseId.toString(), sharedTaskInstanceId.toString(), backPage));
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Error saving variable '" + variableName
-			        + "' with value '" + value + "' for case: " + caseId, e);
+			LOGGER.log(Level.SEVERE, "Error saving variable '" + variableName + "' with value '" + value + "' for case: " + caseId, e);
 		}
 		
 		return null;
@@ -773,5 +762,13 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage, String taskName) {
 		return getTaskViewer().getLinkToTheTaskRedirector(iwc, basePage, caseId, processInstanceId, backPage, taskName);
+	}
+
+	public VariableInstanceQuerier getVariablesQuerier() {
+		return variablesQuerier;
+	}
+
+	public void setVariablesQuerier(VariableInstanceQuerier variablesQuerier) {
+		this.variablesQuerier = variablesQuerier;
 	}
 }

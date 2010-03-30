@@ -8,7 +8,6 @@ import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
 
-import org.jbpm.context.exe.VariableInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.data.IDOLookup;
@@ -16,6 +15,8 @@ import com.idega.data.MetaData;
 import com.idega.data.MetaDataBMPBean;
 import com.idega.data.MetaDataHome;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -29,6 +30,9 @@ public abstract class DefaultIdentifierGenerator {
 	
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+	
+	@Autowired
+	private VariableInstanceQuerier variablesQuerier;
 	
 	/**
 	 * It is strongly recommended to implement this method as synchronized
@@ -94,20 +98,15 @@ public abstract class DefaultIdentifierGenerator {
 	}
 	
 	private boolean isStoredInVariables(String identifier) throws Exception {
-		Collection<VariableInstance> variables = null;
+		Collection<VariableInstanceInfo> variables = null;
 		try {
-			variables = getCasesBPMDAO().getVariblesByNameAndValue(CasesBPMProcessConstants.caseIdentifier, identifier);
+			variables = getVariablesQuerier().getVariablesByNameAndValue(CasesBPMProcessConstants.caseIdentifier, identifier);
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstance.class + " objects by variable name: " +
+			LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstanceInfo.class + " objects by variable name: " +
 					CasesBPMProcessConstants.caseIdentifier + " and value: " + identifier, e);
 		}
 		
-		if (ListUtil.isEmpty(variables)) {
-			return false;
-		}
-		else {
-			return true;
-		}
+		return !ListUtil.isEmpty(variables);
 	}
 	
 	private void storeIdentifier(String identifier) throws Exception {
@@ -129,5 +128,15 @@ public abstract class DefaultIdentifierGenerator {
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
-	
+
+	public VariableInstanceQuerier getVariablesQuerier() {
+		if (variablesQuerier == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return variablesQuerier;
+	}
+
+	public void setVariablesQuerier(VariableInstanceQuerier variablesQuerier) {
+		this.variablesQuerier = variablesQuerier;
+	}
 }

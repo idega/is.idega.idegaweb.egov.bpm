@@ -11,4 +11,7 @@ import java.util.List;
 public interface CasesListSearchFilter {
 	
 	public abstract List<Integer> doFilter(List<Integer> casesIds);
+	
+	public void startFiltering();
+	public void endFiltering(String info);
 }

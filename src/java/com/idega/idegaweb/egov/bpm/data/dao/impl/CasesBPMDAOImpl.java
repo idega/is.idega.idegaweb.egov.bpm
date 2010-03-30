@@ -1,7 +1,5 @@
 package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable;
-
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -25,6 +23,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.presentation.ui.handlers.IWDatePickerHandler;
@@ -356,6 +355,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	
 	private List<Long> getCaseIdsByVariable(String queryName, List<Long> processDefinitionIds, String processDefinitionName, String variableName, Object value,
 			List<String> types) {
+		
 		return getResultList(queryName, Long.class,
 			    new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
 			    new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
@@ -516,7 +516,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getResultList(CaseProcInstBind.getVariablesByNames, VariableInstance.class, new Param(CaseProcInstBind.variablesNamesProp, names));
 	}
 	
-	public List<VariableInstance> getVariblesByNameAndValue(String name, String value) {
+	public List<VariableInstance> getVariablesByNameAndValue(String name, String value) {
 		return getResultList(CaseProcInstBind.getVariableByNameAndValue, VariableInstance.class, new Param(CaseProcInstBind.variablesNamesProp, name), new Param(CaseProcInstBind.variablesValuesProp, value));
 	}
 	

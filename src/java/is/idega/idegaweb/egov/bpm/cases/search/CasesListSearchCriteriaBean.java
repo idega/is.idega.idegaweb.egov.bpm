@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.search;
 
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariable;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
@@ -30,6 +29,7 @@ import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.presentation.IWContext;
@@ -73,177 +73,190 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	private String statusesToHide;
 	
 	public CasesListSearchFilter getCaseNumberFilter() {
-		return new CasesListSearchFilter() {
+		return new DefaultCasesListSearchFilter() {
 			public List<Integer> doFilter(List<Integer> casesIds) {
-				
-				if (ListUtil.isEmpty(casesIds)) {
-					return casesIds;
-				}
-				
-				String caseNumber = getCaseNumber();
-				if (StringUtil.isEmpty(caseNumber)) {
-					LOGGER.log(Level.INFO, "Case number is undefined, not filtering by it!");
-					return casesIds;
-				}
-				
-				String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
-				List<Integer> casesByNumberIds = new ArrayList<Integer>();
-				
-				//	"BPM" cases
-				List<Long> bpmCases = null;
+				startFiltering();
 				try {
-					bpmCases = getCasesBPMDAO().getCaseIdsByCaseNumber(loweredCaseNumber);
-				} catch(Exception e) {
-					LOGGER.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
-				}
-				if (ListUtil.isEmpty(bpmCases)) {
-					LOGGER.log(Level.INFO, "No BPM cases found by number: " + caseNumber);
-				}
-				else {
-					LOGGER.log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
-					casesByNumberIds.addAll(getConvertedFromLongs(bpmCases));
-				}
-				
-				//	Old cases
-				List<Integer> simpleCases = CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()) ? getUserCasesByNumber(loweredCaseNumber) :
-					getGeneralCasesByNumber(loweredCaseNumber);
-				if (ListUtil.isEmpty(simpleCases)) {
-					LOGGER.log(Level.INFO, "No simple cases found by number: " + caseNumber);
-				}
-				else {
-					LOGGER.log(Level.INFO, "Simple cases by number (" + caseNumber + "): " + simpleCases);
-					for (Integer id: simpleCases) {
-						if (!casesByNumberIds.contains(id)) {
-							casesByNumberIds.add(id);
+					if (ListUtil.isEmpty(casesIds)) {
+						return casesIds;
+					}
+					
+					String caseNumber = getCaseNumber();
+					if (StringUtil.isEmpty(caseNumber)) {
+						LOGGER.log(Level.INFO, "Case number is undefined, not filtering by it!");
+						return casesIds;
+					}
+					
+					String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
+					List<Integer> casesByNumberIds = new ArrayList<Integer>();
+					
+					//	"BPM" cases
+					List<Long> bpmCases = null;
+					try {
+						bpmCases = getCasesBPMDAO().getCaseIdsByCaseNumber(loweredCaseNumber);
+					} catch(Exception e) {
+						LOGGER.log(Level.WARNING, "Exception while resolving case ids by case number = " + loweredCaseNumber, e);
+					}
+					if (ListUtil.isEmpty(bpmCases)) {
+						LOGGER.log(Level.INFO, "No BPM cases found by number: " + caseNumber);
+					}
+					else {
+						LOGGER.log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
+						casesByNumberIds.addAll(getConvertedFromLongs(bpmCases));
+					}
+					
+					//	Old cases
+					List<Integer> simpleCases = CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()) ? getUserCasesByNumber(loweredCaseNumber) :
+						getGeneralCasesByNumber(loweredCaseNumber);
+					if (ListUtil.isEmpty(simpleCases)) {
+						LOGGER.log(Level.INFO, "No simple cases found by number: " + caseNumber);
+					} else {
+						LOGGER.log(Level.INFO, "Simple cases by number (" + caseNumber + "): " + simpleCases);
+						for (Integer id: simpleCases) {
+							if (!casesByNumberIds.contains(id)) {
+								casesByNumberIds.add(id);
+							}
 						}
 					}
+					
+					if (ListUtil.isEmpty(casesByNumberIds)) {
+						LOGGER.log(Level.INFO, "No cases found by number: " + caseNumber);
+					} else {
+						LOGGER.log(Level.INFO, "Cases found by number (" + caseNumber + "): " + casesByNumberIds);
+					}
+					casesIds = getNarrowedResults(casesIds, casesByNumberIds);
+					
+					return casesIds;
+				} finally {
+					endFiltering("Looking for cases by number: " + getCaseNumber());
 				}
-				
-				if (ListUtil.isEmpty(casesByNumberIds)) {
-					LOGGER.log(Level.INFO, "No cases found by number: " + caseNumber);
-				}
-				else {
-					LOGGER.log(Level.INFO, "Cases found by number (" + caseNumber + "): " + casesByNumberIds);
-				}
-				casesIds = getNarrowedResults(casesIds, casesByNumberIds);
-				
-				return casesIds;
 			}
 		};
 	}
 	
 	public CasesListSearchFilter getGeneralCasesFilter() {
-		return new CasesListSearchFilter() {
+		return new DefaultCasesListSearchFilter() {
 			public List<Integer> doFilter(List<Integer> casesIds) {
-				
-				if (ListUtil.isEmpty(casesIds)) {
-					return casesIds;
-				}
-				
-				if (StringUtil.isEmpty(getDescription()) && StringUtil.isEmpty(getName()) && StringUtil.isEmpty(getPersonalId()) &&
-						ArrayUtil.isEmpty(getStatuses()) && getDateFrom() == null && getDateTo() == null) {
-					LOGGER.log(Level.INFO, "None of criterias are defined, not filtering by it!");
-					return casesIds;
-				}
-					
-				IWContext iwc = CoreUtil.getIWContext();
-				CasesBusiness casesBusiness = getCasesBusiness();
-				
-				String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
-				
-				Collection<Case> cases = null;
+				startFiltering();
 				try {
-					cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
-							getDateTo(), null, null, false, CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+					if (ListUtil.isEmpty(casesIds)) {
+						return casesIds;
+					}
+					
+					if (StringUtil.isEmpty(getDescription()) && StringUtil.isEmpty(getName()) && StringUtil.isEmpty(getPersonalId()) &&
+							ArrayUtil.isEmpty(getStatuses()) && getDateFrom() == null && getDateTo() == null) {
+						LOGGER.log(Level.INFO, "None of general criterias (description, name, personal ID, statuses, dates) are defined, not filtering by it!");
+						return casesIds;
+					}
+						
+					IWContext iwc = CoreUtil.getIWContext();
+					CasesBusiness casesBusiness = getCasesBusiness();
+					
+					String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
+					
+					Collection<Case> cases = null;
+					try {
+						cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
+								getDateTo(), null, null, false, CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+					}
+					catch (RemoteException e) {
+						e.printStackTrace();
+					}
+	
+					List<Integer> casesByCriteria = null;
+					if (cases != null && ListUtil.isEmpty(cases)) {
+						LOGGER.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
+								.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
+								.append(", dateRange: ").append(getDateRange())
+						.toString());
+					}
+					else {	
+						casesByCriteria = getCasesIds(cases);
+						LOGGER.log(Level.INFO, "Cases by criterias: " + casesByCriteria);
+					}
+					casesIds = getNarrowedResults(casesIds, casesByCriteria);
+					
+					return casesIds;
+				} finally {
+					endFiltering("Looking for cases by criteria: " + getDescription());
 				}
-				catch (RemoteException e) {
-					e.printStackTrace();
-				}
-
-				List<Integer> casesByCriteria = null;
-				if (cases != null && ListUtil.isEmpty(cases)) {
-					LOGGER.log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
-							.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
-							.append(", dateRange: ").append(getDateRange())
-					.toString());
-				}
-				else {	
-					casesByCriteria = getCasesIds(cases);
-					LOGGER.log(Level.INFO, "Cases by criterias: " + casesByCriteria);
-				}
-				casesIds = getNarrowedResults(casesIds, casesByCriteria);
-				
-				return casesIds;
 			}
 		};
 	}
 	
 	public CasesListSearchFilter getContactFilter() {
-		return new CasesListSearchFilter() {
+		return new DefaultCasesListSearchFilter() {
 			public List<Integer> doFilter(List<Integer> casesIds) {
-				
-				if (ListUtil.isEmpty(casesIds)) {
+				startFiltering();
+				try {
+					if (ListUtil.isEmpty(casesIds)) {
+						return casesIds;
+					}
+					
+					String contact = getContact();
+					if (StringUtil.isEmpty(contact)) {
+						return casesIds;
+					}
+					
+					List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
+					if (ListUtil.isEmpty(casesByContact)) {
+						LOGGER.log(Level.INFO, "No BPM cases found by contact: " + contact);
+					}
+					else {
+						LOGGER.log(Level.INFO, "Found BPM cases by contact: " + contact);
+					}
+					casesIds = getNarrowedResults(casesIds, casesByContact);
+					
 					return casesIds;
+				} finally {
+					endFiltering("Looking for cases by contact: " + getContact());
 				}
-				String contact = getContact();
-				if (StringUtil.isEmpty(contact)) {
-					LOGGER.log(Level.INFO, "Contact is undefined, not filtering by it!");
-					return casesIds;
-				}
-				
-				List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
-				if (ListUtil.isEmpty(casesByContact)) {
-					LOGGER.log(Level.INFO, "No BPM cases found by contact: " + contact);
-				}
-				else {
-					LOGGER.log(Level.INFO, "Found BPM cases by contact: " + contact);
-				}
-				casesIds = getNarrowedResults(casesIds, casesByContact);
-				
-				return casesIds;
 			}
 		};
 	}
 	
 	public CasesListSearchFilter getProcessFilter() {
-		return new CasesListSearchFilter() {
+		return new DefaultCasesListSearchFilter() {
 			public List<Integer> doFilter(List<Integer> casesIds) {
-				
-				if (ListUtil.isEmpty(casesIds)) {
-					return casesIds;
-				}
+				startFiltering();
+				try {
+					if (ListUtil.isEmpty(casesIds)) {
+						return casesIds;
+					}
+						
+					String processDefinitionId = getProcessId();
+					if (StringUtil.isEmpty(processDefinitionId)) {
+						return casesIds;
+					}
 					
-				String processDefinitionId = getProcessId();
-				if (StringUtil.isEmpty(processDefinitionId)) {
-					LOGGER.log(Level.INFO, "Process definition id is undefined, not filtering by it!");
+					List<Integer> casesByProcessDefinition = null;
+					if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
+						//	Getting ONLY none "BPM" cases
+						try {
+							casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds,
+									CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
+						}
+						catch (RemoteException e) {
+							e.printStackTrace();
+						}
+					}
+					else {
+						//	Getting "BPM" cases
+						casesByProcessDefinition = getConvertedFromLongs(getCasesByProcessDefinition(processDefinitionId, getProcessVariables()));
+					}
+					
+					if (ListUtil.isEmpty(casesByProcessDefinition)) {
+						LOGGER.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
+					}
+					else {
+						LOGGER.log(Level.INFO, "Found cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
+					}
+					casesIds = getNarrowedResults(casesIds, casesByProcessDefinition);
+					
 					return casesIds;
+				} finally {
+					endFiltering("Looking for cases by process definition: " + getProcessId());
 				}
-				
-				List<Integer> casesByProcessDefinition = null;
-				if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
-					//	Getting ONLY none "BPM" cases
-					try {
-						casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds,
-								CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
-					}
-					catch (RemoteException e) {
-						e.printStackTrace();
-					}
-				}
-				else {
-					//	Getting "BPM" cases
-					casesByProcessDefinition = getConvertedFromLongs(getCasesByProcessDefinition(processDefinitionId, getProcessVariables()));
-				}
-				
-				if (ListUtil.isEmpty(casesByProcessDefinition)) {
-					LOGGER.log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
-				}
-				else {
-					LOGGER.log(Level.INFO, "Found cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
-				}
-				casesIds = getNarrowedResults(casesIds, casesByProcessDefinition);
-				
-				return casesIds;
 			}
 		};
 	}
@@ -626,4 +639,26 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 		.toString();
 	}
 	
+	private abstract class DefaultCasesListSearchFilter implements CasesListSearchFilter {
+		private long start;
+		private long end;
+		private boolean measure;
+		
+		public void endFiltering(String info) {
+			if (!measure) {
+				return;
+			}
+			
+			end = System.currentTimeMillis();
+			LOGGER.info("Query (" + info + ") executed in: " + (end - start) + " ms");
+		}
+
+		public void startFiltering() {
+			measure = CoreUtil.isSQLMeasurementOn();
+			if (measure) {
+				start = System.currentTimeMillis();
+			}
+		}
+		
+	}
 }

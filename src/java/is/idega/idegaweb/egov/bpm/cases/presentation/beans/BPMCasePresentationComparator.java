@@ -2,9 +2,11 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -13,8 +15,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jbpm.context.exe.VariableInstance;
-import org.jbpm.context.exe.variableinstance.NullInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,6 +23,8 @@ import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -34,15 +36,18 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 	private Locale locale;
 	private CasesListSearchCriteriaBean searchCriterias;
 	
-	private Map<String, List<VariableInstance>> variables;
+	private Map<String, List<VariableInstanceInfo>> variables;
 	
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 	
+	@Autowired
+	private VariableInstanceQuerier variablesQuerier;
+	
 	private Collator collator;
 	
 	public BPMCasePresentationComparator(Locale locale, CasesListSearchCriteriaBean searchCriterias) {
-		variables = new HashMap<String, List<VariableInstance>>();
+		variables = new HashMap<String, List<VariableInstanceInfo>>();
 		
 		this.locale = locale;
 		this.searchCriterias = searchCriterias;
@@ -97,15 +102,17 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 		return false;
 	}
 	
-	private List<VariableInstance> getCaseVariables(String caseId) {
-		List<VariableInstance> variables = this.variables.get(caseId);
+	private List<VariableInstanceInfo> getCaseVariables(String caseId) {
+		List<VariableInstanceInfo> variables = this.variables.get(caseId);
 		if (variables == null) {
 			CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByCaseId(Integer.valueOf(caseId));
 			Long piId = cpi == null ? null : cpi.getProcInstId();
-			variables = piId == null ? null : getCasesBPMDAO().getVariablesByProcessInstanceId(piId);
+			Collection<VariableInstanceInfo> tmpVariables = piId == null ? null : getVariablesQuerier().getFullVariablesByProcessInstanceId(piId);
 			
-			if (variables == null) {
-				variables = new ArrayList<VariableInstance>(0);
+			if (tmpVariables == null) {
+				variables = new ArrayList<VariableInstanceInfo>(0);
+			} else {
+				variables = new ArrayList<VariableInstanceInfo>(tmpVariables);
 			}
 			this.variables.put(caseId, variables);
 		}
@@ -115,20 +122,20 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 	@Transactional(readOnly=true)
 	private String getVariableValue(CasePresentation theCase, String variableName) {
 		try {
-			List<VariableInstance> variables = getCaseVariables(theCase.getId());
+			List<VariableInstanceInfo> variables = getCaseVariables(theCase.getId());
 			if (ListUtil.isEmpty(variables)) {
 				return CoreConstants.EMPTY;
 			}
 			
 			String value = null;
-			for (Iterator<VariableInstance> variablesIter = variables.iterator(); (variablesIter.hasNext() && StringUtil.isEmpty(value));) {
-				VariableInstance variable = variablesIter.next();
-				String name = null;
+			for (Iterator<VariableInstanceInfo> variablesIter = variables.iterator(); (variablesIter.hasNext() && StringUtil.isEmpty(value));) {
+				VariableInstanceInfo variable = variablesIter.next();
 				
-				if (!(variable instanceof NullInstance)) {
-					name = variable.getName();
-					if (variableName.equals(name)) {
-						value = variable.getValue().toString();
+				String name = variable.getName();
+				if (variableName.equals(name)) {
+					Serializable tmpValue = variable.getValue();
+					if (tmpValue != null) {
+						value = tmpValue.toString();
 					}
 				}
 			}
@@ -149,6 +156,17 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 
 	public void setCaseBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
+	}
+
+	public VariableInstanceQuerier getVariablesQuerier() {
+		if (variablesQuerier == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return variablesQuerier;
+	}
+
+	public void setVariablesQuerier(VariableInstanceQuerier variablesQuerier) {
+		this.variablesQuerier = variablesQuerier;
 	}
 	
 }

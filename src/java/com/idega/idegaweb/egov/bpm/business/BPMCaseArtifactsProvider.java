@@ -2,13 +2,12 @@ package com.idega.idegaweb.egov.bpm.business;
 
 import is.idega.idegaweb.egov.cases.business.CaseArtifactsProvider;
 
+import java.io.Serializable;
 import java.util.Arrays;
-import java.util.List;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jbpm.context.exe.VariableInstance;
-import org.jbpm.context.exe.variableinstance.NullInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -17,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
@@ -29,8 +30,12 @@ public class BPMCaseArtifactsProvider implements CaseArtifactsProvider {
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 	
+	@Autowired
+	private VariableInstanceQuerier variablesQuerier;
+	
+	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = true)
-	public Object getVariableValue(Object caseId, String variableName) {
+	public <T extends Serializable> T getVariableValue(Object caseId, String variableName) {
 		if (caseId == null || StringUtil.isEmpty(variableName)) {
 			return null;
 		}
@@ -46,9 +51,9 @@ public class BPMCaseArtifactsProvider implements CaseArtifactsProvider {
 		}
 		
 		Long procInstId = bind.getProcInstId();
-		List<VariableInstance> variables = null;
+		Collection<VariableInstanceInfo> variables = null;
 		try {
-			variables = casesBPMDAO.getVariablesByProcessInstanceIdAndVariablesNames(Arrays.asList(procInstId), Arrays.asList(variableName));
+			variables = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(Arrays.asList(procInstId), Arrays.asList(variableName));
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variable '"+variableName+"' from process instance: " + procInstId, e);
 		}
@@ -56,22 +61,18 @@ public class BPMCaseArtifactsProvider implements CaseArtifactsProvider {
 			return null;
 		}
 		
-		for (VariableInstance variable: variables) {
-			if ((variable instanceof NullInstance)) {
-				continue;
-			}
-	
+		for (VariableInstanceInfo variable: variables) {	
 			String name = variable.getName();
 			if (StringUtil.isEmpty(name)) {
 				continue;
 			}
 			
 			if (name.equals(variableName)) {
-				return  variable.getValue();
+				Serializable value = variable.getValue();
+				return value == null ? null : (T) value;
 			}
 		}
 		
 		return null;
-	}
-	
+	}	
 }
