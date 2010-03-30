@@ -413,8 +413,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			caseNumber = caseNumber + CoreConstants.PERCENT;
 		}
 		
-		/*return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber,
-		    Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));*/
+		/*return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber, Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));*/
 		List<Serializable[]> data = null;
 		try {
 			data = SimpleQuerier.executeQuery("select cp.case_id from " + CaseProcInstBind.TABLE_NAME + " cp where cp." + CaseProcInstBind.procInstIdColumnName +
