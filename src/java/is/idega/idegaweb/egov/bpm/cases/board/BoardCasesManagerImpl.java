@@ -138,14 +138,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 	
 	private List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers) {
-		CasesRetrievalManager caseManager = getCaseManager();
-		if (caseManager == null) {
-			return null;
-		}
-		
 		List<String> allVariables = new ArrayList<String>(getVariables());
 		allVariables.addAll(GRADING_VARIABLES);
 		List<CaseBoardView> boardViews = getStringVariablesValuesByVariablesNamesForCases(casesIdsAndHandlers, allVariables);
+		LOGGER.warning("Got views: " + boardViews);	//	TODO
 		if (ListUtil.isEmpty(boardViews)) {
 			return null;
 		}
@@ -234,7 +230,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					view.addVariable(variable.getName(), variable.getValue().toString());
 				}
 			} else {
-				LOGGER.warning("Variable " + variable + " can not be added to board view!");
+				LOGGER.warning(variable + " can not be added to board view!");
 			}
 		}
 		
@@ -734,7 +730,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		public void setHandler(User handler) {
 			this.handler = handler;
 		}
-		
+	
+		@Override
+		public String toString() {
+			return "CaseBoardView: case ID: " + caseId + ", process instance ID: " + processInstanceId;
+		}
 	}
 
 	public TaskViewerHelper getTaskViewer() {
