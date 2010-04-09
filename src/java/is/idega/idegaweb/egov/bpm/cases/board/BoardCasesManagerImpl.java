@@ -141,7 +141,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		List<String> allVariables = new ArrayList<String>(getVariables());
 		allVariables.addAll(GRADING_VARIABLES);
 		List<CaseBoardView> boardViews = getStringVariablesValuesByVariablesNamesForCases(casesIdsAndHandlers, allVariables);
-		LOGGER.warning("Got views: " + boardViews);	//	TODO
+		LOGGER.info("Got views: " + boardViews);	//	TODO
 		if (ListUtil.isEmpty(boardViews)) {
 			return null;
 		}
@@ -210,6 +210,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			return null;
 		}
 		
+		LOGGER.info("Got values for variables: " + variables);	//	TODO
+		
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
 		for (VariableInstanceInfo variable: variables) {
 			if (variable instanceof VariableStringInstance && (variable.getValue() != null && variable.getProcessInstanceId() != null)) {
@@ -217,7 +219,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
 					Integer caseId = getMapedCaseId(processes, processInstanceId);
-					if (caseId != null) {
+					if (caseId == null) {
+						LOGGER.warning("Case ID was not found in " + processes + " for process instance ID: " + processInstanceId);
+					} else {
 						view = new CaseBoardView(caseId.toString(), processInstanceId);
 						view.setHandler(casesIdsAndHandlers.get(caseId));
 						views.add(view);
