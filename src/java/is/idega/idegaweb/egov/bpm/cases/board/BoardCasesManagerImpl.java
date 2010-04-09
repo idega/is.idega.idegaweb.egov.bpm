@@ -141,7 +141,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		List<String> allVariables = new ArrayList<String>(getVariables());
 		allVariables.addAll(GRADING_VARIABLES);
 		List<CaseBoardView> boardViews = getStringVariablesValuesByVariablesNamesForCases(casesIdsAndHandlers, allVariables);
-		LOGGER.info("Got views: " + boardViews);	//	TODO
 		if (ListUtil.isEmpty(boardViews)) {
 			return null;
 		}
@@ -209,8 +208,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			LOGGER.warning("Didn't find any variables values for processes " + processes.values() + " and variables names " + variablesNames);
 			return null;
 		}
-		
-		LOGGER.info("Got values for variables: " + variables);	//	TODO
 		
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
 		for (VariableInstanceInfo variable: variables) {
@@ -321,7 +318,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		if (ListUtil.isEmpty(allCases)) {
 			return null;
 		}
-		LOGGER.info("Got cases by process '" + processName + "' and status '" + caseStatus + "': " + allCases);	//	TODO
 		
 		Collection<GeneralCase> bpmCases = new ArrayList<GeneralCase>();
 		for (Case theCase : allCases) {
