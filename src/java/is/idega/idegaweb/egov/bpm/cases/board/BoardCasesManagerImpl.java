@@ -110,7 +110,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private List<String> variables;
 	
 	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName) {
-		
 		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
 		
 		if (ListUtil.isEmpty(cases)) {
@@ -211,13 +210,13 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(processes.values(), variablesNames);
 		if (ListUtil.isEmpty(variables)) {
+			LOGGER.warning("Didn't find any variables values for processes " + processes.values() + " and variables names " + variablesNames);
 			return null;
 		}
 		
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
 		for (VariableInstanceInfo variable: variables) {
 			if (variable instanceof VariableStringInstance && (variable.getValue() != null && variable.getProcessInstanceId() != null)) {
-				
 				Long processInstanceId = variable.getProcessInstanceId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
@@ -234,6 +233,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				} else {
 					view.addVariable(variable.getName(), variable.getValue().toString());
 				}
+			} else {
+				LOGGER.warning("Variable " + variable + " can not be added to board view!");
 			}
 		}
 		
@@ -307,6 +308,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			}
 			CasesBusiness casesBusiness = getCasesBusiness(iwac);
 			if (casesBusiness == null) {
+				LOGGER.warning(CasesBusiness.class + " is null!");
 				return null;
 			}
 			try {
@@ -319,6 +321,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		if (ListUtil.isEmpty(allCases)) {
 			return null;
 		}
+		LOGGER.info("Got cases by process '" + processName + "' and status '" + caseStatus + "': " + allCases);	//	TODO
 		
 		Collection<GeneralCase> bpmCases = new ArrayList<GeneralCase>();
 		for (Case theCase : allCases) {
@@ -489,8 +492,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return String.valueOf(sum);
 	}
 	
-	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus,
-	        String processName) {
+	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, String processName) {
 		if (iwc == null) {
 			return null;
 		}
