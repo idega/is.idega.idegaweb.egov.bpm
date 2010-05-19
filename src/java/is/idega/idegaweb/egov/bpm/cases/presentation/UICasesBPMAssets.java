@@ -25,6 +25,7 @@ import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
+import com.idega.bpm.pdf.servlet.BPMTaskPDFPrinter;
 import com.idega.bpm.pdf.servlet.XFormToPDFWriter;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -112,6 +113,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		pdfLink.setStyleClass(CasesEngineImp.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
 		pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
 		linksContainer.getChildren().add(pdfLink);
+		
+		DownloadLink taskInPdf = new DownloadLink();
+		taskInPdf.setStyleClass(CasesEngineImp.DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS);
+		taskInPdf.setMediaWriterClass(BPMTaskPDFPrinter.class);
+		linksContainer.getChildren().add(taskInPdf);
 		
 		IWBundle bundle = getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);

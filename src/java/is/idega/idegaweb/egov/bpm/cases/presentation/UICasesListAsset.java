@@ -11,6 +11,7 @@ import javax.faces.context.FacesContext;
 
 import org.apache.myfaces.custom.htmlTag.HtmlTag;
 
+import com.idega.bpm.pdf.servlet.BPMTaskPDFPrinter;
 import com.idega.bpm.pdf.servlet.XFormToPDFWriter;
 import com.idega.facelets.ui.FaceletComponent;
 import com.idega.idegaweb.IWBundle;
@@ -53,6 +54,11 @@ public class UICasesListAsset extends IWBaseComponent {
 		pdfLink.setStyleClass(CasesEngineImp.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
 		pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
 		linksContainer.getChildren().add(pdfLink);
+		
+		DownloadLink taskInPdf = new DownloadLink();
+		taskInPdf.setStyleClass(CasesEngineImp.DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS);
+		taskInPdf.setMediaWriterClass(BPMTaskPDFPrinter.class);
+		linksContainer.getChildren().add(taskInPdf);
 		
 		IWBundle bundle = getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);

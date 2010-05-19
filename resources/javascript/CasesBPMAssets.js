@@ -30,6 +30,7 @@ CasesBPMAssets.GRID_WITH_SUBGRID_ID_PREFIX = '_tableForProcessInstanceGrid_';
 
 CasesBPMAssets.CASE_ATTACHEMENT_LINK_STYLE_CLASS = 'casesBPMAttachmentDownloader';
 CasesBPMAssets.CASE_PDF_DOWNLOADER_LINK_STYLE_CLASS = 'casesBPMPDFGeneratorAndDownloader';
+CasesBPMAssets.DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS = 'casesBPMDownloadTaskInPDF';
 
 CasesBPMAssets.rowInAction = null;
 
@@ -353,12 +354,11 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     }
     
     var onSelectRowFunction = function(rowId) {
-    	
-        var hasViewUI = CasesBPMAssets.isRowHasViewUI(piId, rowId);
-        
-    	if(hasViewUI) {
-    	
-    	   CasesBPMAssets.getProcessRersourceView(caseId, rowId);	
+		if (jQuery('#' + rowId).hasClass('pdfViewableItem')) {
+			var uri = '&variableName=files_pdfTaskView&taskID=' + rowId;
+        	CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, CasesBPMAssets.DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS);
+		} else if (CasesBPMAssets.isRowHasViewUI(piId, rowId)) {
+    		CasesBPMAssets.getProcessRersourceView(caseId, rowId);	
     	}
     };
     
