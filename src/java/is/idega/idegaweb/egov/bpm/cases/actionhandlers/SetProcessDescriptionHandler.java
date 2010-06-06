@@ -50,29 +50,26 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 	private BPMFactory bpmFactory;
 
 	public void execute(ExecutionContext ctx) throws Exception {
-
 		final ProcessInstance pi = ctx.getProcessInstance();
 
 		ProcessInstanceW piw = getBpmFactory()
 				.getProcessManagerByProcessInstanceId(pi.getId())
 				.getProcessInstance(pi.getId());
 
-		final String processDescription;
-		if (getDescription() != null) {
-			processDescription = getDescription();
-		} else {
-			processDescription = piw.getProcessDescription();
-		}
-
-		CaseProcInstBind cpi = getBpmBindsDAO().find(CaseProcInstBind.class,
-				pi.getId());
+		String processDescription = getDescription() == null ? piw.getProcessDescription() : getDescription();
+		
+		setCaseSubject(pi.getId(), processDescription, piw.getProcessDefinitionW().getProcessDefinition().getName());
+	}
+	
+	protected void setCaseSubject(Long processInstanceId, String caseSubject, String caseCode) throws Exception {
+		CaseProcInstBind cpi = getBpmBindsDAO().find(CaseProcInstBind.class, processInstanceId);
 		Integer caseId = cpi.getCaseId();
 
 		CasesBusiness casesBusiness = getCasesBusiness(getIWAC());
 		final Case theCase = casesBusiness.getCase(caseId);
 
-		setCaseCode(theCase, piw.getProcessDefinitionW().getProcessDefinition().getName());
-		theCase.setSubject(processDescription);
+		setCaseCode(theCase, caseCode);
+		theCase.setSubject(caseSubject);
 		theCase.store();
 	}
 	
