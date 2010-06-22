@@ -2,7 +2,6 @@ package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,7 +17,6 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.util.CoreUtil;
-import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -98,15 +96,17 @@ public abstract class DefaultIdentifierGenerator {
 	}
 	
 	private boolean isStoredInVariables(String identifier) throws Exception {
-		Collection<VariableInstanceInfo> variables = null;
+//		Collection<VariableInstanceInfo> variables = null;
 		try {
-			variables = getVariablesQuerier().getVariablesByNameAndValue(CasesBPMProcessConstants.caseIdentifier, identifier);
+//			variables = getVariablesQuerier().getVariablesByNameAndValue(CasesBPMProcessConstants.caseIdentifier, identifier);
+			return getVariablesQuerier().isVariableStored(CasesBPMProcessConstants.caseIdentifier, identifier);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstanceInfo.class + " objects by variable name: " +
 					CasesBPMProcessConstants.caseIdentifier + " and value: " + identifier, e);
 		}
 		
-		return !ListUtil.isEmpty(variables);
+		return false;
+//		return !ListUtil.isEmpty(variables);
 	}
 	
 	private void storeIdentifier(String identifier) throws Exception {
