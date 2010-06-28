@@ -96,9 +96,7 @@ public abstract class DefaultIdentifierGenerator {
 	}
 	
 	private boolean isStoredInVariables(String identifier) throws Exception {
-//		Collection<VariableInstanceInfo> variables = null;
 		try {
-//			variables = getVariablesQuerier().getVariablesByNameAndValue(CasesBPMProcessConstants.caseIdentifier, identifier);
 			return getVariablesQuerier().isVariableStored(CasesBPMProcessConstants.caseIdentifier, identifier);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstanceInfo.class + " objects by variable name: " +
@@ -106,7 +104,6 @@ public abstract class DefaultIdentifierGenerator {
 		}
 		
 		return false;
-//		return !ListUtil.isEmpty(variables);
 	}
 	
 	private void storeIdentifier(String identifier) throws Exception {
