@@ -155,7 +155,8 @@ import org.hibernate.annotations.Index;
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
 				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and var.STRINGVALUE_ like :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+				CaseProcInstBind.variablesNamesProp + " and lower(substr(var.STRINGVALUE_, 1, 256)) like :" + CaseProcInstBind.variablesValuesProp +
+				" group by cp.case_id"
 			),
 			/** Variable queries end **/
 			
@@ -163,13 +164,13 @@ import org.hibernate.annotations.Index;
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp where cp." + CaseProcInstBind.procInstIdColumnName + " in " +
 				"(select var.PROCESSINSTANCE_ from JBPM_VARIABLEINSTANCE var where var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' and " +
-				"lower(var.STRINGVALUE_) like :" + CaseProcInstBind.caseNumberProp + ")"
+				"lower(substr(var.STRINGVALUE_, 1, 256)) like :" + CaseProcInstBind.caseNumberProp + ")"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 
 					query=
-				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE pv on cp." +
-				CaseProcInstBind.procInstIdColumnName + " = pv.PROCESSINSTANCE_ where pv.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName + "' and " +
-				"pv.STRINGVALUE_ in (:" + CaseProcInstBind.caseStatusesProp + ") group by cp.case_id"
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
+				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ where var.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName +
+				"' and substr(var.STRINGVALUE_, 1, 256) in (:" + CaseProcInstBind.caseStatusesProp + ") group by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByUserIds, resultSetMapping="caseId", 
 					query=

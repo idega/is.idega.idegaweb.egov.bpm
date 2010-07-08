@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,6 +29,7 @@ import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -41,8 +43,7 @@ import com.idega.util.StringUtil;
 @Transactional(readOnly = true)
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	
-	private static final Logger LOGGER = Logger.getLogger(CasesBPMDAOImpl.class
-	        .getName());
+	private static final Logger LOGGER = Logger.getLogger(CasesBPMDAOImpl.class.getName());
 	
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
 		
@@ -67,25 +68,20 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return l.iterator().next();
 	}
 	
-	public CaseProcInstBind getCaseProcInstBindByProcessInstanceId(
-	        Long processInstanceId) {
-		
+	public CaseProcInstBind getCaseProcInstBindByProcessInstanceId(Long processInstanceId) {
 		return find(CaseProcInstBind.class, processInstanceId);
 	}
 	
-	public List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(
-	        List<Integer> casesIds) {
+	public List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds) {
 		List<CaseProcInstBind> binds = getResultList(
 		    CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME,
-		    CaseProcInstBind.class, new Param(CaseProcInstBind.casesIdsParam,
-		            casesIds));
+		    CaseProcInstBind.class, new Param(CaseProcInstBind.casesIdsParam, casesIds));
 		
 		return binds;
 	}
 	
 	@Transactional(readOnly = false)
-	public ProcessUserBind getProcessUserBind(long processInstanceId,
-	        int userId, boolean createIfNotFound) {
+	public ProcessUserBind getProcessUserBind(long processInstanceId, int userId, boolean createIfNotFound) {
 		
 		@SuppressWarnings("unchecked")
 		List<ProcessUserBind> u = getEntityManager().createNamedQuery(
@@ -95,8 +91,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		if (u.isEmpty() && createIfNotFound) {
 			
-			CaseProcInstBind bind = find(CaseProcInstBind.class,
-			    processInstanceId);
+			CaseProcInstBind bind = find(CaseProcInstBind.class, processInstanceId);
 			
 			if (bind != null) {
 				
@@ -107,19 +102,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				return cu;
 				
 			} else
-				throw new IllegalStateException(
-				        "Case not bound to process instance");
+				throw new IllegalStateException("Case not bound to process instance");
 			
 		} else if (!u.isEmpty()) {
-			
 			return u.iterator().next();
-			
 		} else
 			return null;
 	}
 	
-	public List<ProcessUserBind> getProcessUserBinds(int userId,
-	        Collection<Integer> casesIds) {
+	public List<ProcessUserBind> getProcessUserBinds(int userId, Collection<Integer> casesIds) {
 		
 		if (casesIds.isEmpty())
 			return new ArrayList<ProcessUserBind>(0);
@@ -148,12 +139,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	
 	@Transactional(readOnly = false)
 	public void updateCaseTypesProcDefBind(CaseTypesProcDefBind bind) {
-		
 		getEntityManager().merge(bind);
 	}
 	
 	public CaseProcInstBind getCaseProcInstBindLatestByDateQN(Date date) {
-		
 		CaseProcInstBind b = null;
 		
 		if (date != null) {
@@ -177,13 +166,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return bind;
 	}
 	
-	public List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
-	        Collection<Date> dates, Collection<Integer> identifierIDs) {
-		
+	public List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs) {
 		List<Object[]> cps = null;
 		
-		if (dates != null && !dates.isEmpty() && identifierIDs != null
-		        && !identifierIDs.isEmpty()) {
+		if (!ListUtil.isEmpty(dates) && !ListUtil.isEmpty(identifierIDs)) {
 			
 			@SuppressWarnings("unchecked")
 			List<Object[]> u = getEntityManager().createNamedQuery(
@@ -199,9 +185,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return cps;
 	}
 	
-	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(
-	        Collection<String> identifiers) {
-		
+	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers) {
 		List<Object[]> cps = null;
 		
 		if (identifiers != null && !identifiers.isEmpty()) {
@@ -219,9 +203,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return cps;
 	}
 	
-	public List<Token> getCaseProcInstBindSubprocessBySubprocessName(
-	        Long processInstanceId) {
-		
+	public List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId) {
 		if (processInstanceId != null) {
 			
 			@SuppressWarnings("unchecked")
@@ -236,11 +218,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return new ArrayList<Token>(0);
 	}
 	
-	public List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(
-	        List<Long> processDefinitionIds, String processDefinitionName,
-	        List<BPMProcessVariable> variables) {
-		if (ListUtil.isEmpty(processDefinitionIds)
-		        || StringUtil.isEmpty(processDefinitionName)) {
+	public List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
+			List<BPMProcessVariable> variables) {
+		
+		if (ListUtil.isEmpty(processDefinitionIds) || StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
 		
@@ -254,11 +235,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			            processDefinitionName));
 		}
 		
+		Locale locale = CoreUtil.getCurrentLocale();
+		
 		List<Long> allResults = null;
 		List<Long> variableResults = null;
 		for (BPMProcessVariable variable : variables) {
 			variableResults = null;
-			Object value = getVariableValue(variable);
+			Object value = getVariableValue(variable, locale);
 			
 			// Date
 			if (variable.isDateType()) {
@@ -288,8 +271,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				if (value instanceof Double) {
 					variableResults = getCaseIdsByVariable(
 					    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables,
-					    processDefinitionIds, processDefinitionName, variable
-					            .getName(), value,
+					    processDefinitionIds, processDefinitionName, variable.getName(), value,
 					    BPMProcessVariable.DOUBLE_TYPES);
 				}
 			
@@ -298,8 +280,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				if (value instanceof Long) {
 					variableResults = getCaseIdsByVariable(
 					    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables,
-					    processDefinitionIds, processDefinitionName, variable
-					            .getName(), value,
+					    processDefinitionIds, processDefinitionName, variable.getName(), value,
 					    BPMProcessVariable.LONG_TYPES);
 				}
 			
@@ -308,23 +289,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				if (value instanceof String) {
 					variableResults = getCaseIdsByVariable(
 					    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables,
-					    processDefinitionIds, processDefinitionName, variable
-					            .getName(), value,
+					    processDefinitionIds, processDefinitionName, variable.getName(),
+					    	CoreConstants.PERCENT.concat((String) value).concat(CoreConstants.PERCENT),
 					    BPMProcessVariable.STRING_TYPES);
 				}
 			
 			// Unsupported variable
 			} else {
-				LOGGER.warning(new StringBuilder("Unsupported variable: ")
-				        .append(variable).append(", terminating search!")
-				        .toString());
+				LOGGER.warning(new StringBuilder("Unsupported variable: ").append(variable).append(", terminating search!").toString());
 				return null; // Unsupported variable!
 			}
 			
 			if (ListUtil.isEmpty(variableResults)) {
-				LOGGER.warning(new StringBuilder("No results by variable: ")
-				        .append(variable).append(", terminating search!")
-				        .toString());
+				LOGGER.warning(new StringBuilder("No results by variable: ").append(variable).append(", terminating search!").toString());
 				return null; // To keep AND
 			}
 			
@@ -365,9 +342,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		);
 	}
 	
-	private Object getVariableValue(BPMProcessVariable variable) {
+	private Object getVariableValue(BPMProcessVariable variable, Locale locale) {
 		if (variable.isStringType()) {
-			return variable.getValue();
+			String value = variable.getValue();
+			if (locale != null) {
+				value = value.toLowerCase(locale);
+			}
+			return value;
 		}
 		
 		if (variable.isDateType()) {
