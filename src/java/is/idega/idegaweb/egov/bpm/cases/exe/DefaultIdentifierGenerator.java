@@ -13,6 +13,7 @@ import com.idega.data.IDOLookup;
 import com.idega.data.MetaData;
 import com.idega.data.MetaDataBMPBean;
 import com.idega.data.MetaDataHome;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
@@ -96,13 +97,15 @@ public abstract class DefaultIdentifierGenerator {
 	}
 	
 	private boolean isStoredInVariables(String identifier) throws Exception {
-		try {
-			return getVariablesQuerier().isVariableStored(CasesBPMProcessConstants.caseIdentifier, identifier);
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstanceInfo.class + " objects by variable name: " +
-					CasesBPMProcessConstants.caseIdentifier + " and value: " + identifier, e);
+		if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("check_identifier_in_jbpm", Boolean.TRUE)) {
+			try {
+				return getVariablesQuerier().isVariableStored(CasesBPMProcessConstants.caseIdentifier, identifier);
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstanceInfo.class + " objects by variable name: " +
+						CasesBPMProcessConstants.caseIdentifier + " and value: " + identifier, e);
+			}
+			return false;
 		}
-		
 		return false;
 	}
 	
