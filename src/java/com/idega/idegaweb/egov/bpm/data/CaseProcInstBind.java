@@ -29,57 +29,20 @@ import org.hibernate.annotations.Index;
  */
 @Entity
 @Table(name=CaseProcInstBind.TABLE_NAME)
-@NamedQueries(
-		{
-			@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
-			@NamedQuery(name=CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId in (:"+CaseProcInstBind.casesIdsParam + ")"),
-			@NamedQuery(name=CaseProcInstBind.getLatestByDateQN, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = :"+CaseProcInstBind.dateCreatedProp+" and cp."+CaseProcInstBind.caseIdentierIDProp+" = (select max(cp2."+CaseProcInstBind.caseIdentierIDProp+") from CaseProcInstBind cp2 where cp2."+CaseProcInstBind.dateCreatedProp+" = cp."+CaseProcInstBind.dateCreatedProp+")"),
-			@NamedQuery(name=CaseProcInstBind.getLastCreatedCase, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = (select max(cp2."+CaseProcInstBind.dateCreatedProp+") from CaseProcInstBind cp2) order by cp."+CaseProcInstBind.dateCreatedProp + ", cp."+CaseProcInstBind.caseIdentierIDProp),
-			@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
-			@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
-			@NamedQuery(name=CaseProcInstBind.getCaseIdByProcessInstanceId, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp."+ CaseProcInstBind.procInstIdProp + " = :" + CaseProcInstBind.procInstIdProp),
-			@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIds, query = "select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp." + CaseProcInstBind.procInstIdProp + " in (:" + CaseProcInstBind.processInstanceIdsProp + ") group by cp." + CaseProcInstBind.caseIdProp),
-//			some stupid hibernate bug, following doesn't work
-//			@NamedQuery(name=CaseProcInstBind.getSubprocessByName, query="select pi.version from org.jbpm.graph.exe.ProcessInstance pi, org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and pi.version = tkn.subProcessInstance and :"+CaseProcInstBind.subProcessNameParam+" = (select epd.name from org.jbpm.graph.def.ProcessDefinition epd where epd.id = pi.processDefinition)")
-			
-			@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null"),
-			
-			//	Query to get variables for a process
-			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessDefinitionName, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi inner join pi.processDefinition pd where var.name is not null and pd.name = :" + CaseProcInstBind.processDefinitionNameProp),
-			//	Query to get variables by process instance id
-			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstanceId, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where var.name is not null and pi.id = :" + CaseProcInstBind.processInstanceIdProp),
-			//	Query to get variables by process instances ids and variables names
-			@NamedQuery(name=CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames, query="select var from org.jbpm.context.exe.VariableInstance var inner join var.processInstance pi where pi.id in (:" + CaseProcInstBind.processInstanceIdsProp + ") and var.name in (:" + CaseProcInstBind.variablesNamesProp + ") group by var.id order by var.processInstance"),
-			//	Query to get variables by names
-			@NamedQuery(name=CaseProcInstBind.getVariablesByNames, query="select var from org.jbpm.context.exe.VariableInstance var where var.name in (:" + CaseProcInstBind.variablesNamesProp + ")"),
-			//	Query to get variable by name and string value
-			@NamedQuery(name=CaseProcInstBind.getVariableByNameAndValue, query="select var from org.jbpm.context.exe.variableinstance.StringInstance var where var.name = :" + CaseProcInstBind.variablesNamesProp + " and var.value like :" + CaseProcInstBind.variablesValuesProp)
-		}
-)
-			/*
-			@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded, query=
-				"select cp."+CaseProcInstBind.caseIdProp+" from CaseProcInstBind as cp " +
-						"inner join org.jbpm.graph.exe.ProcessInstance as pi " +
-						"on cp."+CaseProcInstBind.procInstIdProp+" = pi.id " +
-						"where cp."+CaseProcInstBind.procInstIdProp+" in (:"+CaseProcInstBind.procInstIdProp+")"
-			),
-			@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded, query=
-				"select cp."+CaseProcInstBind.caseIdProp+" from CaseProcInstBind cp " +
-				"inner join org.jbpm.graph.exe.ProcessInstance pi " +
-				"on cp."+CaseProcInstBind.procInstIdProp+" = pi.id " +
-				"where cp."+CaseProcInstBind.procInstIdProp+" in (:"+CaseProcInstBind.procInstIdProp+") and pi.end is null"
-			),
-			@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus, query=
-				"select cp."+CaseProcInstBind.caseIdProp+" from CaseProcInstBind cp " +
-				"inner join com.idega.idegaweb.egov.bpm.data.ProcessUserBind pu " +
-				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu."+ProcessUserBind.caseProcessBindProp+" " +
-				"where cp."+CaseProcInstBind.procInstIdProp+" in (:"+CaseProcInstBind.procInstIdProp+") and pu."+ProcessUserBind.statusProp+" = :"+ProcessUserBind.statusProp
-			)*/
-		 
+@NamedQueries({
+	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
+	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId in (:"+CaseProcInstBind.casesIdsParam + ")"),
+	@NamedQuery(name=CaseProcInstBind.getLatestByDateQN, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = :"+CaseProcInstBind.dateCreatedProp+" and cp."+CaseProcInstBind.caseIdentierIDProp+" = (select max(cp2."+CaseProcInstBind.caseIdentierIDProp+") from CaseProcInstBind cp2 where cp2."+CaseProcInstBind.dateCreatedProp+" = cp."+CaseProcInstBind.dateCreatedProp+")"),
+	@NamedQuery(name=CaseProcInstBind.getLastCreatedCase, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = (select max(cp2."+CaseProcInstBind.dateCreatedProp+") from CaseProcInstBind cp2) order by cp."+CaseProcInstBind.dateCreatedProp + ", cp."+CaseProcInstBind.caseIdentierIDProp),
+	@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
+	@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
+	@NamedQuery(name=CaseProcInstBind.getCaseIdByProcessInstanceId, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp."+ CaseProcInstBind.procInstIdProp + " = :" + CaseProcInstBind.procInstIdProp),
+	@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIds, query = "select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp." + CaseProcInstBind.procInstIdProp + " in (:" + CaseProcInstBind.processInstanceIdsProp + ") group by cp." + CaseProcInstBind.caseIdProp),
+	@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null")
+})
 
 @SqlResultSetMapping(name="caseId", columns=@ColumnResult(name="caseId"))
-@NamedNativeQueries(
-		{
+@NamedNativeQueries({
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded, resultSetMapping="caseId",
 							query=
 				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
@@ -120,7 +83,7 @@ import org.hibernate.annotations.Index;
 			),
 			
 			/** Variable queries start **/
-			//	Query to case ids by DATE variables
+			//	Query to case IDs by DATE variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
@@ -130,7 +93,7 @@ import org.hibernate.annotations.Index;
 				CaseProcInstBind.variablesNamesProp + " and var.DATEVALUE_ between :" + CaseProcInstBind.variablesValuesProp + " and :" +
 				CaseProcInstBind.variablesValuesPropEnd + " group by cp.case_id"
 			),
-			//	Query to case ids by DOUBLE variables
+			//	Query to case IDs by DOUBLE variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
@@ -139,7 +102,7 @@ import org.hibernate.annotations.Index;
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
 				CaseProcInstBind.variablesNamesProp + " and var.DOUBLEVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
-			//	Query to case ids by LONG variables
+			//	Query to case IDs by LONG variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
@@ -148,14 +111,15 @@ import org.hibernate.annotations.Index;
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
 				CaseProcInstBind.variablesNamesProp + " and var.LONGVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
-			//	Query to case ids by STRING variables
+			//	Query to case IDs by STRING variables
+			//	TODO: optimize!!!
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
 				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and lower(substr(var.STRINGVALUE_, 1, 256)) like :" + CaseProcInstBind.variablesValuesProp +
+				CaseProcInstBind.variablesNamesProp + " and lower(substr(var.STRINGVALUE_, 1, 255)) like :" + CaseProcInstBind.variablesValuesProp +
 				" group by cp.case_id"
 			),
 			/** Variable queries end **/
@@ -164,13 +128,13 @@ import org.hibernate.annotations.Index;
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp where cp." + CaseProcInstBind.procInstIdColumnName + " in " +
 				"(select var.PROCESSINSTANCE_ from JBPM_VARIABLEINSTANCE var where var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' and " +
-				"lower(substr(var.STRINGVALUE_, 1, 256)) like :" + CaseProcInstBind.caseNumberProp + ")"
+				"lower(substr(var.STRINGVALUE_, 1, 255)) like :" + CaseProcInstBind.caseNumberProp + ")"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ where var.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName +
-				"' and substr(var.STRINGVALUE_, 1, 256) in (:" + CaseProcInstBind.caseStatusesProp + ") group by cp.case_id"
+				"' and substr(var.STRINGVALUE_, 1, 255) in (:" + CaseProcInstBind.caseStatusesProp + ") group by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByUserIds, resultSetMapping="caseId", 
 					query=
@@ -213,11 +177,6 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByProcessUserStatus = "CaseProcInstBind.getCaseIdsByProcessUserStatus";
 	public static final String getCaseIdsByUserIds = "CaseProcInstBind.getCaseIdsByUserIds";
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
-	public static final String getVariablesByProcessDefinitionName = "CaseProcInstBind.getVariablesByProcessDefinitionName";
-	public static final String getVariablesByProcessInstanceId = "CaseProcInstBind.getVariablesByProcessInstanceId";
-	public static final String getVariablesByProcessInstancesIdsAndVariablesNames = "CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames";
-	public static final String getVariablesByNames = "CaseProcInstBind.getVariablesByNames";
-	public static final String getVariableByNameAndValue = "CaseProcInstBind.getVariableByNameAndValue";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
 	
 	public static final String subProcessNameParam = "subProcessName";
