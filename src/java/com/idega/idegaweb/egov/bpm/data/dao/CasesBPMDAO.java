@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-import org.jbpm.context.exe.VariableInstance;
 import org.jbpm.graph.exe.Token;
 
 import com.idega.core.persistence.GenericDao;
@@ -13,7 +12,6 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.jbpm.bean.BPMProcessVariable;
-import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.util.IWTimestamp;
 
 /**
@@ -26,20 +24,15 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract CaseProcInstBind getCaseProcInstBindByCaseId(Integer caseId);
 	
-	public abstract CaseProcInstBind getCaseProcInstBindByProcessInstanceId(
-	        Long processInstanceId);
+	public abstract CaseProcInstBind getCaseProcInstBindByProcessInstanceId(Long processInstanceId);
 	
-	public abstract List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(
-	        List<Integer> casesIds);
+	public abstract List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds);
 	
-	public abstract ProcessUserBind getProcessUserBind(long processInstanceId,
-	        int userId, boolean createIfNotFound);
+	public abstract ProcessUserBind getProcessUserBind(long processInstanceId, int userId, boolean createIfNotFound);
 	
-	public abstract List<ProcessUserBind> getProcessUserBinds(int userId,
-	        Collection<Integer> casesIds);
+	public abstract List<ProcessUserBind> getProcessUserBinds(int userId, Collection<Integer> casesIds);
 	
-	public abstract CaseTypesProcDefBind getCaseTypesProcDefBindByPDName(
-	        String processDefinitionName);
+	public abstract CaseTypesProcDefBind getCaseTypesProcDefBindByPDName(String processDefinitionName);
 	
 	public abstract void updateCaseTypesProcDefBind(CaseTypesProcDefBind bind);
 	
@@ -47,17 +40,13 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract CaseProcInstBind getLastCreatedCaseProcInstBind();
 	
-	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
-	        Collection<Date> dates, Collection<Integer> identifierIDs);
+	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs);
 	
-	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(
-	        Long processInstanceId);
+	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
 	
-	public abstract List<Long> getCaseIdsByProcessDefinition(
-	        String processDefinitionName);
+	public abstract List<Long> getCaseIdsByProcessDefinition(String processDefinitionName);
 	
-	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(
-	        List<Long> processDefinitionIds, String processDefinitionName,
+	public abstract List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
 	        List<BPMProcessVariable> variables);
 	
 	public abstract List<Long> getCaseIdsByCaseNumber(String caseNumber);
@@ -68,33 +57,14 @@ public interface CasesBPMDAO extends GenericDao {
 	
 	public abstract List<Long> getCaseIdsByUserIds(String userId);
 	
-	public abstract List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom,
-	        IWTimestamp dateTo);
+	public abstract List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
 	
-	public abstract List<Long> getCaseIdsByProcessInstanceIds(
-	        List<Long> processInstanceIds);
+	public abstract List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
 	
-	/**
-	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByProcessDefinition or {@link VariableInstanceQuerier} getFullVariablesByProcessDefinition
-	 * @param processDefinitionName
-	 * @return
-	 */
 	@Deprecated
-	public abstract List<VariableInstance> getVariablesByProcessDefinition(String processDefinitionName);
+	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 	
-	/**
-	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByProcessInstanceId or {@link VariableInstanceQuerier} getFullVariablesByProcessInstanceId
-	 * @param processInstanceId
-	 * @return
-	 */
-	@Deprecated
-	public abstract List<VariableInstance> getVariablesByProcessInstanceId(Long processInstanceId);
-	
-	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(
-	        Collection<String> identifiers);
-	
-	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseCodes,
-	        List<String> caseStatuses, List<String> caseStatusesToHide,
+	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseCodes, List<String> caseStatuses, List<String> caseStatusesToHide,
 	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases);
 	
 	public abstract List<Integer> getClosedCasesIds(User user,
@@ -123,29 +93,4 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Integer> getClosedCasesIdsForAdmin(
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 	
-	/**
-	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByProcessInstanceIdAndVariablesNames
-	 * @param processInstanceIds
-	 * @param variables
-	 * @return
-	 */
-	@Deprecated
-	public abstract List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(Collection<Long> processInstanceIds, List<String> variables);
-	
-	/**
-	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByNames
-	 * @param names
-	 * @return
-	 */
-	@Deprecated
-	public abstract Collection<VariableInstance> getVariablesByNames(List<String> names);
-	
-	/**
-	 * @deprecated Use {@link VariableInstanceQuerier} getVariablesByNameAndValue
-	 * @param name
-	 * @param value
-	 * @return
-	 */
-	@Deprecated
-	public List<VariableInstance> getVariablesByNameAndValue(String name, String value);
 }

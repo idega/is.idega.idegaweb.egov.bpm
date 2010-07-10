@@ -10,7 +10,6 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jbpm.context.exe.VariableInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -448,56 +447,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds,
 		    Long.class, new Param(CaseProcInstBind.processInstanceIdsProp,
 		            processInstanceIds));
-	}
-	
-	public List<VariableInstance> getVariablesByProcessDefinition(
-	        String processDefinitionName) {
-		if (StringUtil.isEmpty(processDefinitionName)) {
-			return null;
-		}
-		
-		return getResultList(
-		    CaseProcInstBind.getVariablesByProcessDefinitionName,
-		    VariableInstance.class, new Param(
-		            CaseProcInstBind.processDefinitionNameProp,
-		            processDefinitionName));
-	}
-	
-	public List<VariableInstance> getVariablesByProcessInstanceId(
-	        Long processInstanceId) {
-		if (processInstanceId == null) {
-			return null;
-		}
-		
-		return getResultList(CaseProcInstBind.getVariablesByProcessInstanceId,
-		    VariableInstance.class, new Param(
-		            CaseProcInstBind.processInstanceIdProp, processInstanceId));
-	}
-	
-	public List<VariableInstance> getVariablesByProcessInstanceIdAndVariablesNames(
-	        Collection<Long> processInstanceIds, List<String> variables) {
-		if (ListUtil.isEmpty(processInstanceIds) || ListUtil.isEmpty(variables)) {
-			return null;
-		}
-		
-		return getResultList(
-		    CaseProcInstBind.getVariablesByProcessInstancesIdsAndVariablesNames,
-		    VariableInstance.class,
-		    new Param(CaseProcInstBind.processInstanceIdsProp,
-		            processInstanceIds), new Param(
-		            CaseProcInstBind.variablesNamesProp, variables));
-	}
-	
-	public List<VariableInstance> getVariablesByNames(List<String> names) {
-		if (ListUtil.isEmpty(names)) {
-			return null;
-		}
-		
-		return getResultList(CaseProcInstBind.getVariablesByNames, VariableInstance.class, new Param(CaseProcInstBind.variablesNamesProp, names));
-	}
-	
-	public List<VariableInstance> getVariablesByNameAndValue(String name, String value) {
-		return getResultList(CaseProcInstBind.getVariableByNameAndValue, VariableInstance.class, new Param(CaseProcInstBind.variablesNamesProp, name), new Param(CaseProcInstBind.variablesValuesProp, value));
 	}
 	
 	// TODO: those queries are very similar, make some general query, and just append queries/joins
