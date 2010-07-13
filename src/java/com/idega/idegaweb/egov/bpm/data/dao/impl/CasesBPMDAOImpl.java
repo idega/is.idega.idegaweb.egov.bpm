@@ -411,9 +411,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			statusesInSet.add(statuses[i]);
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByCaseStatus,
-		    Long.class, new Param(CaseProcInstBind.caseStatusesProp,
-		            statusesInSet));
+		return getResultList(CaseProcInstBind.getCaseIdsByCaseStatus, Long.class, new Param(CaseProcInstBind.caseStatusesProp, statusesInSet));
 	}
 	
 	public List<Long> getCaseIdsByUserIds(String userId) {

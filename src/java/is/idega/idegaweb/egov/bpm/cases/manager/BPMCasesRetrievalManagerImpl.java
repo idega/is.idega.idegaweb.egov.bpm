@@ -269,8 +269,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 		List<Integer> caseIds = null;
 		
-		List<String> statusesToShow = caseStatusesToShow == null ? new ArrayList() : new ArrayList<String>(caseStatusesToShow);
-		List<String> statusesToHide = caseStatusesToHide == null ? new ArrayList() : new ArrayList<String>(caseStatusesToHide);
+		List<String> statusesToShow = caseStatusesToShow == null ? new ArrayList<String>() : new ArrayList<String>(caseStatusesToShow);
+		List<String> statusesToHide = caseStatusesToHide == null ? new ArrayList<String>() : new ArrayList<String>(caseStatusesToHide);
 		statusesToHide = ListUtil.getFilteredList(statusesToHide);
 		
 		try {
