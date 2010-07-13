@@ -21,6 +21,8 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.Index;
 
+import com.idega.jbpm.data.BPMVariableData;
+
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.27 $
@@ -112,35 +114,38 @@ import org.hibernate.annotations.Index;
 				CaseProcInstBind.variablesNamesProp + " and var.LONGVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
 			//	Query to case IDs by STRING variables
-			//	TODO: optimize!!!
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, resultSetMapping="caseId", 
 					query=
-				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
-				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
-				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
-				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and lower(substr(var.STRINGVALUE_, 1, 255)) like :" + CaseProcInstBind.variablesValuesProp +
-				" group by cp.case_id"
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." +
+				CaseProcInstBind.procInstIdColumnName + " = pi.ID_ inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.ID_ " +
+				"inner join JBPM_VARIABLEINSTANCE var on pi.ID_ = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = " +
+				"vdata.variable_id where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
+				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" +	CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
+				CaseProcInstBind.variablesNamesProp + " and lower(vdata.stringvalue) like :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+				/*"JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
+				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ = " +
+				"var.PROCESSINSTANCE_*/
 			),
 			/** Variable queries end **/
 			
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumber, resultSetMapping="caseId", 
 					query=
-				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp where cp." + CaseProcInstBind.procInstIdColumnName + " in " +
-				"(select var.PROCESSINSTANCE_ from JBPM_VARIABLEINSTANCE var where var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' and " +
-				"lower(substr(var.STRINGVALUE_, 1, 255)) like :" + CaseProcInstBind.caseNumberProp + ")"
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
+				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = vdata.variable_id " +
+				"where lower(vdata.stringvalue) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "'"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
-				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ where var.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName +
-				"' and substr(var.STRINGVALUE_, 1, 255) in (:" + CaseProcInstBind.caseStatusesProp + ") group by cp.case_id"
+				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = vdata.variable_id"+
+				" where var.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName + "' and vdata.stringvalue in (:" + CaseProcInstBind.caseStatusesProp +
+				") group by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByUserIds, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_TASKINSTANCE ti on cp." + 
-				CaseProcInstBind.procInstIdColumnName + " = ti.PROCINST_ where ti.ACTORID_ in (:" + ProcessUserBind.userIdParam + ") and ti.END_ is not null group by " +
-				"cp.case_id"
+				CaseProcInstBind.procInstIdColumnName + " = ti.PROCINST_ where ti.ACTORID_ in (:" + ProcessUserBind.userIdParam + ") and ti.END_ is not null group" +
+				" by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByDateRange, resultSetMapping="caseId",
 					query=
