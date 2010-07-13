@@ -122,9 +122,6 @@ import com.idega.jbpm.data.BPMVariableData;
 				"vdata.variable_id where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
 				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" +	CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
 				CaseProcInstBind.variablesNamesProp + " and lower(vdata.stringvalue) like :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
-				/*"JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
-				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ = " +
-				"var.PROCESSINSTANCE_*/
 			),
 			/** Variable queries end **/
 			
