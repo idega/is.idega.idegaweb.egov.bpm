@@ -129,7 +129,8 @@ import com.idega.jbpm.data.BPMVariableData;
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = vdata.variable_id " +
-				"where lower(vdata.stringvalue) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "'"
+				"where lower(vdata.stringvalue) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' " +
+				"group by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 
 					query=
