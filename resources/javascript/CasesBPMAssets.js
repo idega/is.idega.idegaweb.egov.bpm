@@ -104,6 +104,16 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 		CasesBPMAssets.initTakeCaseSelector(container, piId);
 		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics);
 		
+		jQuery('img.reloadCaseStyleClass', container).each(function() {
+			if (typeof CasesEngine == 'undefined' || typeof CasesListHelper == 'undefined') {
+				jQuery(this).css('display', 'none');
+			} else {
+				jQuery(this).click(function() {
+					CasesBPMAssets.reloadCaseView(this, container, piId);
+				});
+			}
+		});
+		
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {
 			callback: function(hasRightChangeRights) {
 				var onGridInitedFunction = function(identifier, needToShow) {
@@ -149,6 +159,37 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 		});
 	});
 };
+
+CasesBPMAssets.reloadCaseView = function(controller, container, piId) {
+	if (jQuery(controller).hasClass('caseViewReloadInProgress')) {
+		return false;
+	} else {
+		jQuery(controller).addClass('caseViewReloadInProgress')
+	}
+	
+	var viewContainer = jQuery(container).parent();
+	var customerViewId = viewContainer.attr('id');
+	if (customerViewId == null) {
+		return false;
+	}
+	
+	var caseOpeners = jQuery('div[customerviewid=\'' + customerViewId + '\']');
+	if (caseOpeners == null || caseOpeners.length == 0) {
+		return false;
+	}
+	
+	viewContainer.hide('normal', function() {
+		jQuery(container).remove();
+
+		for (var i = 0; i < caseOpeners.length; i++) {
+			jQuery(caseOpeners[i]).removeClass('expandedWithNoImage');
+			jQuery(caseOpeners[i]).removeClass('expanded');
+		}
+		
+		viewContainer.removeClass('caseWithInfo');
+		jQuery(caseOpeners[0]).click();
+	});
+}
 
 CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
 	

@@ -47,3 +47,4 @@ cases_bpm.followup.subject=Case requires your attention
 cases_bpm.followup.message=Hello, {0}. Case handler has asked your input.
 cases_search.select_variable=Select variable
 cases_search.there_are_no_variables_for_selected_process=There are no variables for selected process!
+reload=Reload
