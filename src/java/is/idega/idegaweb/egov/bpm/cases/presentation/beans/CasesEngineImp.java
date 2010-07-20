@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UIProcessVariables;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
+import is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
@@ -15,22 +16,29 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.faces.component.UIComponent;
+import javax.servlet.ServletContext;
 
 import org.jdom.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
+import com.idega.block.process.event.CaseModifiedEvent;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
@@ -44,6 +52,7 @@ import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.component.bean.RenderedComponent;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
@@ -64,7 +73,7 @@ import com.idega.webface.WFUtil;
 
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service("casesEngineDWR")
-public class CasesEngineImp implements BPMCasesEngine {
+public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine, ApplicationListener {
 	
 	@Autowired
 	private CasesBPMProcessView casesBPMProcessView;
@@ -91,14 +100,13 @@ public class CasesEngineImp implements BPMCasesEngine {
 	private static final Logger LOGGER = Logger.getLogger(CasesEngineImp.class.getName());
 	
 	public Long getProcessInstanceId(String caseId) {
+		if (caseId == null) {
+			LOGGER.warning("Case ID is not provided!");
+			return null;
+		}	
 		
-		if (caseId != null) {
-			
-			Long processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
-			return processInstanceId;
-		}
-		
-		return null;
+		Long processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
+		return processInstanceId;
 	}
 	
 	public Document getCaseManagerView(CasesBPMAssetProperties properties) {
@@ -135,7 +143,6 @@ public class CasesEngineImp implements BPMCasesEngine {
 			Document rendered = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, caseAssets, true);
 			
 			return rendered;
-			
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Exception while resolving rendered component for case assets view", e);
 		}
@@ -210,8 +217,8 @@ public class CasesEngineImp implements BPMCasesEngine {
 		properties.setAllowPDFSigning(criteriaBean.isAllowPDFSigning());
 		properties.setShowStatistics(criteriaBean.isShowStatistics());
 		properties.setHideEmptySection(criteriaBean.isHideEmptySection());
-		properties.setPageSize(0);
-		properties.setPage(0);
+		properties.setPageSize(0);	//	TODO
+		properties.setPage(0);		//	TODO
 		properties.setInstanceId(criteriaBean.getInstanceId());
 		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
 		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
@@ -293,10 +300,32 @@ public class CasesEngineImp implements BPMCasesEngine {
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
 	}
 	
+	private List<CasesListSearchFilter> getFilters(ServletContext servletContext, CasesSearchCriteriaBean criterias) {
+		List<CasesListSearchFilter> filtersList = new ArrayList<CasesListSearchFilter>();
+		
+		try {
+			WebApplicationContext webAppContext = WebApplicationContextUtils.getWebApplicationContext(servletContext);
+			@SuppressWarnings("unchecked")
+			Map<Object, CasesListSearchFilter> filters = webAppContext.getBeansOfType(CasesListSearchFilter.class);
+			if (filters == null || filters.isEmpty()) {
+				return filtersList;
+			}
+			
+			for (CasesListSearchFilter filter: filters.values()) {
+				filter.setCriterias(criterias);
+				filtersList.add(filter);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		
+		return filtersList;
+	}
+	
 	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
 		final User currentUser;
 		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
-			LOGGER.log(Level.INFO, "Not logged in, skipping searching");
+			LOGGER.info("Not logged in, skipping searching");
 			return null;
 		}
 		
@@ -318,11 +347,13 @@ public class CasesEngineImp implements BPMCasesEngine {
 		
 		PagedDataCollection<CasePresentation> cases = null;
 		
-		List<CasesListSearchFilter> filters = criteriaBean.getFilters();
-		if (filters != null) {
-			for (CasesListSearchFilter filt : filters) {
-				caseIdsByUser = filt.doFilter(caseIdsByUser);
-			}
+		List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criteriaBean);
+		if (ListUtil.isEmpty(filters)) {
+			return null;
+		}
+		
+		for (CasesListSearchFilter filter: filters) {
+			caseIdsByUser = filter.doFilter(caseIdsByUser);
 		}
 		
 		Locale locale = iwc.getCurrentLocale();
@@ -507,6 +538,21 @@ public class CasesEngineImp implements BPMCasesEngine {
 		defaultSortingOptions.add(new AdvancedProperty("getCaseStatusLocalized", iwrb.getLocalizedString("status", "Status")));
 		
 		return defaultSortingOptions;
+	}
+
+	public void onApplicationEvent(ApplicationEvent event) {
+		if (event instanceof CaseModifiedEvent) {
+			Thread cacheReseter = new Thread(new Runnable() {
+				public void run() {
+					try {
+						getCache(DefaultCasesListSearchFilter.SEARCH_FILTER_CACHE_NAME, DefaultCasesListSearchFilter.SEARCH_FILTER_CACHE_TTL).clear();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			});
+			cacheReseter.start();
+		}
 	}
 
 }

@@ -2,6 +2,8 @@ package is.idega.idegaweb.egov.bpm.cases.search;
 
 import java.util.List;
 
+import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
+
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.1 $
@@ -10,8 +12,7 @@ import java.util.List;
  */
 public interface CasesListSearchFilter {
 	
-	public abstract List<Integer> doFilter(List<Integer> casesIds);
+	public void setCriterias(CasesSearchCriteriaBean criterias);
 	
-	public void startFiltering();
-	public void endFiltering(String info);
+	public List<Integer> doFilter(List<Integer> casesIds);
 }
