@@ -11,6 +11,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	
 	private static final long serialVersionUID = 8071978111646904945L;
 
+	private String componentId;
+	private String criteriasId;
 	private String processId;
 	private String caseListType;
 	
@@ -27,6 +29,10 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	private String caseCodes;
 	private String statusesToShow;
 	private String statusesToHide;
+	
+	private int page = 0;
+	private int pageSize = 0;
+	private int foundResults = 0;
 	
 	public String getProcessId() {
 		return processId;
@@ -144,6 +150,46 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 		this.onlySubscribedCases = onlySubscribedCases;
 	}
 
+	public int getPage() {
+		return page;
+	}
+
+	public void setPage(int page) {
+		this.page = page;
+	}
+
+	public int getPageSize() {
+		return pageSize;
+	}
+
+	public void setPageSize(int pageSize) {
+		this.pageSize = pageSize;
+	}
+	
+	public String getComponentId() {
+		return componentId;
+	}
+
+	public void setComponentId(String componentId) {
+		this.componentId = componentId;
+	}
+
+	public String getCriteriasId() {
+		return criteriasId;
+	}
+
+	public void setCriteriasId(String criteriasId) {
+		this.criteriasId = criteriasId;
+	}
+	
+	public int getFoundResults() {
+		return foundResults;
+	}
+
+	public void setFoundResults(int foundResults) {
+		this.foundResults = foundResults;
+	}
+
 	@Override
 	public String toString() {
 		return new StringBuilder("Case number: " + getCaseNumber()).append("\n")
@@ -161,6 +207,10 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Case codes: " + caseCodes).append("\n")
 			.append("Statuses to show: " + statusesToShow).append("\n")
 			.append("Statuses to hide: " + statusesToHide).append("\n")
+			.append("Page: " + page).append("\n")
+			.append("Page size: " + pageSize).append("\n")
+			.append("Component ID: " + componentId).append("\n")
+			.append("Criterias ID: " + criteriasId)
 		.toString();
 	}
 }

@@ -217,8 +217,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setAllowPDFSigning(criteriaBean.isAllowPDFSigning());
 		properties.setShowStatistics(criteriaBean.isShowStatistics());
 		properties.setHideEmptySection(criteriaBean.isHideEmptySection());
-		properties.setPageSize(0);	//	TODO
-		properties.setPage(0);		//	TODO
+		properties.setPageSize(criteriaBean.getPageSize());
+		properties.setPage(criteriaBean.getPage());
 		properties.setInstanceId(criteriaBean.getInstanceId());
 		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
 		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
@@ -226,6 +226,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setStatusesToShow(criteriaBean.getStatusesToShowInList());
 		properties.setStatusesToHide(criteriaBean.getStatusesToHideInList());
 		properties.setOnlySubscribedCases(criteriaBean.isOnlySubscribedCases());
+		properties.setComponentId(criteriaBean.getComponentId());
+		properties.setCriteriasId(criteriaBean.getCriteriasId());
+		properties.setFoundResults(criteriaBean.getFoundResults());
+		
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
 			properties.setAddCredentialsToExernalUrls(false);
@@ -364,9 +368,18 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
 			return null;
 		}
-		
+			
 		List<CasePresentation> casesToSort = new ArrayList<CasePresentation>(cases.getCollection());
 		Collections.sort(casesToSort, getCasePresentationComparator(criteriaBean, locale));
+		int totalCount = cases.getCollection().size();
+		criteriaBean.setFoundResults(totalCount);
+		int count = criteriaBean.getPageSize() <= 0 ? 20 : criteriaBean.getPageSize();
+		int startIndex = criteriaBean.getPage() <= 0 ? 0 : (criteriaBean.getPage() - 1) * count;
+		if (startIndex + count < totalCount) {
+			casesToSort = casesToSort.subList(startIndex, (startIndex + count));
+		} else {
+			casesToSort = casesToSort.subList(startIndex, totalCount);
+		}
 		cases = new PagedDataCollection<CasePresentation>(casesToSort);
 		
 		return cases;
