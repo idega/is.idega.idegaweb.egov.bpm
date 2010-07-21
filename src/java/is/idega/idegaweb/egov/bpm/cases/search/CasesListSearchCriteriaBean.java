@@ -25,6 +25,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	private boolean showCaseNumberColumn = true;
 	private boolean showCreationTimeInDateColumn = true;
 	private boolean onlySubscribedCases;
+	private boolean clearResults = true;
 	
 	private String caseCodes;
 	private String statusesToShow;
@@ -190,6 +191,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 		this.foundResults = foundResults;
 	}
 
+	public boolean isClearResults() {
+		return clearResults;
+	}
+
+	public void setClearResults(boolean clearResults) {
+		this.clearResults = clearResults;
+	}
+
 	@Override
 	public String toString() {
 		return new StringBuilder("Case number: " + getCaseNumber()).append("\n")
@@ -210,7 +219,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Page: " + page).append("\n")
 			.append("Page size: " + pageSize).append("\n")
 			.append("Component ID: " + componentId).append("\n")
-			.append("Criterias ID: " + criteriasId)
+			.append("Criterias ID: " + criteriasId).append("\n")
+			.append("Clear results: " + clearResults)
 		.toString();
 	}
 }

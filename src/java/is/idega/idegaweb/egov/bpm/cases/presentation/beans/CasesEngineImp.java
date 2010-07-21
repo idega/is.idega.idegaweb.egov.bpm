@@ -187,8 +187,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 		
-		//	Clearing search result before new search
-		clearSearchResults(criteriaBean.getId());
+		if (criteriaBean.isClearResults()) {
+			//	Clearing search result before new search
+			clearSearchResults(criteriaBean.getId());
+		}
 		
 		LOGGER.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criteriaBean.getCaseNumber()).append(", description: ")
 				.append(criteriaBean.getDescription()).append(", name: ").append(criteriaBean.getName()).append(", personalId: ")
@@ -207,7 +209,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		addSearchQueryToSession(iwc, criteriaBean);
 		
 		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean);
-		if (cases != null) {
+		if (cases != null && criteriaBean.isClearResults()) {
 			setSearchResults(iwc, cases.getCollection(), criteriaBean);
 		}
 		
