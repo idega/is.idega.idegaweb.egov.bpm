@@ -551,6 +551,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	public boolean isSearchResultStored(String id) {
+		if (StringUtil.isEmpty(id)) {
+			return false;
+		}
 		Collection<CasePresentation> cases = this.cases.get(id);
 		return ListUtil.isEmpty(cases) ? Boolean.FALSE : Boolean.TRUE;
 	}
@@ -656,6 +659,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	public Collection<CasePresentation> getSearchResults(String id) {
+		if (StringUtil.isEmpty(id)) {
+			return null;
+		}
 		return cases.get(id);
 	}
 	
