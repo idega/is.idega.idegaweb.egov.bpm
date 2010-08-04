@@ -2,7 +2,6 @@ package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
-import java.rmi.RemoteException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -13,7 +12,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CasesRetrievalManager;
-import com.idega.block.process.data.Case;
 import com.idega.presentation.IWContext;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
@@ -32,22 +30,22 @@ public class GeneralCasesFilter extends DefaultCasesListSearchFilter {
 		
 		String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
 		
-		Collection<Case> cases = null;
+		Collection<Integer> casesIDs = null;
 		try {
-			cases = casesBusiness.getCasesByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
+			casesIDs = casesBusiness.getCasesIDsByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
 					getDateTo(), null, null, false, CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
-		} catch (RemoteException e) {
-			e.printStackTrace();
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting cases by criterias", e);
 		}
 
 		List<Integer> casesByCriteria = null;
-		if (cases != null && ListUtil.isEmpty(cases)) {
+		if (casesIDs != null && ListUtil.isEmpty(casesIDs)) {
 			getLogger().log(Level.INFO, new StringBuilder("No cases found by criterias: description: ").append(getDescription()).append(", name: ")
 					.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
 					.append(", dateRange: ").append(getDateRange())
 			.toString());
 		} else {	
-			casesByCriteria = getCasesIds(cases);
+			casesByCriteria = getUniqueIds(casesIDs);
 			getLogger().log(Level.INFO, "Cases by criterias: " + casesByCriteria);
 		}
 		

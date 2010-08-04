@@ -85,9 +85,9 @@ public class CaseNumberFilter extends DefaultCasesListSearchFilter {
 			return null;	//	Unable to search for general cases
 		}
 		
-		Collection<Case> casesByNumber = null;
+		Collection<Integer> casesByNumber = null;
 		try {
-			casesByNumber = caseHome.getCasesByCriteria(caseNumber, null, null, null, null, null, null, null, true);
+			casesByNumber = caseHome.getCasesIDsByCriteria(caseNumber, null, null, null, null, null, null, null, true);
 		} catch (FinderException e) {
 			e.printStackTrace();
 		}
@@ -95,15 +95,7 @@ public class CaseNumberFilter extends DefaultCasesListSearchFilter {
 			return null;	//	No results
 		}
 		
-		List<Integer> generalCases = new ArrayList<Integer>(casesByNumber.size());
-		for (Case casse: casesByNumber) {
-			try {
-				generalCases.add(Integer.valueOf(casse.getId()));
-			} catch(NumberFormatException e) {
-				e.printStackTrace();
-			}
-		}
-		return generalCases;
+		return getUniqueIds(casesByNumber);
 	}
 	
 	private List<Integer> getUserCasesByNumber(String number) {
@@ -112,14 +104,14 @@ public class CaseNumberFilter extends DefaultCasesListSearchFilter {
 			return null;
 		}
 		
-		Collection<Case> cases = null;
+		Collection<Integer> casesByNumber = null;
 		try {
-			cases = caseHome.findByCriteria(number, null, null, null, null, null, null, null, true);
+			casesByNumber = caseHome.findIDsByCriteria(number, null, null, null, null, null, null, null, true);
 		} catch (FinderException e) {
 			e.printStackTrace();
 		}
 		
-		return getCasesIds(cases);
+		return getUniqueIds(casesByNumber);
 	}
 	
 	private CaseHome getCaseHome() {

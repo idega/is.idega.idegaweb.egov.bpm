@@ -191,11 +191,10 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		
 		List<Integer> convertedValues = new ArrayList<Integer>();
 		for (Object o: values) {
-			if (o instanceof Long) {
-				convertedValues.add(Integer.valueOf(((Long) o).intValue()));
-			}
-			else {
-				getLogger().log(Level.WARNING, "Object is not type of Long: " + o);
+			if (o instanceof Number) {
+				convertedValues.add(((Number) o).intValue());
+			} else {
+				getLogger().log(Level.WARNING, "Object is not type of Number: " + o);
 			}
 		}
 		
@@ -223,6 +222,33 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			}
 			else {
 				getLogger().log(Level.WARNING, "ID is not type of Integer: " + o);
+			}
+		}
+		
+		return ids;
+	}
+	
+	protected List<Integer> getUniqueIds(Collection<Integer> casesIDs) {
+		if (ListUtil.isEmpty(casesIDs)) {
+			return null;
+		}
+		
+		List<Integer> ids = new ArrayList<Integer>(casesIDs.size());
+		for (Object id: casesIDs) {
+			Integer realId = null;
+			
+			if (id instanceof Number) {
+				realId = ((Number) id).intValue();
+			} else if (id != null) {
+				try {
+					realId = Integer.valueOf(id.toString());
+				} catch(Exception e) {
+					e.printStackTrace();
+				}
+			}
+			
+			if (realId != null && !ids.contains(realId)) {
+				ids.add(realId);
 			}
 		}
 		

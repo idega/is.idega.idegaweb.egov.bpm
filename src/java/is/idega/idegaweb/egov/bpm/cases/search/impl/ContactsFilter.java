@@ -52,7 +52,6 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 		final List<Integer> casesByContact = new ArrayList<Integer>();
 			
 		for (User contactPerson: usersByContactInfo) {
-			
 			try {
 				casesByContactPerson = getConvertedFromLongs(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc,
 																																contactPerson, false)));

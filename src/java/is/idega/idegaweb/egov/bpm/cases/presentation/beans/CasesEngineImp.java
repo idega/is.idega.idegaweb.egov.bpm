@@ -14,6 +14,7 @@ import is.idega.idegaweb.egov.cases.util.CasesConstants;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -336,14 +337,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
-		List<Integer> caseIdsByUser = null;
+		List<Integer> casesIds = null;
 		try {
-			caseIdsByUser = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(), 
+			casesIds = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(), 
 					criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criteriaBean, e);
 		}
-		if (ListUtil.isEmpty(caseIdsByUser)) {
+		if (ListUtil.isEmpty(casesIds)) {
 			return null;
 		}
 		
@@ -359,12 +360,35 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		
 		for (CasesListSearchFilter filter: filters) {
-			caseIdsByUser = filter.doFilter(caseIdsByUser);
+			casesIds = filter.doFilter(casesIds);
+		}
+		if (ListUtil.isEmpty(casesIds)) {
+			return null;
 		}
 		
+		Comparator<Integer> c = new Comparator<Integer>() {
+			public int compare(Integer o1, Integer o2) {
+				return -o1.compareTo(o2);
+			}
+		};
+		Collections.sort(casesIds, c);
+		
+		int totalCount = casesIds.size();
+		criteriaBean.setFoundResults(totalCount);
+		int count = criteriaBean.getPageSize() <= 0 ? 20 : criteriaBean.getPageSize();
+		int startIndex = criteriaBean.getPage() <= 0 ? 0 : (criteriaBean.getPage() - 1) * count;
+		
+		LOGGER.info("filtered cases by the criterias: " + casesIds);	//	TODO
+		
+		boolean noSortingOptions = ListUtil.isEmpty(criteriaBean.getSortingOptions());
 		Locale locale = iwc.getCurrentLocale();
-		if (!ListUtil.isEmpty(caseIdsByUser)) {
-			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(caseIdsByUser, locale);
+		if (!ListUtil.isEmpty(casesIds)) {
+			if (noSortingOptions) {
+				//	No need to load all the cases, just for one page
+				casesIds = getSubList(casesIds, startIndex, count, totalCount);
+			}
+			
+			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(casesIds, locale);
 		}
 		
 		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
@@ -373,18 +397,24 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			
 		List<CasePresentation> casesToSort = new ArrayList<CasePresentation>(cases.getCollection());
 		Collections.sort(casesToSort, getCasePresentationComparator(criteriaBean, locale));
-		int totalCount = cases.getCollection().size();
-		criteriaBean.setFoundResults(totalCount);
-		int count = criteriaBean.getPageSize() <= 0 ? 20 : criteriaBean.getPageSize();
-		int startIndex = criteriaBean.getPage() <= 0 ? 0 : (criteriaBean.getPage() - 1) * count;
-		if (startIndex + count < totalCount) {
-			casesToSort = casesToSort.subList(startIndex, (startIndex + count));
-		} else {
-			casesToSort = casesToSort.subList(startIndex, totalCount);
-		}
-		cases = new PagedDataCollection<CasePresentation>(casesToSort);
 		
+		LOGGER.info("Loaded and sorted cases: " + casesToSort);	//	TODO
+		
+		if (!noSortingOptions) {
+			//	Loaded all the cases (heavy task), will sort by user's preferences
+			casesToSort = getSubList(casesToSort, startIndex, count, totalCount);
+		}
+		
+		cases = new PagedDataCollection<CasePresentation>(casesToSort);
 		return cases;
+	}
+	
+	private <T> List<T> getSubList(List<T> list, int startIndex, int count, int totalCount) {
+		if (startIndex + count < totalCount) {
+			return list.subList(startIndex, (startIndex + count));
+		} else {
+			return list.subList(startIndex, totalCount);
+		}
 	}
 	
 	private CasePresentationComparator getCasePresentationComparator(CasesListSearchCriteriaBean searchCriterias, Locale locale) {

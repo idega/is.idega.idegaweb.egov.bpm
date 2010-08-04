@@ -2,7 +2,6 @@ package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -28,10 +27,10 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
 			//	Getting ONLY none "BPM" cases
 			try {
-				casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds,
+				casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, 
 						CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
-			} catch (RemoteException e) {
-				e.printStackTrace();
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error getting non BPM cases", e);
 			}
 		} else {
 			//	Getting "BPM" cases
