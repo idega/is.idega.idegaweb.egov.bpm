@@ -124,9 +124,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			caseCreated = new Date();
 		
 		getBpmContext().execute(new JbpmCallback() {
-			
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				
 				try {
 					ProcessDefinition pd = getProcessDefinition();
 					ProcessInstance pi = new ProcessInstance(pd);
@@ -137,7 +135,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					// binding view to task instance
 					view.getViewToTask().bind(view, ti);
 					
-					getLogger().log(Level.INFO, "New process instance created for the process " + pd.getName());
+					getLogger().info("New process instance created for the process " + pd.getName());
 					
 					pi.setStart(new Date());
 					
@@ -172,7 +170,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					            false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
 					);
 					
-					getLogger().log(Level.INFO, "Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
+					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
 					
 					pi.setStart(caseCreated);
 					
@@ -195,12 +193,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					IWContext iwc = CoreUtil.getIWContext();
 					dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
 					IWTimestamp created = new IWTimestamp(genCase.getCreated());
-					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName,
-							created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT, IWTimestamp.SHORT));
+					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT, IWTimestamp.SHORT));
 					
 					CaseProcInstBind piBind = new CaseProcInstBind();
-					piBind.setCaseId(new Integer(genCase.getPrimaryKey()
-					        .toString()));
+					piBind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
 					piBind.setProcInstId(pi.getId());
 					piBind.setCaseIdentierID(caseIdentifierNumber);
 					
@@ -208,9 +204,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					piBind.setCaseIdentifier(caseIdentifier);
 					getCasesBPMDAO().persist(piBind);
 					
-					// TODO: if variables submission and process execution fails here,
-					// rollback case proc inst bind
-					
+					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
 					
 					submitVariablesAndProceedProcess(ti, viewSubmission.resolveVariables(), true);
