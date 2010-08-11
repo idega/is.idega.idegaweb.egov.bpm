@@ -105,3 +105,7 @@
     border: 1px #a0a0a0 solid;
     padding: 15px;
 }
+
+div.protestRullingDecisionReason select {
+	color: #101010 !important;
+}
