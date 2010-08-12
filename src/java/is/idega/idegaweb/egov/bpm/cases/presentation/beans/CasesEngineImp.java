@@ -44,6 +44,7 @@ import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
+import com.idega.block.process.presentation.beans.CasesSearchResults;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.JQuery;
@@ -379,6 +380,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			
 			totalCount = casesIds.size();
 			criteriaBean.setFoundResults(totalCount);
+			criteriaBean.setAllDataLoaded(!(totalCount > criteriaBean.getPageSize()));
 			count = criteriaBean.getPageSize() <= 0 ? 20 : criteriaBean.getPageSize();
 			startIndex = criteriaBean.getPage() <= 0 ? 0 : (criteriaBean.getPage() - 1) * count;
 		}
@@ -521,8 +523,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		
 		String id = criteriaBean.getId();
-		cases = cases == null ? null : criteriaBean.getPageSize() >= criteriaBean.getFoundResults() ? cases : null;
-		resultsHolder.setSearchResults(id, cases, criteriaBean);
+		resultsHolder.setSearchResults(id, new CasesSearchResults(id, cases, criteriaBean));
 		return true;
 	}
 	
@@ -542,20 +543,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return result;
 		}
 		
-		if (!resultsHolder.isSearchResultStored(id)) {
+		if (!resultsHolder.isSearchResultStored(id) || !resultsHolder.isAllDataLoaded(id)) {
 			CasesSearchCriteriaBean criterias = resultsHolder.getSearchCriteria(id);
-			if (criterias instanceof CasesListSearchCriteriaBean) {
-				CasesListSearchCriteriaBean listCriterias = (CasesListSearchCriteriaBean) criterias;
-				
-				PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, (CasesListSearchCriteriaBean) criterias, false);
-				if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
-					result.setValue(getResourceBundle(iwc).getLocalizedString("no_search_results_to_export", "There are no search results to export!"));
-					return result;
-				}
-				
-				listCriterias.setPageSize(cases.getTotalCount());
-				setSearchResults(iwc, cases.getCollection(), listCriterias);
-			} else {
+			if (ListUtil.isEmpty(getReLoadedCases(criterias))) {
 				result.setValue(getResourceBundle(iwc).getLocalizedString("no_search_results_to_export", "There are no search results to export!"));
 				return result;
 			}
@@ -615,4 +605,23 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 	}
 
+	public Collection<CasePresentation> getReLoadedCases(CasesSearchCriteriaBean criterias) {
+		if (criterias instanceof CasesListSearchCriteriaBean) {
+			IWContext iwc = CoreUtil.getIWContext();
+			CasesListSearchCriteriaBean listCriterias = (CasesListSearchCriteriaBean) criterias;
+			
+			PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, listCriterias, false);
+			if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
+				return null;
+			}
+			
+			listCriterias.setAllDataLoaded(Boolean.TRUE);
+			listCriterias.setPageSize(cases.getTotalCount());
+			setSearchResults(iwc, cases.getCollection(), listCriterias);
+			
+			return cases.getCollection();
+		}
+		
+		return null;
+	}
 }

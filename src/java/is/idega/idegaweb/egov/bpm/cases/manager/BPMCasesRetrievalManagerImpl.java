@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
@@ -45,6 +46,7 @@ import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseCode;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.process.presentation.beans.CasePresentation;
+import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -103,6 +105,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	
 	@Autowired
 	private VariablesHandler variablesHandler;
+	
+	@Autowired
+	private BPMCasesEngine casesEngine;
 	
 	static final String beanIdentifier = "casesBPMCaseHandler";
 	public static final String caseHandlerType = "CasesBPM";
@@ -743,6 +748,19 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			caseId = getCaseId((Long) entityId);
 		}
 		return super.getCaseOwner(caseId == null ? entityId : caseId);
+	}
+
+	@Override
+	public Collection<CasePresentation> getReLoadedCases(CasesSearchCriteriaBean criterias) {
+		return getCasesEngine().getReLoadedCases(criterias);
+	}
+
+	public BPMCasesEngine getCasesEngine() {
+		return casesEngine;
+	}
+
+	public void setCasesEngine(BPMCasesEngine casesEngine) {
+		this.casesEngine = casesEngine;
 	}
 	
 }

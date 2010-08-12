@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
+import com.idega.block.process.presentation.beans.CasesSearchResults;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
@@ -67,8 +68,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsHolderImpl.class.getName());
 	private static final short DEFAULT_CELL_WIDTH = (short) (40 * 256);
 	
-	private Map<String, Collection<CasePresentation>> cases = new HashMap<String, Collection<CasePresentation>>();
-	private Map<String, CasesSearchCriteriaBean> criterias = new HashMap<String, CasesSearchCriteriaBean>();
+	private Map<String, CasesSearchResults> allResults = new HashMap<String, CasesSearchResults>();
 	
 	private MemoryFileBuffer memory;
 
@@ -83,13 +83,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
 	
-	public void setSearchResults(String id, Collection<CasePresentation> cases, CasesSearchCriteriaBean criteriaBean) {
-		this.cases.put(id, cases);
-		this.criterias.put(id, criteriaBean);
+	public void setSearchResults(String id, CasesSearchResults results) {
+		allResults.put(id, results);
 	}
 
+	private Collection<CasePresentation> getCases(String id) {
+		CasesSearchResults results = allResults.get(id);
+		return results == null ? null : results.getCases();
+	}
+	
 	public boolean doExport(String id) {
-		Collection<CasePresentation> cases = this.cases.get(id);
+		Collection<CasePresentation> cases = getCases(id);
 		if (ListUtil.isEmpty(cases)) {
 			return false;
 		}
@@ -554,7 +558,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (StringUtil.isEmpty(id)) {
 			return false;
 		}
-		Collection<CasePresentation> cases = this.cases.get(id);
+		Collection<CasePresentation> cases = getCases(id);
 		return ListUtil.isEmpty(cases) ? Boolean.FALSE : Boolean.TRUE;
 	}
 	
@@ -563,7 +567,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return null;
 		}
 		
-		Collection<CasePresentation> cases = this.cases.get(id);
+		Collection<CasePresentation> cases = getCases(id);
 		
 		boolean putToMap = false;
 		Map<String, List<CasePresentation>> casesByCategories = new HashMap<String, List<CasePresentation>>();
@@ -621,7 +625,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return null;
 		}
 		
-		Collection<CasePresentation> cases = this.cases.get(id);
+		Collection<CasePresentation> cases = getCases(id);
 		CasePresentation nextCase = null;
 		
 		if (!StringUtil.isEmpty(processDefinitionName)) {
@@ -654,7 +658,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	public boolean clearSearchResults(String id) {
-		setSearchResults(id, null, null);
+		allResults.remove(id);
 		return Boolean.TRUE;
 	}
 
@@ -662,11 +666,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (StringUtil.isEmpty(id)) {
 			return null;
 		}
-		return cases.get(id);
+		
+		return getCases(id);
 	}
 	
 	public CasesSearchCriteriaBean getSearchCriteria(String id) {
-		return criterias.get(id);
+		if (StringUtil.isEmpty(id)) {
+			return null;
+		}
+		
+		CasesSearchResults results = allResults.get(id);
+		return results == null ? null : results.getCriterias();
 	}
 
 	public RolesManager getRolesManager() {
@@ -683,6 +693,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	public void setVariablesQuerier(VariableInstanceQuerier variablesQuerier) {
 		this.variablesQuerier = variablesQuerier;
+	}
+
+	public boolean isAllDataLoaded(String id) {
+		CasesSearchCriteriaBean criterias = getSearchCriteria(id);
+		return criterias == null ? Boolean.FALSE : criterias.isAllDataLoaded();
 	}
 
 }
