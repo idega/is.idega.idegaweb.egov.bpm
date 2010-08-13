@@ -214,8 +214,8 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		Integer id = null;
 		List<Integer> ids = new ArrayList<Integer>();
 		for (Object o: filterResults) {
-			if (o instanceof Integer) {
-				id = (Integer) o;
+			if (o instanceof Number) {
+				id = ((Number) o).intValue();
 				if (casesIds.contains(id)) {
 					ids.add(id);
 				}

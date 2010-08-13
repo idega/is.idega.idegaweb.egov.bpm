@@ -34,13 +34,15 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			}
 		} else {
 			//	Getting "BPM" cases
-			casesByProcessDefinition = getConvertedFromLongs(getCasesByProcessDefinition(processDefinitionId, getProcessVariables()));
+			List<Long> ids = getCasesByProcessDefinition(processDefinitionId, getProcessVariables());
+			casesByProcessDefinition = getConvertedFromLongs(ids);
 		}
 		
 		if (ListUtil.isEmpty(casesByProcessDefinition)) {
-			getLogger().log(Level.INFO, "No cases found by process definition id: " + processDefinitionId);
+			getLogger().info("No cases found by process definition id: " + processDefinitionId + " and variables: " + getProcessVariables());
 		} else {
-			getLogger().log(Level.INFO, "Found cases by process definition (" + processDefinitionId + "): " + casesByProcessDefinition);
+			getLogger().info("Found cases by process definition (" + processDefinitionId + ") and variables (" + getProcessVariables() + "): " +
+					casesByProcessDefinition);
 		}
 			
 		return casesByProcessDefinition;
@@ -69,10 +71,9 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		try {
 			final ProcessDefinition processDefinition = getBpmFactory().getProcessManager(procDefId).getProcessDefinition(procDefId).getProcessDefinition();
 			return getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndNameAndVariables(processDefinitionIds, processDefinition.getName(), variables);
-			
 		} catch(Exception e) {
 			getLogger().log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
-					processDefinitionId, e);
+					processDefinitionId + ", variables: " + variables, e);
 		}
 		
 		return null;
@@ -80,7 +81,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 
 	@Override
 	protected String getFilterKey() {
-		return getProcessId();
+		return new StringBuilder().append(getProcessId()).append(getProcessVariables()).toString();
 	}
 
 	@Override
