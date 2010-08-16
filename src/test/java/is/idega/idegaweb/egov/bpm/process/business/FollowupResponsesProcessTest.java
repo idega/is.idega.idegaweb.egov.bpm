@@ -3,12 +3,9 @@ package is.idega.idegaweb.egov.bpm.process.business;
 import is.idega.idegaweb.egov.bpm.cases.testbase.EgovBPMBaseTest;
 
 import java.io.InputStream;
-import java.util.Collection;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.graph.exe.ProcessInstance;
-import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,7 +15,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -124,7 +120,7 @@ public final class FollowupResponsesProcessTest extends EgovBPMBaseTest {
 		if(true)
 			return;
 
-		deployProcessDefinitions();
+		/*deployProcessDefinitions();
 		
 		JbpmContext jbpmContext = bpmContext.createJbpmContext();
 		Long piId = null; 
@@ -161,7 +157,7 @@ public final class FollowupResponsesProcessTest extends EgovBPMBaseTest {
 			
 		} finally {
 			bpmContext.closeAndCommit(jbpmContext);
-		}
+		}*/
 	    
 	    		
 	}

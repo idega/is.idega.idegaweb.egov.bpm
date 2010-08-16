@@ -1,11 +1,9 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.testbase.EgovBPMBaseTest;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.graph.exe.ProcessInstance;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,7 +12,6 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.IdegaJbpmContext;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -73,7 +70,7 @@ public final class SendCaseMessagesHandlerTest extends EgovBPMBaseTest {
 		if(true)
 			return;
 		
-		deployProcessDefinitions();
+		/*deployProcessDefinitions();
 		
 		JbpmContext jbpmContext = bpmContext.createJbpmContext();
 		
@@ -84,6 +81,6 @@ public final class SendCaseMessagesHandlerTest extends EgovBPMBaseTest {
 
 		} finally {
 			bpmContext.closeAndCommit(jbpmContext);
-		}
+		}*/
 	}
 }

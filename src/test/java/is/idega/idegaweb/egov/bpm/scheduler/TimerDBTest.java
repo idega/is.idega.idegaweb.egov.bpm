@@ -21,38 +21,16 @@
  */
 package is.idega.idegaweb.egov.bpm.scheduler;
 
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Date;
-import java.util.GregorianCalendar;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.criterion.Restrictions;
-import org.jbpm.context.exe.ContextInstance;
-import org.jbpm.graph.def.ActionHandler;
-import org.jbpm.graph.def.Event;
-import org.jbpm.graph.def.Node;
-import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.graph.exe.ExecutionContext;
-import org.jbpm.graph.exe.ProcessInstance;
-import org.jbpm.graph.exe.Token;
-import org.jbpm.job.Timer;
-import org.jbpm.scheduler.SchedulerService;
-import org.jbpm.taskmgmt.exe.TaskInstance;
-import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
-import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration
 //@Transactional
 public class TimerDBTest {//extends _AbstractDbTestCase {
-  private static Log log = LogFactory.getLog(Timer.class);
+  //private static Log log = LogFactory.getLog(Timer.class);
 
   static boolean isNoOpExecuted = false;
   

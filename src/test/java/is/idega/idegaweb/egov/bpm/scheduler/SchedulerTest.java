@@ -664,7 +664,7 @@ public class SchedulerTest extends EgovBPMBaseTest {
 
     JbpmContext jbpmContext = jbpmConfiguration.createJbpmContext();
     try {
-      TestSchedulerService testSchedulerService = (TestSchedulerService) jbpmContext.getServices().getSchedulerService();
+      /*TestSchedulerService testSchedulerService = (TestSchedulerService)*/ jbpmContext.getServices().getSchedulerService();
       
       ProcessInstance processInstance = new ProcessInstance(processDefinition);
        
@@ -709,7 +709,7 @@ public class SchedulerTest extends EgovBPMBaseTest {
 
     JbpmContext jbpmContext = jbpmConfiguration.createJbpmContext();
     try {
-      TestSchedulerService testSchedulerService = (TestSchedulerService) jbpmContext.getServices().getSchedulerService();
+      /*TestSchedulerService testSchedulerService = (TestSchedulerService)*/ jbpmContext.getServices().getSchedulerService();
       
       ProcessInstance processInstance = new ProcessInstance(processDefinition);
 

@@ -2,32 +2,6 @@ package is.idega.idegaweb.egov.bpm.scheduler;
 
 import is.idega.idegaweb.egov.bpm.cases.testbase.EgovBPMBaseTest;
 
-import java.util.Timer;
-import java.util.TimerTask;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.hibernate.Session;
-import org.hibernate.tool.hbm2ddl.SchemaExport;
-import org.jbpm.JbpmConfiguration;
-import org.jbpm.JbpmContext;
-import org.jbpm.db.ContextSession;
-import org.jbpm.db.GraphSession;
-import org.jbpm.db.JobSession;
-import org.jbpm.db.LoggingSession;
-import org.jbpm.db.TaskMgmtSession;
-import org.jbpm.graph.def.ProcessDefinition;
-import org.jbpm.graph.exe.ProcessInstance;
-import org.jbpm.job.Job;
-import org.jbpm.job.executor.JobExecutor;
-import org.jbpm.logging.log.ProcessLog;
-import org.jbpm.taskmgmt.exe.TaskInstance;
-import org.junit.After;
-import org.junit.Before;
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.idega.jbpm.IdegaJbpmContext;
-
 public abstract class _AbstractDbTestCase extends EgovBPMBaseTest {
 //	private static final Log log = LogFactory.getLog(_AbstractDbTestCase.class);
 //
