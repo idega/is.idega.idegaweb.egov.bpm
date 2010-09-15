@@ -25,6 +25,7 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
 
 /**
@@ -36,6 +37,8 @@ import com.idega.util.StringUtil;
 public class CasesStatusHandler implements ActionHandler {
 	
 	private static final long serialVersionUID = 7504445907540445936L;
+	
+	private static final Logger LOGGER = Logger.getLogger(CasesStatusHandler.class.getName());
 	
 	/**
 	 * variable which contains string representation of case status to set
@@ -80,15 +83,11 @@ public class CasesStatusHandler implements ActionHandler {
 	private CasesStatusMapperHandler casesStatusMapperHandler;
 	
 	public void execute(ExecutionContext ectx) throws Exception {
-		
+		Integer caseId = null;
 		try {
-			Integer caseId = getCaseId(ectx);
-			
+			caseId = getCaseId(ectx);
 			if (caseId == null) {
-				
-				Logger.getLogger(getClass().getName()).log(Level.WARNING,
-				    "No caseId resolved, skipping case status change");
-				
+				LOGGER.log(Level.WARNING, "No caseId resolved, skipping case status change");
 				return;
 			}
 			
@@ -96,58 +95,39 @@ public class CasesStatusHandler implements ActionHandler {
 			Integer performerUserId = getPerformerUserId();
 			final String ifCaseStatus = getIfCaseStatus();
 			
-			IWContext iwc = IWContext.getCurrentInstance();
+			IWContext iwc = CoreUtil.getIWContext();
 			IWApplicationContext iwac = getIWAC(iwc);
 			CasesBusiness casesBusiness = getCasesBusiness(iwac);
 			final Case theCase = casesBusiness.getCase(caseId);
 			
 			if (ifCaseStatus == null || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
-				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set
-				// (i.e. change always)
-				
+				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
 				final User performer;
-				
 				if (performerUserId == null) {
-					
 					if (iwc != null) {
-						
 						if (iwc.isLoggedOn())
 							performer = iwc.getCurrentUser();
 						else
 							performer = null;
-						
 					} else {
-						
-						Logger
-						        .getLogger(getClass().getName())
-						        .log(
-						            Level.WARNING,
-						            "Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
+						LOGGER.warning("Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
 						performer = null;
 					}
-					
 				} else {
-					
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
 				
 				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer);
 			}
-			
 		} catch (Exception e) {
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE,
-			    "Exception while changing case status", e);
+			LOGGER.log(Level.SEVERE, "Exception while changing case status for the case: " + caseId, e);
 		}
 	}
 	
 	public String getCaseStatus() {
-		
 		if (caseStatus == null) {
-			
 			if (!StringUtil.isEmpty(getCaseStatusMappedName())) {
-				
-				caseStatus = getCasesStatusMapperHandler()
-				        .getStatusCodeByMappedName(getCaseStatusMappedName());
+				caseStatus = getCasesStatusMapperHandler().getStatusCodeByMappedName(getCaseStatusMappedName());
 			}
 		}
 		
@@ -155,13 +135,9 @@ public class CasesStatusHandler implements ActionHandler {
 	}
 	
 	public String getIfCaseStatus() {
-		
 		if (ifCaseStatus == null) {
-			
 			if (!StringUtil.isEmpty(getIfCaseStatusMappedName())) {
-				
-				ifCaseStatus = getCasesStatusMapperHandler()
-				        .getStatusCodeByMappedName(getIfCaseStatusMappedName());
+				ifCaseStatus = getCasesStatusMapperHandler().getStatusCodeByMappedName(getIfCaseStatusMappedName());
 			}
 		}
 		
@@ -169,34 +145,18 @@ public class CasesStatusHandler implements ActionHandler {
 	}
 	
 	private Integer getCaseId(ExecutionContext ectx) {
-		
 		if (caseId == null) {
-			
 			Long processInstanceIdToUse;
-			
 			if (getProcessInstanceId() != null) {
-				
 				processInstanceIdToUse = getProcessInstanceId();
 			} else {
-				
-				Long currentProcessInstanceId = ectx.getProcessInstance()
-				        .getId();
-				
-				processInstanceIdToUse = getBpmFactory()
-				        .getMainProcessInstance(currentProcessInstanceId)
-				        .getId();
+				Long currentProcessInstanceId = ectx.getProcessInstance().getId();
+				processInstanceIdToUse = getBpmFactory().getMainProcessInstance(currentProcessInstanceId).getId();
 			}
 			
-			CaseProcInstBind cpi = getCasesBPMDAO()
-			        .getCaseProcInstBindByProcessInstanceId(
-			            processInstanceIdToUse);
-			
+			CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceIdToUse);
 			if (cpi == null) {
-				
-				Logger.getLogger(getClass().getName()).log(
-				    Level.WARNING,
-				    "No case process instance bind found for process instance id="
-				            + processInstanceIdToUse);
+				LOGGER.warning("No case process instance bind found for process instance id=" + processInstanceIdToUse);
 			}
 			
 			caseId = cpi.getCaseId();
@@ -206,23 +166,12 @@ public class CasesStatusHandler implements ActionHandler {
 	}
 	
 	private IWApplicationContext getIWAC(final IWContext iwc) {
-		
-		final IWApplicationContext iwac;
-		
-		if (iwc != null) {
-			iwac = iwc;
-		} else {
-			
-			iwac = IWMainApplication.getDefaultIWApplicationContext();
-		}
-		
-		return iwac;
+		return iwc == null ? IWMainApplication.getDefaultIWApplicationContext() : iwc;
 	}
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
-			    CasesBusiness.class);
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -230,8 +179,7 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac,
-			    UserBusiness.class);
+			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
