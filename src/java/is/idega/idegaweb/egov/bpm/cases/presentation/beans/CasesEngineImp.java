@@ -211,8 +211,15 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		addSearchQueryToSession(iwc, criteriaBean);
 		
 		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean, true);
-		if (cases != null && criteriaBean.isClearResults()) {
-			setSearchResults(iwc, cases.getCollection(), criteriaBean);
+		if (criteriaBean.isClearResults()) {
+			if (cases == null) {
+				Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criteriaBean.getId());
+				if (externalData != null) {
+					setSearchResults(iwc, externalData, criteriaBean);
+				}
+			} else {
+				setSearchResults(iwc, cases.getCollection(), criteriaBean);
+			}
 		}
 		
 		CaseListPropertiesBean properties = new CaseListPropertiesBean();
@@ -545,12 +552,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		
 		if (!resultsHolder.isSearchResultStored(id) || !resultsHolder.isAllDataLoaded(id)) {
 			CasesSearchCriteriaBean criterias = resultsHolder.getSearchCriteria(id);
-			if (ListUtil.isEmpty(getReLoadedCases(criterias))) {
+			if (ListUtil.isEmpty(getReLoadedCases(resultsHolder, criterias, id))) {
 				result.setValue(getResourceBundle(iwc).getLocalizedString("no_search_results_to_export", "There are no search results to export!"));
 				return result;
 			}
 		}
 		
+		getExternalSearchResults(resultsHolder, id);
 		if (!resultsHolder.doExport(id)) {
 			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
@@ -606,22 +614,59 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	public Collection<CasePresentation> getReLoadedCases(CasesSearchCriteriaBean criterias) {
+		return getReLoadedCases(null, criterias, null);
+	}
+	
+	private Collection<CasePresentation> getReLoadedCases(CasesSearchResultsHolder resultsHolder, CasesSearchCriteriaBean criterias, String id) {
 		if (criterias instanceof CasesListSearchCriteriaBean) {
 			IWContext iwc = CoreUtil.getIWContext();
 			CasesListSearchCriteriaBean listCriterias = (CasesListSearchCriteriaBean) criterias;
 			
 			PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, listCriterias, false);
-			if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
-				return null;
+			if (cases == null) {
+				cases = new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>());
 			}
 			
 			listCriterias.setAllDataLoaded(Boolean.TRUE);
 			listCriterias.setPageSize(cases.getTotalCount());
 			setSearchResults(iwc, cases.getCollection(), listCriterias);
 			
+			if (resultsHolder != null && id != null) {
+				Collection<CasePresentation> externalData = getExternalSearchResults(resultsHolder, id);
+				if (ListUtil.isEmpty(cases.getCollection())) {
+					return externalData;
+				}
+			}
+			
 			return cases.getCollection();
 		}
 		
 		return null;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private Collection<CasePresentation> getExternalSearchResults(CasesSearchResultsHolder resultsHolder, String id) {
+		Map<String, ? extends ExternalCasesDataExporter> externalExporters = null;
+		try {
+			externalExporters = WebApplicationContextUtils.getWebApplicationContext(getApplication().getServletContext()).getBeansOfType(ExternalCasesDataExporter.class);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting beans of type: " + ExternalCasesDataExporter.class, e);
+		}
+		
+		if (externalExporters == null || externalExporters.isEmpty()) {
+			return null;
+		}
+		
+		List<CasePresentation> data = new ArrayList<CasePresentation>();
+		for (ExternalCasesDataExporter externalExporter: externalExporters.values()) {
+			List<CasePresentation> externalData = externalExporter.getExternalData(id);
+			resultsHolder.concatExternalData(id, externalData);
+			
+			if (!ListUtil.isEmpty(externalData)) {
+				data.addAll(externalData);
+			}
+		}
+		
+		return data;
 	}
 }
