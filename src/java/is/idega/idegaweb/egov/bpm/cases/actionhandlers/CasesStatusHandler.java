@@ -38,7 +38,8 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	private static final long serialVersionUID = 7504445907540445936L;
 	
-	private static final Logger LOGGER = Logger.getLogger(CasesStatusHandler.class.getName());
+	private static final Logger LOGGER = Logger
+	        .getLogger(CasesStatusHandler.class.getName());
 	
 	/**
 	 * variable which contains string representation of case status to set
@@ -83,11 +84,13 @@ public class CasesStatusHandler implements ActionHandler {
 	private CasesStatusMapperHandler casesStatusMapperHandler;
 	
 	public void execute(ExecutionContext ectx) throws Exception {
+		
 		Integer caseId = null;
 		try {
 			caseId = getCaseId(ectx);
 			if (caseId == null) {
-				LOGGER.log(Level.WARNING, "No caseId resolved, skipping case status change");
+				LOGGER.log(Level.WARNING,
+				    "No caseId resolved, skipping case status change");
 				return;
 			}
 			
@@ -100,8 +103,10 @@ public class CasesStatusHandler implements ActionHandler {
 			CasesBusiness casesBusiness = getCasesBusiness(iwac);
 			final Case theCase = casesBusiness.getCase(caseId);
 			
-			if (ifCaseStatus == null || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
-				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
+			if (ifCaseStatus == null
+			        || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
+				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set
+				// (i.e. change always)
 				final User performer;
 				if (performerUserId == null) {
 					if (iwc != null) {
@@ -117,17 +122,21 @@ public class CasesStatusHandler implements ActionHandler {
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
 				
-				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer);
+				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status,
+				    performer);
 			}
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Exception while changing case status for the case: " + caseId, e);
+			LOGGER.log(Level.SEVERE,
+			    "Exception while changing case status for the case: " + caseId,
+			    e);
 		}
 	}
 	
 	public String getCaseStatus() {
 		if (caseStatus == null) {
 			if (!StringUtil.isEmpty(getCaseStatusMappedName())) {
-				caseStatus = getCasesStatusMapperHandler().getStatusCodeByMappedName(getCaseStatusMappedName());
+				caseStatus = getCasesStatusMapperHandler()
+				        .getStatusCodeByMappedName(getCaseStatusMappedName());
 			}
 		}
 		
@@ -137,7 +146,8 @@ public class CasesStatusHandler implements ActionHandler {
 	public String getIfCaseStatus() {
 		if (ifCaseStatus == null) {
 			if (!StringUtil.isEmpty(getIfCaseStatusMappedName())) {
-				ifCaseStatus = getCasesStatusMapperHandler().getStatusCodeByMappedName(getIfCaseStatusMappedName());
+				ifCaseStatus = getCasesStatusMapperHandler()
+				        .getStatusCodeByMappedName(getIfCaseStatusMappedName());
 			}
 		}
 		
@@ -150,13 +160,19 @@ public class CasesStatusHandler implements ActionHandler {
 			if (getProcessInstanceId() != null) {
 				processInstanceIdToUse = getProcessInstanceId();
 			} else {
-				Long currentProcessInstanceId = ectx.getProcessInstance().getId();
-				processInstanceIdToUse = getBpmFactory().getMainProcessInstance(currentProcessInstanceId).getId();
+				Long currentProcessInstanceId = ectx.getProcessInstance()
+				        .getId();
+				processInstanceIdToUse = getBpmFactory()
+				        .getMainProcessInstance(currentProcessInstanceId)
+				        .getId();
 			}
 			
-			CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceIdToUse);
+			CaseProcInstBind cpi = getCasesBPMDAO()
+			        .getCaseProcInstBindByProcessInstanceId(
+			            processInstanceIdToUse);
 			if (cpi == null) {
-				LOGGER.warning("No case process instance bind found for process instance id=" + processInstanceIdToUse);
+				LOGGER.warning("No case process instance bind found for process instance id="
+				        + processInstanceIdToUse);
 			}
 			
 			caseId = cpi.getCaseId();
@@ -166,12 +182,14 @@ public class CasesStatusHandler implements ActionHandler {
 	}
 	
 	private IWApplicationContext getIWAC(final IWContext iwc) {
-		return iwc == null ? IWMainApplication.getDefaultIWApplicationContext() : iwc;
+		return iwc == null ? IWMainApplication.getDefaultIWApplicationContext()
+		        : iwc;
 	}
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -179,7 +197,8 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
+			return (UserBusiness) IBOLookup.getServiceInstance(iwac,
+			    UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}

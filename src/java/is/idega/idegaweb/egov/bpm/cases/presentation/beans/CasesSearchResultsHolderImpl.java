@@ -756,7 +756,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return criterias == null ? Boolean.FALSE : criterias.isAllDataLoaded();
 	}
 
-	@Override
 	public void concatExternalData(String id, List<CasePresentation> externalData) {
 		if (StringUtil.isEmpty(id) || ListUtil.isEmpty(externalData) || concatenatedData.contains(id)) {
 			return;
