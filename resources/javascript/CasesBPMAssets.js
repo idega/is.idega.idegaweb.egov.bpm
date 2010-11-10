@@ -1087,9 +1087,25 @@ CasesBPMAssets.openDocumentSignerWindow = function(uri, lightBoxTitle, closeLigh
 	
 	var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
 	var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
-	GB_show(lightBoxTitle, uri, {height: windowHeight, width: windowWidth, animation: false, localizations: {closeTitle: closeLightBoxTitle}, onClose:
-								CasesBPMAssets.reloadDocumentsGrid});
-	closeAllLoadingMessages();
+	var tmpFancyBoxLinkId = 'tmpFancyBoxLinkId_' + Math.ceil(1000 * Math.random());
+	jQuery(document.body).append('<a class=\'iframe\' style=\'display: none;\' id=\'' + tmpFancyBoxLinkId + '\' href=\'' + uri + '\' title=\'' + lightBoxTitle + '\'>' +
+		lightBoxTitle + '</a>');
+	jQuery('#' + tmpFancyBoxLinkId).fancybox({
+		autoScale: false,
+		autoDimensions: false,
+		width:	windowWidth,
+		height:	windowHeight,
+		hideOnOverlayClick: false,
+		hideOnContentClick: false,
+		onClosed: function() {
+			CasesBPMAssets.reloadDocumentsGrid();
+			jQuery('#' + tmpFancyBoxLinkId).remove();
+		},
+		onComplete: function() {
+			closeAllLoadingMessages();
+		}
+	});
+	jQuery('#' + tmpFancyBoxLinkId).trigger('click');
 }
 
 CasesBPMAssets.showHumanizedMessage = function(message, params) {

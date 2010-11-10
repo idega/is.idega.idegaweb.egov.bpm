@@ -293,9 +293,6 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		cssFiles.add(web2.getBundleUriToLinkLinksWithFilesStyleFile());
 		cssFiles.add(web2.getBundleURIToJQGridStyles());
 		cssFiles.add(web2.getBundleUriToHumanizedMessagesStyleSheet());
-		if (isAllowPDFSigning()) {
-			cssFiles.add(web2.getBundleUtiToGreyBoxStyleSheet());
-		}
 		cssFiles.add(iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getVirtualPathWithFileNameString("style/case.css"));
 		cssFiles.add(web2.getBundleURIToFancyBoxStyleFile());
 		PresentationUtil.addStyleSheetsToHeader(iwc, cssFiles);
@@ -314,7 +311,6 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		scripts.add(CoreConstants.DWR_UTIL_SCRIPT);
 		scripts.add("/dwr/interface/BPMProcessAssets.js");
 		if (isAllowPDFSigning()) {
-			scripts.add(web2.getBundleUtiToGreyBoxScript());
 			scripts.add("/dwr/interface/PDFGeneratorFromProcess.js");
 		}
 		scripts.add(web2.getBundleUriToHumanizedMessagesScript());
