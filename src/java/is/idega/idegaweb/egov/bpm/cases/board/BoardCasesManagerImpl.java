@@ -685,6 +685,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				return;
 			}
 			
+			if (StringUtil.isEmpty(variable.getValue())) {
+				LOGGER.warning("Variable value for " + name + " (case=" + caseId + ", piId=" + processInstanceId + ") is undefined!");
+			}
+			
 			if (value.equals(variable.getValue())) {
 				return;
 			}
