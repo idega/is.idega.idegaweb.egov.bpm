@@ -676,6 +676,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 		public void addVariable(String name, String value) {
 			if (StringUtil.isEmpty(name) || StringUtil.isEmpty(value)) {
+				LOGGER.warning("Variable value or name (name=" + name + ", value=" +value+ ", case=" + caseId + ", piId=" + processInstanceId + ") is undefined!");
 				return;
 			}
 			
@@ -683,10 +684,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			if (variable == null) {
 				getVariables().add(new AdvancedProperty(name, value));
 				return;
-			}
-			
-			if (StringUtil.isEmpty(variable.getValue())) {
-				LOGGER.warning("Variable value for " + name + " (case=" + caseId + ", piId=" + processInstanceId + ") is undefined!");
 			}
 			
 			if (value.equals(variable.getValue())) {
