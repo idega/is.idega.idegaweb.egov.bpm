@@ -149,24 +149,24 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		for (CaseBoardView view: boardViews) {
 			CaseBoardBean boardCase = new CaseBoardBean(view.getCaseId(), view.getProcessInstanceId());
 			
-			boardCase.setApplicantName(view.getValue(getVariables().get(0)));
-			boardCase.setPostalCode(view.getValue(getVariables().get(1)));
-			boardCase.setCaseIdentifier(view.getValue(getVariables().get(2)));
-			boardCase.setCaseDescription(view.getValue(getVariables().get(3)));
+			boardCase.setApplicantName(view.getValue(CasesBoardViewer.CASE_FIELDS.get(0).getId()));
+			boardCase.setPostalCode(view.getValue(CasesBoardViewer.CASE_FIELDS.get(1).getId()));
+			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(2).getId()));
+			boardCase.setCaseDescription(view.getValue(CasesBoardViewer.CASE_FIELDS.get(3).getId()));
 			
-			boardCase.setTotalCost(String.valueOf(getNumberValue(view.getValue(getVariables().get(4)), true)));
-			boardCase.setAppliedAmount(String.valueOf(getNumberValue(view.getValue(getVariables().get(5)), true)));
+			boardCase.setTotalCost(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(4).getId()), true)));
+			boardCase.setAppliedAmount(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()), true)));
 			
-			boardCase.setNutshell(view.getValue(getVariables().get(6)));
+			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(6).getId()));
 			
 			boardCase.setGradingSum(getGradingSum(view));
 			
-			boardCase.setCategory(view.getValue(getVariables().get(8)));
-			boardCase.setComment(view.getValue(getVariables().get(9)));
+			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(8).getId()));
+			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(9).getId()));
 			
-			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(getVariables().get(10)), false));
-			boardCase.setBoardAmount(getNumberValue(view.getValue(getVariables().get(11)), false));
-			boardCase.setRestrictions(view.getValue(getVariables().get(12)));
+			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()), false));
+			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()), false));
+			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()));
 			
 			boardCase.setHandler(view.getHandler());
 			
@@ -680,7 +680,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				return;
 			}
 			
-			AdvancedProperty variable = getVariable(name);
+			AdvancedProperty variable = getVariable(getVariables(), name);
 			if (variable == null) {
 				getVariables().add(new AdvancedProperty(name, value));
 				return;
@@ -695,7 +695,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 		
 		public String getValue(String variableName) {
-			AdvancedProperty variable = getVariable(variableName);
+			AdvancedProperty variable = getVariable(getVariables(), variableName);
 			return getStringValue(variable == null ? null : variable.getValue());
 		}
 		
@@ -711,20 +711,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			return values;
 		}
 		
-		private AdvancedProperty getVariable(String name) {
-			if (StringUtil.isEmpty(name)) {
-				return null;
-			}
-			
-			for (AdvancedProperty variable: getVariables()) {
-				if (name.equals(variable.getId())) {
-					return variable;
-				}
-			}
-			
-			return null;
-		}
-
 		public User getHandler() {
 			return handler;
 		}
@@ -739,6 +725,20 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 	}
 
+	private AdvancedProperty getVariable(List<AdvancedProperty> variables, String name) {
+		if (StringUtil.isEmpty(name)) {
+			return null;
+		}
+		
+		for (AdvancedProperty variable: variables) {
+			if (name.equals(variable.getId())) {
+				return variable;
+			}
+		}
+		
+		return null;
+	}
+	
 	public TaskViewerHelper getTaskViewer() {
 		return taskViewer;
 	}
