@@ -211,7 +211,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
 		for (VariableInstanceInfo variable: variables) {
-			if (variable instanceof VariableStringInstance && (variable.getValue() != null && variable.getProcessInstanceId() != null)) {
+			if (variable instanceof VariableStringInstance && (variable.getName() != null && variable.getValue() != null && variable.getProcessInstanceId() != null)) {
 				Long processInstanceId = variable.getProcessInstanceId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
