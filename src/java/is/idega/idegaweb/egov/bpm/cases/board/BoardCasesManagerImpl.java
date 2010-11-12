@@ -170,6 +170,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			
 			boardCase.setHandler(view.getHandler());
 			
+			if (StringUtil.isEmpty(boardCase.getApplicantName())) {
+				LOGGER.warning("Applicant name is unknown: ".concat(boardCase.toString()).concat(". Probably some error occured gathering data."));
+			}
+			
 			boardCases.add(boardCase);
 		}
 		
