@@ -208,7 +208,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		Map<Integer, Long> processes = getCaseProcessInstanceRelation().getCasesProcessInstancesIds(casesIdsAndHandlers.keySet());
 
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier()
-			.getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, processes.values(), true, false);
+			.getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, processes.values(), true, false, false);
 		if (ListUtil.isEmpty(variables)) {
 			LOGGER.warning("Didn't find any variables values for processes " + processes.values() + " and variables names " + variablesNames);
 			return null;
