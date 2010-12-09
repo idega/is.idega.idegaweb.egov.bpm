@@ -150,23 +150,24 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			CaseBoardBean boardCase = new CaseBoardBean(view.getCaseId(), view.getProcessInstanceId());
 			
 			boardCase.setApplicantName(view.getValue(CasesBoardViewer.CASE_FIELDS.get(0).getId()));
-			boardCase.setPostalCode(view.getValue(CasesBoardViewer.CASE_FIELDS.get(1).getId()));
-			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(2).getId()));
-			boardCase.setCaseDescription(view.getValue(CasesBoardViewer.CASE_FIELDS.get(3).getId()));
+			boardCase.setAddress(view.getValue(CasesBoardViewer.CASE_FIELDS.get(1).getId()));
+			boardCase.setPostalCode(view.getValue(CasesBoardViewer.CASE_FIELDS.get(2).getId()));
+			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(3).getId()));
+			boardCase.setCaseDescription(view.getValue(CasesBoardViewer.CASE_FIELDS.get(4).getId()));
 			
-			boardCase.setTotalCost(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(4).getId()), true)));
-			boardCase.setAppliedAmount(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()), true)));
+			boardCase.setTotalCost(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()), true)));
+			boardCase.setAppliedAmount(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(6).getId()), true)));
 			
-			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(6).getId()));
+			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(7).getId()));
 			
 			boardCase.setGradingSum(getGradingSum(view));
 			
-			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(8).getId()));
-			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(9).getId()));
+			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(9).getId()));
+			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()));
 			
-			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()), false));
-			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()), false));
-			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()));
+			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()), false));
+			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()), false));
+			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(13).getId()));
 			
 			boardCase.setHandler(view.getHandler());
 			
@@ -372,7 +373,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		} catch (IBOLookupException e) {
 			LOGGER.log(Level.SEVERE, "Error getting " + CasesBusiness.class, e);
 		}
@@ -524,17 +525,17 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			List<String> allValues = caseBoard.getAllValues();
 			List<String> rowValues = new ArrayList<String>(allValues.size());
 			for (String value : allValues) {
-				if (index == 2) {
+				if (index == 3) {
 					// Link to grading task
 					rowValues.add(caseBoard.getCaseIdentifier());
 				} else {
 					rowValues.add(value);
 				}
 				
-				if (index == allValues.size() - 3) {
+				if (index == allValues.size() - 4) {
 					// Calculating grant amount suggestions
 					grantAmountSuggestionTotal += caseBoard.getGrantAmountSuggestion();
-				} else if (index == allValues.size() - 2) {
+				} else if (index == allValues.size() - 3) {
 					// Calculating board amounts
 					boardAmountTotal += caseBoard.getBoardAmount();
 				}
@@ -551,8 +552,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		data.setBodyBeans(bodyRows);
 		
 		// Footer
-		data.setFooterValues(getFooterValues(iwrb, grantAmountSuggestionTotal,
-		    boardAmountTotal));
+		data.setFooterValues(getFooterValues(iwrb, grantAmountSuggestionTotal, boardAmountTotal));
 		
 		// Everything is OK
 		data.setFilledWithData(Boolean.TRUE);
@@ -567,7 +567,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		
 		UserBusiness userBusiness = null;
 		try {
-			userBusiness = (UserBusiness) IBOLookup.getServiceInstance(iwc, UserBusiness.class);
+			userBusiness = IBOLookup.getServiceInstance(iwc, UserBusiness.class);
 		} catch(RemoteException e) {
 			LOGGER.log(Level.WARNING, "Error getting " + UserBusiness.class, e);
 		}
@@ -594,11 +594,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	
 	private List<String> getTableHeaders(IWResourceBundle iwrb) {
 		String prefix = "case_board_viewer.";
-		List<String> headers = new ArrayList<String>(
-		        CasesBoardViewer.CASE_FIELDS.size());
+		List<String> headers = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
 		for (AdvancedProperty header : CasesBoardViewer.CASE_FIELDS) {
-			headers.add(iwrb.getLocalizedString(new StringBuilder(prefix)
-			        .append(header.getId()).toString(), header.getValue()));
+			headers.add(iwrb.getLocalizedString(new StringBuilder(prefix).append(header.getId()).toString(), header.getValue()));
 		}
 		
 		headers.add(iwrb.getLocalizedString(new StringBuilder(prefix).append("case_handler").toString(), "Case handler"));
