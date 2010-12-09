@@ -66,7 +66,7 @@ import com.idega.util.expression.ELUtil;
 public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsHolderImpl.class.getName());
-	private static final short DEFAULT_CELL_WIDTH = (short) (40 * 256);
+	private static final int DEFAULT_CELL_WIDTH = 40 * 256;
 	
 	private Map<String, CasesSearchResults> allResults = new HashMap<String, CasesSearchResults>();
 	private Map<String, List<CasePresentation>> externalData = new HashMap<String, List<CasePresentation>>();
@@ -253,14 +253,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			List<String> standardFieldsInfo) {
 		IWResourceBundle iwrb = getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 		
-		short cellIndexInRow = 0;
+		int cellIndexInRow = 0;
 		
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		
-		short cellRow = 0;
-		short cellIndex = 0;
+		int cellRow = 0;
+		int cellIndex = 0;
 		
 		//	Default header labels
 		HSSFRow row = sheet.createRow(cellRow++);
