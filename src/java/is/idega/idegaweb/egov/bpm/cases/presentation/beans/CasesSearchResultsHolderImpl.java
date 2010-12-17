@@ -253,14 +253,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			List<String> standardFieldsInfo) {
 		IWResourceBundle iwrb = getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 		
-		int cellIndexInRow = 0;
+		short cellIndexInRow = 0;
 		
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		
-		int cellRow = 0;
-		int cellIndex = 0;
+		short cellRow = 0;
+		short cellIndex = 0;
 		
 		//	Default header labels
 		HSSFRow row = sheet.createRow(cellRow++);
