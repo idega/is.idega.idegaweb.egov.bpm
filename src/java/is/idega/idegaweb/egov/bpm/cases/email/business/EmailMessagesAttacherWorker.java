@@ -41,6 +41,7 @@ import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.util.CoreConstants;
 import com.idega.util.IOUtil;
@@ -159,86 +160,84 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 		
 		for (Token tkn : tkns) {
-			
 			ProcessInstance subPI = tkn.getSubProcessInstance();
-			
-			if (subPI != null && EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
-				
-				try {
-					TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
-					String subject = message.getSubject();
-					ti.setName(subject);
-					
-					String text = message.getBody();
-					
-					if (text == null)
-						text = CoreConstants.EMPTY;
-					
-					HashMap<String, Object> vars = new HashMap<String, Object>(2);
-					
-					String senderPersonalName = message.getSenderName();
-					String fromAddress = message.getFromAddress();
-					
-					vars.put("string_subject", subject);
-					vars.put("string_text", text);
-					vars.put("string_fromPersonal", senderPersonalName);
-					vars.put("string_fromAddress", fromAddress);
-					
-					BPMFactory bpmFactory = getBpmFactory();
-					
-					// taking here view for new task instance
-					getBpmFactory().takeView(ti.getId(), false, null);
-					
-					long pdId = ti.getProcessInstance().getProcessDefinition().getId();
-					
-					ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
-					emailViewSubmission.populateVariables(vars);
-					
-					TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
-					taskInstance.submit(emailViewSubmission, false);
-					
-					Map<String, InputStream> attachments = message.getAttachments();
-					Collection<File> attachedFiles = message.getAttachedFiles();
-					if (!ListUtil.isEmpty(attachedFiles)) {
-						for (File attachedFile: attachedFiles) {
-							if (attachedFile != null) {
-								if (attachments == null) {
-									attachments = new HashMap<String, InputStream>(1);
-								}
-								attachments.put(attachedFile.getName(), new FileInputStream(attachedFile));
-							}
-						}
-					}
-					
-					if (attachments != null && !attachments.isEmpty()) {
-						Variable variable = new Variable("attachments", VariableDataType.FILES);
-						
-						InputStream fileStream = null;
-						for (String fileName : attachments.keySet()) {
-							fileStream = attachments.get(fileName);
-							try {
-								taskInstance.addAttachment(variable, fileName, fileName, fileStream);
-							} catch (Exception e) {
-								LOGGER.log(Level.SEVERE, "Unable to set binary variable for task instance: " + ti.getId(), e);
-							} finally {
-								IOUtil.closeInputStream(fileStream);
-								if (!ListUtil.isEmpty(attachedFiles)) {
-									for (File attachedFile: attachedFiles) {
-										attachedFile.delete();
-									}
-								}
-							}
-						}
-					}
-					
-					return true;
-					
-				} catch (Exception e) {
-					LOGGER.log(Level.SEVERE, "Exception while attaching email msg", e);
-				}
+			if (subPI == null || EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
+				continue;
 			}
+			
+			try {
+				TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
+				String subject = message.getSubject();
+				ti.setName(subject);
+				
+				String text = message.getBody();
+				
+				if (text == null)
+					text = CoreConstants.EMPTY;
+				
+				HashMap<String, Object> vars = new HashMap<String, Object>(2);
+				
+				String senderPersonalName = message.getSenderName();
+				String fromAddress = message.getFromAddress();
+				
+				vars.put("string_subject", subject);
+				vars.put("string_text", text);
+				vars.put("string_fromPersonal", senderPersonalName);
+				vars.put("string_fromAddress", fromAddress);
+				
+				BPMFactory bpmFactory = getBpmFactory();
+				
+				// taking here view for new task instance
+				View view = getBpmFactory().takeView(ti.getId(), false, null);
+				LOGGER.info("View for email message to attach: " + view);
+				
+				long pdId = ti.getProcessInstance().getProcessDefinition().getId();
+				
+				ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
+				emailViewSubmission.populateVariables(vars);
+				
+				TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
+				taskInstance.submit(emailViewSubmission, false);
+				
+				Map<String, InputStream> attachments = message.getAttachments();
+				Collection<File> attachedFiles = message.getAttachedFiles();
+				if (!ListUtil.isEmpty(attachedFiles)) {
+					for (File attachedFile: attachedFiles) {
+						if (attachedFile != null) {
+							if (attachments == null) {
+								attachments = new HashMap<String, InputStream>(1);
+							}
+							attachments.put(attachedFile.getName(), new FileInputStream(attachedFile));
+						}
+					}
+				}
+				
+				if (attachments != null && !attachments.isEmpty()) {
+					Variable variable = new Variable("attachments", VariableDataType.FILES);
+					
+					InputStream fileStream = null;
+					for (String fileName : attachments.keySet()) {
+						fileStream = attachments.get(fileName);
+						try {
+							taskInstance.addAttachment(variable, fileName, fileName, fileStream);
+						} catch (Exception e) {
+							LOGGER.log(Level.SEVERE, "Unable to set binary variable for task instance: " + ti.getId(), e);
+						} finally {
+							IOUtil.closeInputStream(fileStream);
+							if (!ListUtil.isEmpty(attachedFiles)) {
+								for (File attachedFile: attachedFiles) {
+									attachedFile.delete();
+								}
+							}
+						}
+					}
+				}
+				return true;
+			} catch (Exception e) {
+				LOGGER.log(Level.SEVERE, "Exception while attaching email msg (subject: " + message.getSubject() + ", body: " + message.getBody() + "). Token: " +
+						tkn.getName() + " (" + tkn.getId() + "), sub-process: " + subPI.getId(), e);
+			}	
 		}
-		
 		return false;
 	}
 
