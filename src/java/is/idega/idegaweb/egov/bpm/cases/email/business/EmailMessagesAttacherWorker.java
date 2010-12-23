@@ -148,6 +148,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	
 	@Transactional
 	private boolean attachEmailMessage(JbpmContext ctx, BPMEmailMessage message) {
+		if (message.isParsed()) {
+			return true;
+		}
 		if (ctx == null || message == null) {
 			return false;
 		}
@@ -232,6 +235,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						}
 					}
 				}
+				
+				message.setParsed(true);
 				return true;
 			} catch (Exception e) {
 				LOGGER.log(Level.SEVERE, "Exception while attaching email msg (subject: " + message.getSubject() + ", body: " + message.getBody() + "). Token: " +
