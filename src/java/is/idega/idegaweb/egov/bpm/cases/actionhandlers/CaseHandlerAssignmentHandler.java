@@ -67,6 +67,9 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	@Autowired
 	private SendCaseMessagesHandler sendCaseMessagesHandler;
 	
+	private Integer handlerUserId;
+	private Integer performerUserId;
+	
 	public static final String assignHandlerEventType = "handlerAssignedToCase";
 	public static final String unassignHandlerEventType = "handlerUnassignedFromCase";
 	public static final String handlerUserIdVarName = "handlerUserId";
@@ -104,7 +107,8 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 				caseHandlerRole = new Role(defaultCaseHandlerRoleName);
 			}
 			
-			if (assignHandlerEventType.equals(event)) {
+			if (assignHandlerEventType.equals(event)
+			        || "node-enter".equals(event)) {
 				
 				unassign(genCase, processInstanceId, casesBusiness, ectx,
 				    caseHandlerRole);
@@ -148,28 +152,55 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		casesBusiness.untakeCase(genCase);
 	}
 	
+	private Integer getHandlerUserId(ExecutionContext ectx) {
+		
+		if (handlerUserId == null)
+			handlerUserId = (Integer) ectx.getVariable(handlerUserIdVarName);
+		
+		if (handlerUserId == null)
+			throw new IllegalStateException("No handler user id set");
+		
+		return handlerUserId;
+	}
+	
+	private Integer getPerformerUserId(ExecutionContext ectx) {
+		
+		if (performerUserId == null)
+			performerUserId = (Integer) ectx
+			        .getVariable(performerUserIdVarName);
+		
+		if (performerUserId == null)
+			performerUserId = new Integer(getCurrentUser().getPrimaryKey()
+			        .toString());
+		
+		return performerUserId;
+	}
+	
+	private User getCurrentUser() {
+		
+		return IWContext.getCurrentInstance().getCurrentUser();
+	}
+	
 	private void assign(GeneralCase genCase, ProcessInstance pi,
 	        CasesBusiness casesBusiness, ExecutionContext ectx,
 	        IWApplicationContext iwac, Role caseHandlerRole) throws Exception {
 		
-		Integer handlerUserId = (Integer) ectx
-		        .getVariable(handlerUserIdVarName);
-		Integer performerUserId = (Integer) ectx
-		        .getVariable(performerUserIdVarName);
+		final Integer handlerUserId = getHandlerUserId(ectx);
+		final Integer performerUserId = getPerformerUserId(ectx);
 		
 		// assigning handler
-		User currentHandler = genCase.getHandledBy();
+		final User currentHandler = genCase.getHandledBy();
 		
 		if (currentHandler == null
 		        || !String.valueOf(handlerUserId).equals(
 		            String.valueOf(currentHandler.getPrimaryKey()))) {
 			
-			UserBusiness userBusiness = getUserBusiness(iwac);
+			final UserBusiness userBusiness = getUserBusiness(iwac);
 			
-			IWContext iwc = IWContext.getCurrentInstance();
+			final IWContext iwc = IWContext.getCurrentInstance();
 			
-			User handler = userBusiness.getUser(handlerUserId);
-			User performer = userBusiness.getUser(performerUserId);
+			final User handler = userBusiness.getUser(handlerUserId);
+			final User performer = userBusiness.getUser(performerUserId);
 			
 			// statistics and status change. also keeping handlerId there
 			casesBusiness.takeCase(genCase, handler, iwc, performer, true,
@@ -182,7 +213,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		// creating case handler role and assigning handler user to this, so
 		// that 'ordinary' users could see their contacts etc (they have the
 		// permission to see caseHandler contacts)
-		List<Role> roles = Arrays.asList(new Role[] { caseHandlerRole });
+		final List<Role> roles = Arrays.asList(new Role[] { caseHandlerRole });
 		getBpmFactory().getRolesManager().createProcessActors(roles, pi);
 		getBpmFactory().getRolesManager().createIdentitiesForRoles(roles,
 		    new Identity(handlerUserId.toString(), IdentityType.USER),
@@ -330,5 +361,13 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	
 	SendCaseMessagesHandler getSendCaseMessagesHandler() {
 		return sendCaseMessagesHandler;
+	}
+	
+	public void setHandlerUserId(Integer handlerUserId) {
+		this.handlerUserId = handlerUserId;
+	}
+	
+	public void setPerformerUserId(Integer performerUserId) {
+		this.performerUserId = performerUserId;
 	}
 }
