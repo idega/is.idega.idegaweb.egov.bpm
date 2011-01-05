@@ -23,6 +23,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
+
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.jbpm.graph.def.ProcessDefinition;
@@ -94,39 +95,29 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			throw new IllegalArgumentException("View submission was for different process definition id than tried to submit to");
 		}
 		
-		getLogger().finer("Starting process for process definition id = " + processDefinitionId);
+		final ProcessDefinition pd = getProcessDefinition();
+		
+		getLogger().info("Starting process for process definition id = " + processDefinitionId + ", process definition name: " + pd.getName());
 		
 		Map<String, String> parameters = viewSubmission.resolveParameters();
 		
 		getLogger().finer("Params " + parameters);
 		
-		final Integer userId;
-		if (parameters.containsKey(CasesBPMProcessConstants.userIdActionVariableName))
-			userId = Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName));
-		else
-			userId = null;
+		final Integer userId = parameters.containsKey(CasesBPMProcessConstants.userIdActionVariableName) ?
+				Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName)) : null;
 		
-		final String caseStatusKey;
-		if (parameters.containsKey(CasesBPMProcessConstants.caseStatusVariableName))
-			caseStatusKey = parameters.get(CasesBPMProcessConstants.caseStatusVariableName);
-		else
-			caseStatusKey = null;
+		final String caseStatusKey = parameters.containsKey(CasesBPMProcessConstants.caseStatusVariableName) ?
+				parameters.get(CasesBPMProcessConstants.caseStatusVariableName) : null;
 		
 		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		final String caseIdentifier = parameters.get(CasesBPMProcessConstants.caseIdentifier);
 		final String realCaseCreationDate = parameters.get(CasesBPMProcessConstants.caseCreationDateParam);
 		
-		final Date caseCreated;
-		
-		if (!StringUtil.isEmpty(realCaseCreationDate)) {
-			caseCreated = new IWTimestamp(realCaseCreationDate).getDate();
-		} else
-			caseCreated = new Date();
+		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ? new Date() : new IWTimestamp(realCaseCreationDate).getDate();
 		
 		getBpmContext().execute(new JbpmCallback() {
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				try {
-					ProcessDefinition pd = getProcessDefinition();
 					ProcessInstance pi = new ProcessInstance(pd);
 					TaskInstance ti = pi.getTaskMgmtInstance().createStartTaskInstance();
 					
