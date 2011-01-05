@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jbpm.graph.exe.Token;
@@ -26,7 +25,6 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
-import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
@@ -240,7 +238,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		List<Long> variableResults = null;
 		for (BPMProcessVariable variable : variables) {
 			variableResults = null;
-			Object value = getVariableValue(variable, locale);
+			Object value = variable.getRealValue(locale);
 			
 			// Date
 			if (variable.isDateType()) {
@@ -339,42 +337,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			    new Param(CaseProcInstBind.variablesValuesProp, value),
 			    new Param(CaseProcInstBind.variablesTypesProp, new HashSet<String>(types))
 		);
-	}
-	
-	private Object getVariableValue(BPMProcessVariable variable, Locale locale) {
-		if (variable.isStringType()) {
-			String value = variable.getValue();
-			if (locale != null) {
-				value = value.toLowerCase(locale);
-			}
-			return value;
-		}
-		
-		if (variable.isDateType()) {
-			try {
-				return IWDatePickerHandler.getParsedTimestampByCurrentLocale(variable.getValue());
-			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "Error converting string to timestamp: "+ variable.getValue(), e);
-			}
-		}
-		
-		if (variable.isDoubleType()) {
-			try {
-				return Double.valueOf(variable.getValue());
-			} catch (NumberFormatException e) {
-				LOGGER.log(Level.WARNING, "Error converting string to double: "+ variable.getValue(), e);
-			}
-		}
-		
-		if (variable.isLongType()) {
-			try {
-				return Long.valueOf(variable.getValue());
-			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "Error converting string to long: " + variable.getValue(), e);
-			}
-		}
-		
-		return null;
 	}
 	
 	public List<Long> getCaseIdsByCaseNumber(String caseNumber) {
