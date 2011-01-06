@@ -115,7 +115,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		
 		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ? new Date() : new IWTimestamp(realCaseCreationDate).getDate();
 		
-		boolean submitted = getBpmContext().execute(new JbpmCallback() {
+		Object submitted = getBpmContext().execute(new JbpmCallback() {
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
 				try {
 					ProcessInstance pi = new ProcessInstance(pd);
