@@ -115,8 +115,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		
 		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ? new Date() : new IWTimestamp(realCaseCreationDate).getDate();
 		
-		getBpmContext().execute(new JbpmCallback() {
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
+		boolean submitted = getBpmContext().execute(new JbpmCallback() {
+			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
 				try {
 					ProcessInstance pi = new ProcessInstance(pd);
 					TaskInstance ti = pi.getTaskMgmtInstance().createStartTaskInstance();
@@ -194,13 +194,16 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					piBind.setDateCreated(caseCreated);
 					piBind.setCaseIdentifier(caseIdentifier);
 					getCasesBPMDAO().persist(piBind);
+					getLogger().info("Bind was created: process instance ID=" + pi.getId() + ", case ID=" + genCase.getPrimaryKey());
 					
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
+					getLogger().info("Variables were set: " + caseData);
 					
 					submitVariablesAndProceedProcess(ti, viewSubmission.resolveVariables(), true);
+					getLogger().info("Variables were submitted and a process proceeded");
 					
-					return null;
+					return Boolean.TRUE;
 				} catch (JbpmException e) {
 					throw e;
 				} catch (RuntimeException e) {
@@ -210,6 +213,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				}
 			}
 		});
+		getLogger().info("Process was created: " + submitted);
 	}
 	
 	@Override
