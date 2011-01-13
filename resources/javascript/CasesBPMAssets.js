@@ -215,7 +215,6 @@ CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
 	        }
 	        
 	        takeCaseSelect.css("display", "inline");
-	        console.log(takeCaseSelect);
 	        jQuery.each(jQuery('.selectCaseHandlerLabelStyle', container), function() {
 	        	jQuery(this).css("display", "inline");
 	        });
