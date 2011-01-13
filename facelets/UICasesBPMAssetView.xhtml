@@ -15,7 +15,7 @@
 	</ui:define>
 	<ui:define name="actions">
 		<div>
-			<t:commandLink rendered="#{!casesBPMAssetsState.showSpecialBackPage}" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+			<t:commandLink rendered="#{!casesBPMAssetsState.showSpecialBackPage}" forceId="true" id="backToCaseOverviewAfterSubmitted" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
 			<t:div rendered="#{casesBPMAssetsState.showSpecialBackPage}">
 				<a href="#{casesBPMAssetsState.specialBackPage}">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
 			</t:div>
