@@ -192,48 +192,46 @@ CasesBPMAssets.reloadCaseView = function(controller, container, piId) {
 }
 
 CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
-	
 	var takeCaseSelect = jQuery('.takeCaseSelect', container);
 	
 	BPMProcessAssets.getAllHandlerUsers(piId, {
         callback: function(handlerUsers) {
-        	
-        	if(handlerUsers != null && handlerUsers.length != 0) {
-        		
-        		var selectId = takeCaseSelect.attr("id");
-        		
-	            if(selectId == null || selectId.length == 0) {
-	            	
-	                var date = new Date();
-	                selectId = 'takeCase_' + date.getTime();
-	                takeCaseSelect.attr("id", selectId);
-	            }
-	            
-	            dwr.util.addOptions(selectId, handlerUsers, 'id', 'value');
-	            
-	            var selected = IWCORE.getSelectedFromAdvancedProperties(handlerUsers);
-	            
-	            if(selected != null) {
-	                
-	                takeCaseSelect.val(selected);
-	            }
-	            
-	            takeCaseSelect.css("display", "inline");
-	            
-	            if (takeCaseSelect != null && takeCaseSelect.length > 0) {
-	                
-	                var attributeName = 'processinstanceid';
-	                takeCaseSelect.attr(attributeName, piId);
-	                takeCaseSelect.change(function() {
-	                    var watcher = jQuery(this);
-	                    var processInstanceId = watcher.attr(attributeName);
-	                    var handlerId = watcher.val();
-	                    
-	                    CasesBPMAssets.assignCase(handlerId, processInstanceId);
-	                });
-	            }
+        	if (handlerUsers == null || handlerUsers.length == 0) {
+        		return;
         	}
-        }
+        		
+        	var selectId = takeCaseSelect.attr("id");
+	        if (selectId == null || selectId.length == 0) {
+	            var date = new Date();
+	            selectId = 'takeCase_' + date.getTime();
+                takeCaseSelect.attr("id", selectId);
+	        }
+	            
+	        dwr.util.addOptions(selectId, handlerUsers, 'id', 'value');
+	        
+	        var selected = IWCORE.getSelectedFromAdvancedProperties(handlerUsers);
+	        if (selected != null) {
+	            takeCaseSelect.val(selected);
+	        }
+	        
+	        takeCaseSelect.css("display", "inline");
+	        console.log(takeCaseSelect);
+	        jQuery.each(jQuery('.selectCaseHandlerLabelStyle', container), function() {
+	        	jQuery(this).css("display", "inline");
+	        });
+	        
+	        if (takeCaseSelect != null && takeCaseSelect.length > 0) {
+	        	var attributeName = 'processinstanceid';
+	            takeCaseSelect.attr(attributeName, piId);
+	            takeCaseSelect.change(function() {
+	            	var watcher = jQuery(this);
+	                var processInstanceId = watcher.attr(attributeName);
+	                var handlerId = watcher.val();
+	                  
+	                CasesBPMAssets.assignCase(handlerId, processInstanceId);
+	            });
+	        }
+       	}
     });
 }
 

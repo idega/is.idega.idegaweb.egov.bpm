@@ -24,6 +24,7 @@
 				</t:div>
 				<t:div styleClass="caseTasksPartHeaderRightLayerStyle" rendered="#{loginSession.loggedIn and caseManagerState.fullView}" style="float: right">
 					<t:outputText styleClass="watchUnwatchCase" value="#{casesBPMAssetsState.watchCaseStatusLabel}"></t:outputText>
+					<t:outputText styleClass="selectCaseHandlerLabelStyle" style="display: none;" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['bpm.caseHandler']}:" />
 					<h:selectOneListbox styleClass="takeCaseSelect" style="margin-left: 10px; display: none;" />
 					<t:graphicImage url="#{iwResourceResolver['is.idega.idegaweb.egov.bpm']['images/reload.png']}"
 						title="#{localizedStrings['is.idega.idegaweb.egov.bpm']['reload']}" alt="#{localizedStrings['is.idega.idegaweb.egov.bpm']['reload']}"
