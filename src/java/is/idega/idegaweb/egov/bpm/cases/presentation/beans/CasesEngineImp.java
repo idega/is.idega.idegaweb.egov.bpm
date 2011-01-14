@@ -59,6 +59,8 @@ import com.idega.core.component.bean.RenderedComponent;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.exe.ProcessDefinitionW;
@@ -94,6 +96,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	
 	@Autowired
 	private JQuery jQuery;
+	
+	@Autowired
+	private CasesBPMDAO casesBPMDAO;
 	
 	public static final String	FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader",
 								PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader",
@@ -335,6 +340,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		
 		return filtersList;
+	}
+	
+	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criteriaBean) {
+		return criteriaBean instanceof CasesListSearchCriteriaBean ?
+				getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criteriaBean, false) : null;
 	}
 	
 	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean, boolean usePaging) {
@@ -668,5 +678,31 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		
 		return data;
+	}
+	
+	public String getCaseStatus(Long processInstanceId) {
+		if (processInstanceId == null) {
+			LOGGER.warning("Process instance id is not provided");
+			return null;
+		}
+		
+		CaseProcInstBind bind = null;
+		try {
+			bind = casesBPMDAO.getCaseProcInstBindByProcessInstanceId(processInstanceId);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error while getting instance of " + CaseProcInstBind.class.getName() + " by process instance: " + processInstanceId, e);
+		}
+		if (bind == null) {
+			return null;
+		}
+		
+		CasePresentation theCase = null;
+		try {
+			theCase = caseManagersProvider.getCaseManager().getCaseByIdLazily(bind.getCaseId());
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting case by id: " + bind.getCaseId(), e);
+		}
+		
+		return theCase == null ? null : theCase.getLocalizedStatus();
 	}
 }

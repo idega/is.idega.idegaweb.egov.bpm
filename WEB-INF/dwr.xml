@@ -12,6 +12,7 @@
 	    	<include method="getVariablesWindow" />
 	    	<include method="getExportedSearchResults" />
 	    	<include method="clearSearchResults" />
+	    	<include method="getCaseStatus"/>
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">
@@ -24,7 +25,7 @@
             <param name="beanName" value="boardCasesManagerBean" />
             <include method="setCaseVariableValue" />
         </create>
-    	
+        
     	<convert match="is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean" converter="bean" />
 	</allow>
 	<signatures>

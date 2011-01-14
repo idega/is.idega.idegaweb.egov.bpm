@@ -227,7 +227,7 @@ CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
 	                var processInstanceId = watcher.attr(attributeName);
 	                var handlerId = watcher.val();
 	                  
-	                CasesBPMAssets.assignCase(handlerId, processInstanceId);
+	                CasesBPMAssets.assignCase(handlerId, processInstanceId, container);
 	            });
 	        }
        	}
@@ -1277,16 +1277,26 @@ CasesBPMAssets.setWatchOrUnwatchTask = function(element, processInstanceId) {
 	});
 }
 
-CasesBPMAssets.assignCase = function(handlerId, processInstanceId) {
-	
+CasesBPMAssets.assignCase = function(handlerId, processInstanceId, container) {
 	showLoadingMessage('');
     BPMProcessAssets.assignCase(handlerId, processInstanceId, {
-        callback: function(message) {
-            closeAllLoadingMessages();
-            
-            if (message == null) {
-                return false;
-            }
+        callback: function(result) {
+	        if (result) {
+	        	LazyLoader.load('/dwr/interface/CasesEngine.js', function() {
+	            	CasesEngine.getCaseStatus(processInstanceId, {
+		            	callback: function(caseStatus) {
+		            		closeAllLoadingMessages();
+		            		
+		                	if (caseStatus == null) {
+		                		return;
+		                	}
+		                					
+		                	var statusContainer = jQuery('div.casesListBodyContainerItemStatus', jQuery(container).parent().parent());
+		                	statusContainer.text(caseStatus);
+		             	}
+		            });
+	          	}, null);
+	       	}
         }
     });
 }
