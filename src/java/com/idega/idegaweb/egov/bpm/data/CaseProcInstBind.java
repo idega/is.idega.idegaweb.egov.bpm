@@ -15,6 +15,7 @@ import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
 import javax.persistence.NamedQuery;
 import javax.persistence.SqlResultSetMapping;
+import javax.persistence.SqlResultSetMappings;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
@@ -43,8 +44,18 @@ import com.idega.jbpm.data.BPMVariableData;
 	@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null")
 })
 
-@SqlResultSetMapping(name="caseId", columns=@ColumnResult(name="caseId"))
+@SqlResultSetMappings({
+	@SqlResultSetMapping(name="caseId", columns=@ColumnResult(name="caseId")),
+	@SqlResultSetMapping(name=CaseProcInstBind.procInstIdProp, columns=@ColumnResult(name=CaseProcInstBind.procInstIdProp))
+})
 @NamedNativeQueries({
+			@NamedNativeQuery(name=CaseProcInstBind.getProcInstIdsByCaseStatusesAndProcDefNames, resultSetMapping=CaseProcInstBind.procInstIdProp,
+					query= "select cp." + CaseProcInstBind.procInstIdColumnName + " " + CaseProcInstBind.procInstIdProp + " from " + CaseProcInstBind.TABLE_NAME + " cp " +
+					"inner join proc_case pc on cp.case_id = pc.PROC_CASE_ID inner join JBPM_PROCESSINSTANCE pi on cp." + CaseProcInstBind.procInstIdColumnName + " = pi.id_ " +
+					"inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ where pd.name_ in (:" + CaseProcInstBind.processDefinitionNameProp +
+					") and pc.CASE_STATUS in (:" + CaseProcInstBind.caseStatusParam + ")"
+			),
+	
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded, resultSetMapping="caseId",
 							query=
 				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
@@ -181,10 +192,12 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByUserIds = "CaseProcInstBind.getCaseIdsByUserIds";
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
-	
+	public static final String getProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getProcInstIdsByCaseStatus";
+		
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
 	public static final String casesIdsParam = "casesIds";
+	public static final String caseStatusParam = "caseStatus";
 	
 	public static final String TABLE_NAME = "BPM_CASES_PROCESSINSTANCES";
 	

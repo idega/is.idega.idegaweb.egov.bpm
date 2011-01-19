@@ -3,6 +3,7 @@ package com.idega.idegaweb.egov.bpm.data.dao.impl;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -726,5 +727,17 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		return getQueryNativeInline(builder.toString()).getResultList(
 		    Integer.class, "caseId", params.toArray(new Param[params.size()]));
+	}
+
+	@Override
+	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames) {
+		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames)) {
+			return Collections.emptyList();
+		}
+		
+		return getResultList(CaseProcInstBind.getProcInstIdsByCaseStatusesAndProcDefNames, Long.class,
+				new Param(CaseProcInstBind.caseStatusParam, caseStatuses),
+				new Param(CaseProcInstBind.processDefinitionNameProp, procDefNames)
+		);
 	}
 }
