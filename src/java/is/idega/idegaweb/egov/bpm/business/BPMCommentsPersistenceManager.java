@@ -152,10 +152,27 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return hasRightToViewComments(processInstanceId, currentUser);
 		}
 		
-		return  false;
+		return false;
 	}
 	
-	private boolean hasRightToViewComments(Long processInstanceId, User user) {
+	@Override
+	public boolean hasRightsToWriteComments(Long identifier) {
+		if (identifier == null)
+			return false;
+		
+		User currentUser = getCurrentUser();
+		if (currentUser != null) {
+			return hasRightToWriteComments(identifier, currentUser);
+		}
+		
+		return false;
+	}
+	
+	protected boolean hasRightToWriteComments(Long processInstanceId, User user) {
+		return getBpmFactory().getRolesManager().canWriteComments(processInstanceId, user);
+	}
+
+	protected boolean hasRightToViewComments(Long processInstanceId, User user) {
 		return getBpmFactory().getRolesManager().canSeeComments(processInstanceId, user);
 	}
 	
@@ -432,6 +449,10 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		
 		return getAllFeedSubscribers(properties.getIdentifier(), authorId);
 	}
+	
+	protected boolean canReadAndWriteAllComments(Long identifier, User user) {
+		return false;
+	}
 
 	@SuppressWarnings("unchecked")
 	@Override
@@ -473,6 +494,8 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return null;
 		}
 		
+		boolean canSeeAndWriteCommentsAllComments = canReadAndWriteAllComments(getConvertedValue(properties.getIdentifier()), currentUser);
+		
 		for (Comment comment: commentsByProcessInstance) {
 			Entry entry = entries.get(comment.getEntryId());
 			if (entry != null && !filteredEntries.contains(entry)) {
@@ -492,20 +515,20 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 						commentEntry.setReplyable(isReplyable(comment, currentUser));
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						fillWithReaders(properties, comment, commentEntry);
-					} else if (comment.isAnnouncedToPublic()) {
+					} else if (comment.isAnnouncedToPublic() || canSeeAndWriteCommentsAllComments) {
 						//	Comment was announced to public
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						checkIfRead = true;
-					} else if (isReplyToPrivateComment(comment, currentUser)) {
+					} else if (isReplyToPrivateComment(comment, currentUser) || canSeeAndWriteCommentsAllComments) {
 						//	This is a reply-comment to private comment
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						checkIfRead = true;
-					} else if (comment.getAuthorId().intValue() != userId) {
+					} else if (comment.getAuthorId().intValue() != userId || canSeeAndWriteCommentsAllComments) {
 						//	Not this user's private comment
 						visible = false;
 					}
 				} else {
-					if (!hasFullRights && comment.isAnnouncedToPublic()) {
+					if (!hasFullRights && comment.isAnnouncedToPublic() || canSeeAndWriteCommentsAllComments) {
 						commentEntry.setPrimaryKey(comment.getPrimaryKey().toString());
 						checkIfRead = true;
 					}
