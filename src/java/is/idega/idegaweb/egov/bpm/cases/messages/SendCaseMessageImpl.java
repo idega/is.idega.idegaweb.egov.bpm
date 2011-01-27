@@ -9,7 +9,9 @@ import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,6 +20,7 @@ import javax.ejb.FinderException;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -36,6 +39,8 @@ import com.idega.jbpm.process.business.messages.TypeRef;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.CoreUtil;
+import com.idega.util.ListUtil;
 
 
 /**
@@ -44,10 +49,13 @@ import com.idega.user.data.User;
  *
  * Last modified: $Date: 2009/01/22 17:29:22 $ by $Author: anton $
  */
-@Scope("singleton")
-@SendMessageType("caseMessage")
+
 @Service
+@SendMessageType("caseMessage")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 public class SendCaseMessageImpl extends SendMailMessageImpl {
+	
+	private static final Logger LOGGER = Logger.getLogger(SendCaseMessageImpl.class.getName());
 	
 	public static final TypeRef caseUserBean = new TypeRef("bean", "caseUser");
 
@@ -56,29 +64,22 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 	
 	@Override
 	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
-		
 		final Integer caseId = (Integer)context;
 	
-		final IWContext iwc = IWContext.getCurrentInstance();
-		final IWApplicationContext iwac;
-		final IWMainApplication iwma;
-
-		if(iwc != null)
-			iwma = IWMainApplication.getIWMainApplication(iwc);
-		else
-			iwma = IWMainApplication.getDefaultIWMainApplication();
+		final IWContext iwc = CoreUtil.getIWContext();
+		final IWMainApplication iwma = iwc == null ? IWMainApplication.getDefaultIWMainApplication() : iwc.getIWMainApplication();
 		
-		iwac = iwma.getIWApplicationContext();
+		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
+		final UserBusiness userBusiness  = getUserBusiness(iwc);
 		
-		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwac);
-		final UserBusiness userBusiness  = getUserBusiness(iwac);
+		Locale defaultLocale = iwma.getDefaultLocale();
+		//	Making sure default locale is not null
+		defaultLocale = defaultLocale == null ? iwc.getCurrentLocale() : defaultLocale;
+		defaultLocale = defaultLocale == null ? Locale.ENGLISH : defaultLocale;
 		
-		final Locale defaultLocale = iwma.getDefaultLocale();
-		
-		final ArrayList<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
-		
+		final List<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
 		try {
-			CasesBusiness casesBusiness = getCasesBusiness(iwac);
+			CasesBusiness casesBusiness = getCasesBusiness(iwc);
 			
 			final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
 			Collection<User> users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
@@ -86,16 +87,15 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			long pid = pi.getId();
 			ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
 			
-			HashMap<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
+			Map<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
 			
-			if(mvCtx == null)
+			if (mvCtx == null)
 				mvCtx = new MessageValueContext(3);
 			
 			for (User user : users) {
-				
 				Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
 				
-				if(preferredLocale == null)
+				if (preferredLocale == null)
 					preferredLocale = defaultLocale;
 				
 				CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(user, piw);
@@ -108,45 +108,43 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				
 				String subject = subjNMsg[0];
 				String text = subjNMsg[1];
+				if (subject == null || text == null) {
+					LOGGER.warning("Unable to send message because subject (" + subject + ") or/and text (" + text + ") is null!");
+					continue;
+				}
 					
-				Logger.getLogger(getClass().getName()).log(Level.FINER, "Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+") name="+user.getName());
+				LOGGER.finer("Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+") name="+user.getName());
 				
 				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
 				msgValsToSend.add(mv);
 			}
-			
 		} catch (RemoteException e) {
-			Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
+			LOGGER.log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
 		} catch (FinderException e) {
-			Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
+			LOGGER.log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
 		}
 		
-		if(msgValsToSend != null && !msgValsToSend.isEmpty()) {
+		if (ListUtil.isEmpty(msgValsToSend)) {
+			return;
+		}
 			
-			new Thread(new Runnable() {
-
-				public void run() {
-					
-					try {
-						
-						for (MessageValue messageValue : msgValsToSend) {
-							
-							Message message = messageBusiness.createUserMessage(messageValue);
-							message.store();
-						}
-						
-					} catch (RemoteException e) {
-						Logger.getLogger(SendCaseMessagesHandler.class.getName()).log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
+		new Thread(new Runnable() {
+			public void run() {
+				try {
+					for (MessageValue messageValue : msgValsToSend) {
+						Message message = messageBusiness.createUserMessage(messageValue);
+						message.store();
 					}
+				} catch (RemoteException e) {
+					LOGGER.log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
 				}
-			}).start();
-		}
-		
+			}
+		}).start();
 	}
 	
 	protected CommuneMessageBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
 		try {
-			return (CommuneMessageBusiness)IBOLookup.getServiceInstance(iwac, CommuneMessageBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, CommuneMessageBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -155,7 +153,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 	@Override
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness)IBOLookup.getServiceInstance(iwac, UserBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -163,9 +161,8 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
+			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
