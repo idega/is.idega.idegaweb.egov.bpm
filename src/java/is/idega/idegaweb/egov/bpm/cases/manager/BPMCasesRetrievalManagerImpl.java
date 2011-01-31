@@ -284,8 +284,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			CasesListParameters params = new CasesListParameters(user, type, isSuperAdmin, statusesToHide, statusesToShow);
 			params = resolveParameters(iwc, params);
-			statusesToShow = params.getStatusesToShow();
-			statusesToHide = params.getStatusesToHide();
+			statusesToShow = ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
+			statusesToHide = ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
 			roles = params.getRoles();
 			groups = params.getGroups();
 			casecodes = params.getCodes();
@@ -296,18 +296,14 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			}
 			
 			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
-				if (isSuperAdmin) {
-					caseIds = getCasesBPMDAO().getOpenCasesIdsForAdmin(caseCodes, statusesToShow, statusesToHide);
-				} else {
-					caseIds = getCasesBPMDAO().getOpenCasesIds(user, caseCodes, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases);
-				}
-				
+				caseIds = isSuperAdmin ?
+							getCasesBPMDAO().getOpenCasesIdsForAdmin(caseCodes, statusesToShow, statusesToHide) :
+							getCasesBPMDAO().getOpenCasesIds(user, caseCodes, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases);
+
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
-				if (isSuperAdmin) {
-					caseIds = getCasesBPMDAO().getClosedCasesIdsForAdmin(statusesToShow, statusesToHide);
-				} else {
-					caseIds = getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases);
-				}
+				caseIds = isSuperAdmin ?
+							getCasesBPMDAO().getClosedCasesIdsForAdmin(statusesToShow, statusesToHide) :
+							getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases);
 				
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
 				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide, onlySubscribedCases);
