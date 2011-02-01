@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -20,9 +21,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.bpm.BPMConstants;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
+import com.idega.business.IBOLookup;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
@@ -30,11 +31,12 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.bean.VariableInstanceType;
-import com.idega.jbpm.bean.VariableStringInstance;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.presentation.IWContext;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
@@ -71,9 +73,8 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, IWResourceBundle iwrb, Locale locale, boolean isAdmin,
 			boolean useRealValue) {
 		
-		variables = ListUtil.isEmpty(variables) ? new ArrayList<VariableInstanceInfo>() : new ArrayList<VariableInstanceInfo>(variables);
-		VariableInstanceInfo handlerVariable = new VariableStringInstance(BPMConstants.BPM_PROCESS_HANDLER_VARIABLE, CoreConstants.EMPTY);
-		variables.add(handlerVariable);
+		if (ListUtil.isEmpty(variables))
+			return null;
 		
 		String at = "@";
 		String name = null;
@@ -188,7 +189,6 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	
 	private String getVariableRealValue(VariableInstanceInfo variable, Locale locale) {
 		Serializable value = variable.getValue();
-		
 		if (value == null) {
 			return null;	//	Invalid value
 		}
@@ -206,6 +206,17 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			IWTimestamp date = new IWTimestamp((Date) value);
 			return date.getLocaleDate(locale, DateFormat.SHORT);
 		}
+		
+		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) && realValue instanceof Long) {
+			try {
+				UserBusiness userBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), UserBusiness.class);
+				User user = userBusiness.getUser(((Long) realValue).intValue());
+				return user == null ? CoreConstants.MINUS : user.getName();
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting user by ID: " + realValue, e);
+			}
+		}
+		
 		return realValue.toString();
 	}
 	

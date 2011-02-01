@@ -53,4 +53,4 @@ cases_bpm.followup.subject=Case requires your attention
 cases_bpm.followup.message=Hello, {0}. Case handler has asked your input.
 reload=Reload
 bpm.caseHandler=Handler
-bpm_variable.bpm_process_handler_variable=Handler
+bpm_variable.handlerUserId=Handler

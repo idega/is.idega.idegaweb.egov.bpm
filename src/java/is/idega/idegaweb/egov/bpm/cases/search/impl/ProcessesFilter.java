@@ -14,7 +14,6 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CasesRetrievalManager;
-import com.idega.bpm.BPMConstants;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.user.data.User;
@@ -76,7 +75,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		
 		BPMProcessVariable handlerVariable = null;
 		for (BPMProcessVariable variable: variables) {
-			if (BPMConstants.BPM_PROCESS_HANDLER_VARIABLE.equals(variable.getName())) {
+			if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName())) {
 				handlerVariable = variable;
 			}
 		}
