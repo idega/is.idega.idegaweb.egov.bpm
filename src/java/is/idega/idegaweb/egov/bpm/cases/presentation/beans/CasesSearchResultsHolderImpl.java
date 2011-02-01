@@ -231,7 +231,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private List<AdvancedProperty> getAvailableVariablesByProcessInstanceId(Locale locale, Long processInstanceId, boolean isAdmin) {
 		Collection<VariableInstanceInfo> variablesByProcessInstance = null;
 		try {
-			variablesByProcessInstance = getVariablesQuerier().getFullVariablesByProcessInstanceId(processInstanceId);
+			variablesByProcessInstance = getVariablesQuerier().getFullVariablesByProcessInstanceId(processInstanceId, false);
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variables for process instance: " + processInstanceId, e);
 		}
