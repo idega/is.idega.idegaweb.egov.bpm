@@ -20,22 +20,22 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.bpm.BPMConstants;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.bean.VariableDateInstance;
-import com.idega.jbpm.bean.VariableDoubleInstance;
+import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.bean.VariableInstanceType;
-import com.idega.jbpm.bean.VariableLongInstance;
 import com.idega.jbpm.bean.VariableStringInstance;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.presentation.IWContext;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
@@ -70,9 +70,10 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, IWResourceBundle iwrb, Locale locale, boolean isAdmin,
 			boolean useRealValue) {
-		if (ListUtil.isEmpty(variables)) {
-			return null;
-		}
+		
+		variables = ListUtil.isEmpty(variables) ? new ArrayList<VariableInstanceInfo>() : new ArrayList<VariableInstanceInfo>(variables);
+		VariableInstanceInfo handlerVariable = new VariableStringInstance(BPMConstants.BPM_PROCESS_HANDLER_VARIABLE, CoreConstants.EMPTY);
+		variables.add(handlerVariable);
 		
 		String at = "@";
 		String name = null;
@@ -192,19 +193,20 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			return null;	//	Invalid value
 		}
 		
-		if (variable instanceof VariableDateInstance) {
-			IWTimestamp date = new IWTimestamp((Date) value);
-			return date.getLocaleDate(locale, DateFormat.SHORT);
-		} else if (variable instanceof VariableDoubleInstance) {
-			//	TODO:	Perhaps add some options for decimals later
-			return value.toString();
-		} else if (variable instanceof VariableLongInstance) {
-			return value.toString();
-		} else if (variable instanceof VariableStringInstance) {
-			return value.toString();
+		BPMProcessVariable bpmVariable = new BPMProcessVariable(variable.getName(), value.toString(), variable.getType().getTypeKeys().get(0));
+		Serializable realValue = bpmVariable.getRealValue();
+		if (realValue == null) {
+			return null;
 		}
 		
-		return null;		//	We do not support other types
+		if (realValue instanceof String) {
+			return (String) realValue;
+		}
+		if (realValue instanceof Date) {
+			IWTimestamp date = new IWTimestamp((Date) value);
+			return date.getLocaleDate(locale, DateFormat.SHORT);
+		}
+		return realValue.toString();
 	}
 	
 	public Long getProcessDefinitionId() {

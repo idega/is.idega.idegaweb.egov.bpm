@@ -9,9 +9,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.idegaweb.IWApplicationContext;
 import com.idega.presentation.IWContext;
-import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
@@ -43,7 +41,7 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 		if (StringUtil.isEmpty(contact))
 			return null;
 		
-		Collection<User> usersByContactInfo = getUserBusiness(iwc).getUsersByNameOrEmailOrPhone(contact);
+		Collection<User> usersByContactInfo = getUserBusiness().getUsersByNameOrEmailOrPhone(contact);
 		if (ListUtil.isEmpty(usersByContactInfo)) {
 			return null;
 		}
@@ -71,10 +69,6 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 		return casesByContact;
 	}
 	
-	private UserBusiness getUserBusiness(IWApplicationContext iwac) {
-		return getServiceInstance(iwac, UserBusiness.class);
-	}
-
 	@Override
 	protected String getFilterKey() {
 		return getContact();

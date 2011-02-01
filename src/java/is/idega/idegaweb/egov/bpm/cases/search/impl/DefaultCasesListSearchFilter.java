@@ -19,6 +19,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
+import com.idega.user.business.UserBusiness;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
@@ -279,6 +280,10 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	
 	protected CasesBusiness getCasesBusiness() {
 		return getServiceInstance(CasesBusiness.class);
+	}
+	
+	protected UserBusiness getUserBusiness() {
+		return getServiceInstance(UserBusiness.class);
 	}
 
 	public void setCriterias(CasesSearchCriteriaBean criterias) {

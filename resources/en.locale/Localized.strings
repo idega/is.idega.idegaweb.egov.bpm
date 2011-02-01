@@ -59,3 +59,4 @@ bpm_variable.string_ownerCommune=Commune
 bpm_variable.string_ownerPostCode=Postal code
 bpm_variable.string_vehicleManufacturer=Vehicle manufacturer
 bpm_variable.string_vehicleModel=Vehicle model
+bpm_variable.bpm_process_handler_variable=Handler
