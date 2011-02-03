@@ -135,9 +135,6 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		if (!ListUtil.isEmpty(varsToRemove))
 			variables.removeAll(varsToRemove);
 		
-		if (ListUtil.isEmpty(variables))
-			return casesIdsByMultipleValues;
-		
 		try {
 			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndNameAndVariables(processDefinitionIds, procDefName,
 					variables));
