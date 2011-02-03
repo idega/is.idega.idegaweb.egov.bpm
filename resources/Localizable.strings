@@ -54,3 +54,5 @@ cases_bpm.followup.message=Hello, {0}. Case handler has asked your input.
 reload=Reload
 bpm.caseHandler=Handler
 bpm_variable.handlerUserId=Handler
+bpm_variable.objlist_violationPersons=Violator personal ID
+bpm_variable.objlist_violationCompanies=Violator company ID
