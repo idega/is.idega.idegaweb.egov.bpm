@@ -3,28 +3,38 @@ package is.idega.idegaweb.egov.bpm.cases.search.impl;
 import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import org.jbpm.graph.def.ProcessDefinition;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.jbpm.bean.BPMProcessVariable;
-import com.idega.jbpm.bean.VariableInstanceType;
-import com.idega.user.data.User;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.VariableInstanceQuerier;
+import com.idega.util.ArrayUtil;
+import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
-import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 @Service
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class ProcessesFilter extends DefaultCasesListSearchFilter {
 
+	@Autowired
+	private VariableInstanceQuerier variablesQuerier;
+	
 	@Override
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		String processDefinitionId = getProcessId();
@@ -39,15 +49,13 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			}
 		} else {
 			//	Getting "BPM" cases
-			List<Long> ids = getCasesByProcessDefinition(processDefinitionId, getProcessVariables());
-			casesByProcessDefinition = getConvertedFromLongs(ids);
+			casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId, getProcessVariables());
 		}
 		
 		if (ListUtil.isEmpty(casesByProcessDefinition)) {
 			getLogger().info("No cases found by process definition id: " + processDefinitionId + " and variables: " + getProcessVariables());
 		} else {
-			getLogger().info("Found cases by process definition (" + processDefinitionId + ") and variables (" + getProcessVariables() + "): " +
-					casesByProcessDefinition);
+			getLogger().info("Found cases by process definition (" + processDefinitionId + ") and variables (" + getProcessVariables() + "): " + casesByProcessDefinition);
 		}
 			
 		return casesByProcessDefinition;
@@ -58,7 +66,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		return "Looking for cases by process definition: " + getProcessId();
 	}
 	
-	private List<Long> getCasesByProcessDefinition(String processDefinitionId, List<BPMProcessVariable> variables) {
+	private List<Integer> getCasesByProcessDefinition(String processDefinitionId, List<BPMProcessVariable> variables) {
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
 		
@@ -73,28 +81,67 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		List<Long> processDefinitionIds = new ArrayList<Long>(1);
 		processDefinitionIds.add(procDefId);
 		
+		ProcessDefinition processDefinition = null;
+		try {
+			processDefinition = getBpmFactory().getProcessManager(procDefId).getProcessDefinition(procDefId).getProcessDefinition();
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting process definition by ID: " + processDefinitionId, e);
+		}
+		String procDefName = processDefinition == null ? null : processDefinition.getName();
+		
+		Object tmp = null;
 		BPMProcessVariable handlerVariable = null;
+		List<BPMProcessVariable> varsToRemove = new ArrayList<BPMProcessVariable>();
+		Map<String, List<Serializable>> multValues = new HashMap<String, List<Serializable>>();
 		for (BPMProcessVariable variable: variables) {
-			if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName())) {
+			if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName())) {	//	Checking if variable is holding handler ID
 				handlerVariable = variable;
+				
+			} else if ((tmp = variable.getRealValue()) instanceof Collection) {	//	Checking if value is multi-type
+				Collection<?> newMultipleValues = (Collection<?>) tmp;
+				List<Serializable> existingMultipleValues = multValues.get(variable.getName());
+				if (existingMultipleValues == null) {
+					existingMultipleValues = new ArrayList<Serializable>();
+					multValues.put(variable.getName(), existingMultipleValues);
+				}
+				for (Object value: newMultipleValues) {
+					if (value instanceof Serializable && !existingMultipleValues.contains(value)) {
+						existingMultipleValues.add((Serializable) value);
+						varsToRemove.add(variable);
+					}
+				}
 			}
+		}
+		
+		List<Integer> casesIdsByMultipleValues = null;
+		if (!multValues.isEmpty()) {
+			casesIdsByMultipleValues = getConvertedFromNumbers(getCasesIdsByMultipleVariableValues(procDefName, multValues));
+			if (ListUtil.isEmpty(casesIdsByMultipleValues))
+				return null;
 		}
 		
 		if (handlerVariable != null) {
-			variables.remove(handlerVariable);
-			
-			String handlerId = getHandlerId(handlerVariable.getValue());
-			if (handlerId == null) {
-				getLogger().warning("Handler ID can not be resolved by search key: " + handlerVariable.getValue());
+			List<Integer> casesIdsByHandlers = getCaseIdsByHandlers(handlerVariable.getName(), handlerVariable.getValue(), procDefName);
+			if (ListUtil.isEmpty(casesIdsByHandlers))
 				return null;
-			}
-			BPMProcessVariable handlerVar = new BPMProcessVariable(CaseHandlerAssignmentHandler.handlerUserIdVarName, handlerId, VariableInstanceType.LONG.getTypeKeys().get(0));
-			variables.add(handlerVar);
+			
+			casesIdsByMultipleValues = casesIdsByMultipleValues == null ?
+					new ArrayList<Integer>(casesIdsByHandlers) :
+					getNarrowedResults(casesIdsByMultipleValues, casesIdsByHandlers);
+			
+			variables.remove(handlerVariable);
 		}
 		
+		if (!ListUtil.isEmpty(varsToRemove))
+			variables.removeAll(varsToRemove);
+		
+		if (ListUtil.isEmpty(variables))
+			return casesIdsByMultipleValues;
+		
 		try {
-			final ProcessDefinition processDefinition = getBpmFactory().getProcessManager(procDefId).getProcessDefinition(procDefId).getProcessDefinition();
-			return getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndNameAndVariables(processDefinitionIds, processDefinition.getName(), variables);
+			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndNameAndVariables(processDefinitionIds, procDefName,
+					variables));
+			return ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues, casesIdsByOtherVars);
 		} catch(Exception e) {
 			getLogger().log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
 					processDefinitionId + ", variables: " + variables, e);
@@ -103,33 +150,60 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		return null;
 	}
 	
-	private String getHandlerId(String searchKey) {
-		if (StringUtil.isEmpty(searchKey)) {
+	private List<Long> getCasesIdsByMultipleVariableValues(String processDefinitionName, Map<String, List<Serializable>> multipleValues) {
+		List<String> procDefNames = Arrays.asList(processDefinitionName);
+		
+		List<Long> procInstIds = new ArrayList<Long>();
+		for (String variableName: multipleValues.keySet()) {
+			Collection<VariableInstanceInfo> vars = getVariablesQuerier().getProcessVariablesByNameAndValue(variableName, multipleValues.get(variableName), procDefNames);
+			procInstIds = getProcInstIdsFromVars(vars, procInstIds);
+		}
+		
+		return getCasesBPMDAO().getCaseIdsByProcessInstanceIds(procInstIds);
+	}
+	
+	private List<Long> getProcInstIdsFromVars(Collection<VariableInstanceInfo> vars) {
+		return getProcInstIdsFromVars(vars, null);
+	}
+		
+	private List<Long> getProcInstIdsFromVars(Collection<VariableInstanceInfo> vars, List<Long> ids) {
+		if (ListUtil.isEmpty(vars))
 			return null;
-		}
 		
-		if (StringHandler.isNaturalNumber(searchKey)) {
-			User handler = null;
-			try {
-				handler = getUserBusiness().getUser(searchKey);
-			} catch (Exception e) {
-				getLogger().warning("User was not found by personal ID: " + searchKey);
-			}
-			if (handler != null) {
-				return handler.getId();
-			}
-		} else {
-			getLogger().info("'" + searchKey + "' is not treated as a personal ID");
-		}
+		ids = ids == null ? new ArrayList<Long>() : ids;
+		for (VariableInstanceInfo var: vars) {
+			Long procInstId = var.getProcessInstanceId();
+			if (procInstId == null)
+				continue;
 			
-		Collection<User> users = null;
-		try {
-			users = getUserBusiness().getUsersByNameOrEmailOrPhone(searchKey);
-		} catch (Exception e) {
-			getLogger().log(Level.WARNING, "Error getting users by search key: " + searchKey, e);
+			if (!ids.contains(procInstId))
+				ids.add(procInstId);
+		}
+		return ids;
+	}
+	
+	private List<Integer> getCaseIdsByHandlers(String varName, String handlersIds, String procDefName) {
+		if (StringUtil.isEmpty(handlersIds))
+			return null;
+		
+		String[] ids = handlersIds.split(CoreConstants.SEMICOLON);
+		if (ArrayUtil.isEmpty(ids))
+			return null;
+		
+		List<Serializable> usersIds = new ArrayList<Serializable>();
+		for (String id: ids) {
+			usersIds.add(Long.valueOf(id));
 		}
 		
-		return ListUtil.isEmpty(users) ? null : users.iterator().next().getId();
+		Collection<VariableInstanceInfo> vars = getVariablesQuerier().getProcessVariablesByNameAndValue(varName, usersIds, Arrays.asList(procDefName));
+		if (ListUtil.isEmpty(vars))
+			return null;
+		
+		List<Long> procInstIds = getProcInstIdsFromVars(vars);
+		if (ListUtil.isEmpty(procInstIds))
+			return null;
+		
+		return getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(procInstIds));
 	}
 
 	@Override
@@ -145,5 +219,11 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			return false;
 		}
 		return true;
+	}
+	
+	VariableInstanceQuerier getVariablesQuerier() {
+		if (variablesQuerier == null)
+			ELUtil.getInstance().autowire(this);
+		return variablesQuerier;
 	}
 }

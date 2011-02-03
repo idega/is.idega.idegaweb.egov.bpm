@@ -44,7 +44,7 @@ public class CaseNumberFilter extends DefaultCasesListSearchFilter {
 			getLogger().log(Level.INFO, "No BPM cases found by number: " + caseNumber);
 		} else {
 			getLogger().log(Level.INFO, "BPM cases by number (" + caseNumber + "): " + bpmCases);
-			casesByNumberIds.addAll(getConvertedFromLongs(bpmCases));
+			casesByNumberIds.addAll(getConvertedFromNumbers(bpmCases));
 		}
 		
 		//	Old cases

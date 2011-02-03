@@ -185,7 +185,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		this.bpmFactory = bpmFactory;
 	}
 	
-	protected List<Integer> getConvertedFromLongs(List<Long> values) {
+	protected List<Integer> getConvertedFromNumbers(List<? extends Number> values) {
 		if (ListUtil.isEmpty(values)) {
 			return null;
 		}
@@ -202,7 +202,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return convertedValues;
 	}
 	
-	protected List<Integer> getNarrowedResults(List<Integer> casesIds, List<Integer> filterResults) {
+	protected List<Integer> getNarrowedResults(List<? extends Number> casesIds, List<? extends Number> filterResults) {
 		if (ListUtil.isEmpty(casesIds)) {
 			getLogger().info("There are no start data, emptying IDs");
 			return null;
@@ -212,21 +212,22 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			return null;
 		}
 		
+		List<Integer> tmp = getConvertedFromNumbers(casesIds);
+		
 		Integer id = null;
-		List<Integer> ids = new ArrayList<Integer>();
+		List<Integer> filtered = new ArrayList<Integer>();
 		for (Object o: filterResults) {
 			if (o instanceof Number) {
 				id = ((Number) o).intValue();
-				if (casesIds.contains(id)) {
-					ids.add(id);
+				if (tmp.contains(id)) {
+					filtered.add(id);
 				}
-			}
-			else {
-				getLogger().log(Level.WARNING, "ID is not type of Integer: " + o);
+			} else {
+				getLogger().log(Level.WARNING, "ID is not type of Number: " + o);
 			}
 		}
 		
-		return ids;
+		return filtered;
 	}
 	
 	protected List<Integer> getUniqueIds(Collection<Integer> casesIDs) {

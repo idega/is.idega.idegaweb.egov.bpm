@@ -2,6 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UIProcessVariables;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
@@ -64,6 +65,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.user.data.User;
@@ -313,8 +315,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		if (!ListUtil.isEmpty(bean.getProcessVariables())) {
 			for (BPMProcessVariable variable: bean.getProcessVariables()) {
-				searchFields.add(new AdvancedProperty(iwrb.getLocalizedString(new StringBuilder("bpm_variable.").append(variable.getName()).toString(),
-																												variable.getName()), variable.getValue()));
+				String value = variable.getValue();
+				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName())) {
+					MultipleSelectionVariablesResolver resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName());
+					value = resolver.getPresentation(variable);
+				}
+				
+				searchFields.add(new AdvancedProperty(iwrb.getLocalizedString("bpm_variable.".concat(variable.getName()), variable.getName()), value));
 			}
 		}
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);

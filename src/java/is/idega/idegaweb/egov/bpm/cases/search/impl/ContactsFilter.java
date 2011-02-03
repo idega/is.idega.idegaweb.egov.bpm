@@ -51,7 +51,7 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 			
 		for (User contactPerson: usersByContactInfo) {
 			try {
-				casesByContactPerson = getConvertedFromLongs(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc,
+				casesByContactPerson = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc,
 																																contactPerson, false)));
 			} catch(Exception e) {
 				getLogger().log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);

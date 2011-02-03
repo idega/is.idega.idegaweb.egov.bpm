@@ -23,7 +23,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
-import com.idega.business.IBOLookup;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
@@ -34,14 +33,13 @@ import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
-import com.idega.user.business.UserBusiness;
-import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 @Scope("request")
 @Service(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER)
@@ -207,17 +205,16 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			return date.getLocaleDate(locale, DateFormat.SHORT);
 		}
 		
-		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) && realValue instanceof Long) {
-			try {
-				UserBusiness userBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), UserBusiness.class);
-				User user = userBusiness.getUser(((Long) realValue).intValue());
-				return user == null ? CoreConstants.MINUS : user.getName();
-			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "Error getting user by ID: " + realValue, e);
-			}
+		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) || variable.getName().startsWith(VariableInstanceType.OBJ_LIST.getPrefix())) {
+			return getResolver(variable.getName()).getPresentation(variable);
 		}
 		
 		return realValue.toString();
+	}
+	
+	private MultipleSelectionVariablesResolver getResolver(String variableName) {
+		MultipleSelectionVariablesResolver resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variableName);
+		return resolver;
 	}
 	
 	public Long getProcessDefinitionId() {
