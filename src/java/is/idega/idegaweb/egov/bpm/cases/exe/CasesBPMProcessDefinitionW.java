@@ -47,6 +47,7 @@ import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -131,15 +132,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					pi.setStart(new Date());
 					
 					IWApplicationContext iwac = getIWAC();
-					UserBusiness userBusiness = getUserBusiness(iwac);
-					
-					final User user;
-					if (userId != null)
-						user = userBusiness.getUser(userId);
-					else
-						user = null;
-					
 					IWMainApplication iwma = iwac.getIWMainApplication();
+					
+					UserBusiness userBusiness = getUserBusiness(iwac);
+					User user = userId == null ? null : userBusiness.getUser(userId);
 					
 					CasesBusiness casesBusiness = getCasesBusiness(iwac);
 					
@@ -147,19 +143,30 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					Long caseCategoryId = bind.getCasesCategoryId();
 					Long caseTypeId = bind.getCasesTypeId();
 					
-					GeneralCase genCase = casesBusiness.storeGeneralCase(
-					            user,
-					            caseCategoryId,
-					            caseTypeId,
-					            null,
-					            null,
-					            "This is simple cases-jbpm-formbuilder integration example.",
-					            null,
-					            BPMCasesRetrievalManagerImpl.caseHandlerType,
-					            false,
-					            casesBusiness.getIWResourceBundleForUser(user, null, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER)),
-					            false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
-					);
+					IWResourceBundle iwrb = null;
+					GeneralCase genCase = null;
+					try {
+						iwrb = casesBusiness.getIWResourceBundleForUser(user, null, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER));
+						genCase = casesBusiness.storeGeneralCase(
+						            user,
+						            caseCategoryId,
+						            caseTypeId,
+						            null,
+						            null,
+						            "This is simple cases-jbpm-formbuilder integration example.",
+						            null,
+						            BPMCasesRetrievalManagerImpl.caseHandlerType,
+						            false,
+						            iwrb,
+						            false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
+						);
+					} catch (Exception e) {
+						String message = "Error creating case for BPM process: " + pi.getId() + ". User: " + user + ", case category ID: " + caseCategoryId + ", case type ID: "
+						+ caseTypeId + ", resource bunlde: " + iwrb + ", case identifier: " + caseIdentifier + ", case status key: " + caseStatusKey;
+						getLogger().log(Level.SEVERE, message, e);
+						CoreUtil.sendExceptionNotification(message, e);
+						throw new RuntimeException(message, e);
+					}
 					
 					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
 					
