@@ -171,6 +171,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
 					
 					pi.setStart(caseCreated);
+					notifyAboutNewProcess(pd.getName(), pi.getId());					
 					
 					Map<String, Object> caseData = new HashMap<String, Object>();
 					caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
