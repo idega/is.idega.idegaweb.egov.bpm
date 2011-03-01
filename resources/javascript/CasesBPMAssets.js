@@ -129,6 +129,8 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 							jQuery('div.sendCaseEmailStyleInBPMCaseViewer', container).addClass('caseListTasksSectionVisibleStyleClass').show('slow');
 						}
 					}
+					
+					CasesBPMAssets.manageLoadingMessage();
 				}
 				
 				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection,
@@ -159,6 +161,15 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 		});
 	});
 };
+
+CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT = 4;
+CasesBPMAssets.manageLoadingMessage = function() {
+	CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT--;
+	if (CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT == 0) {
+		CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT = 4;
+		closeAllLoadingMessages();
+	}
+}
 
 CasesBPMAssets.reloadCaseView = function(controller, container, piId) {
 	if (jQuery(controller).hasClass('caseViewReloadInProgress')) {
