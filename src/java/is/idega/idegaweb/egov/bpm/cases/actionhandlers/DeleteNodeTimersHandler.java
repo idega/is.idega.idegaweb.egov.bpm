@@ -25,28 +25,15 @@ public class DeleteNodeTimersHandler implements ActionHandler {
 	
 	@SuppressWarnings("unchecked")
 	public void execute(ExecutionContext executionContext) throws Exception {
+		SchedulerService schedulerService = executionContext.getJbpmContext().getServices().getSchedulerService();
 		
-		SchedulerService schedulerService = executionContext.getJbpmContext()
-		        .getServices().getSchedulerService();
-		
-		Node timersNode = null;
-		
-		if (getTimersNodeName() != null) {
-			
-			timersNode = executionContext.getProcessDefinition().getNode(
-			    getTimersNodeName());
-		} else {
-			timersNode = executionContext.getNode();
-		}
+		Node timersNode = getTimersNodeName() == null ? executionContext.getNode() : executionContext.getProcessDefinition().getNode(getTimersNodeName());
 		
 		String timersName = timersNode.getName();
-		List<Token> tokens = executionContext.getProcessInstance()
-		        .getRootToken().getChildrenAtNode(timersNode);
-		
-		for (Token tok : tokens) {
-			
-			if (!tok.equals(executionContext.getToken())) {
+		List<Token> tokens = executionContext.getProcessInstance().getRootToken().getChildrenAtNode(timersNode);
 				
+		for (Token tok : tokens) {
+			if (!tok.equals(executionContext.getToken())) {
 				schedulerService.deleteTimersByName(timersName, tok);
 			}
 		}
