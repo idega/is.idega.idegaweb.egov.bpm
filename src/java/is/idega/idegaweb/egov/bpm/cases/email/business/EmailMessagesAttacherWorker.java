@@ -164,7 +164,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		
 		for (Token tkn : tkns) {
 			ProcessInstance subPI = tkn.getSubProcessInstance();
-			if (subPI == null || EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
+			if (subPI == null || !EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
 				continue;
 			}
 			
