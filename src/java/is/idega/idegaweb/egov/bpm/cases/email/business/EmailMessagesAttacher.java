@@ -6,7 +6,9 @@ import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+
 import com.idega.block.email.client.business.ApplicationEmailEvent;
+import com.idega.bpm.exe.DefaultBPMProcessInstanceW;
 import com.idega.bpm.xformsview.IXFormViewFactory;
 import com.idega.core.file.tmp.TmpFileResolver;
 import com.idega.core.file.tmp.TmpFileResolverType;
@@ -32,7 +34,7 @@ public class EmailMessagesAttacher implements ApplicationListener {
 	private TmpFilesManager fileUploadManager;
 	private TmpFileResolver uploadedResourceResolver;
 	
-	protected static final String email_fetch_process_name = "fetchEmails";
+	protected static final String email_fetch_process_name = DefaultBPMProcessInstanceW.email_fetch_process_name;
 	
 	public void onApplicationEvent(ApplicationEvent ae) {
 		
