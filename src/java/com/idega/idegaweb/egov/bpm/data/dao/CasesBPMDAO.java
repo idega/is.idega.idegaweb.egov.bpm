@@ -60,6 +60,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom, IWTimestamp dateTo);
 	
 	public abstract List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
+	public List<Integer> getCasesIdsByProcInstIds(List<Long> procInstIds);
 	
 	@Deprecated
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);

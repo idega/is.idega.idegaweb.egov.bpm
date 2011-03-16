@@ -71,6 +71,23 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return find(CaseProcInstBind.class, processInstanceId);
 	}
 	
+	public List<Integer> getCasesIdsByProcInstIds(List<Long> procInstIds) {
+		if (ListUtil.isEmpty(procInstIds))
+			return null;
+		
+		List<Long> casesIds = getCaseIdsByProcessInstanceIds(procInstIds);
+		if (ListUtil.isEmpty(casesIds))
+			return null;
+		
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Long caseId: casesIds) {
+			Integer id = caseId.intValue();
+			ids.add(id);
+		}
+		
+		return ids;
+	}
+	
 	public List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds) {
 		List<CaseProcInstBind> binds = getResultList(
 		    CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME,
@@ -400,15 +417,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		                    .toString()));
 	}
 	
-	public List<Long> getCaseIdsByProcessInstanceIds(
-	        List<Long> processInstanceIds) {
+	public List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds) {
 		if (ListUtil.isEmpty(processInstanceIds)) {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds,
-		    Long.class, new Param(CaseProcInstBind.processInstanceIdsProp,
-		            processInstanceIds));
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class, new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
 	}
 	
 	// TODO: those queries are very similar, make some general query, and just append queries/joins
