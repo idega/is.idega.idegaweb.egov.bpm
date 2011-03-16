@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -185,7 +184,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		this.bpmFactory = bpmFactory;
 	}
 	
-	protected List<Integer> getConvertedFromNumbers(List<? extends Number> values) {
+	public static List<Integer> getConvertedFromNumbers(List<? extends Number> values) {
 		if (ListUtil.isEmpty(values)) {
 			return null;
 		}
@@ -195,20 +194,20 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			if (o instanceof Number) {
 				convertedValues.add(((Number) o).intValue());
 			} else {
-				getLogger().log(Level.WARNING, "Object is not type of Number: " + o);
+				getLogger(DefaultCasesListSearchFilter.class).warning("Object is not type of Number: " + o);
 			}
 		}
 		
 		return convertedValues;
 	}
 	
-	protected List<Integer> getNarrowedResults(List<? extends Number> casesIds, List<? extends Number> filterResults) {
+	public static List<Integer> getNarrowedResults(List<? extends Number> casesIds, List<? extends Number> filterResults) {
 		if (ListUtil.isEmpty(casesIds)) {
-			getLogger().info("There are no start data, emptying IDs");
+			getLogger(DefaultCasesListSearchFilter.class).info("There are no start data, emptying IDs");
 			return null;
 		}
 		if (ListUtil.isEmpty(filterResults)) {
-			getLogger().info("No results found, emptying IDs");
+			getLogger(DefaultCasesListSearchFilter.class).info("No results found, emptying IDs");
 			return null;
 		}
 		
@@ -223,7 +222,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 					filtered.add(id);
 				}
 			} else {
-				getLogger().log(Level.WARNING, "ID is not type of Number: " + o);
+				getLogger(DefaultCasesListSearchFilter.class).warning("ID is not type of Number: " + o);
 			}
 		}
 		

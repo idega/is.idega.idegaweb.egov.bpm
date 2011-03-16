@@ -190,6 +190,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return true;
 	}
 	
+	public Document getRenderedCasesByQuery(CasesSearchCriteriaBean criteriaBean) {
+		return criteriaBean instanceof CasesListSearchCriteriaBean ? getCasesListByUserQuery((CasesListSearchCriteriaBean) criteriaBean) : null;
+	}
+	
 	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean) {
 		if (criteriaBean == null) {
 			LOGGER.log(Level.SEVERE, "Can not execute search - search criterias unknown");
@@ -355,7 +359,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 	
 	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean, boolean usePaging) {
-		final User currentUser;
+		User currentUser = null;
 		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
 			return null;
@@ -379,14 +383,23 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		
 		PagedDataCollection<CasePresentation> cases = null;
 		
-		List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criteriaBean);
-		if (ListUtil.isEmpty(filters)) {
-			return null;
+		if (ListUtil.isEmpty(criteriaBean.getProcInstIds())) {
+			List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criteriaBean);
+			if (ListUtil.isEmpty(filters)) {
+				return null;
+			}
+			
+			for (CasesListSearchFilter filter: filters) {
+				casesIds = filter.doFilter(casesIds);
+			}
+		} else {
+			List<Integer> ids = casesBPMDAO.getCasesIdsByProcInstIds(criteriaBean.getProcInstIds());
+			if (ListUtil.isEmpty(ids)) {
+				return null;
+			}
+			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, ids);
 		}
 		
-		for (CasesListSearchFilter filter: filters) {
-			casesIds = filter.doFilter(casesIds);
-		}
 		if (ListUtil.isEmpty(casesIds)) {
 			return null;
 		}
@@ -459,9 +472,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	private CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
+			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+		} catch (IBOLookupException ile) {
 			LOGGER.log(Level.SEVERE, "Error getting CasesBusiness", ile);
 		}
 		
