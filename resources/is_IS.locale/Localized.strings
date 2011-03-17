@@ -74,3 +74,24 @@ bpm.caseHandler=Umsj\u00F3narma\u00F0ur
 bpm_variable.handlerUserId=Umsj\u00F3narma\u00F0ur
 bpm_variable.objlist_violationPersons=Kennitala einstaklings
 bpm_variable.objlist_violationCompanies=Kennitala fyrirt\u00E6kis
+
+bpm_variable.string_actionTaken=\u00DArskur\u00F0ur
+bpm_variable.string_ownerAppartmentNumber=\u00CDb\u00FA\u00F0 n\u00FAmer
+bpm_variable.date_parkingCardIssued=\u00DAtgefi\u00F0 dags.
+bpm_variable.list_ownerReason=\u00C1st\u00E6\u00F0a
+bpm_variable.string_ownerFullName=Nafn eiganda
+
+bpm_variable.string_ticketType=Tegund gjalds
+bpm_variable.string_vehicleNumber=Fastan\u00FAmer
+bpm_variable.string_protestText=Andm\u00E6latexti
+bpm_variable.string_violatorPersonalID=Kennitala
+bpm_variable.parkingReportFilterDateRangeFrom=Dags. fr\u00E1
+bpm_variable.parkingReportFilterDateRangeTo=Dags. til
+bpm_variable.string_vehicleType=Tegund \u00F6kut\u00E6kis
+bpm_variable.string_ticketNumber=N\u00FAmer gjalds
+bpm_variable.list_ticketViolationsNumbers=Brotan\u00FAmer
+bpm_variable.string_ticketViolationDescription=Brotal\u00FDsing
+bpm_variable.string_ticketMeterNumber=N\u00FAmer gjaldm\u00E6lis
+bpm_variable.string_violatorPostalCode=P\u00F3stn\u00FAmer
+bpm_variable.string_realViolatorAddressMunicipality=Sveitarf\u00E9lag
+bpm_variable.string_officerNumber=N\u00FAmer st\u00F6\u00F0uvar\u00F0ar
