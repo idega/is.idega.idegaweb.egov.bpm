@@ -22,6 +22,7 @@ import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
+import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
@@ -94,15 +95,18 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		List<BPMProcessVariable> varsToRemove = new ArrayList<BPMProcessVariable>();
 		Map<String, List<Serializable>> multValues = new HashMap<String, List<Serializable>>();
 		for (BPMProcessVariable variable: variables) {
-			if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName())) {	//	Checking if variable is holding handler ID
+			String name = variable.getName();
+
+			//	Checking if variable is holding handler ID
+			if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name)) {
 				handlerVariable = variable;
 				
 			} else if ((tmp = variable.getRealValue()) instanceof Collection) {	//	Checking if value is multi-type
 				Collection<?> newMultipleValues = (Collection<?>) tmp;
-				List<Serializable> existingMultipleValues = multValues.get(variable.getName());
+				List<Serializable> existingMultipleValues = multValues.get(name);
 				if (existingMultipleValues == null) {
 					existingMultipleValues = new ArrayList<Serializable>();
-					multValues.put(variable.getName(), existingMultipleValues);
+					multValues.put(name, existingMultipleValues);
 				}
 				for (Object value: newMultipleValues) {
 					if (value instanceof Serializable && !existingMultipleValues.contains(value)) {
@@ -179,17 +183,31 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		return ids;
 	}
 	
-	private List<Integer> getCaseIdsByHandlers(String varName, String handlersIds, String procDefName) {
-		if (StringUtil.isEmpty(handlersIds))
+	private List<Integer> getCaseIdsByHandlers(String varName, String handlers, String procDefName) {
+		if (StringUtil.isEmpty(handlers))
 			return null;
 		
-		String[] ids = handlersIds.split(CoreConstants.SEMICOLON);
+		String[] ids = handlers.split(CoreConstants.SEMICOLON);
 		if (ArrayUtil.isEmpty(ids))
 			return null;
 		
 		List<Serializable> usersIds = new ArrayList<Serializable>();
 		for (String id: ids) {
-			usersIds.add(Long.valueOf(id));
+			Long handlerId = null;
+			try {
+				handlerId = Long.valueOf(id);
+			} catch (NumberFormatException e) {
+				Collection<User> users = getUserBusiness().getUsersByNameOrEmailOrPhone(id);
+				if (!ListUtil.isEmpty(users)) {
+					for (User user: users) {
+						usersIds.add(Long.valueOf(user.getId()));
+					}
+				}
+				handlerId = null;
+			}
+			
+			if (handlerId != null)
+				usersIds.add(handlerId);
 		}
 		
 		Collection<VariableInstanceInfo> vars = getVariablesQuerier().getProcessVariablesByNameAndValue(varName, usersIds, Arrays.asList(procDefName));
