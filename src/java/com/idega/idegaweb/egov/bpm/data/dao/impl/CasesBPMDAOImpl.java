@@ -1,5 +1,6 @@
 package com.idega.idegaweb.egov.bpm.data.dao.impl;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,6 +9,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jbpm.graph.exe.Token;
@@ -19,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
+import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
@@ -739,5 +742,33 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				new Param(CaseProcInstBind.caseStatusParam, caseStatuses),
 				new Param(CaseProcInstBind.processDefinitionNameProp, procDefNames)
 		);
+	}
+
+	@Override
+	public Long getProcessInstanceIdByCaseSubject(String subject) {
+		if (StringUtil.isEmpty(subject)) {
+			LOGGER.warning("Case subject is not provided!");
+			return null;
+		}
+		
+		List<Serializable[]> data = null;
+		String query = "select b.process_instance_id from BPM_CASES_PROCESSINSTANCES b, proc_case c where c.CASE_SUBJECT = '" + subject + "' and b.case_id = c.PROC_CASE_ID";
+		try {
+			data = SimpleQuerier.executeQuery(query, 1);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (ListUtil.isEmpty(data))
+			return null;
+		
+		Serializable[] ids = data.get(0);
+		if (ArrayUtil.isEmpty(ids))
+			return null;
+		
+		Serializable id = ids[0];
+		if (id instanceof Number)
+			return ((Number) id).longValue();
+		
+		return null;
 	}
 }

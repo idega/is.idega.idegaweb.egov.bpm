@@ -95,4 +95,6 @@ public interface CasesBPMDAO extends GenericDao {
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
 	
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
+	
+	public Long getProcessInstanceIdByCaseSubject(String subject);
 }
