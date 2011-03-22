@@ -205,7 +205,8 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			return date.getLocaleDate(locale, DateFormat.SHORT);
 		}
 		
-		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) || variable.getName().startsWith(VariableInstanceType.OBJ_LIST.getPrefix())) {
+		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(variable.getName())
+				|| variable.getName().startsWith(VariableInstanceType.OBJ_LIST.getPrefix())) {
 			return getResolver(variable.getName()).getPresentation(variable);
 		}
 		
