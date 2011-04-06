@@ -479,6 +479,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				continue;
 			}
 			
+			if (value.indexOf("_") != -1) {
+				value = value.substring(0, value.indexOf("_"));
+			}
+			if (value.indexOf("a") != -1) {
+				value = value.substring(0, value.indexOf("a"));
+			}
+			if (value.indexOf("b") != -1) {
+				value = value.substring(0, value.indexOf("b"));
+			}
+			
 			gradeValue = null;
 			try {
 				gradeValue = Long.valueOf(value);
