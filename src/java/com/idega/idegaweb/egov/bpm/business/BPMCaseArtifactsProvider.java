@@ -53,7 +53,7 @@ public class BPMCaseArtifactsProvider implements CaseArtifactsProvider {
 		Long procInstId = bind.getProcInstId();
 		Collection<VariableInstanceInfo> variables = null;
 		try {
-			variables = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(Arrays.asList(procInstId), Arrays.asList(variableName));
+			variables = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(Arrays.asList(variableName), Arrays.asList(procInstId), false, false);
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variable '"+variableName+"' from process instance: " + procInstId, e);
 		}
