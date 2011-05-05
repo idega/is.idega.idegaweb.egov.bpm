@@ -43,11 +43,12 @@ CasesBPMAssets.openedCase = {
 	usePdfDownloadColumn: false,
 	allowPDFSigning: false,
 	showAttachmentStatistics: false,
-	showOnlyCreatorInContacts: false
+	showOnlyCreatorInContacts: false,
+	showLogExportButton: false
 }
 
 CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-										showAttachmentStatistics, showOnlyCreatorInContacts) {
+										showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton) {
 	CasesBPMAssets.openedCase.caseId = caseId || null;
 	CasesBPMAssets.openedCase.piId = piId || null;
 	CasesBPMAssets.openedCase.container = container || null;
@@ -58,21 +59,22 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeR
 	CasesBPMAssets.openedCase.hideEmptySection = hideEmptySection || false;
 	CasesBPMAssets.openedCase.showAttachmentStatistics = showAttachmentStatistics || false;
 	CasesBPMAssets.openedCase.showOnlyCreatorInContacts = showOnlyCreatorInContacts || false;
+	CasesBPMAssets.openedCase.showLogExportButton = showLogExportButton || false;
 }
 
-CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics) {
+CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton) {
 	jQuery(container).mouseover(function() {
 		if (CasesBPMAssets.openedCase.caseId == caseId) {
 			return;
 		}
 		
 		CasesBPMAssets.setOpenedCase(caseId, piId, container, null, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
-			showOnlyCreatorInContacts);
+			showOnlyCreatorInContacts, showLogExportButton);
 	});
 }
 
 CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
-									showOnlyCreatorInContacts) {
+									showOnlyCreatorInContacts, showLogExportButton) {
 	if (container == null) {
 		return false;
 	}
@@ -102,7 +104,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 	   	}
 
 		CasesBPMAssets.initTakeCaseSelector(container, piId);
-		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics);
+		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton);
 		
 		jQuery('img.reloadCaseStyleClass', container).each(function() {
 			if (typeof CasesEngine == 'undefined' || typeof CasesListHelper == 'undefined') {
@@ -112,6 +114,13 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 					CasesBPMAssets.reloadCaseView(this, container, piId);
 				});
 			}
+		});
+		
+		jQuery('img.caseLogsAsPDFStyleClass', container).each(function() {
+			jQuery(this).click(function(){
+				var uri = '&caseLogIdToDownload=' + caseId;//CasesBPMAssets.openedCase.caseId;
+				CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, 'caselogspdfdownload');
+			});
 		});
 		
 		BPMProcessAssets.hasUserRolesEditorRights(piId, {

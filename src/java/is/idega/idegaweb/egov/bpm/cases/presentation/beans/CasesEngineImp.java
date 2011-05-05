@@ -84,6 +84,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	@Autowired
 	private CasesBPMProcessView casesBPMProcessView;
 	
+	
 	@Autowired
 	private BuilderLogicWrapper builderLogic;
 	
@@ -104,7 +105,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	
 	public static final String	FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader",
 								PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader",
-								DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS = "casesBPMDownloadTaskInPDF";
+								DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS = "casesBPMDownloadTaskInPDF",
+								CASE_LOGS_PDF_DOWNLOAD_LINK_STYLE_CLASS = "caselogspdfdownload";
 	
 	private static final Logger LOGGER = Logger.getLogger(CasesEngineImp.class.getName());
 	
@@ -144,6 +146,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				stateBean.setShowAttachmentStatistics(properties.isShowAttachmentStatistics());
 				stateBean.setShowOnlyCreatorInContacts(properties.isShowOnlyCreatorInContacts());
 				stateBean.setAutoShowComments(properties.isAutoShowComments());
+				stateBean.setShowLogExportButton(properties.isShowLogExportButton());
 			}
 			
 			Integer caseId = new Integer(caseIdStr);

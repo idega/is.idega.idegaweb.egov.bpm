@@ -83,6 +83,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean showOnlyCreatorInContacts = Boolean.FALSE;
 	private String specialBackPage;
 	private String commentsPersistenceManagerIdentifier;
+	private boolean showLogExportButton;
 	
 	private Boolean showNextTask;
 	private Long nextProcessInstanceId;
@@ -724,6 +725,14 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setAutoShowComments(boolean autoShowComments) {
 		this.autoShowComments = autoShowComments;
+	}
+
+	public boolean isShowLogExportButton() {
+		return showLogExportButton;
+	}
+
+	public void setShowLogExportButton(boolean showLogExportButton) {
+		this.showLogExportButton = showLogExportButton;
 	}
 
 }

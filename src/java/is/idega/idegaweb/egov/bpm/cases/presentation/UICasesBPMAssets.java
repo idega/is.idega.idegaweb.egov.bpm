@@ -26,6 +26,7 @@ import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.pdf.servlet.BPMTaskPDFPrinter;
+import com.idega.bpm.pdf.servlet.CaseLogsToPDFWriter;
 import com.idega.bpm.pdf.servlet.XFormToPDFWriter;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -68,6 +69,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private boolean hideEmptySection = true;
 	private boolean showAttachmentStatistics;
 	private boolean showOnlyCreatorInContacts;
+	private boolean showLogExportButton;
 	
 	private String commentsPersistenceManagerIdentifier;
 	
@@ -113,6 +115,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		pdfLink.setStyleClass(CasesEngineImp.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
 		pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
 		linksContainer.getChildren().add(pdfLink);
+		
+		DownloadLink casePDFLink = new DownloadLink();
+		casePDFLink.setStyleClass(CasesEngineImp.CASE_LOGS_PDF_DOWNLOAD_LINK_STYLE_CLASS);
+		casePDFLink.setMediaWriterClass(CaseLogsToPDFWriter.class);
+		linksContainer.getChildren().add(casePDFLink);
 		
 		DownloadLink taskInPdf = new DownloadLink();
 		taskInPdf.setStyleClass(CasesEngineImp.DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS);
@@ -359,7 +366,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		String mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
 			.append(processInstanceId == null ? String.valueOf(-1) : processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ")
 			.append(isUsePdfDownloadColumn()).append(", ").append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(", ")
-			.append(isShowAttachmentStatistics()).append(", ").append(isShowOnlyCreatorInContacts()).append(");").toString();
+			.append(isShowAttachmentStatistics()).append(", ").append(isShowOnlyCreatorInContacts()).append(", ").append(isShowLogExportButton()).append(");").toString();
 		
 		if (!isSingle) {
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction).append("\n});").toString();
@@ -414,6 +421,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setShowOnlyCreatorInContacts(boolean showOnlyCreatorInContacts) {
 		this.showOnlyCreatorInContacts = showOnlyCreatorInContacts;
+	}
+
+	public boolean isShowLogExportButton() {
+		return showLogExportButton;
+	}
+
+	public void setShowLogExportButton(boolean showLogExportButton) {
+		this.showLogExportButton = showLogExportButton;
 	}
 	
 }

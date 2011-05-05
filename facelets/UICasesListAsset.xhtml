@@ -29,6 +29,11 @@
 					<t:graphicImage url="#{iwResourceResolver['is.idega.idegaweb.egov.bpm']['images/reload.png']}"
 						title="#{localizedStrings['is.idega.idegaweb.egov.bpm']['reload']}" alt="#{localizedStrings['is.idega.idegaweb.egov.bpm']['reload']}"
 						styleClass="reloadCaseStyleClass" />
+						
+					<t:graphicImage rendered="#{casesBPMAssetsState.showLogExportButton}" url="#{iwResourceResolver['is.idega.idegaweb.egov.bpm']['images/export_case_logs.png']}"
+						title="#{localizedStrings['is.idega.idegaweb.egov.bpm']['download_case_logs_as_pdf']}" alt="#{localizedStrings['is.idega.idegaweb.egov.bpm']['download_case_logs_as_pdf']}"
+						styleClass="caseLogsAsPDFStyleClass"/>
+					
 				</t:div>
 				<div class="spacer" />
 				<t:div style="display: none;" rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}" />
