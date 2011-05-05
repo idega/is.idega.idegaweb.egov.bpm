@@ -118,7 +118,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 		
 		jQuery('img.caseLogsAsPDFStyleClass', container).each(function() {
 			jQuery(this).click(function(){
-				var uri = '&caseLogIdToDownload=' + caseId;//CasesBPMAssets.openedCase.caseId;
+				var uri = '&caseLogIdToDownload=' + caseId;
 				CasesBPMAssets.setCurrentWindowToDownloadCaseResource(uri, 'caselogspdfdownload');
 			});
 		});
