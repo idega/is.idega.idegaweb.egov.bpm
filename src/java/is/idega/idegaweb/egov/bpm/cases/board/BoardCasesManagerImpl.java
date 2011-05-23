@@ -83,7 +83,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	        		"string_ownerProject",				//	14
 	        		"string_ownerCostValue",			//	15
 	        		"string_ownerProjectedSize",		//	16
-	            	"string_ownerEntrepreneurCompany"	//	17
+	            	"string_ownerEntrepreneurCompany",	//	17
+	            	"string_expectedResultDescriptionValue" // 18
 	 ));
 
 	private static final Logger LOGGER = Logger.getLogger(BoardCasesManagerImpl.class.getName());
@@ -161,14 +162,15 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(7).getId()));
 
-			boardCase.setGradingSums(getGradingSum(view));
+			boardCase.setGradingSum(getGradingSum(view)[0]);
+			boardCase.setNegativeGradingSum(getGradingSum(view)[1]);
 
-			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(9).getId()));
-			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()));
+			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()));
+			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()));
 
-			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()), false));
-			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()), false));
-			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(13).getId()));
+			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()), false));
+			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(13).getId()), false));
+			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(14).getId()));
 
 			boardCase.setHandler(view.getHandler());
 
