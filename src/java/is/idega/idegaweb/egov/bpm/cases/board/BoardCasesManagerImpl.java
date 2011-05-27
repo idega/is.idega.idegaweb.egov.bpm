@@ -162,8 +162,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(7).getId()));
 
-			boardCase.setGradingSum(getGradingSum(view)[0]);
-			boardCase.setNegativeGradingSum(getGradingSum(view)[1]);
+			String [] gradingSums = getGradingSum(view);
+			boardCase.setGradingSum(gradingSums[0]);
+			boardCase.setNegativeGradingSum(gradingSums[1]);
 
 			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()));
 			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()));
