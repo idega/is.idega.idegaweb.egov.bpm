@@ -228,10 +228,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes, List<String> caseStatusesToHide,
-			List<String> caseStatusesToShow, int startIndex, int count, boolean onlySubscribedCases) {
+			List<String> caseStatusesToShow, int startIndex, int count, boolean onlySubscribedCases, boolean showAllCases) {
 
 		try {
-			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases);
+			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases);
 
 			if (ListUtil.isEmpty(casesIds)) {
 				LOGGER.info("User '" + user + "' doesn't have any cases!");
@@ -267,7 +267,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	
 	@Override
 	public List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
-			boolean onlySubscribedCases) throws Exception {
+			boolean onlySubscribedCases, boolean showAllCases) throws Exception {
 
 		List<Integer> caseIds = null;
 		IWContext iwc = CoreUtil.getIWContext();
@@ -284,9 +284,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			boolean isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
 
 			CasesListParameters params = new CasesListParameters(user, type, isSuperAdmin, statusesToHide, statusesToShow);
-			params = resolveParameters(iwc, params);
-			statusesToShow = ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
-			statusesToHide = ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
+			params = resolveParameters(iwc, params, showAllCases);
+			statusesToShow = showAllCases ? statusesToShow : ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
+			statusesToHide = showAllCases ? statusesToHide : ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
 			roles = params.getRoles();
 			groups = params.getGroups();
 			casecodes = params.getCodes();
@@ -320,7 +320,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return caseIds;
 	}
 	
-	private CasesListParameters resolveParameters(IWContext iwc, CasesListParameters params) throws Exception {
+	private CasesListParameters resolveParameters(IWContext iwc, CasesListParameters params, boolean showAllCases) throws Exception {
 		User user = params.getUser();
 		String type = params.getType();
 		boolean isSuperAdmin = params.isSuperAdmin();
@@ -337,10 +337,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		
 		if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
 			String[] caseStatuses = casesBusiness.getStatusesForOpenCases();
-			statusesToShow.addAll(Arrays.asList(caseStatuses));
-			statusesToShow = ListUtil.getFilteredList(statusesToShow);
-			statusesToHide.addAll(Arrays.asList(casesBusiness.getStatusesForClosedCases()));
-			statusesToHide = ListUtil.getFilteredList(statusesToHide);
+			if (!showAllCases) {
+				statusesToShow.addAll(Arrays.asList(caseStatuses));
+				statusesToShow = ListUtil.getFilteredList(statusesToShow);
+				statusesToHide.addAll(Arrays.asList(casesBusiness.getStatusesForClosedCases()));
+				statusesToHide = ListUtil.getFilteredList(statusesToHide);
+			}
 			
 			if (!isSuperAdmin) {
 				roles = iwc.getAccessController().getAllRolesForUser(user);
@@ -356,8 +358,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			
 		} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
 			String[] caseStatuses = casesBusiness.getStatusesForClosedCases();
-			statusesToShow.addAll(Arrays.asList(caseStatuses));
-			statusesToShow = ListUtil.getFilteredList(statusesToShow);
+			if (!showAllCases) {
+				statusesToShow.addAll(Arrays.asList(caseStatuses));
+				statusesToShow = ListUtil.getFilteredList(statusesToShow);
+			}
 			
 			if (!isSuperAdmin) {
 				roles = iwc.getAccessController().getAllRolesForUser(user);
@@ -373,11 +377,13 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			
 		}  else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
 			String[] caseStatuses = casesBusiness.getStatusesForMyCases();
-			statusesToShow.addAll(Arrays.asList(caseStatuses));
-			statusesToShow = ListUtil.getFilteredList(statusesToShow);
+			if (!showAllCases) {
+				statusesToShow.addAll(Arrays.asList(caseStatuses));
+				statusesToShow = ListUtil.getFilteredList(statusesToShow);
+			}
 			
 		} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
-			statusesToShow = ListUtil.getFilteredList(statusesToShow);
+			statusesToShow = showAllCases ? statusesToShow : ListUtil.getFilteredList(statusesToShow);
 			CaseCode[] casecodes = getCaseBusiness().getCaseCodesForUserCasesList();
 			roles = iwc.getAccessController().getAllRolesForUser(user);
 
@@ -390,8 +396,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		params.setCodes(codes);
 		params.setGroups(groups);
 		params.setRoles(roles);
-		params.setStatusesToHide(statusesToHide);
-		params.setStatusesToShow(statusesToShow);
+		if (!showAllCases) {
+			params.setStatusesToHide(statusesToHide);
+			params.setStatusesToShow(statusesToShow);
+		}
 		
 		return params;
 	}

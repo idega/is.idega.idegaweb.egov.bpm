@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,6 +41,7 @@ import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
+import com.idega.block.process.data.CaseStatus;
 import com.idega.block.process.event.CaseModifiedEvent;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
@@ -371,8 +373,26 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
 		List<Integer> casesIds = null;
 		try {
+			if (criteriaBean.isShowAllCases()) {
+				CasesBusiness casesBusiness = getCasesBusiness(iwc);
+				@SuppressWarnings("unchecked")
+				Collection<CaseStatus> statuses = casesBusiness.getCaseStatuses();
+				StringBuffer allStatuses = null;
+				if (!ListUtil.isEmpty(statuses)) {
+					allStatuses = new StringBuffer();
+					for (Iterator<CaseStatus> statusesIter = statuses.iterator(); statusesIter.hasNext();) {
+						allStatuses.append(statusesIter.next().getStatus());
+						if (statusesIter.hasNext())
+							allStatuses.append(CoreConstants.COMMA);
+					}
+				}
+				
+				criteriaBean.setStatusesToShow(allStatuses == null ? null : allStatuses.toString());
+				criteriaBean.setStatusesToHide(null);
+			}
+			
 			casesIds = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(), 
-					criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases());
+					criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases(), criteriaBean.isShowAllCases());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criteriaBean, e);
 		}
