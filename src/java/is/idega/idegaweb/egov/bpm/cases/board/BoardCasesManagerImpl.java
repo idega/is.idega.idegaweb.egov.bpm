@@ -114,9 +114,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName) {
 		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
 
-		if (ListUtil.isEmpty(cases)) {
+		if (ListUtil.isEmpty(cases))
 			return null;
-		}
 
 		Map<Integer, User> casesIdsAndHandlers = new HashMap<Integer, User>();
 		for (GeneralCase theCase : cases) {
@@ -163,8 +162,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(7).getId()));
 
 			String [] gradingSums = getGradingSum(view);
-			boardCase.setGradingSum(gradingSums[0]);
 			boardCase.setNegativeGradingSum(gradingSums[1]);
+			boardCase.setGradingSum(gradingSums[0]);
 
 			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()));
 			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()));
@@ -186,9 +185,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	private CaseBoardView getCaseView(List<CaseBoardView> views, Long processInstanceId) {
-		if (ListUtil.isEmpty(views) || processInstanceId == null) {
+		if (ListUtil.isEmpty(views) || processInstanceId == null)
 			return null;
-		}
 
 		for (CaseBoardView view: views) {
 			if (processInstanceId.longValue() == view.getProcessInstanceId().longValue()) {
@@ -409,22 +407,18 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
 	public AdvancedProperty setCaseVariableValue(Integer caseId, String variableName, String value, String role, String backPage) {
-		if (caseId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(value)) {
+		if (caseId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(value))
 			return null;
-		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null || !iwc.isLoggedOn()) {
+		if (iwc == null || !iwc.isLoggedOn())
 			return null;
-		}
-		if (!StringUtil.isEmpty(role) && !iwc.hasRole(role)) {
+		if (!StringUtil.isEmpty(role) && !iwc.hasRole(role))
 			return null;
-		}
 
 		try {
-			if (value.equals("no_value")) {
+			if (value.equals("no_value"))
 				value = CoreConstants.EMPTY;
-			}
 
 			Long processInstanceId = getCaseProcessInstanceRelation().getCaseProcessInstanceId(caseId);
 
@@ -479,17 +473,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	 */
 	public String [] getGradingSum(CaseBoardView view) {
 		List<String> gradingValues = view.getValues(GRADING_VARIABLES);
-		String [] returnValue = new String[2];
-		if (ListUtil.isEmpty(gradingValues)) {
-			returnValue[0] = String.valueOf(0);
-			returnValue[1] = String.valueOf(0);
-			return returnValue;
-		}
+		String[] gradings = new String[] {String.valueOf(0), String.valueOf(0)};
+		if (ListUtil.isEmpty(gradingValues))
+			return gradings;
 
 		long sum = 0;
 		long negativeSum = 0;
 		Long gradeValue = null;
-		for (String value : gradingValues) {
+		for (String value: gradingValues) {
 			if (StringUtil.isEmpty(getStringValue(value))) {
 				continue;
 			}
@@ -514,16 +505,15 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			if (gradeValue != null) {
 				long longValue = gradeValue.longValue();
 				sum += longValue;
-				if(longValue < 0){
+				if (longValue < 0)
 					negativeSum += longValue;
-				}
 			}
 		}
 
-		returnValue[0] = String.valueOf(sum);
-		returnValue[1] = String.valueOf(negativeSum);
+		gradings[0] = String.valueOf(sum);
+		gradings[1] = String.valueOf(negativeSum);
 
-		return returnValue;
+		return gradings;
 	}
 
 	@Override
@@ -558,20 +548,18 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			List<String> allValues = caseBoard.getAllValues();
 			List<String> rowValues = new ArrayList<String>(allValues.size());
 			for (String value : allValues) {
-				if (index == 3) {
+				if (index == 3)
 					// Link to grading task
 					rowValues.add(caseBoard.getCaseIdentifier());
-				} else {
+				else
 					rowValues.add(value);
-				}
 
-				if (index == allValues.size() - 4) {
+				if (index == allValues.size() - 4)
 					// Calculating grant amount suggestions
 					grantAmountSuggestionTotal += caseBoard.getGrantAmountSuggestion();
-				} else if (index == allValues.size() - 3) {
+				else if (index == allValues.size() - 3)
 					// Calculating board amounts
 					boardAmountTotal += caseBoard.getBoardAmount();
-				}
 
 				index++;
 			}
@@ -619,9 +607,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		} catch (NoEmailFoundException e) {
 		}
 
-		if (email != null) {
+		if (email != null)
 			info.setValue(new StringBuilder("mailto:").append(email.getEmailAddress()).toString());
-		}
 
 		return info;
 	}
@@ -638,10 +625,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return headers;
 	}
 
-	private List<String> getFooterValues(IWResourceBundle iwrb,
-	        long grantAmountSuggestionTotal, long boardAmountTotal) {
-		List<String> values = new ArrayList<String>(
-		        CasesBoardViewer.CASE_FIELDS.size());
+	private List<String> getFooterValues(IWResourceBundle iwrb, long grantAmountSuggestionTotal, long boardAmountTotal) {
+		List<String> values = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
 
 		for (int i = 0; i < CasesBoardViewer.CASE_FIELDS.size(); i++) {
 			if (i == CasesBoardViewer.CASE_FIELDS.size() - 4) {
