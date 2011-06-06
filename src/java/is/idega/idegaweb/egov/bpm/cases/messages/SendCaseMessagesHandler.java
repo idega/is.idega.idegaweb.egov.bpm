@@ -42,6 +42,7 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	@Override
 	public void execute(ExecutionContext ectx) throws Exception {
 		final String sendToRoles = getSendToRoles();
+		final Integer recipientUserId = getRecipientUserID();
 
 		ProcessInstance candPI;
 		String caseIdStr;
@@ -81,6 +82,7 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 		LocalizedMessages msgs = getLocalizedMessages();
 		msgs.setSendToRoles(sendToRoles);
+		msgs.setRecipientUserId(recipientUserId);
 		getSendMessage().send(null, new Integer(caseIdStr), pi, msgs, tkn);
 	}
 

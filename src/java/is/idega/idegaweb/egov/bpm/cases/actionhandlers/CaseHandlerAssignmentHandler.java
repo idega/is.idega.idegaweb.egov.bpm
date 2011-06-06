@@ -68,12 +68,14 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	private SendCaseMessagesHandler sendCaseMessagesHandler;
 	
 	private Integer handlerUserId;
+	private Integer recipientId;
 	private Integer performerUserId;
 	
 	public static final String assignHandlerEventType = "handlerAssignedToCase";
 	public static final String unassignHandlerEventType = "handlerUnassignedFromCase";
 	public static final String handlerUserIdVarName = "handlerUserId";
 	public static final String performerUserIdVarName = "performerUserId";
+	public static final String recipientUserIdVarName = "recipientUserId";
 	
 	public void execute(ExecutionContext ectx) throws Exception {
 		
@@ -176,6 +178,15 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		return performerUserId;
 	}
 	
+	private Integer getRecipientUserId(ExecutionContext ectx) {
+		
+		if (recipientId == null)
+			recipientId = (Integer) ectx
+			        .getVariable(recipientUserIdVarName);
+		
+		return recipientId;
+	}
+	
 	private User getCurrentUser() {
 		
 		return IWContext.getCurrentInstance().getCurrentUser();
@@ -231,6 +242,13 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		msgHan.setSubjectValues(getSubjectValues());
 		msgHan.setInlineSubject(getInlineSubject());
 		msgHan.setInlineMessage(getInlineMessage());
+		
+		if (getRecipientUserId(ectx) != null) {
+			msgHan.setRecipientUserID(getRecipientUserId(ectx));
+		}
+		else if (getHandlerUserId(ectx) != null) {
+			msgHan.setRecipientUserID(getHandlerUserId(ectx));
+		}
 		
 		msgHan.execute(ectx);
 	}

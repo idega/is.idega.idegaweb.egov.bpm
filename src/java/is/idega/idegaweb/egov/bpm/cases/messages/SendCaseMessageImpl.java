@@ -82,7 +82,14 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			CasesBusiness casesBusiness = getCasesBusiness(iwc);
 			
 			final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-			Collection<User> users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
+			Collection<User> users = null;
+			if (msgs.getRecipientUserId() != null) {
+				users = new ArrayList<User>();
+				users.add(getUserBusiness(iwc).getUser(msgs.getRecipientUserId()));
+			}
+			else {
+				users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
+			}
 			
 			long pid = pi.getId();
 			ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);

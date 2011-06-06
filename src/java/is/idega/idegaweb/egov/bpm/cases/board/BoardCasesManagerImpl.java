@@ -497,7 +497,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 			gradeValue = null;
 			try {
-				gradeValue = Long.valueOf(value);
+				gradeValue = Long.valueOf(value.trim());
 			} catch (Exception e) {
 				LOGGER.warning("Unable to convert '" + value + "' to number!");
 			}
