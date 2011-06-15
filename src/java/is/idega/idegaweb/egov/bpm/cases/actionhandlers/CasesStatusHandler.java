@@ -48,6 +48,8 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	private String caseStatusMappedName;
 	
+	private String comment;
+	
 	/**
 	 * if set, then it's checked, if the current status matches, and only then the status is changed
 	 * (for instance, if status specified by ifCaseStatusExp is received, then it may change to in
@@ -94,7 +96,7 @@ public class CasesStatusHandler implements ActionHandler {
 				return;
 			}
 			
-			final String status = getCaseStatus();
+			String status = getCaseStatus();
 			Integer performerUserId = getPerformerUserId();
 			final String ifCaseStatus = getIfCaseStatus();
 			
@@ -102,6 +104,10 @@ public class CasesStatusHandler implements ActionHandler {
 			IWApplicationContext iwac = getIWAC(iwc);
 			CasesBusiness casesBusiness = getCasesBusiness(iwac);
 			final Case theCase = casesBusiness.getCase(caseId);
+			
+			if (status == null) {
+				status = theCase.getStatus();
+			}
 			
 			if (ifCaseStatus == null
 			        || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
@@ -123,7 +129,7 @@ public class CasesStatusHandler implements ActionHandler {
 				}
 				
 				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status,
-				    performer);
+				    performer, getComment());
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE,
@@ -266,5 +272,13 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	CasesStatusMapperHandler getCasesStatusMapperHandler() {
 		return casesStatusMapperHandler;
+	}
+
+	public String getComment() {
+		return comment;
+	}
+
+	public void setComment(String comment) {
+		this.comment = comment;
 	}
 }

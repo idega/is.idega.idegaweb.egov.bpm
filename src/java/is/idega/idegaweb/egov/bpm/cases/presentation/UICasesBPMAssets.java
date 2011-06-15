@@ -85,6 +85,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
 
+		String caseID = context.getExternalContext().getRequestParameterMap().get(ProcessManagerBind.caseIdParam);
+		if (caseID != null && caseID.length() > 0) {
+			setCaseId(new Integer(caseID));
+		}
+
 		ELUtil.getInstance().autowire(this);
 		
 //		<assets grid component>
@@ -137,6 +142,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 //		<asset view>
 		
 		CasesBPMAssetsState stateBean = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
+		stateBean.setCaseId(getCaseId());
 		
 		String commentsManagerIdentifier = StringUtil.isEmpty(commentsPersistenceManagerIdentifier) ? BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER :
 			commentsPersistenceManagerIdentifier;
