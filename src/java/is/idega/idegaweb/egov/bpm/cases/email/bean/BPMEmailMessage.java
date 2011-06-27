@@ -74,4 +74,8 @@ public class BPMEmailMessage extends EmailMessage {
 		this.attachments = attachments;
 	}
 	
+	@Override
+	public String toString() {
+		return super.toString() + ". BPM process instance ID: " + getProcessInstanceId() + ", task instance ID: " + getTaskInstanceId() + ", attachments: " + getAttachments();
+	}
 }

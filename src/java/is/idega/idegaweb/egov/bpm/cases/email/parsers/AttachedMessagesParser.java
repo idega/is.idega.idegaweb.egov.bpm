@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.email.parsers;
 
 import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -44,7 +45,6 @@ public class AttachedMessagesParser extends DefaultMessageParser implements Emai
 		return new BPMEmailMessage();
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, Collection<? extends EmailMessage>> getParsedMessages(Map<String, FoundMessagesInfo> messagesInfo, EmailParams params) {
 		if (messagesInfo == null || messagesInfo.isEmpty()) {
@@ -86,7 +86,8 @@ public class AttachedMessagesParser extends DefaultMessageParser implements Emai
 					BPMEmailMessage bpmMessage = (BPMEmailMessage) parsedMessage;
 					bpmMessage.setProcessInstanceId(identifiers.get(identifier));
 					
-					List<BPMEmailMessage> messagesByProcess = (List<BPMEmailMessage>) parsedMessages.get(identifier);
+					@SuppressWarnings("unchecked")
+					Collection<BPMEmailMessage> messagesByProcess = (Collection<BPMEmailMessage>) parsedMessages.get(identifier);
 					if (messagesByProcess == null) {
 						messagesByProcess = new ArrayList<BPMEmailMessage>();
 						messagesByProcess.add(bpmMessage);

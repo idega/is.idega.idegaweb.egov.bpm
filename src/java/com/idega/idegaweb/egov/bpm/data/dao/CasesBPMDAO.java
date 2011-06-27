@@ -62,7 +62,6 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds);
 	public List<Integer> getCasesIdsByProcInstIds(List<Long> procInstIds);
 	
-	@Deprecated
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 	
 	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseCodes, List<String> caseStatuses, List<String> caseStatusesToHide,

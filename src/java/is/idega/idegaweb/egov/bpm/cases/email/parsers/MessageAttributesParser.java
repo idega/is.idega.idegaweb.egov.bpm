@@ -2,6 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.email.parsers;
 
 import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -44,36 +45,59 @@ public class MessageAttributesParser extends DefaultMessageParser implements Ema
 	
 	@Override
 	public Collection<? extends EmailMessage> getParsedMessages(ApplicationEmailEvent emailEvent) {
+		Map<String, FoundMessagesInfo> messages = emailEvent.getMessages();
+		if (messages != null) {
+			int invalidMails = 0;
+			for (FoundMessagesInfo info: messages.values()) {
+				List<Message> mailsToDrop = new ArrayList<Message>();
+				Collection<Message> mails = info.getMessages();
+				if (ListUtil.isEmpty(mails))
+					continue;
+				
+				for (Message mail: mails) {
+					if (!isValidEmail(mail))
+						mailsToDrop.add(mail);
+				}
+				
+				if (!ListUtil.isEmpty(mailsToDrop))
+					mails.removeAll(mailsToDrop);
+				if (ListUtil.isEmpty(mails))
+					invalidMails++;
+			}
+			
+			if (invalidMails == messages.size())
+				return null;
+		}
+		
 		return getParsedMessages(emailEvent.getParameters());
 	}
 	
-	private Collection<? extends EmailMessage> getParsedMessages(MessageParameters message) {
-		if (message == null || ListUtil.isEmpty(message.getProperties())) {
+	private Collection<? extends EmailMessage> getParsedMessages(MessageParameters msgParams) {
+		if (msgParams == null || ListUtil.isEmpty(msgParams.getProperties()))
 			return null;
-		}
 		
-		Long processInstanceId = getValue(message.getProperties(), ProcessArtifacts.PROCESS_INSTANCE_ID_PARAMETER);
-		if (processInstanceId == null) {
+		Long processInstanceId = getValue(msgParams.getProperties(), ProcessArtifacts.PROCESS_INSTANCE_ID_PARAMETER);
+		if (processInstanceId == null)
 			return null;
-		}
-		Long taskInstanceId = getValue(message.getProperties(), ProcessArtifacts.TASK_INSTANCE_ID_PARAMETER);
+		
+		Long taskInstanceId = getValue(msgParams.getProperties(), ProcessArtifacts.TASK_INSTANCE_ID_PARAMETER);
 		
 		BPMEmailMessage bpmMessage = (BPMEmailMessage) getNewMessage();
 		bpmMessage.setProcessInstanceId(processInstanceId);
 		bpmMessage.setTaskInstanceId(taskInstanceId);
 		
-		bpmMessage.setSenderName(message.getSenderName());
-		bpmMessage.setFromAddress(message.getFrom());
+		bpmMessage.setSenderName(msgParams.getSenderName());
+		bpmMessage.setFromAddress(msgParams.getFrom());
 		
-		bpmMessage.setReplyToAddress(message.getReplyTo());
+		bpmMessage.setReplyToAddress(msgParams.getReplyTo());
 		
-		bpmMessage.setCcAddress(message.getRecipientCc());
-		bpmMessage.setBccAddress(message.getRecipientBcc());
+		bpmMessage.setCcAddress(msgParams.getRecipientCc());
+		bpmMessage.setBccAddress(msgParams.getRecipientBcc());
 		
-		bpmMessage.setSubject(message.getSubject());
-		bpmMessage.setBody(message.getMessage());
+		bpmMessage.setSubject(msgParams.getSubject());
+		bpmMessage.setBody(msgParams.getMessage());
 		
-		bpmMessage.addAttachment(message.getAttachment());
+		bpmMessage.addAttachment(msgParams.getAttachment());
 		
 		return Arrays.asList(bpmMessage);
 	}
@@ -106,16 +130,19 @@ public class MessageAttributesParser extends DefaultMessageParser implements Ema
 	
 	@Override
 	public EmailMessage getParsedMessage(Message message, EmailParams parmas) throws Exception {
+		//	No implementation needed
 		return null;
 	}
 	
 	@Override
 	public Map<String, Collection<? extends EmailMessage>> getParsedMessages(Map<String, FoundMessagesInfo> messages, EmailParams params) {
+		//	No implementation needed
 		return null;
 	}
 	
 	@Override
 	public Collection<? extends EmailMessage> getParsedMessagesCollection(Map<String, FoundMessagesInfo> messages, EmailParams params) {
+		//	No implementation needed
 		return null;
 	}
 }

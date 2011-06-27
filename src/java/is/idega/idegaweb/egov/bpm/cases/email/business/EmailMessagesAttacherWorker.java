@@ -5,7 +5,9 @@ import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -39,6 +41,8 @@ import com.idega.core.messaging.EmailMessage;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.View;
@@ -65,6 +69,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	private BPMContext idegaJbpmContext;
 	@Autowired
 	private BPMFactory bpmFactory;
+	@Autowired
+	private VariableInstanceQuerier variablesQuerier;
 	
 	private ApplicationEmailEvent emailEvent;
 	
@@ -135,9 +141,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	}
 	
 	private void addParsedMessages(Collection<BPMEmailMessage> allParsedMessages, Collection<? extends EmailMessage> parsedMessages) {
-		if (ListUtil.isEmpty(parsedMessages)) {
+		if (ListUtil.isEmpty(parsedMessages))
 			return;
-		}
 		
 		for (EmailMessage message: parsedMessages) {
 			if (message instanceof BPMEmailMessage && !allParsedMessages.contains(message)) {
@@ -168,25 +173,41 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				continue;
 			}
 			
+			String subject = message.getSubject();
+			String text = message.getBody();
+			if (text == null)
+				text = CoreConstants.EMPTY;
+			String senderPersonalName = message.getSenderName();
+			String fromAddress = message.getFromAddress();
+			
+			List<String> varsNames = Arrays.asList("string_subject", "string_text", "string_fromPersonal", "string_fromAddress");
+			
+			Map<String, List<Serializable>> variablesWithValues = new HashMap<String, List<Serializable>>();
+			variablesWithValues.put(varsNames.get(0), Arrays.asList((Serializable) subject));
+			variablesWithValues.put(varsNames.get(2), Arrays.asList((Serializable) senderPersonalName));
+			variablesWithValues.put(varsNames.get(3), Arrays.asList((Serializable) fromAddress));
+			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesByProcesses(variablesWithValues, Arrays.asList(varsNames.get(1)), null,
+					Arrays.asList(subPI.getId()), null);
+			if (vars != null && !vars.isEmpty()) {
+				for (Map<String, VariableInstanceInfo> existingValues: vars.values()) {
+					VariableInstanceInfo existingVar = existingValues.get(varsNames.get(1));
+					if (existingVar != null && text.equals(existingVar.getValue().toString())) {
+						LOGGER.warning("BPM message is duplicated, dropping it: " + message);
+						message.setParsed(true);
+						return true;
+					}
+				}
+			}
+			
 			try {
 				TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
-				String subject = message.getSubject();
 				ti.setName(subject);
 				
-				String text = message.getBody();
-				
-				if (text == null)
-					text = CoreConstants.EMPTY;
-				
-				HashMap<String, Object> vars = new HashMap<String, Object>(2);
-				
-				String senderPersonalName = message.getSenderName();
-				String fromAddress = message.getFromAddress();
-				
-				vars.put("string_subject", subject);
-				vars.put("string_text", text);
-				vars.put("string_fromPersonal", senderPersonalName);
-				vars.put("string_fromAddress", fromAddress);
+				Map<String, Object> newVars = new HashMap<String, Object>(2);
+				newVars.put(varsNames.get(0), subject);
+				newVars.put(varsNames.get(1), text);
+				newVars.put(varsNames.get(2), senderPersonalName);
+				newVars.put(varsNames.get(3), fromAddress);
 				
 				BPMFactory bpmFactory = getBpmFactory();
 				
@@ -197,7 +218,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				long pdId = ti.getProcessInstance().getProcessDefinition().getId();
 				
 				ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
-				emailViewSubmission.populateVariables(vars);
+				emailViewSubmission.populateVariables(newVars);
 				
 				TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
 				taskInstance.submit(emailViewSubmission, false);
