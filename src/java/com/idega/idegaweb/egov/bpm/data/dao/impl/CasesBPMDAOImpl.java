@@ -237,22 +237,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return new ArrayList<Token>(0);
 	}
 	
-	public List<Long> getCaseIdsByProcessDefinitionIdsAndNameAndVariables(List<Long> processDefinitionIds, String processDefinitionName,
-			List<BPMProcessVariable> variables) {
+	public List<Long> getCaseIdsByProcessDefinitionNameAndVariables(String processDefinitionName, List<BPMProcessVariable> variables) {
 		
-		if (ListUtil.isEmpty(processDefinitionIds) || StringUtil.isEmpty(processDefinitionName)) {
+		if (StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
 		
-		if (ListUtil.isEmpty(variables)) {
-			return getResultList(
-			    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName,
-			    Long.class, new Param(
-			            CaseProcInstBind.processDefinitionIdsProp,
-			            processDefinitionIds), new Param(
-			            CaseProcInstBind.processDefinitionNameProp,
-			            processDefinitionName));
-		}
+		if (ListUtil.isEmpty(variables))
+			return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, Long.class, new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 		
 		Locale locale = CoreUtil.getCurrentLocale();
 		
@@ -276,7 +268,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					valueEnd.setSecond(59);
 					valueEnd.setMilliSecond(999);
 					variableResults = getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, Long.class,
-						    new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
 						    new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
 						    new Param(CaseProcInstBind.variablesNamesProp, variable.getName()),
 						    new Param(CaseProcInstBind.variablesValuesProp, valueStart.getTimestamp()),
@@ -288,29 +279,22 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			// Double
 			} else if (variable.isDoubleType()) {
 				if (value instanceof Double) {
-					variableResults = getCaseIdsByVariable(
-					    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables,
-					    processDefinitionIds, processDefinitionName, variable.getName(), value,
-					    BPMProcessVariable.DOUBLE_TYPES);
+					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, processDefinitionName, variable.getName(),
+							value, BPMProcessVariable.DOUBLE_TYPES);
 				}
 			
 			// Long
 			} else if (variable.isLongType()) {
 				if (value instanceof Long) {
-					variableResults = getCaseIdsByVariable(
-					    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables,
-					    processDefinitionIds, processDefinitionName, variable.getName(), value,
-					    BPMProcessVariable.LONG_TYPES);
+					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, processDefinitionName, variable.getName(),
+							value, BPMProcessVariable.LONG_TYPES);
 				}
 			
 			// String
 			} else if (variable.isStringType()) {
 				if (value instanceof String) {
-					variableResults = getCaseIdsByVariable(
-					    CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables,
-					    processDefinitionIds, processDefinitionName, variable.getName(),
-					    	CoreConstants.PERCENT.concat((String) value).concat(CoreConstants.PERCENT),
-					    BPMProcessVariable.STRING_TYPES);
+					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, processDefinitionName, variable.getName(),
+					    	CoreConstants.PERCENT.concat((String) value).concat(CoreConstants.PERCENT), BPMProcessVariable.STRING_TYPES);
 				}
 			
 			// Unsupported variable
@@ -349,11 +333,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		            processDefinitionName));
 	}
 	
-	private List<Long> getCaseIdsByVariable(String queryName, List<Long> processDefinitionIds, String processDefinitionName, String variableName, Object value,
+	private List<Long> getCaseIdsByVariable(String queryName, String processDefinitionName, String variableName, Object value,
 			List<String> types) {
 		
 		return getResultList(queryName, Long.class,
-			    new Param(CaseProcInstBind.processDefinitionIdsProp, processDefinitionIds),
 			    new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
 			    new Param(CaseProcInstBind.variablesNamesProp, variableName),
 			    new Param(CaseProcInstBind.variablesValuesProp, value),

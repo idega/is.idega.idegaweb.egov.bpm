@@ -71,17 +71,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
 		
-		final Long procDefId;
-		try {
-			procDefId = Long.valueOf(processDefinitionId);
-		} catch (NumberFormatException e) {
-			getLogger().log(Level.SEVERE, "Process definition id provided ("+processDefinitionId+") was incorrect", e);
-			return null;
-		}
-		
-		List<Long> processDefinitionIds = new ArrayList<Long>(1);
-		processDefinitionIds.add(procDefId);
-		
+		Long procDefId = Long.valueOf(processDefinitionId);
 		ProcessDefinition processDefinition = null;
 		try {
 			processDefinition = getBpmFactory().getProcessManager(procDefId).getProcessDefinition(procDefId).getProcessDefinition();
@@ -89,6 +79,8 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			getLogger().log(Level.WARNING, "Error getting process definition by ID: " + processDefinitionId, e);
 		}
 		String procDefName = processDefinition == null ? null : processDefinition.getName();
+		if (StringUtil.isEmpty(procDefName))
+			return null;
 		
 		Object tmp = null;
 		BPMProcessVariable handlerVariable = null;
@@ -140,8 +132,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			variables.removeAll(varsToRemove);
 		
 		try {
-			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionIdsAndNameAndVariables(processDefinitionIds, procDefName,
-					variables));
+			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionNameAndVariables(procDefName, variables));
 			return ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues, casesIdsByOtherVars);
 		} catch(Exception e) {
 			getLogger().log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+

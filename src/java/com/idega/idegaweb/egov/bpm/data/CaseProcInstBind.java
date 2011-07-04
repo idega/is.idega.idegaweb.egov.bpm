@@ -85,8 +85,8 @@ import com.idega.jbpm.data.BPMVariableData;
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
-				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pi.PROCESSDEFINITION_ in (:" + 
-				CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " group by cp.case_id"
+				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp +
+				" group by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionName, resultSetMapping="caseId", 
 					query=
@@ -101,9 +101,8 @@ import com.idega.jbpm.data.BPMVariableData;
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
-				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
-				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and var.DATEVALUE_ between :" + CaseProcInstBind.variablesValuesProp + " and :" +
+				" var.PROCESSINSTANCE_ where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp +
+				") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp + " and var.DATEVALUE_ between :" + CaseProcInstBind.variablesValuesProp + " and :" +
 				CaseProcInstBind.variablesValuesPropEnd + " group by cp.case_id"
 			),
 			//	Query to case IDs by DOUBLE variables
@@ -111,18 +110,16 @@ import com.idega.jbpm.data.BPMVariableData;
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
-				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
-				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and var.DOUBLEVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+				" var.PROCESSINSTANCE_ where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp +
+				") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp + " and var.DOUBLEVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
 			//	Query to case IDs by LONG variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
-				" var.PROCESSINSTANCE_ where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
-				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and var.LONGVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+				" var.PROCESSINSTANCE_ where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp +
+				") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp + " and var.LONGVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
 			//	Query to case IDs by STRING variables
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, resultSetMapping="caseId", 
@@ -130,9 +127,9 @@ import com.idega.jbpm.data.BPMVariableData;
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = pi.ID_ inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.ID_ " +
 				"inner join JBPM_VARIABLEINSTANCE var on pi.ID_ = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = " +
-				"vdata.variable_id where (pi.PROCESSDEFINITION_ in (:" + CaseProcInstBind.processDefinitionIdsProp + ") or pd.NAME_ = :" +
-				CaseProcInstBind.processDefinitionNameProp + ") and var.CLASS_ in (:" +	CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" +
-				CaseProcInstBind.variablesNamesProp + " and lower(vdata.stringvalue) like :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+				"vdata.variable_id where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " and var.CLASS_ in (:" +	CaseProcInstBind.variablesTypesProp +
+				") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp + " and lower(vdata.stringvalue) like :" + CaseProcInstBind.variablesValuesProp +
+				" group by cp.case_id"
 			),
 			/** Variable queries end **/
 			
