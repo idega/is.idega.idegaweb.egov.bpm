@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -32,11 +33,13 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.events.VariableCreatedEvent;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -73,29 +76,27 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 				// creating new token, so there are no race conditions for
 				// variables
-				Token tkn = new Token(pi.getRootToken(),
-						"assignUnassignHandler_" + System.currentTimeMillis());
+				Token tkn = new Token(pi.getRootToken(), "assignUnassignHandler_" + System.currentTimeMillis());
 
 				ExecutionContext ectx = new ExecutionContext(tkn);
 
 				IWContext iwc = IWContext.getCurrentInstance();
 				Integer performerId = iwc.getCurrentUserId();
 
-				ectx.setVariable(
-						CaseHandlerAssignmentHandler.performerUserIdVarName,
-						performerId);
+				ectx.setVariable(CaseHandlerAssignmentHandler.performerUserIdVarName, performerId);
+				Map<String, Object> createdVars = new HashMap<String, Object>();
+				createdVars.put(CaseHandlerAssignmentHandler.performerUserIdVarName, performerId);
+				
+				if (handlerUserId != null) {
+					ectx.setVariable(CaseHandlerAssignmentHandler.handlerUserIdVarName,	handlerUserId);
+					createdVars.put(CaseHandlerAssignmentHandler.handlerUserIdVarName, handlerUserId);
+				}
 
-				if (handlerUserId != null)
-					ectx.setVariable(
-							CaseHandlerAssignmentHandler.handlerUserIdVarName,
-							handlerUserId);
-
-				pi
-						.getProcessDefinition()
-						.fireEvent(
-								handlerUserId != null ? CaseHandlerAssignmentHandler.assignHandlerEventType
-										: CaseHandlerAssignmentHandler.unassignHandlerEventType,
-								ectx);
+				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(this, pi.getProcessDefinition().getName(), pi.getId(), createdVars);
+				ELUtil.getInstance().publishEvent(performerVarCreated);
+				
+				pi.getProcessDefinition().fireEvent(handlerUserId != null ?
+						CaseHandlerAssignmentHandler.assignHandlerEventType	: CaseHandlerAssignmentHandler.unassignHandlerEventType, ectx);
 				return null;
 			}
 		});
@@ -197,6 +198,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 		return casesBPMDAO;
 	}
 
+	@Override
 	public ProcessWatch getProcessWatcher() {
 		return processWatcher;
 	}
