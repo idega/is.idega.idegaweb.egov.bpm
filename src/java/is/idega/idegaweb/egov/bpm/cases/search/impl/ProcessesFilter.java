@@ -36,6 +36,8 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
 	
+	private String procDefName;
+	
 	@Override
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		String processDefinitionId = getProcessId();
@@ -54,9 +56,11 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		}
 		
 		if (ListUtil.isEmpty(casesByProcessDefinition)) {
-			getLogger().info("No cases found by process definition id: " + processDefinitionId + " and variables: " + getProcessVariables());
+			getLogger().warning("No cases found by process definition (ID: " + processDefinitionId + ", name: " + getProcessDefinitionName() + ") and variables (" +
+					getProcessVariables() + ")");
 		} else {
-			getLogger().info("Found cases by process definition (" + processDefinitionId + ") and variables (" + getProcessVariables() + "): " + casesByProcessDefinition);
+			getLogger().info("Found cases by process definition (ID: " + processDefinitionId + ", name: " + getProcessDefinitionName() + ") and variables (" +
+					getProcessVariables() + "): " + casesByProcessDefinition);
 		}
 			
 		return casesByProcessDefinition;
@@ -64,16 +68,20 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 	
 	@Override
 	protected String getInfo() {
-		return "Looking for cases by process definition: " + getProcessId();
+		return "Looking for cases by process definition. ID: " + getProcessId() + ", name: " + getProcessDefinitionName() + " and BPM variables: " + getProcessVariables();
 	}
 	
-	private List<Integer> getCasesByProcessDefinition(String processDefinitionId, List<BPMProcessVariable> variables) {
+	private String getProcessDefinitionName() {
+		return procDefName;
+	}
+	
+	private List<Integer> getCasesByProcessDefinition(String processDefinitionId, List<BPMProcessVariable> vars) {
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
 		
-		Long procDefId = Long.valueOf(processDefinitionId);
 		ProcessDefinition processDefinition = null;
 		try {
+			Long procDefId = Long.valueOf(processDefinitionId);
 			processDefinition = getBpmFactory().getProcessManager(procDefId).getProcessDefinition(procDefId).getProcessDefinition();
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting process definition by ID: " + processDefinitionId, e);
@@ -81,6 +89,11 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		String procDefName = processDefinition == null ? null : processDefinition.getName();
 		if (StringUtil.isEmpty(procDefName))
 			return null;
+		this.procDefName = procDefName;
+
+		getLogger().info(getInfo());
+		
+		List<BPMProcessVariable> variables = new ArrayList<BPMProcessVariable>(vars);
 		
 		Object tmp = null;
 		BPMProcessVariable handlerVariable = null;
@@ -114,16 +127,24 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			casesIdsByMultipleValues = getConvertedFromNumbers(getCasesIdsByMultipleVariableValues(procDefName, multValues));
 			if (ListUtil.isEmpty(casesIdsByMultipleValues))
 				return null;
+			getLogger().info("Found cases by multiple variables: " + multValues + " and process definition: " + procDefName + ": " + casesIdsByMultipleValues);
 		}
 		
 		if (handlerVariable != null) {
 			List<Integer> casesIdsByHandlers = getCaseIdsByHandlers(handlerVariable.getName(), handlerVariable.getValue(), procDefName);
 			if (ListUtil.isEmpty(casesIdsByHandlers))
 				return null;
+			getLogger().info("Found cases by handler: " + handlerVariable + " and process definition: " + procDefName + ": " + casesIdsByHandlers);
 			
-			casesIdsByMultipleValues = casesIdsByMultipleValues == null ?
-					new ArrayList<Integer>(casesIdsByHandlers) :
-					getNarrowedResults(casesIdsByMultipleValues, casesIdsByHandlers);
+			if (casesIdsByMultipleValues == null) {
+				//	Just handler variable was specified
+				casesIdsByMultipleValues = new ArrayList<Integer>(casesIdsByHandlers);
+			} else {
+				//	Keeping condition AND
+				casesIdsByMultipleValues = getNarrowedResults(casesIdsByMultipleValues, casesIdsByHandlers);
+				if (ListUtil.isEmpty(casesIdsByMultipleValues))
+					return null;
+			}
 			
 			variables.remove(handlerVariable);
 		}
@@ -131,15 +152,17 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		if (!ListUtil.isEmpty(varsToRemove))
 			variables.removeAll(varsToRemove);
 		
+		List<Integer> casesIds = null;
 		try {
 			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionNameAndVariables(procDefName, variables));
-			return ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues, casesIdsByOtherVars);
+			casesIds = ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues, casesIdsByOtherVars);
 		} catch(Exception e) {
 			getLogger().log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
 					processDefinitionId + ", variables: " + variables, e);
 		}
 		
-		return null;
+		
+		return casesIds;
 	}
 	
 	private List<Long> getCasesIdsByMultipleVariableValues(String processDefinitionName, Map<String, List<Serializable>> multipleValues) {
