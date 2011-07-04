@@ -3,6 +3,8 @@ package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
+import java.util.Locale;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,11 +24,15 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.process.business.messages.MessageValueContext;
+import com.idega.jbpm.process.business.messages.MessageValueHandler;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -38,8 +44,10 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	private static final long serialVersionUID = 7504445907540445936L;
 	
-	private static final Logger LOGGER = Logger
-	        .getLogger(CasesStatusHandler.class.getName());
+	private static final Logger LOGGER = Logger.getLogger(CasesStatusHandler.class.getName());
+	
+	@Autowired
+	private MessageValueHandler messageValueHandler;
 	
 	/**
 	 * variable which contains string representation of case status to set
@@ -48,7 +56,8 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	private String caseStatusMappedName;
 	
-	private String comment;
+	private Map<String, String> commentExpression;
+	private String commentValues;
 	
 	/**
 	 * if set, then it's checked, if the current status matches, and only then the status is changed
@@ -86,13 +95,11 @@ public class CasesStatusHandler implements ActionHandler {
 	private CasesStatusMapperHandler casesStatusMapperHandler;
 	
 	public void execute(ExecutionContext ectx) throws Exception {
-		
 		Integer caseId = null;
 		try {
 			caseId = getCaseId(ectx);
 			if (caseId == null) {
-				LOGGER.log(Level.WARNING,
-				    "No caseId resolved, skipping case status change");
+				LOGGER.warning("No caseId resolved, skipping case status change");
 				return;
 			}
 			
@@ -109,10 +116,8 @@ public class CasesStatusHandler implements ActionHandler {
 				status = theCase.getStatus();
 			}
 			
-			if (ifCaseStatus == null
-			        || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
-				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set
-				// (i.e. change always)
+			if (ifCaseStatus == null || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
+				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
 				final User performer;
 				if (performerUserId == null) {
 					if (iwc != null) {
@@ -128,21 +133,18 @@ public class CasesStatusHandler implements ActionHandler {
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
 				
-				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status,
-				    performer, getComment());
+				String comment = getComment(ectx, iwc.getCurrentLocale(), performer);
+				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment);
 			}
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE,
-			    "Exception while changing case status for the case: " + caseId,
-			    e);
+			LOGGER.log(Level.SEVERE, "Exception while changing case status for the case: " + caseId, e);
 		}
 	}
 	
 	public String getCaseStatus() {
 		if (caseStatus == null) {
 			if (!StringUtil.isEmpty(getCaseStatusMappedName())) {
-				caseStatus = getCasesStatusMapperHandler()
-				        .getStatusCodeByMappedName(getCaseStatusMappedName());
+				caseStatus = getCasesStatusMapperHandler().getStatusCodeByMappedName(getCaseStatusMappedName());
 			}
 		}
 		
@@ -166,19 +168,14 @@ public class CasesStatusHandler implements ActionHandler {
 			if (getProcessInstanceId() != null) {
 				processInstanceIdToUse = getProcessInstanceId();
 			} else {
-				Long currentProcessInstanceId = ectx.getProcessInstance()
-				        .getId();
-				processInstanceIdToUse = getBpmFactory()
-				        .getMainProcessInstance(currentProcessInstanceId)
-				        .getId();
+				Long currentProcessInstanceId = ectx.getProcessInstance().getId();
+				processInstanceIdToUse = getBpmFactory().getMainProcessInstance(currentProcessInstanceId).getId();
 			}
 			
-			CaseProcInstBind cpi = getCasesBPMDAO()
-			        .getCaseProcInstBindByProcessInstanceId(
-			            processInstanceIdToUse);
+			CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceIdToUse);
 			if (cpi == null) {
-				LOGGER.warning("No case process instance bind found for process instance id="
-				        + processInstanceIdToUse);
+				LOGGER.warning("No case process instance bind found for process instance id=" + processInstanceIdToUse);
+				return null;
 			}
 			
 			caseId = cpi.getCaseId();
@@ -187,15 +184,13 @@ public class CasesStatusHandler implements ActionHandler {
 		return caseId;
 	}
 	
-	private IWApplicationContext getIWAC(final IWContext iwc) {
-		return iwc == null ? IWMainApplication.getDefaultIWApplicationContext()
-		        : iwc;
+	private IWApplicationContext getIWAC(IWContext iwc) {
+		return iwc == null ? IWMainApplication.getDefaultIWApplicationContext() : iwc;
 	}
 	
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
-			    CasesBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -203,8 +198,7 @@ public class CasesStatusHandler implements ActionHandler {
 	
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac,
-			    UserBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -273,12 +267,52 @@ public class CasesStatusHandler implements ActionHandler {
 	CasesStatusMapperHandler getCasesStatusMapperHandler() {
 		return casesStatusMapperHandler;
 	}
-
-	public String getComment() {
+	
+	private String getComment(ExecutionContext context, Locale locale, User user) {
+		if (locale == null) {
+			LOGGER.warning("Locale is unknown, unable to resolve comment");
+			return null;
+		}
+		
+		Map<String, String> commentExpr = getCommentExpression();
+		if (commentExpr == null)
+			return null;
+		
+		String comment = commentExpr.get(locale.toString());
+		if (StringUtil.isEmpty(comment))
+			return null;
+		
+		if (StringUtil.isEmpty(getCommentValues()))
+			return comment;
+		
+		MessageValueContext messageContext = new MessageValueContext();
+		messageContext.setValue(MessageValueContext.userBean, user);
+		Long pid = getProcessInstanceId();
+		ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
+		messageContext.setValue(MessageValueContext.piwBean, piw);
+		comment = getMessageValueHandler().getFormattedMessage(comment, getCommentValues(), context.getToken(), messageContext);
 		return comment;
 	}
 
-	public void setComment(String comment) {
-		this.comment = comment;
+	public Map<String, String> getCommentExpression() {
+		return commentExpression;
+	}
+
+	public void setCommentExpression(Map<String, String> commentExpression) {
+		this.commentExpression = commentExpression;
+	}
+
+	public String getCommentValues() {
+		return commentValues;
+	}
+
+	public void setCommentValues(String commentValues) {
+		this.commentValues = commentValues;
+	}
+	
+	MessageValueHandler getMessageValueHandler() {
+		if (messageValueHandler == null)
+			ELUtil.getInstance().autowire(this);
+		return messageValueHandler;
 	}
 }
