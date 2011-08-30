@@ -19,6 +19,7 @@ import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -40,7 +41,7 @@ import com.idega.util.expression.ELUtil;
  */
 @Service("casesStatusHandler")
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
-public class CasesStatusHandler implements ActionHandler {
+public class CasesStatusHandler extends DefaultSpringBean implements ActionHandler {
 	
 	private static final long serialVersionUID = 7504445907540445936L;
 	
@@ -133,7 +134,7 @@ public class CasesStatusHandler implements ActionHandler {
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
 				
-				String comment = getComment(ectx, iwc.getCurrentLocale(), performer);
+				String comment = getComment(ectx, getCurrentLocale(), performer);
 				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment);
 			}
 		} catch (Exception e) {
