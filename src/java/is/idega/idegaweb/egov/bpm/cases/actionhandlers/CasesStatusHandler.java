@@ -135,7 +135,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 				}
 				
 				String comment = getComment(ectx, getCurrentLocale(), performer);
-				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment);
+				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment, true);
 			}
 		} catch (Exception e) {
 			LOGGER.log(Level.SEVERE, "Exception while changing case status for the case: " + caseId, e);
