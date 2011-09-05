@@ -261,8 +261,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
 			properties.setAddCredentialsToExernalUrls(false);
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, properties);
-		}
-		else {
+		} else {
 			properties.setShowCheckBoxes(false);
 			component = getCasesListBuilder().getCasesList(iwc, cases, properties);
 		}
@@ -278,52 +277,52 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 	}
 	
-	private void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean bean) {
+	private void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean searchParams) {
 		List<AdvancedProperty> searchFields = new ArrayList<AdvancedProperty>();
 		
 		Locale locale = iwc.getCurrentLocale();
 		IWResourceBundle iwrb = getResourceBundle(iwc);
 		
-		if (!StringUtil.isEmpty(bean.getCaseNumber())) {
-			searchFields.add(new AdvancedProperty("case_nr", bean.getCaseNumber()));
+		if (!StringUtil.isEmpty(searchParams.getCaseNumber())) {
+			searchFields.add(new AdvancedProperty("case_nr", searchParams.getCaseNumber()));
 		}
-		if (!StringUtil.isEmpty(bean.getDescription())) {
-			searchFields.add(new AdvancedProperty("description", bean.getDescription()));
+		if (!StringUtil.isEmpty(searchParams.getDescription())) {
+			searchFields.add(new AdvancedProperty("description", searchParams.getDescription()));
 		}
-		if (!StringUtil.isEmpty(bean.getName())) {
-			searchFields.add(new AdvancedProperty("name", bean.getName()));
+		if (!StringUtil.isEmpty(searchParams.getName())) {
+			searchFields.add(new AdvancedProperty("name", searchParams.getName()));
 		}
-		if (!StringUtil.isEmpty(bean.getPersonalId())) {
-			searchFields.add(new AdvancedProperty("personal_id", bean.getPersonalId()));
+		if (!StringUtil.isEmpty(searchParams.getPersonalId())) {
+			searchFields.add(new AdvancedProperty("personal_id", searchParams.getPersonalId()));
 		}
-		if (!StringUtil.isEmpty(bean.getContact())) {
-			searchFields.add(new AdvancedProperty("contact", bean.getContact()));
+		if (!StringUtil.isEmpty(searchParams.getContact())) {
+			searchFields.add(new AdvancedProperty("contact", searchParams.getContact()));
 		}
-		if (!StringUtil.isEmpty(bean.getProcessId())) {
+		if (!StringUtil.isEmpty(searchParams.getProcessId())) {
 			String processName = null;
 			try {
 				ProcessDefinitionW bpmCasesManager = ELUtil.getInstance().getBean(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER);
-				bpmCasesManager.setProcessDefinitionId(Long.valueOf(bean.getProcessId()));
+				bpmCasesManager.setProcessDefinitionId(Long.valueOf(searchParams.getProcessId()));
 				processName = bpmCasesManager.getProcessName(locale);
 			} catch(Exception e) {
-				LOGGER.log(Level.WARNING, "Error getting process name by: " + bean.getProcessId());
+				LOGGER.log(Level.WARNING, "Error getting process name by: " + searchParams.getProcessId());
 			}
 			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ? "general_cases" : processName));
 		}
-		if (!StringUtil.isEmpty(bean.getStatusId())) {
+		if (!StringUtil.isEmpty(searchParams.getStatusId())) {
 			String status = null;
 			try {
-				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(null, getCasesBusiness(iwc).getCaseStatus(bean.getStatusId()), locale);
+				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(null, getCasesBusiness(iwc).getCaseStatus(searchParams.getStatusId()), locale);
 			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "Error getting status name by: " + bean.getStatusId(), e);
+				LOGGER.log(Level.WARNING, "Error getting status name by: " + searchParams.getStatusId(), e);
 			}
 			searchFields.add(new AdvancedProperty("status", StringUtil.isEmpty(status) ? iwrb.getLocalizedString("unknown_status", "Unknown") : status));
 		}
-		if (!StringUtil.isEmpty(bean.getDateRange())) {
-			searchFields.add(new AdvancedProperty("date_range", bean.getDateRange()));
+		if (!StringUtil.isEmpty(searchParams.getDateRange())) {
+			searchFields.add(new AdvancedProperty("date_range", searchParams.getDateRange()));
 		}
-		if (!ListUtil.isEmpty(bean.getProcessVariables())) {
-			for (BPMProcessVariable variable: bean.getProcessVariables()) {
+		if (!ListUtil.isEmpty(searchParams.getProcessVariables())) {
+			for (BPMProcessVariable variable: searchParams.getProcessVariables()) {
 				String value = variable.getValue();
 				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName())) {
 					MultipleSelectionVariablesResolver resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName());
@@ -574,6 +573,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 	
 	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, CasesListSearchCriteriaBean criteriaBean) {
+		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE, criteriaBean);
+		
 		CasesSearchResultsHolder resultsHolder = null;
 		try {
 			resultsHolder = getSearchResultsHolder();
@@ -632,7 +633,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	public boolean clearSearchResults(String id) {
 		IWContext iwc = CoreUtil.getIWContext();
 		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE);
-		
+		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE);
 		return getSearchResultsHolder().clearSearchResults(id);
 	}
 

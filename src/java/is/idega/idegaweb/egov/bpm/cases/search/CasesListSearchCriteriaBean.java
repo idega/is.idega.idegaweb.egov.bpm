@@ -20,7 +20,6 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	
 	private boolean usePDFDownloadColumn = true;
 	private boolean allowPDFSigning = true;
-	private boolean showStatistics;
 	private boolean hideEmptySection;
 	private boolean showCaseNumberColumn = true;
 	private boolean showCreationTimeInDateColumn = true;
@@ -65,14 +64,6 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setAllowPDFSigning(boolean allowPDFSigning) {
 		this.allowPDFSigning = allowPDFSigning;
-	}
-
-	public boolean isShowStatistics() {
-		return showStatistics;
-	}
-
-	public void setShowStatistics(boolean showStatistics) {
-		this.showStatistics = showStatistics;
 	}
 
 	public List<BPMProcessVariable> getProcessVariables() {
