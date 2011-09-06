@@ -10,12 +10,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.identity.BPMUserFactory;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
@@ -23,11 +25,21 @@ import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
 
 @Scope("request")
 @Service(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName)
 public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver {
 
+	@Autowired
+	private BPMUserFactory userFactory;
+	
+	BPMUserFactory getUserFactory() {
+		if (userFactory == null)
+			ELUtil.getInstance().autowire(this);
+		return userFactory;
+	}
+	
 	@Override
 	public Collection<AdvancedProperty> getValues(String procDefId, String variableName) {
 		if (StringUtil.isEmpty(procDefId) || StringUtil.isEmpty(variableName)) {
@@ -41,33 +53,21 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 			return values;
 		}
 		
-		List<Long> procInstIds = getBpmDAO().getProcessInstanceIdsByProcessDefinitionNames(Arrays.asList(procDefName));
-		if (ListUtil.isEmpty(procInstIds)) {
-			addEmptyLabel(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
-			return values;
-		}
-		
-		Collection<VariableInstanceInfo> vars = getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(Arrays.asList(variableName), procInstIds, false, false);
-		if (ListUtil.isEmpty(vars)) {
+		List<Integer> ids = getUserFactory().getAllHandlersForProcess(procDefName);
+		if (ListUtil.isEmpty(ids)) {
 			addEmptyLabel(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 			return values;
 		}
 		
 		values = new ArrayList<AdvancedProperty>();
-		List<String> ids = new ArrayList<String>();
-		for (VariableInstanceInfo var: vars) {
-			String id = var.getValue().toString();
-			if (ids.contains(id))
-				continue;	//	No need to duplicate users
-			
-			ids.add(id);
-			values.add(new AdvancedProperty(id, getUserName(id)));
+		for (Integer id: ids) {
+			values.add(new AdvancedProperty(String.valueOf(id), getUserName(id)));
 		}
 		
 		return values;
 	}
 	
-	private String getUserName(String id) {
+	private String getUserName(Integer id) {
 		try {
 			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
 			User user = userBusiness.getUser(Integer.valueOf(id));
