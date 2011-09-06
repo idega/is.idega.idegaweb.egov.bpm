@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -753,5 +754,39 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return ((Number) id).longValue();
 		
 		return null;
+	}
+	
+	public List<Integer> getCasesIdsByHandlersAndProcessDefinition(List<Integer> handlersIds, String procDefName) {
+		if (ListUtil.isEmpty(handlersIds) || StringUtil.isEmpty(procDefName))
+			return null;
+		
+		StringBuilder ids = new StringBuilder();
+		for (Iterator<Integer> handlersIter = handlersIds.iterator(); handlersIter.hasNext();) {
+			ids.append(handlersIter.next());
+			if (handlersIter.hasNext())
+				ids.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+		}
+		String query = "select distinct c.COMM_CASE_ID from comm_case c inner join BPM_CASES_PROCESSINSTANCES b on b.case_id = c.COMM_CASE_ID inner join jbpm_processinstance p"
+			.concat(" on p.id_ = b.process_instance_id inner join jbpm_processdefinition d on d.id_ = p.processdefinition_ where d.name_ = '").concat(procDefName)
+			.concat("' and c.handler in (").concat(ids.toString()).concat(")");
+		List<Serializable[]> cases = null;
+		try {
+			cases = SimpleQuerier.executeQuery(query, 1);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (ListUtil.isEmpty(cases))
+			return null;
+		
+		List<Integer> casesIds = new ArrayList<Integer>();
+		for (Serializable[] caseId: cases) {
+			if (ArrayUtil.isEmpty(caseId))
+				continue;
+			
+			Serializable id = caseId[0];
+			if (id instanceof Number)
+				casesIds.add(((Number) id).intValue());
+		}
+		return casesIds;
 	}
 }
