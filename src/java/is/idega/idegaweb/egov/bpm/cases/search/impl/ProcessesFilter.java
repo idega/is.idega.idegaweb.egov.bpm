@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CasesRetrievalManager;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
@@ -35,6 +36,9 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
+	
+	@Autowired
+	private CasesBPMDAO casesDAO;
 	
 	private String procDefName;
 	
@@ -105,7 +109,6 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			//	Checking if variable is holding handler ID
 			if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name)) {
 				handlerVariable = variable;
-				
 			} else if ((tmp = variable.getRealValue()) instanceof Collection) {	//	Checking if value is multi-type
 				Collection<?> newMultipleValues = (Collection<?>) tmp;
 				List<Serializable> existingMultipleValues = multValues.get(name);
@@ -177,10 +180,6 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		return getCasesBPMDAO().getCaseIdsByProcessInstanceIds(procInstIds);
 	}
 	
-	private List<Long> getProcInstIdsFromVars(Collection<VariableInstanceInfo> vars) {
-		return getProcInstIdsFromVars(vars, null);
-	}
-		
 	private List<Long> getProcInstIdsFromVars(Collection<VariableInstanceInfo> vars, List<Long> ids) {
 		if (ListUtil.isEmpty(vars))
 			return null;
@@ -205,16 +204,16 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		if (ArrayUtil.isEmpty(ids))
 			return null;
 		
-		List<Serializable> usersIds = new ArrayList<Serializable>();
+		List<Integer> usersIds = new ArrayList<Integer>();
 		for (String id: ids) {
-			Long handlerId = null;
+			Integer handlerId = null;
 			try {
-				handlerId = Long.valueOf(id);
+				handlerId = Integer.valueOf(id);
 			} catch (NumberFormatException e) {
 				Collection<User> users = getUserBusiness().getUsersByNameOrEmailOrPhone(id);
 				if (!ListUtil.isEmpty(users)) {
 					for (User user: users) {
-						usersIds.add(Long.valueOf(user.getId()));
+						usersIds.add(Integer.valueOf(user.getId()));
 					}
 				}
 				handlerId = null;
@@ -224,15 +223,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 				usersIds.add(handlerId);
 		}
 		
-		Collection<VariableInstanceInfo> vars = getVariablesQuerier().getProcessVariablesByNameAndValue(varName, usersIds, Arrays.asList(procDefName));
-		if (ListUtil.isEmpty(vars))
-			return null;
-		
-		List<Long> procInstIds = getProcInstIdsFromVars(vars);
-		if (ListUtil.isEmpty(procInstIds))
-			return null;
-		
-		return getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(procInstIds));
+		return getCasesDAO().getCasesIdsByHandlersAndProcessDefinition(usersIds, procDefName);
 	}
 
 	@Override
@@ -254,5 +245,11 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		if (variablesQuerier == null)
 			ELUtil.getInstance().autowire(this);
 		return variablesQuerier;
+	}
+	
+	CasesBPMDAO getCasesDAO() {
+		if (casesDAO == null)
+			ELUtil.getInstance().autowire(this);
+		return casesDAO;
 	}
 }
