@@ -25,6 +25,10 @@
             <param name="beanName" value="boardCasesManagerBean" />
             <include method="setCaseVariableValue" />
         </create>
+        <create creator="spring" javascript="BPMApplicationXFormHandler">
+            <param name="beanName" value="bpmApplicationXFormHandler" />
+            <include method="isRequiredToBeLoggedIn" />
+        </create>
         
     	<convert match="is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean" converter="bean" />
 	</allow>
