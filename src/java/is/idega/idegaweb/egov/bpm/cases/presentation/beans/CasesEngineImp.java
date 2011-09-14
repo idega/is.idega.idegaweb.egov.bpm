@@ -43,6 +43,7 @@ import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.block.process.event.CaseModifiedEvent;
+import com.idega.block.process.presentation.UICasesList;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
@@ -226,7 +227,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		
 		addSearchQueryToSession(iwc, criteriaBean);
 		
-		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean, true);
+		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean);
 		if (criteriaBean.isClearResults()) {
 			if (cases == null) {
 				Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criteriaBean.getId());
@@ -359,10 +360,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	
 	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criteriaBean) {
 		return criteriaBean instanceof CasesListSearchCriteriaBean ?
-				getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criteriaBean, false) : null;
+				getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criteriaBean) : null;
 	}
 	
-	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean, boolean usePaging) {
+	private boolean isPagingTurnedOn() {
+		return IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean(UICasesList.DYNAMIC_CASES_NAVIGATOR, Boolean.TRUE);
+	}
+	
+	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
 		User currentUser = null;
 		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
@@ -429,6 +434,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		int totalCount = 0;
 		int count = 0;
 		int startIndex = 0;
+		boolean usePaging = isPagingTurnedOn();
 		if (usePaging) {
 			Comparator<Integer> c = new Comparator<Integer>() {
 				public int compare(Integer o1, Integer o2) {
@@ -442,6 +448,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			criteriaBean.setAllDataLoaded(!(totalCount > criteriaBean.getPageSize()));
 			count = criteriaBean.getPageSize() <= 0 ? 20 : criteriaBean.getPageSize();
 			startIndex = criteriaBean.getPage() <= 0 ? 0 : (criteriaBean.getPage() - 1) * count;
+		} else {
+			criteriaBean.setPageSize(-1);
 		}
 		
 		boolean noSortingOptions = ListUtil.isEmpty(criteriaBean.getSortingOptions());
@@ -675,7 +683,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			IWContext iwc = CoreUtil.getIWContext();
 			CasesListSearchCriteriaBean listCriterias = (CasesListSearchCriteriaBean) criterias;
 			
-			PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, listCriterias, false);
+			PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, listCriterias);
 			if (cases == null) {
 				cases = new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>());
 			}
