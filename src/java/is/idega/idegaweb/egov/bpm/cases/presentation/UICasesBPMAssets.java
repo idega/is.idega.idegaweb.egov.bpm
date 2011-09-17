@@ -178,6 +178,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetViewRendered}", Boolean.class));
 		getFacets().put(assetViewFacet, div);
 //		</asset view>
+		
+		if (!CoreUtil.isSingleComponentRenderingProcess(iwc)) {
+			IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+			PresentationUtil.addJavaScriptActionToBody(iwc, "jQuery(document).ready(function() {showLoadingMessage('"+iwrb.getLocalizedString("loading", "Loading...")+"');});");
+		}
 	}
 	
 	@Override
