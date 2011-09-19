@@ -70,6 +70,7 @@ import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
+import com.idega.presentation.ListNavigator;
 import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
@@ -86,7 +87,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	
 	@Autowired
 	private CasesBPMProcessView casesBPMProcessView;
-	
 	
 	@Autowired
 	private BuilderLogicWrapper builderLogic;
@@ -642,6 +642,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		IWContext iwc = CoreUtil.getIWContext();
 		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE);
 		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE);
+		setCasesPagerAttributes(-1, -1);
 		return getSearchResultsHolder().clearSearchResults(id);
 	}
 
@@ -755,5 +756,18 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		
 		return theCase == null ? null : theCase.getLocalizedStatus();
+	}
+
+	@Override
+	public boolean setCasesPagerAttributes(int page, int pageSize) {
+		page = page <= 0 ? 1 : page;
+		pageSize = pageSize <= 0 ? 20 : pageSize;
+		
+		String key = "userCases";
+		IWContext iwc = CoreUtil.getIWContext();
+		iwc.setSessionAttribute(ListNavigator.PARAMETER_CURRENT_PAGE + "_" + key, page);
+		iwc.setSessionAttribute(ListNavigator.PARAMETER_NUMBER_OF_ENTRIES + "_" + key, pageSize);
+		
+		return true;
 	}
 }
