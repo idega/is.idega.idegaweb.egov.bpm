@@ -311,6 +311,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 				caseIds = getCasesBPMDAO().getUserCasesIds(user, statusesToShow, statusesToHide, casecodes, roles, onlySubscribedCases);
+			} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
+				caseIds = getCasesBPMDAO().getPublicCasesIds(statusesToShow, statusesToHide, caseCodes);
+			} else {
+				getLogger().warning("Unknown cases list type:" + type);
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -466,16 +470,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 	
 	protected Collection<ICPage> getPages(String pageSubType) {
-		
 		try {
 			ICPageHome home = (ICPageHome) IDOLookup.getHome(ICPage.class);
-			@SuppressWarnings("unchecked")
-			Collection<ICPage> icpages = home.findBySubType(pageSubType, false);
-			
-			return icpages;
-			
+			return home.findBySubType(pageSubType, false);
 		} catch (Exception e) {
-			throw new RuntimeException("Exception while resolving icpages by subType: "+pageSubType, e);
+			throw new RuntimeException("Exception while resolving pages by subType: "+pageSubType, e);
 		}
 	}
 
