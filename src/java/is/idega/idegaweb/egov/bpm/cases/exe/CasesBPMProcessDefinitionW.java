@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.idega.block.process.data.CaseStatus;
+import com.idega.bpm.BPMConstants;
 import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
 import com.idega.bpm.xformsview.XFormsView;
 import com.idega.business.IBOLookup;
@@ -208,7 +209,17 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					pi.getContextInstance().setVariables(caseData);
 					getLogger().info("Variables were set: " + caseData);
 					
-					submitVariablesAndProceedProcess(ti, viewSubmission.resolveVariables(), true);
+					Map<String, Object> variables = viewSubmission.resolveVariables();
+					submitVariablesAndProceedProcess(ti, variables, true);
+					
+					if (variables != null && variables.containsKey(BPMConstants.PUBLIC_PROCESS)) {
+						Object publicProcess = variables.get(BPMConstants.PUBLIC_PROCESS);
+						if (Boolean.valueOf(publicProcess.toString())) {
+							genCase.setAsAnonymous(Boolean.TRUE);
+							genCase.store();
+						}
+					}
+					
 					getLogger().info("Variables were submitted and a process proceeded");
 					
 					return Boolean.TRUE;
