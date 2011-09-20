@@ -697,6 +697,26 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
 	}
 	
+	public List<Integer> getPublicCasesIds(List<String> caseStatusesToShow, List<String> caseStatusesToHide, List<String> caseCodes) {
+		List<Param> params = new ArrayList<Param>();
+		
+		boolean useCaseCodes = !ListUtil.isEmpty(caseCodes);
+		if (useCaseCodes)
+			params.add(new Param("caseCodes", caseCodes));
+		
+		StringBuilder builder = new StringBuilder(1000);
+		builder.append("select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case, comm_case where ");
+		builder.append("proc_case.PROC_CASE_ID = comm_case.COMM_CASE_ID and comm_case.IS_ANONYMOUS = 'Y' ");
+		
+		if (useCaseCodes)
+			builder.append(" and proc_case.case_code not in (:caseCodes) ");
+		
+		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
+		builder.append(" order by Created desc");
+		
+		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params == null ? null : params.toArray(new Param[params.size()]));
+	}
+	
 	public List<Integer> getCasesIdsByStatusForAdmin(
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
 		StringBuilder builder = new StringBuilder(200);

@@ -83,6 +83,8 @@ public interface CasesBPMDAO extends GenericDao {
 	        List<String> caseStatuses, List<String> caseStatusesToHide,
 	        List<String> caseCodes, Collection<String> roles, boolean onlySubscribedCases);
 	
+	public abstract List<Integer> getPublicCasesIds(List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes);
+	
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(
 	        List<String> caseStatuses, List<String> caseStatusesToHide);
 	
