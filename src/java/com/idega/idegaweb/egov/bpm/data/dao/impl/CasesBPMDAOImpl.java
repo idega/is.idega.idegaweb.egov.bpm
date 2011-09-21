@@ -504,9 +504,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 
-		if (!ListUtil.isEmpty(caseCodes)) {
-			builder.append("and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes)) ");
-		}
 		if (onlySubscribedCases) {
 			builder.append("and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber) ");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
@@ -545,9 +542,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		
-		if (!ListUtil.isEmpty(caseCodes)) {
-			builder.append(" and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes))");
-		}
 		builder.append(") union"
 		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 		                + "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where proc_case.case_manager_type is null ");
