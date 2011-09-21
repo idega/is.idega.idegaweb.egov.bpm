@@ -1,10 +1,10 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
@@ -79,7 +79,8 @@ public class AssignCaseOwnerHandler implements ActionHandler {
 		        .getProcessInstance(getProcessInstanceId())
 		        .getStartTaskInstance().getTaskInstance();
 		
-		taskInstance.setActorId(ownerUser.getId());
+		if (ownerUser != null)
+			taskInstance.setActorId(ownerUser.getId());
 		
 		getBpmContext().saveProcessEntity(taskInstance);
 	}
