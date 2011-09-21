@@ -292,9 +292,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			casecodes = params.getCodes();
 			
 			caseIds = getCachedIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, roles, groups, casecodes);
-			if (!ListUtil.isEmpty(caseIds)) {
+			if (!ListUtil.isEmpty(caseIds))
 				return caseIds;
-			}
 			
 			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
 				caseIds = isSuperAdmin ?
