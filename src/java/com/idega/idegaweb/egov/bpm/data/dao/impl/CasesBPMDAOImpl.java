@@ -702,7 +702,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append("proc_case.PROC_CASE_ID = comm_case.COMM_CASE_ID and comm_case.IS_ANONYMOUS = 'Y' ");
 		
 		if (useCaseCodes)
-			builder.append(" and proc_case.case_code not in (:caseCodes) ");
+			builder.append(" and proc_case.case_code in (:caseCodes) ");
 		
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
 		builder.append(" order by Created desc");
