@@ -7,7 +7,6 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.Iterator;
 import java.util.List;
@@ -682,9 +681,13 @@ public class CasesBPMAssetsState implements Serializable {
 	public String getSpecialBackPage() {
 		if (!specialBackPageDecoded) {
 			specialBackPageDecoded = true;
+			
+			if (StringUtil.isEmpty(specialBackPage))
+				return null;
+			
 			try {
 				specialBackPage = URLDecoder.decode(specialBackPage, CoreConstants.ENCODING_UTF8);
-			} catch (UnsupportedEncodingException e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

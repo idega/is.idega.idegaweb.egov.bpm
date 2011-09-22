@@ -71,7 +71,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private boolean showOnlyCreatorInContacts;
 	private boolean showLogExportButton;
 	
-	private String commentsPersistenceManagerIdentifier;
+	private String commentsPersistenceManagerIdentifier, specialBackPage;
 	
 	private Long processInstanceId;
 	private Integer caseId;
@@ -166,7 +166,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		if (iwc.isParameterSet(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER)) {
 			stateBean.setSpecialBackPage(iwc.getParameter(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER));
-		}
+		} else if (!StringUtil.isEmpty(getSpecialBackPage()))
+			stateBean.setSpecialBackPage(getSpecialBackPage());
 		
 		div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		div.setValue(divTag);
@@ -374,16 +375,20 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		Long processInstanceId = stateBean.getProcessInstanceId();
 		Integer caseId = stateBean.getCaseId();
 		
-		String mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
+		String specialBackPage = getSpecialBackPage();
+		StringBuffer mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
 			.append(processInstanceId == null ? String.valueOf(-1) : processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ")
 			.append(isUsePdfDownloadColumn()).append(", ").append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(", ")
-			.append(isShowAttachmentStatistics()).append(", ").append(isShowOnlyCreatorInContacts()).append(", ").append(isShowLogExportButton()).append(");").toString();
+			.append(isShowAttachmentStatistics()).append(", ").append(isShowOnlyCreatorInContacts()).append(", ").append(isShowLogExportButton()).append(", ");
+		if (StringUtil.isEmpty(specialBackPage))
+			mainAction.append("null");
+		else
+			mainAction.append("'").append(specialBackPage).append("'");
+		mainAction.append(");").toString();
 		
-		if (!isSingle) {
-			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction).append("\n});").toString();
-		}
-		
-		PresentationUtil.addJavaScriptActionToBody(iwc, mainAction);
+		if (!isSingle)
+			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction.toString()).append("\n});");
+		PresentationUtil.addJavaScriptActionToBody(iwc, mainAction.toString());
 	}
 
 	public boolean isUsePdfDownloadColumn() {
@@ -440,6 +445,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setShowLogExportButton(boolean showLogExportButton) {
 		this.showLogExportButton = showLogExportButton;
+	}
+
+	public String getSpecialBackPage() {
+		return specialBackPage;
+	}
+
+	public void setSpecialBackPage(String specialBackPage) {
+		this.specialBackPage = specialBackPage;
 	}
 	
 }
