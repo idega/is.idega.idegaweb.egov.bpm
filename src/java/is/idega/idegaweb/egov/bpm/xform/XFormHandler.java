@@ -5,6 +5,8 @@ import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -16,10 +18,11 @@ import org.springframework.stereotype.Service;
 import com.idega.chiba.web.xml.xforms.validation.XFormSubmissionValidator;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.jbpm.data.dao.BPMDAO;
+import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.presentation.BPMTaskViewer;
-import com.idega.presentation.IWContext;
+import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
@@ -48,22 +51,45 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 		return bpmDAO;
 	}
 	
-	public boolean isRequiredToBeLoggedIn(String uri) {
-		if (StringUtil.isEmpty(uri))
-			return false;	//	Error
+	private boolean isUserAbleToSubmitTask(User user, TaskInstanceW task) {
+		if (user == null || task == null)
+			return false;
 		
-		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null) {
-			getLogger().warning("Unable to get instance of " + IWContext.class.getSimpleName());
-			return false;	//	Error
+		List<BPMDocument> tasksForUser = task.getProcessInstanceW().getTaskDocumentsForUser(user, getCurrentLocale());
+		if (ListUtil.isEmpty(tasksForUser)) {
+			getLogger().warning("There are no tasks available for the user " + user);
+			return false;
+		} else {
+			boolean foundAvailableTask = false;
+			long tiId = task.getTaskInstanceId();
+			for (Iterator<BPMDocument> tasksIter = tasksForUser.iterator(); (!foundAvailableTask && tasksIter.hasNext());) {
+				foundAvailableTask = tiId == tasksIter.next().getTaskInstanceId().longValue();
+			}
+			
+			if (foundAvailableTask) {
+				return true;
+			} else {
+				getLogger().warning("Task with ID " + tiId + " is not available for submitting by the user " + user);
+				return false;
+			}
 		}
-		if (iwc.isLoggedOn())
-			return false;	//	Everything is fine
+	}
+	
+	public boolean isPossibleToSubmitXForm(String uri) {
+		if (StringUtil.isEmpty(uri))
+			return true;	//	Error - can not determine
+		
+		User user = null;
+		try {
+			user = getBPMFactory().getBpmUserFactory().getCurrentBPMUser().getUserToUse();
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error resolving BPM user", e);
+		}
 		
 		URIUtil uriUtil = new URIUtil(uri);
 		Map<String, String> params = uriUtil.getParameters();
 		if (params == null || params.isEmpty())
-			return false;	//	Error
+			return true;	//	Error - can not determine
 		
 		try {
 			Long procDefId = null;
@@ -72,27 +98,32 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 			} else if (params.containsKey(CasesBPMAssetsState.TASK_INSTANCE_ID_PARAMETER)) {
 				Long tiId = Long.valueOf(params.get(CasesBPMAssetsState.TASK_INSTANCE_ID_PARAMETER));
 				TaskInstanceW task = getBPMFactory().getProcessManagerByTaskInstanceId(tiId).getTaskInstance(tiId);
-				procDefId = task.getProcessInstanceW().getProcessDefinitionW().getProcessDefinitionId();
+				if (user == null) {
+					procDefId = task.getProcessInstanceW().getProcessDefinitionW().getProcessDefinitionId();
+				} else
+					return isUserAbleToSubmitTask(user, task);
 			}
 			if (procDefId == null) {
 				getLogger().warning("Unable to resolve process definition ID from the parameters: " + params);
-				return false;	//	Error
+				return true;	//	Error - can not determine
 			}
 			
 			String appUrl = getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(procDefId);
 			if (StringUtil.isEmpty(appUrl))
-				return false;	//	Error
+				return true;	//	Error - can not determine
 			
 			ApplicationBusiness appBusiness = getServiceInstance(ApplicationBusiness.class);
 			Collection<Application> apps = appBusiness.getApplicationHome().findAllByApplicationUrl(appUrl);
 			if (ListUtil.isEmpty(apps)) {
 				getLogger().warning("No applications were found by URL: " + appUrl);
-				return getApplication().getSettings().getBoolean("invalidate_xform_if_not_logged", Boolean.FALSE);
+				return getApplication().getSettings().getBoolean("submit_xform_if_logged_out", Boolean.TRUE);	//	Be default allowing to submit
 			}
 			
 			for (Application app: apps) {
-				if (app.getRequiresLogin())
-					return true;
+				if (app.getRequiresLogin() && user == null) {
+					getLogger().warning("User must be logged in to submit the application: " + app.getNameByLocale(getCurrentLocale()));
+					return false;
+				}
 			}
 		} catch (Exception e) {
 			String message = "Error resolving if xform at '" + uri + "' needs to be invalidated";
@@ -100,7 +131,7 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 			getLogger().log(Level.WARNING, message, e);
 		}
 		
-		return false;
+		return true;	//	Error - can not determine
 	}
 	
 }
