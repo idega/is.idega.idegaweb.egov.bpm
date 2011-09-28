@@ -131,7 +131,7 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 			getLogger().log(Level.WARNING, message, e);
 		}
 		
-		return true;	//	Error - can not determine
+		return true;
 	}
 	
 }
