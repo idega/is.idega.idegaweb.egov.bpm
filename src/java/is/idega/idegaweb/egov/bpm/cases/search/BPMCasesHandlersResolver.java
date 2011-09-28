@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHand
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
@@ -15,6 +16,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.builder.bean.AdvancedProperty;
+import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.identity.BPMUserFactory;
@@ -63,6 +65,10 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 		for (Integer id: ids) {
 			values.add(new AdvancedProperty(String.valueOf(id), getUserName(id)));
 		}
+		
+		List<AdvancedProperty> sorted = new ArrayList<AdvancedProperty>(values);
+		Collections.sort(sorted, new AdvancedPropertyComparator(getCurrentLocale()));
+		values = new ArrayList<AdvancedProperty>(sorted);
 		
 		return values;
 	}
