@@ -119,7 +119,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 			
 			if (ifCaseStatus == null || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
 				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
-				final User performer;
+				User performer = null;
 				if (performerUserId == null) {
 					if (iwc != null) {
 						if (iwc.isLoggedOn())
@@ -133,6 +133,8 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 				} else {
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
+				if (performer == null)
+					performer = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getUserToUse();
 				
 				String comment = getComment(ectx, getCurrentLocale(), performer);
 				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment, true);
