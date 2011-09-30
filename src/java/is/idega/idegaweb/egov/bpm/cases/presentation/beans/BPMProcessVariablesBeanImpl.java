@@ -93,7 +93,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			}
 			
 			localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
-			if (StringUtil.isEmpty(localizedName)) {
+			if (StringUtil.isEmpty(localizedName) || localizedName.equals(name)) {
 				continue;
 			}
 			

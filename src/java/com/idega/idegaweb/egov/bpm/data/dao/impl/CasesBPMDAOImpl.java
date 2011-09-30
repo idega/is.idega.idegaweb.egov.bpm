@@ -729,7 +729,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		    Integer.class, "caseId", params.toArray(new Param[params.size()]));
 	}
 
-	@Override
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames) {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames)) {
 			return Collections.emptyList();
@@ -741,7 +740,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		);
 	}
 
-	@Override
 	public Long getProcessInstanceIdByCaseSubject(String subject) {
 		if (StringUtil.isEmpty(subject)) {
 			LOGGER.warning("Case subject is not provided!");

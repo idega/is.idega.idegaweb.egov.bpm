@@ -759,7 +759,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return theCase == null ? null : theCase.getLocalizedStatus();
 	}
 
-	@Override
 	public boolean setCasesPagerAttributes(int page, int pageSize) {
 		page = page <= 0 ? 1 : page;
 		pageSize = pageSize <= 0 ? 20 : pageSize;

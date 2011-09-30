@@ -110,7 +110,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	private List<String> variables;
 
-	@Override
 	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName) {
 		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
 
@@ -404,7 +403,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return variables;
 	}
 
-	@Override
 	@Transactional(propagation = Propagation.REQUIRED)
 	public AdvancedProperty setCaseVariableValue(Integer caseId, String variableName, String value, String role, String backPage) {
 		if (caseId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(value))
@@ -516,7 +514,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return gradings;
 	}
 
-	@Override
 	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, String processName) {
 		if (iwc == null) {
 			return null;
@@ -581,7 +578,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return data;
 	}
 
-	@Override
 	public AdvancedProperty getHandlerInfo(IWContext iwc, User handler) {
 		if (handler == null) {
 			return null;
@@ -785,7 +781,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
-	@Override
 	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage, String taskName) {
 		return getTaskViewer().getLinkToTheTaskRedirector(iwc, basePage, caseId, processInstanceId, backPage, taskName);
 	}
