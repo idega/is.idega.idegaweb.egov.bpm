@@ -68,6 +68,7 @@ bpm_variable.string_ownerPersonalId=Kennitala
 bpm_variable.string_ownerAddress=Heimilisfang/gata
 bpm_variable.string_ownerCommune=P\u00F3stfang
 bpm_variable.string_ownerPostCode=P\u00F3stn\u00FAmer
+bpm_variable.string_ownerMunicipality=Sta\u00F0ur
 bpm_variable.string_vehicleManufacturer=Tegund \u00F6kut\u00E6kis
 bpm_variable.string_vehicleModel=\u00D6kut\u00E6ki ger\u00F0
 bpm.caseHandler=Umsj\u00F3narma\u00F0ur

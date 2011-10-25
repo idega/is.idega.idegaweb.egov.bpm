@@ -57,6 +57,7 @@ bpm_variable.string_ownerPersonalId=Personal ID
 bpm_variable.string_ownerAddress=Address
 bpm_variable.string_ownerCommune=Commune
 bpm_variable.string_ownerPostCode=Postal code
+bpm_variable.string_ownerMunicipality=Area
 bpm_variable.string_vehicleManufacturer=Vehicle manufacturer
 bpm_variable.string_vehicleModel=Vehicle model
 bpm_variable.handlerUserId=Handler
