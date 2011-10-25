@@ -142,7 +142,8 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			LOGGER.log(Level.SEVERE, "Error getting variables for process: " + processDefinitionId, e);
 		}
 		if (ListUtil.isEmpty(variables)) {
-			return null;
+			processVariables = Collections.emptyList();
+			return processVariables;
 		}
 		
 		IWContext iwc = CoreUtil.getIWContext();
