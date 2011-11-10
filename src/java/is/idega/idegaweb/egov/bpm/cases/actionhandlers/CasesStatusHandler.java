@@ -167,14 +167,8 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 	
 	private Integer getCaseId(ExecutionContext ectx) {
 		if (caseId == null) {
-			Long processInstanceIdToUse;
-			if (getProcessInstanceId() != null) {
-				processInstanceIdToUse = getProcessInstanceId();
-			} else {
-				Long currentProcessInstanceId = ectx.getProcessInstance().getId();
-				processInstanceIdToUse = getBpmFactory().getMainProcessInstance(currentProcessInstanceId).getId();
-			}
-			
+			Long processInstanceIdToUse = getProcessInstanceId(ectx);
+		
 			CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceIdToUse);
 			if (cpi == null) {
 				LOGGER.warning("No case process instance bind found for process instance id=" + processInstanceIdToUse);
@@ -185,6 +179,25 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 		}
 		
 		return caseId;
+	}
+	
+	/**
+	 * <p>Method for returning of instance id of jBPM process. Look at
+	 * /resources/processes/SomeProcess/processdefinition.xml for deeper 
+	 * understanding or <a href=http://docs.jboss.org/jbpm>jBPM</a>.</p>
+	 * @param ectx org.jbpm.graph.exe.ExecutionContext.
+	 * @return id.
+	 */
+	protected Long getProcessInstanceId(ExecutionContext ectx) {
+	    Long processInstanceIdToUse;
+	    if (getProcessInstanceId() != null) {
+            processInstanceIdToUse = getProcessInstanceId();
+        } else {
+            Long currentProcessInstanceId = ectx.getProcessInstance().getId();
+            processInstanceIdToUse = getBpmFactory().getMainProcessInstance(currentProcessInstanceId).getId();
+        }
+	    
+	    return processInstanceIdToUse;
 	}
 	
 	private IWApplicationContext getIWAC(IWContext iwc) {
