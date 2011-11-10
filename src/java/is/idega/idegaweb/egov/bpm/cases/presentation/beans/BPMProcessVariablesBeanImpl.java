@@ -207,7 +207,8 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		}
 		
 		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(variable.getName())
-				|| variable.getName().startsWith(VariableInstanceType.OBJ_LIST.getPrefix())) {
+				|| variable.getName().startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) || variable.getName().startsWith(VariableInstanceType.LIST.getPrefix())
+				|| variable.getName().equals("string_harbourNr")) {
 			return getResolver(variable.getName()).getPresentation(variable);
 		}
 		

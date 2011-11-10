@@ -63,3 +63,5 @@ bpm_variable.string_vehicleModel=Vehicle model
 bpm_variable.handlerUserId=Handler
 bpm_variable.objlist_violationPersons=Violator personal ID
 bpm_variable.objlist_violationCompanies=Violator company ID
+bpm_variable.list_violationTypes=Violation type
+bpm_variable.string_harbourNr=Harbour nr.

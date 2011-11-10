@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.mail.Message;
+import javax.mail.MessagingException;
 
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -55,8 +56,12 @@ public class MessageAttributesParser extends DefaultMessageParser implements Ema
 					continue;
 				
 				for (Message mail: mails) {
-					if (!isValidEmail(mail))
-						mailsToDrop.add(mail);
+					try {
+						if (!isValidEmail(mail))
+							mailsToDrop.add(mail);
+					} catch (MessagingException e) {
+						LOGGER.log(Level.WARNING, "Error while resolving if email is valid", e);
+					}
 				}
 				
 				if (!ListUtil.isEmpty(mailsToDrop))

@@ -67,6 +67,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
+import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
@@ -326,9 +327,17 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (!ListUtil.isEmpty(searchParams.getProcessVariables())) {
 			for (BPMProcessVariable variable: searchParams.getProcessVariables()) {
 				String value = variable.getValue();
-				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName())) {
-					MultipleSelectionVariablesResolver resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName());
-					value = resolver.getPresentation(variable);
+				
+				String name = variable.getName();
+				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name)
+						|| name.startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) || name.startsWith(VariableInstanceType.LIST.getPrefix())
+						|| name.equals("string_harbourNr")) {
+					MultipleSelectionVariablesResolver resolver = null;
+					try {
+						resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName());
+					} catch (Throwable e) {}
+					if (resolver != null)
+						value = resolver.getPresentation(variable);
 				}
 				
 				searchFields.add(new AdvancedProperty(iwrb.getLocalizedString("bpm_variable.".concat(variable.getName()), variable.getName()), value));
