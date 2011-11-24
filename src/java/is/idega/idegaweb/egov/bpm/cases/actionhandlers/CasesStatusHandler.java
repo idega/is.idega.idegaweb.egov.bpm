@@ -125,7 +125,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 						if (iwc.isLoggedOn())
 							performer = iwc.getCurrentUser();
 						else
-							performer = null;
+							performer = iwc.getAccessController().getAdministratorUser();
 					} else {
 						LOGGER.warning("Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
 						performer = null;
@@ -133,8 +133,12 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 				} else {
 					performer = getUserBusiness(iwac).getUser(performerUserId);
 				}
-				if (performer == null)
-					performer = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getUserToUse();
+				
+				try {
+					if (performer == null)
+						performer = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getUserToUse();
+				} catch(Exception e) {
+				}
 				
 				String comment = getComment(ectx, getCurrentLocale(), performer);
 				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment, true);
