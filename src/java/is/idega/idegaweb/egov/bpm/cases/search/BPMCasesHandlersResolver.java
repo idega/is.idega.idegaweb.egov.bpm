@@ -73,7 +73,7 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 		return values;
 	}
 	
-	private String getUserName(Integer id) {
+	protected String getUserName(Integer id) {
 		try {
 			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
 			User user = userBusiness.getUser(Integer.valueOf(id));

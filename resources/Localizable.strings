@@ -52,9 +52,11 @@ cases_bpm.process_was_removed_from_watch_list=Current case was removed from your
 cases_bpm.followup.subject=Case requires your attention
 cases_bpm.followup.message=Hello, {0}. Case handler has asked your input.
 reload=Reload
+
 bpm.caseHandler=Handler
 bpm_variable.handlerUserId=Handler
 bpm_variable.objlist_violationPersons=Violator personal ID
 bpm_variable.objlist_violationCompanies=Violator company ID
 bpm_variable.list_violationTypes=Violation type
 bpm_variable.string_harbourNr=Harbour nr.
+bpm_variable.string_responsibleInspector=Responsible inspector
