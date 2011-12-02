@@ -84,7 +84,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	        		"string_ownerCostValue",			//	15
 	        		"string_ownerProjectedSize",		//	16
 	            	"string_ownerEntrepreneurCompany",	//	17
-	            	"string_expectedResultDescriptionValue" // 18
+	            	"string_expectedResultDescriptionValue", // 18
+	            	"string_possibleImpactValue", // 19
+	            	"string_financeDescriptionValue" // 20
 	 ));
 
 	private static final Logger LOGGER = Logger.getLogger(BoardCasesManagerImpl.class.getName());
@@ -150,26 +152,28 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			CaseBoardBean boardCase = new CaseBoardBean(view.getCaseId(), view.getProcessInstanceId());
 
 			boardCase.setApplicantName(view.getValue(CasesBoardViewer.CASE_FIELDS.get(0).getId()));
-			boardCase.setAddress(view.getValue(CasesBoardViewer.CASE_FIELDS.get(1).getId()));
-			boardCase.setPostalCode(view.getValue(CasesBoardViewer.CASE_FIELDS.get(2).getId()));
-			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(3).getId()));
-			boardCase.setCaseDescription(view.getValue(CasesBoardViewer.CASE_FIELDS.get(4).getId()));
+			boardCase.setPersonalID(view.getValue(CasesBoardViewer.CASE_FIELDS.get(1).getId()));
+			boardCase.setAddress(view.getValue(CasesBoardViewer.CASE_FIELDS.get(2).getId()));
+			boardCase.setPostalCode(view.getValue(CasesBoardViewer.CASE_FIELDS.get(3).getId()));
+			boardCase.setMunicipality(view.getValue(CasesBoardViewer.CASE_FIELDS.get(4).getId()));
+			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()));
+			boardCase.setCaseDescription(view.getValue(CasesBoardViewer.CASE_FIELDS.get(6).getId()));
 
-			boardCase.setTotalCost(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()), true)));
-			boardCase.setAppliedAmount(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(6).getId()), true)));
+			boardCase.setTotalCost(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(7).getId()), true)));
+			boardCase.setAppliedAmount(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(8).getId()), true)));
 
-			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(7).getId()));
+			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(9).getId()));
 
 			String [] gradingSums = getGradingSum(view);
 			boardCase.setNegativeGradingSum(gradingSums[1]);
 			boardCase.setGradingSum(gradingSums[0]);
 
-			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(10).getId()));
-			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(11).getId()));
+			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()));
+			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(13).getId()));
 
-			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()), false));
-			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(13).getId()), false));
-			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(14).getId()));
+			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(14).getId()), false));
+			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(15).getId()), false));
+			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(16).getId()));
 
 			boardCase.setHandler(view.getHandler());
 
@@ -492,6 +496,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			if (value.indexOf("b") != -1) {
 				value = value.substring(0, value.indexOf("b"));
 			}
+			if (value.indexOf("c") != -1) {
+				value = value.substring(0, value.indexOf("c"));
+			}
 
 			gradeValue = null;
 			try {
@@ -545,7 +552,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			List<String> allValues = caseBoard.getAllValues();
 			List<String> rowValues = new ArrayList<String>(allValues.size());
 			for (String value : allValues) {
-				if (index == 3)
+				if (index == 5)
 					// Link to grading task
 					rowValues.add(caseBoard.getCaseIdentifier());
 				else
