@@ -30,6 +30,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
+import com.idega.jbpm.data.impl.VariableInstanceQuerierImpl;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -294,8 +295,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			// String
 			} else if (variable.isStringType()) {
 				if (value instanceof String) {
-					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, processDefinitionName, variable.getName(),
-					    	CoreConstants.PERCENT.concat((String) value).concat(CoreConstants.PERCENT), BPMProcessVariable.STRING_TYPES);
+					String query = VariableInstanceQuerierImpl.isDataMirrowed() ?
+							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables :
+							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow;
+					variableResults = getCaseIdsByVariable(query, processDefinitionName, variable.getName(),
+							CoreConstants.PERCENT.concat((String) value).concat(CoreConstants.PERCENT), BPMProcessVariable.STRING_TYPES);
 				}
 			
 			// Unsupported variable
@@ -357,7 +361,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			caseNumber = caseNumber + CoreConstants.PERCENT;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByCaseNumber, Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));
+		String query = VariableInstanceQuerierImpl.isDataMirrowed() ? CaseProcInstBind.getCaseIdsByCaseNumber : CaseProcInstBind.getCaseIdsByCaseNumberNoMirrow;
+		return getResultList(query, Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));
 	}
 	
 	public List<Long> getCaseIdsByProcessUserStatus(String status) {
@@ -365,8 +370,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessUserStatus,
-		    Long.class, new Param(ProcessUserBind.statusProp, status));
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessUserStatus, Long.class, new Param(ProcessUserBind.statusProp, status));
 	}
 	
 	public List<Long> getCaseIdsByCaseStatus(String[] statuses) {
@@ -379,7 +383,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			statusesInSet.add(statuses[i]);
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByCaseStatus, Long.class, new Param(CaseProcInstBind.caseStatusesProp, statusesInSet));
+		String query = VariableInstanceQuerierImpl.isDataMirrowed() ? CaseProcInstBind.getCaseIdsByCaseStatus : CaseProcInstBind.getCaseIdsByCaseStatusNoMirrow;
+		return getResultList(query, Long.class, new Param(CaseProcInstBind.caseStatusesProp, statusesInSet));
 	}
 	
 	public List<Long> getCaseIdsByUserIds(String userId) {
@@ -387,8 +392,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 		
-		return getResultList(CaseProcInstBind.getCaseIdsByUserIds, Long.class,
-		    new Param(ProcessUserBind.userIdParam, userId));
+		return getResultList(CaseProcInstBind.getCaseIdsByUserIds, Long.class, new Param(ProcessUserBind.userIdParam, userId));
 	}
 	
 	public List<Long> getCaseIdsByDateRange(IWTimestamp dateFrom,
