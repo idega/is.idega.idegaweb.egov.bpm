@@ -621,11 +621,19 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return result;
 		}
 		
+		CasesSearchCriteriaBean criterias = resultsHolder.getSearchCriteria(id);
+		if (criterias != null) {
+			criterias.setPage(-1);
+			criterias.setPageSize(Integer.MAX_VALUE);
+		}
 		if (!resultsHolder.isSearchResultStored(id) || !resultsHolder.isAllDataLoaded(id)) {
-			CasesSearchCriteriaBean criterias = resultsHolder.getSearchCriteria(id);
-			if (ListUtil.isEmpty(getReLoadedCases(resultsHolder, criterias, id))) {
+			Collection<CasePresentation> cases = getReLoadedCases(resultsHolder, criterias, id);
+			if (ListUtil.isEmpty(cases)) {
 				result.setValue(getResourceBundle(iwc).getLocalizedString("no_search_results_to_export", "There are no search results to export!"));
 				return result;
+			} else if (criterias != null) {
+				criterias.setPageSize(cases.size());
+				criterias.setAllDataLoaded(Boolean.TRUE);
 			}
 		}
 		
@@ -686,7 +694,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	public Collection<CasePresentation> getReLoadedCases(CasesSearchCriteriaBean criterias) {
-		return getReLoadedCases(null, criterias, null);
+		Collection<CasePresentation> reLoadedCases = getReLoadedCases(null, criterias, null);
+		if (!ListUtil.isEmpty(reLoadedCases))
+			criterias.setAllDataLoaded(Boolean.FALSE);
+		return reLoadedCases;
 	}
 	
 	private Collection<CasePresentation> getReLoadedCases(CasesSearchResultsHolder resultsHolder, CasesSearchCriteriaBean criterias, String id) {
