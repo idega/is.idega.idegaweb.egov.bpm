@@ -129,7 +129,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 		}
 	}
 
-	private static final String caseDescriptionVariableName = "string_caseDescription";
+	public static final String caseDescriptionVariableName = "string_caseDescription";
 
 	@Override
 	@Transactional(readOnly = true)
