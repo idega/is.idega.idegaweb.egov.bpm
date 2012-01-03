@@ -33,6 +33,7 @@ import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
 import com.idega.util.CoreUtil;
@@ -170,7 +171,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	}
 	
 	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
-		String localizedName = iwrb.getLocalizedString(new StringBuilder("bpm_variable.").append(name).toString(), isAdmin ? name : null);
+		String localizedName = iwrb.getLocalizedString(new StringBuilder(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX).append(name).toString(), isAdmin ? name : null);
 		
 		if (StringUtil.isEmpty(localizedName)) {
 			return isAdmin ? name : null;	//	No translation found

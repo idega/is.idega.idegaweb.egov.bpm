@@ -109,8 +109,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Autowired
 	private BPMCasesEngine casesEngine;
 	
-	static final String beanIdentifier = "casesBPMCaseHandler";
-	public static final String caseHandlerType = "CasesBPM";
+	public static final String	beanIdentifier = "casesBPMCaseHandler",
+								caseHandlerType = "CasesBPM";
 
 	@Override
 	public String getBeanIdentifier() {

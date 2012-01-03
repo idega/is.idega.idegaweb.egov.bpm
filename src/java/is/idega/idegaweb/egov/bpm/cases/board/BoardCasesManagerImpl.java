@@ -1,7 +1,11 @@
 package is.idega.idegaweb.egov.bpm.cases.board;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.business.TaskViewerHelper;
 import is.idega.idegaweb.egov.bpm.cases.CaseProcessInstanceRelationImpl;
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
+import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariablesBean;
 import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
@@ -12,6 +16,7 @@ import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBean;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBodyRowBean;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,15 +46,9 @@ import com.idega.core.contact.data.Email;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.VariableInstanceInfo;
-import com.idega.jbpm.bean.VariableStringInstance;
 import com.idega.jbpm.data.VariableInstanceQuerier;
-import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.exe.ProcessInstanceW;
-import com.idega.jbpm.exe.TaskInstanceW;
-import com.idega.jbpm.view.View;
-import com.idega.jbpm.view.ViewSubmission;
+import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.NoEmailFoundException;
 import com.idega.user.business.UserBusiness;
@@ -59,34 +59,32 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
-@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service
-@Transactional
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class BoardCasesManagerImpl implements BoardCasesManager {
 
-	private static final List<String> GRADING_VARIABLES = Collections
-	        .unmodifiableList(Arrays.asList(
-	        		"string_ownerInnovationalValue",	//	0
-	        		"string_ownerCompetitionValue",		//	1
-	        		"string_ownerEntrepreneursValue",	//	2
-	        		"string_ownerPossibleDevelopments",	//	3
-	        		"string_ownerNatureStatus",			//	4
-	        		"string_ownerApplication",			//	5
-	        		"string_ownerOverturn",				//	6
-	        		"string_ownerProceeds",				//	7
-	        		"string_ownerEconomist",			//	8
-	        		"string_ownerEmployees",			//	9
-	        		"string_ownerForsvarsmenn",			//	10
-	        		"string_ownerConstant",				//	11
-	        		"string_ownerNewConstant",			//	12
-	        		"string_ownerBusiness",				//	13
-	        		"string_ownerProject",				//	14
-	        		"string_ownerCostValue",			//	15
-	        		"string_ownerProjectedSize",		//	16
-	            	"string_ownerEntrepreneurCompany",	//	17
-	            	"string_expectedResultDescriptionValue", // 18
-	            	"string_possibleImpactValue", // 19
-	            	"string_financeDescriptionValue" // 20
+	private static final List<String> GRADING_VARIABLES = Collections.unmodifiableList(Arrays.asList(
+	        		"string_ownerInnovationalValue",			//	0
+	        		"string_ownerCompetitionValue",				//	1
+	        		"string_ownerEntrepreneursValue",			//	2
+	        		"string_ownerPossibleDevelopments",			//	3
+	        		"string_ownerNatureStatus",					//	4
+	        		"string_ownerApplication",					//	5
+	        		"string_ownerOverturn",						//	6
+	        		"string_ownerProceeds",						//	7
+	        		"string_ownerEconomist",					//	8
+	        		"string_ownerEmployees",					//	9
+	        		"string_ownerForsvarsmenn",					//	10
+	        		"string_ownerConstant",						//	11
+	        		"string_ownerNewConstant",					//	12
+	        		"string_ownerBusiness",						//	13
+	        		"string_ownerProject",						//	14
+	        		"string_ownerCostValue",					//	15
+	        		"string_ownerProjectedSize",				//	16
+	            	"string_ownerEntrepreneurCompany",			//	17
+	            	"string_expectedResultDescriptionValue",	//	18
+	            	"string_possibleImpactValue",				//	19
+	            	"string_financeDescriptionValue"			//	20
 	 ));
 
 	private static final Logger LOGGER = Logger.getLogger(BoardCasesManagerImpl.class.getName());
@@ -96,13 +94,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private CasesRetrievalManager caseManager;
 
 	@Autowired
-	private BPMFactory bpmFactory;
-
-	@Autowired
 	private CaseProcessInstanceRelationImpl caseProcessInstanceRelation;
-
-	@Autowired
-	private CasesBPMDAO casesBPMDAO;
 
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
@@ -112,7 +104,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	private List<String> variables;
 
-	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName) {
+	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName, String uuid) {
 		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
 
 		if (ListUtil.isEmpty(cases))
@@ -129,7 +121,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			}
 		}
 
-		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(casesIdsAndHandlers);
+		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(casesIdsAndHandlers, uuid);
 		if (ListUtil.isEmpty(boardCases)) {
 			return null;
 		}
@@ -139,48 +131,51 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return boardCases;
 	}
 
-	private List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers) {
-		List<String> allVariables = new ArrayList<String>(getVariables());
+	private List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers, String uuid) {
+		List<String> variablesToQuery = getVariables(uuid);
+		List<String> allVariables = new ArrayList<String>(variablesToQuery);
 		allVariables.addAll(GRADING_VARIABLES);
-		List<CaseBoardView> boardViews = getStringVariablesValuesByVariablesNamesForCases(casesIdsAndHandlers, allVariables);
+		List<CaseBoardView> boardViews = getVariablesValuesByNamesForCases(casesIdsAndHandlers, allVariables);
 		if (ListUtil.isEmpty(boardViews)) {
 			return null;
 		}
 
+		List<String> numberVariables = Arrays.asList(
+				CasesBoardViewer.CASE_FIELDS.get(7).getId(),
+				CasesBoardViewer.CASE_FIELDS.get(8).getId(),
+				CasesBoardViewer.CASE_FIELDS.get(14).getId(),
+				CasesBoardViewer.CASE_FIELDS.get(15).getId()
+		);
+		
 		List<CaseBoardBean> boardCases = new ArrayList<CaseBoardBean>();
 		for (CaseBoardView view: boardViews) {
 			CaseBoardBean boardCase = new CaseBoardBean(view.getCaseId(), view.getProcessInstanceId());
 
 			boardCase.setApplicantName(view.getValue(CasesBoardViewer.CASE_FIELDS.get(0).getId()));
-			boardCase.setPersonalID(view.getValue(CasesBoardViewer.CASE_FIELDS.get(1).getId()));
-			boardCase.setAddress(view.getValue(CasesBoardViewer.CASE_FIELDS.get(2).getId()));
-			boardCase.setPostalCode(view.getValue(CasesBoardViewer.CASE_FIELDS.get(3).getId()));
-			boardCase.setMunicipality(view.getValue(CasesBoardViewer.CASE_FIELDS.get(4).getId()));
 			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()));
-			boardCase.setCaseDescription(view.getValue(CasesBoardViewer.CASE_FIELDS.get(6).getId()));
-
-			boardCase.setTotalCost(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(7).getId()), true)));
-			boardCase.setAppliedAmount(String.valueOf(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(8).getId()), true)));
-
-			boardCase.setNutshell(view.getValue(CasesBoardViewer.CASE_FIELDS.get(9).getId()));
 
 			String [] gradingSums = getGradingSum(view);
-			boardCase.setNegativeGradingSum(gradingSums[1]);
-			boardCase.setGradingSum(gradingSums[0]);
-
+			
 			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()));
-			boardCase.setComment(view.getValue(CasesBoardViewer.CASE_FIELDS.get(13).getId()));
 
-			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(14).getId()), false));
-			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(15).getId()), false));
-			boardCase.setRestrictions(view.getValue(CasesBoardViewer.CASE_FIELDS.get(16).getId()));
+			boardCase.setBoardAmount(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(14).getId()), false));
+			boardCase.setGrantAmountSuggestion(getNumberValue(view.getValue(CasesBoardViewer.CASE_FIELDS.get(15).getId()), false));
 
 			boardCase.setHandler(view.getHandler());
 
-			if (StringUtil.isEmpty(boardCase.getApplicantName())) {
-				LOGGER.warning("Applicant name is unknown: ".concat(boardCase.toString()).concat(". Probably some error occured gathering data."));
+			for (String variable: variablesToQuery) {
+				String value = view.getValue(variable);
+				if (numberVariables.contains(variable)) {
+					if (variable.equals(CasesBoardViewer.CASE_FIELDS.get(14).getId()) || variable.equals(CasesBoardViewer.CASE_FIELDS.get(15).getId()))
+						value = String.valueOf(getNumberValue(value, false));
+					else
+						value = String.valueOf(getNumberValue(value, true));
+				}
+				boardCase.addValue(variable, value);
 			}
-
+			boardCase.addValue(CasesBoardViewer.CASE_FIELDS.get(10).getId(), gradingSums[1]);
+			boardCase.addValue(CasesBoardViewer.CASE_FIELDS.get(11).getId(), gradingSums[0]);
+			
 			boardCases.add(boardCase);
 		}
 
@@ -210,11 +205,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
-	private List<CaseBoardView> getStringVariablesValuesByVariablesNamesForCases(Map<Integer, User> casesIdsAndHandlers, List<String> variablesNames) {
+	private List<CaseBoardView> getVariablesValuesByNamesForCases(Map<Integer, User> casesIdsAndHandlers, List<String> variablesNames) {
 		Map<Integer, Long> processes = getCaseProcessInstanceRelation().getCasesProcessInstancesIds(casesIdsAndHandlers.keySet());
 
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier()
-			.getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, processes.values(), true, false, false);
+				.getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, processes.values(), true, false, false);
 		if (ListUtil.isEmpty(variables)) {
 			LOGGER.warning("Didn't find any variables values for processes " + processes.values() + " and variables names " + variablesNames);
 			return null;
@@ -222,7 +217,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
 		for (VariableInstanceInfo variable: variables) {
-			if (variable instanceof VariableStringInstance && (variable.getName() != null && variable.getValue() != null && variable.getProcessInstanceId() != null)) {
+			Serializable value = variable.getValue();
+			if (variable.getName() != null && value != null && variable.getProcessInstanceId() != null) {
 				Long processInstanceId = variable.getProcessInstanceId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
@@ -239,7 +235,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				if (view == null) {
 					LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + processes);
 				} else {
-					view.addVariable(variable.getName(), variable.getValue().toString());
+					view.addVariable(variable.getName(), value.toString());
 				}
 			} else {
 				LOGGER.warning(variable + " can not be added to board view!");
@@ -250,18 +246,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	private Long getNumberValue(String value, boolean dropThousands) {
-		if (StringUtil.isEmpty(getStringValue(value))) {
+		if (StringUtil.isEmpty(getStringValue(value)))
 			return Long.valueOf(0);
-		}
 
 		value = value.replaceAll(CoreConstants.SPACE, CoreConstants.EMPTY);
 		value = value.replace(CoreConstants.DOT, CoreConstants.EMPTY);
 		value = value.replace("þús", CoreConstants.EMPTY);
 		value = value.replaceAll("kr", CoreConstants.EMPTY);
 
-		if (StringUtil.isEmpty(value)) {
+		if (StringUtil.isEmpty(value))
 			return Long.valueOf(0);
-		}
 
 		Double numberValue = null;
 		try {
@@ -289,15 +283,13 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	@SuppressWarnings("unchecked")
 	private void sortBoardCases(IWContext iwc, List<CaseBoardBean> boardCases) {
-		if (ListUtil.isEmpty(boardCases)) {
+		if (ListUtil.isEmpty(boardCases))
 			return;
-		}
 
 		List<String> sortingPreferences = null;
 		Object o = iwc.getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
-		if (o instanceof List) {
+		if (o instanceof List)
 			sortingPreferences = (List<String>) o;
-		}
 
 		Collections.sort(boardCases, new BoardCasesComparator(iwc.getLocale(), sortingPreferences));
 	}
@@ -326,9 +318,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			}
 		}
 
-		if (ListUtil.isEmpty(allCases)) {
+		if (ListUtil.isEmpty(allCases))
 			return null;
-		}
 
 		Collection<GeneralCase> bpmCases = new ArrayList<GeneralCase>();
 		for (Case theCase : allCases) {
@@ -348,9 +339,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 
 		Collection<Long> casesIdsByProcessDefinition = caseManager.getCasesIdsByProcessDefinitionName(processName);
-		if (ListUtil.isEmpty(casesIdsByProcessDefinition)) {
+		if (ListUtil.isEmpty(casesIdsByProcessDefinition))
 			return null;
-		}
 
 		List<Integer> ids = new ArrayList<Integer>(casesIdsByProcessDefinition.size());
 		for (Long id : casesIdsByProcessDefinition) {
@@ -358,13 +348,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 
 		Collection<Case> cases = getCasesBusiness(iwac).getCasesByIds(ids);
-		if (ListUtil.isEmpty(cases)) {
+		if (ListUtil.isEmpty(cases))
 			return null;
-		}
 
-		if (StringUtil.isEmpty(caseStatus)) {
+		if (StringUtil.isEmpty(caseStatus))
 			return cases;
-		}
 
 		Collection<Case> casesByProcessDefinitionAndStatus = new ArrayList<Case>();
 		for (Case theCase : cases) {
@@ -389,7 +377,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private CasesRetrievalManager getCaseManager() {
 		if (caseManager == null) {
 			try {
-				caseManager = ELUtil.getInstance().getBean("casesBPMCaseHandler");
+				caseManager = ELUtil.getInstance().getBean(BPMCasesRetrievalManagerImpl.beanIdentifier);
 			} catch (Exception e) {
 				LOGGER.log(Level.SEVERE, "Error getting Spring bean for: " + CasesRetrievalManager.class, e);
 			}
@@ -397,74 +385,18 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return caseManager;
 	}
 
-	private List<String> getVariables() {
+	private List<String> getVariables(String uuid) {
 		if (variables == null) {
-			variables = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
-			for (AdvancedProperty variable : CasesBoardViewer.CASE_FIELDS) {
-				variables.add(variable.getId());
-			}
+			List<String> customColumns = getCustomColumns(uuid);
+			if (ListUtil.isEmpty(customColumns)) {
+				variables = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
+				for (AdvancedProperty variable : CasesBoardViewer.CASE_FIELDS) {
+					variables.add(variable.getId());
+				}
+			} else
+				variables = new ArrayList<String>(customColumns);
 		}
 		return variables;
-	}
-
-	@Transactional(propagation = Propagation.REQUIRED)
-	public AdvancedProperty setCaseVariableValue(Integer caseId, String variableName, String value, String role, String backPage) {
-		if (caseId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(value))
-			return null;
-
-		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null || !iwc.isLoggedOn())
-			return null;
-		if (!StringUtil.isEmpty(role) && !iwc.hasRole(role))
-			return null;
-
-		try {
-			if (value.equals("no_value"))
-				value = CoreConstants.EMPTY;
-
-			Long processInstanceId = getCaseProcessInstanceRelation().getCaseProcessInstanceId(caseId);
-
-			ProcessInstanceW piw = getBpmFactory().getProcessInstanceW(processInstanceId);
-
-			String taskName = "Grading";
-			List<TaskInstanceW> allTasks = piw.getUnfinishedTaskInstancesForTask(taskName);
-
-			if (ListUtil.isEmpty(allTasks)) {
-				LOGGER.warning("No tasks instances were found for task = " + taskName + " by process instance: " + processInstanceId);
-				return null;
-			}
-
-			// should be only one task instance
-			if (allTasks.size() > 1)
-				LOGGER.warning("More than one task instance found for task = " + taskName + " when only one expected");
-
-			TaskInstanceW sharedTIW = allTasks.iterator().next();
-			Long sharedTaskInstanceId = sharedTIW.getTaskInstanceId();
-			View view = sharedTIW.loadView();
-
-			// TODO: move getViewSubmission to view too
-			// TODO: add addVariable and so to the viewSubmission
-			ViewSubmission viewSubmission = getBpmFactory().getViewSubmission();
-			Map<String, Object> variables = view.resolveVariables();
-			if (variables == null)
-				variables = new HashMap<String, Object>();
-			variables.put(variableName, value);
-
-			viewSubmission.populateParameters(view.resolveParameters());
-			viewSubmission.populateVariables(variables);
-
-			Long viewTaskInstanceId = view.getTaskInstanceId();
-
-			TaskInstanceW viewTIW = getBpmFactory().getProcessManagerByTaskInstanceId(viewTaskInstanceId).getTaskInstance(viewTaskInstanceId);
-
-			viewTIW.submit(viewSubmission);
-
-			return new AdvancedProperty(value, getTaskViewer().getLinkToTheTask(iwc, caseId.toString(), sharedTaskInstanceId.toString(), backPage));
-		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Error saving variable '" + variableName + "' with value '" + value + "' for case: " + caseId, e);
-		}
-
-		return null;
 	}
 
 	/**
@@ -521,55 +453,63 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return gradings;
 	}
 
-	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, String processName) {
-		if (iwc == null) {
+	public boolean isColumnOfDomain(String currentColumn, String columnOfDomain) {
+		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
+	}
+	
+	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, String processName, String uuid) {
+		if (iwc == null)
 			return null;
-		}
 
 		IWBundle bundle = iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
 		CaseBoardTableBean data = new CaseBoardTableBean();
 
-		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatus, processName);
+		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatus, processName, uuid);
 		if (ListUtil.isEmpty(boardCases)) {
 			data.setErrorMessage(iwrb.getLocalizedString("cases_board_viewer.no_cases_found", "There are no cases!"));
 			return data;
 		}
 
 		// Header
-		data.setHeaderLabels(getTableHeaders(iwrb));
+		data.setHeaderLabels(getTableHeaders(iwrb, uuid));
 
 		// Body
-		long grantAmountSuggestionTotal = 0;
+		Map<Integer, AdvancedProperty> columns = getColumns(iwrb, uuid);
+		
 		long boardAmountTotal = 0;
+		long grantAmountSuggestionTotal = 0;
+		String uniqueCaseId = "uniqueCaseId";
 		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<CaseBoardTableBodyRowBean>(boardCases.size());
 		for (CaseBoardBean caseBoard : boardCases) {
 			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(caseBoard.getCaseId(), caseBoard.getProcessInstanceId());
-			rowBean.setId(new StringBuilder("uniqueCaseId").append(caseBoard.getCaseId()).toString());
+			rowBean.setId(new StringBuilder(uniqueCaseId).append(caseBoard.getCaseId()).toString());
 			rowBean.setCaseIdentifier(caseBoard.getCaseIdentifier());
-
+			rowBean.setHandler(caseBoard.getHandler());
+			
 			int index = 0;
-			List<String> allValues = caseBoard.getAllValues();
-			List<String> rowValues = new ArrayList<String>(allValues.size());
-			for (String value : allValues) {
-				if (index == 5)
+			Map<Integer, AdvancedProperty> rowValues = new TreeMap<Integer, AdvancedProperty>();
+			for (Integer key: columns.keySet()) {
+				AdvancedProperty column = columns.get(key);
+				
+				if (isColumnOfDomain(column.getId(), CasesBoardViewer.CASE_FIELDS.get(5).getId()))
 					// Link to grading task
-					rowValues.add(caseBoard.getCaseIdentifier());
-				else
-					rowValues.add(value);
+					rowValues.put(index, new AdvancedProperty(column.getId(), caseBoard.getCaseIdentifier()));
+				else if (column.getId().equals(CaseHandlerAssignmentHandler.handlerUserIdVarName)) {
+					rowValues.put(index, new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName, caseBoard.getHandler() == null ?
+							String.valueOf(-1) : caseBoard.getHandler().getId()));
+				} else
+					rowValues.put(index, new AdvancedProperty(column.getId(), /*value*/caseBoard.getValue(column.getId())));
 
-				if (index == allValues.size() - 4)
-					// Calculating grant amount suggestions
-					grantAmountSuggestionTotal += caseBoard.getGrantAmountSuggestion();
-				else if (index == allValues.size() - 3)
+				if (isColumnOfDomain(column.getId(), CasesBoardViewer.CASE_FIELDS.get(14).getId()))
 					// Calculating board amounts
 					boardAmountTotal += caseBoard.getBoardAmount();
+				else if (isColumnOfDomain(column.getId(), CasesBoardViewer.CASE_FIELDS.get(15).getId()))
+					// Calculating grant amount suggestions
+					grantAmountSuggestionTotal += caseBoard.getGrantAmountSuggestion();
 
 				index++;
 			}
-
-			rowBean.setHandler(caseBoard.getHandler());
-			rowValues.add(caseBoard.getHandler() == null ? String.valueOf(-1) : caseBoard.getHandler().getId());
 
 			rowBean.setValues(rowValues);
 			bodyRows.add(rowBean);
@@ -577,7 +517,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		data.setBodyBeans(bodyRows);
 
 		// Footer
-		data.setFooterValues(getFooterValues(iwrb, grantAmountSuggestionTotal, boardAmountTotal));
+		data.setFooterValues(getFooterValues(iwrb, grantAmountSuggestionTotal, boardAmountTotal, uuid));
 
 		// Everything is OK
 		data.setFilledWithData(Boolean.TRUE);
@@ -596,9 +536,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		} catch(RemoteException e) {
 			LOGGER.log(Level.WARNING, "Error getting " + UserBusiness.class, e);
 		}
-		if (userBusiness == null) {
+		if (userBusiness == null)
 			return null;
-		}
 
 		AdvancedProperty info = new AdvancedProperty(handler.getName());
 
@@ -607,62 +546,103 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			email = userBusiness.getUsersMainEmail(handler);
 		} catch (RemoteException e) {
 			LOGGER.log(Level.WARNING, "Error getting email for user: " + handler, e);
-		} catch (NoEmailFoundException e) {
-		}
+		} catch (NoEmailFoundException e) {}
 
 		if (email != null)
 			info.setValue(new StringBuilder("mailto:").append(email.getEmailAddress()).toString());
 
 		return info;
 	}
-
-	private List<String> getTableHeaders(IWResourceBundle iwrb) {
-		String prefix = "case_board_viewer.";
-		List<String> headers = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
-		for (AdvancedProperty header : CasesBoardViewer.CASE_FIELDS) {
-			headers.add(iwrb.getLocalizedString(new StringBuilder(prefix).append(header.getId()).toString(), header.getValue()));
+	
+	private static final String LOCALIZATION_PREFIX = "case_board_viewer.";
+	
+	public List<String> getCustomColumns(String uuid) {
+		if (StringUtil.isEmpty(uuid))
+			return Collections.emptyList();
+		
+		IWContext iwc = CoreUtil.getIWContext();
+		Object customColumns = iwc.getSessionAttribute(CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid);
+		if (customColumns instanceof List<?>) {
+			@SuppressWarnings("unchecked")
+			List<String> columns = (List<String>) customColumns;
+			return columns;
 		}
-
-		headers.add(iwrb.getLocalizedString(new StringBuilder(prefix).append("case_handler").toString(), "Case handler"));
-
-		return headers;
+		return null;
+	}
+	
+	public Map<Integer, AdvancedProperty> getColumns(IWResourceBundle iwrb, String uuid) {
+		Map<Integer, AdvancedProperty> columns = new TreeMap<Integer, AdvancedProperty>();
+		int index = 1;
+		
+		List<String> customColumns = getCustomColumns(uuid);
+		if (ListUtil.isEmpty(customColumns)) {
+			for (AdvancedProperty header: CasesBoardViewer.CASE_FIELDS) {
+				columns.put(index, new AdvancedProperty(header.getId(),
+						iwrb.getLocalizedString(new StringBuilder(LOCALIZATION_PREFIX).append(header.getId()).toString(), header.getValue())));
+				index++;
+			}
+			columns.put(index, new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName,
+					iwrb.getLocalizedString(new StringBuilder(LOCALIZATION_PREFIX).append(CaseHandlerAssignmentHandler.handlerUserIdVarName).toString(), "Case handler")));
+		} else {
+			IWContext iwc = CoreUtil.getIWContext();
+			IWResourceBundle bpmIWRB = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+			for (String column: customColumns) {
+				String localized = iwrb.getLocalizedString(LOCALIZATION_PREFIX.concat(column), column);
+				if (column.equals(localized))
+					localized = bpmIWRB.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(column), column);
+				if (column.equals(localized)) {
+					LOGGER.warning("Variable " + column + " is not localized");
+					continue;
+				}
+				
+				columns.put(index, new AdvancedProperty(column, localized));
+				index++;
+			}
+		}
+		
+		return columns;
 	}
 
-	private List<String> getFooterValues(IWResourceBundle iwrb, long grantAmountSuggestionTotal, long boardAmountTotal) {
-		List<String> values = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
+	private Map<Integer,  AdvancedProperty> getTableHeaders(IWResourceBundle iwrb, String uuid) {
+		return getColumns(iwrb, uuid);
+	}
 
-		for (int i = 0; i < CasesBoardViewer.CASE_FIELDS.size(); i++) {
-			if (i == CasesBoardViewer.CASE_FIELDS.size() - 4) {
+	private List<String> getFooterValues(IWResourceBundle iwrb, long grantAmountSuggestionTotal, long boardAmountTotal, String uuid) {
+		List<String> columns = getVariables(uuid);
+		List<String> values = new ArrayList<String>();
+		
+		int indexOfBoard = getIndexOfColumn(CasesBoardViewer.CASE_FIELDS.get(14).getId(), uuid);
+		indexOfBoard = indexOfBoard < 1 ? Integer.MAX_VALUE : indexOfBoard;
+		int indexOfSuggested = getIndexOfColumn(CasesBoardViewer.CASE_FIELDS.get(15).getId(), uuid);
+		indexOfSuggested = indexOfSuggested < 1 ? Integer.MAX_VALUE : indexOfSuggested;
+		int totalColumn = Math.min(indexOfSuggested, indexOfBoard) - 1;
+		
+		for (int i = 0; i < columns.size(); i++) {
+			if (totalColumn > -1 && totalColumn == i) {
 				// SUMs label
-				values.add(new StringBuilder(iwrb.getLocalizedString(
-				    "case_board_viewer.total_sum", "Total")).append(
-				    CoreConstants.COLON).toString());
-			} else if (i == CasesBoardViewer.CASE_FIELDS.size() - 3) {
+				values.add(new StringBuilder(iwrb.getLocalizedString("case_board_viewer.total_sum", "Total")).append(CoreConstants.COLON).toString());
+			} else if (i == indexOfSuggested) {
 				// Grant amount suggestions
 				values.add(String.valueOf(grantAmountSuggestionTotal));
-			} else if (i == CasesBoardViewer.CASE_FIELDS.size() - 2) {
+			} else if (i == indexOfBoard) {
 				// Board amount
 				values.add(String.valueOf(boardAmountTotal));
-			} else {
+			} else
 				values.add(CoreConstants.EMPTY);
-			}
 		}
 
 		values.add(CoreConstants.EMPTY);
 
 		return values;
 	}
-
-	BPMFactory getBpmFactory() {
-		return bpmFactory;
+	
+	public int getIndexOfColumn(String column, String uuid) {
+		List<String> columns = getVariables(uuid);
+		return columns.indexOf(column);
 	}
 
 	CaseProcessInstanceRelationImpl getCaseProcessInstanceRelation() {
 		return caseProcessInstanceRelation;
-	}
-
-	CasesBPMDAO getCasesBPMDAO() {
-		return casesBPMDAO;
 	}
 
 	private String getStringValue(String value) {
@@ -764,6 +744,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	public TaskViewerHelper getTaskViewer() {
+		if (taskViewer == null)
+			ELUtil.getInstance().autowire(this);
 		return taskViewer;
 	}
 
@@ -775,17 +757,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		this.caseManager = caseManager;
 	}
 
-	public void setBpmFactory(BPMFactory bpmFactory) {
-		this.bpmFactory = bpmFactory;
-	}
-
-	public void setCaseProcessInstanceRelation(
-			CaseProcessInstanceRelationImpl caseProcessInstanceRelation) {
+	public void setCaseProcessInstanceRelation(CaseProcessInstanceRelationImpl caseProcessInstanceRelation) {
 		this.caseProcessInstanceRelation = caseProcessInstanceRelation;
-	}
-
-	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
-		this.casesBPMDAO = casesBPMDAO;
 	}
 
 	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage, String taskName) {
@@ -793,10 +766,23 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	public VariableInstanceQuerier getVariablesQuerier() {
+		if (variablesQuerier == null)
+			ELUtil.getInstance().autowire(this);
 		return variablesQuerier;
 	}
 
 	public void setVariablesQuerier(VariableInstanceQuerier variablesQuerier) {
 		this.variablesQuerier = variablesQuerier;
+	}
+
+	@Override
+	public List<AdvancedProperty> getAvailableVariables(String processName) {
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null)
+			return null;
+		
+		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariablesByProcessDefinition(processName);
+		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
+		return variablesProvider.getAvailableVariables(variables, iwc.getCurrentLocale(), iwc.isSuperAdmin(), false);
 	}
 }

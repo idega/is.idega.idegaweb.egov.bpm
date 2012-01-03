@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -73,7 +74,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	
 	public static final String assignHandlerEventType = "handlerAssignedToCase";
 	public static final String unassignHandlerEventType = "handlerUnassignedFromCase";
-	public static final String handlerUserIdVarName = "handlerUserId";
+	public static final String handlerUserIdVarName = ProcessConstants.HANDLER_IDENTIFIER;
 	public static final String performerUserIdVarName = "performerUserId";
 	public static final String recipientUserIdVarName = "recipientUserId";
 	

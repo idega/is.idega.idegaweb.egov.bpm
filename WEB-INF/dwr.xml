@@ -25,6 +25,8 @@
         <create creator="spring" javascript="BoardCasesManager">
             <param name="beanName" value="boardCasesManagerBean" />
             <include method="setCaseVariableValue" />
+            <include method="saveCustomizedColumns" />
+            <include method="resetCustomizedColumns" />
         </create>
         <create creator="spring" javascript="BPMApplicationXFormHandler">
             <param name="beanName" value="bpmApplicationXFormHandler" />

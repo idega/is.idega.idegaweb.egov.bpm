@@ -69,6 +69,7 @@ import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ListNavigator;
@@ -340,7 +341,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 						value = resolver.getPresentation(variable);
 				}
 				
-				searchFields.add(new AdvancedProperty(iwrb.getLocalizedString("bpm_variable.".concat(variable.getName()), variable.getName()), value));
+				searchFields.add(new AdvancedProperty(iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(variable.getName()), variable.getName()), value));
 			}
 		}
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
