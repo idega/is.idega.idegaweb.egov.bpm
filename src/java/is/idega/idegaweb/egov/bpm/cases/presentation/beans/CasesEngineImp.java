@@ -260,6 +260,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setComponentId(criteriaBean.getComponentId());
 		properties.setCriteriasId(criteriaBean.getCriteriasId());
 		properties.setFoundResults(criteriaBean.getFoundResults());
+		properties.setCasesListCustomizer(criteriaBean.getCasesListCustomizer());
+		properties.setCustomColumns(criteriaBean.getCustomColumns());
 		
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {

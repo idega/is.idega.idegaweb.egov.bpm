@@ -61,3 +61,7 @@ bpm_variable.list_violationTypes=Violation type
 bpm_variable.string_harbourNr=Harbour nr.
 bpm_variable.string_responsibleInspector=Responsible inspector
 bpm_variable.string_vesselRegistryNr=Vessel number
+
+bpm_variable.string_musicSchoolCandidateName=Applicant
+bpm_variable.string_applicantSocialSecurityCode=Personal ID
+bpm_variable.string_addressOfApplicant=Address

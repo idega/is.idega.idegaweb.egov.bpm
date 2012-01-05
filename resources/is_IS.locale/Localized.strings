@@ -101,3 +101,7 @@ bpm_variable.list_violationTypes=Tegund brots
 bpm_variable.string_harbourNr=H\u00F6fn
 bpm_variable.string_responsibleInspector=Eftirlitsma\u00F0ur
 bpm_variable.string_vesselRegistryNr=Skipan\u00FAmer
+
+bpm_variable.string_musicSchoolCandidateName=Nafn
+bpm_variable.string_applicantSocialSecurityCode=Kennitala
+bpm_variable.string_addressOfApplicant=Heimilisfang
