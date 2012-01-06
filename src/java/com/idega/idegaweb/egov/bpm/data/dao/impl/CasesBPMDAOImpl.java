@@ -13,6 +13,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.hibernate.HibernateException;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -443,7 +444,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 
 		if (onlySubscribedCases) {
-			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber");
+			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber) ");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
 			params.add(new Param("caseAuthor", user.getPrimaryKey()));
 		}
@@ -452,7 +453,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		builder.append(" and proc_case.case_manager_type is null) order by Created desc");
 		
-		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
+		String query = builder.toString();
+		try {
+			return getQueryNativeInline(query).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
+		} catch (HibernateException e) {
+			LOGGER.log(Level.WARNING, "Error executing query:\n" + query, e);
+			throw new RuntimeException(e);
+		}
 	}
 	
 	private String getConditionForCaseStatuses(List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
@@ -594,7 +601,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToHide)");
 		}
 		if (onlySubscribedCases) {
-			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber");
+			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber) ");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
 			params.add(new Param("caseAuthor", user.getPrimaryKey().toString()));
 		}
@@ -680,7 +687,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
 		
 		if (onlySubscribedCases) {
-			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber");
+			builder.append(" and (proc_case.user_id = :caseAuthor or proc_case_subscribers.ic_user_id = :subscriber) ");
 			params.add(new Param("subscriber", user.getPrimaryKey()));
 			params.add(new Param("caseAuthor", user.getPrimaryKey().toString()));
 		}
