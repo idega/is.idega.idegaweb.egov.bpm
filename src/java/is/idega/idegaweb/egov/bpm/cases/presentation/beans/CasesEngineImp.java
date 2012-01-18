@@ -1,5 +1,8 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.business.ApplicationType;
+import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
@@ -55,6 +58,7 @@ import com.idega.block.web2.business.JQuery;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
 import com.idega.builder.bean.AdvancedProperty;
+import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -792,5 +796,83 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		iwc.setSessionAttribute(ListNavigator.PARAMETER_NUMBER_OF_ENTRIES + "_" + key, pageSize);
 		
 		return true;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.cases.business.CasesEngine#getAvailableProcesses(com.idega.presentation.IWContext)
+	 */
+	@Override
+	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc) {
+		ApplicationBusiness appBusiness = null;
+		try {
+			appBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
+		} catch (IBOLookupException e) {
+			e.printStackTrace();
+		}
+
+		if (appBusiness == null) {
+			return null;
+		}
+
+		ApplicationType appType = null;
+		try {
+			appType = ELUtil.getInstance().getBean("appTypeBPM");
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Unable to get application type", e);
+			return null;
+		}
+
+		Collection<Application> bpmApps = appBusiness.getApplicationsByType(appType.getType());
+		if (ListUtil.isEmpty(bpmApps)) {
+			return null;
+		}
+
+		CaseManagersProvider caseManagersProvider = ELUtil.getInstance().getBean(CaseManagersProvider.beanIdentifier);
+		if (caseManagersProvider == null) {
+			return null;
+		}
+
+		CasesRetrievalManager caseManager = caseManagersProvider.getCaseManager();
+		if (caseManager == null) {
+			return null;
+		}
+
+		List<AdvancedProperty> allProcesses = new ArrayList<AdvancedProperty>();
+
+		String processId = null;
+		String processName = null;
+		String localizedName = null;
+		Locale locale = iwc.getCurrentLocale();
+		for (Application bpmApp: bpmApps) {
+			processId = null;
+			processName = bpmApp.getUrl();
+			localizedName = processName;
+
+			if (appType.isVisible(bpmApp)) {
+
+				if (StringUtil.isEmpty(processId)) {
+					processId = String.valueOf(caseManager.getLatestProcessDefinitionIdByProcessName(processName));
+				}
+	
+				localizedName = caseManager.getProcessName(processName, locale);
+
+				if (!StringUtil.isEmpty(processId)) {
+					allProcesses.add(new AdvancedProperty(processId, localizedName));
+				}
+			}
+			else {
+				LOGGER.warning(new StringBuilder("Application '").append(bpmApp.getName()).append("' is not accessible")
+						.append((iwc.isLoggedOn() ? " for user: " + iwc.getCurrentUser() : ": user must be logged in!")).toString());
+			}
+		}
+		
+		if (ListUtil.isEmpty(allProcesses)) {
+			return null;
+		}
+
+		Collections.sort(allProcesses, new AdvancedPropertyComparator(iwc.getCurrentLocale()));
+
+		return allProcesses;
 	}
 }
