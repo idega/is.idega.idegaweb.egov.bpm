@@ -55,8 +55,9 @@ public class CasesBPMAssetsState implements Serializable {
 	
 	public static final String beanIdentifier = "casesBPMAssetsState";
 	
-	public static final String CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER = "casesAssetsSpecialBackPage";
-	public static final String TASK_INSTANCE_ID_PARAMETER = "tiId";
+	public static final String	CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER = "casesAssetsSpecialBackPage",
+								TASK_INSTANCE_ID_PARAMETER = "tiId",
+								SHOW_BACK_BUTTON_PARAMETER = "showBackButton";
 	
 	@Autowired
 	private transient CasesBPMProcessView casesBPMProcessView;
@@ -80,6 +81,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean hideEmptySection = Boolean.FALSE;
 	private Boolean showAttachmentStatistics = Boolean.FALSE;
 	private Boolean showOnlyCreatorInContacts = Boolean.FALSE;
+	private Boolean showBackButton;
 	private String specialBackPage;
 	private String commentsPersistenceManagerIdentifier;
 	private boolean showLogExportButton;
@@ -736,6 +738,15 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setShowLogExportButton(boolean showLogExportButton) {
 		this.showLogExportButton = showLogExportButton;
+	}
+
+	public Boolean getShowBackButton() {
+		if (showBackButton == null) {
+			IWContext iwc = CoreUtil.getIWContext();
+			String param = iwc.getParameter(SHOW_BACK_BUTTON_PARAMETER);
+			showBackButton = !StringUtil.isEmpty(param) && Boolean.valueOf(param);
+		}
+		return showBackButton;
 	}
 
 }

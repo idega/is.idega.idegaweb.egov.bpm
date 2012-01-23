@@ -112,7 +112,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				parameters.get(CasesBPMProcessConstants.caseStatusVariableName) : null;
 		
 		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
-		final String caseIdentifier = parameters.get(CasesBPMProcessConstants.caseIdentifier);
+		final String caseIdentifier = parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER);
 		final String realCaseCreationDate = parameters.get(CasesBPMProcessConstants.caseCreationDateParam);
 		
 		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ? new Date() : new IWTimestamp(realCaseCreationDate).getDate();
@@ -180,7 +180,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
 					caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
 					caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
-					caseData.put(CasesBPMProcessConstants.caseIdentifier, caseIdentifier);
+					caseData.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, caseIdentifier);
 					
 					Collection<CaseStatus> allStatuses = casesBusiness.getCaseStatuses();
 					
@@ -275,13 +275,13 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						parameters.put(CasesBPMProcessConstants.userIdActionVariableName, initiatorId.toString());
 					
 					parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam, String.valueOf(identifierNumber));
-					parameters.put(CasesBPMProcessConstants.caseIdentifier, String.valueOf(identifier));
+					parameters.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, String.valueOf(identifier));
 					parameters.put(CasesBPMProcessConstants.caseCreationDateParam, realCreationDateString);
 					
 					view.populateParameters(parameters);
 					
 					HashMap<String, Object> vars = new HashMap<String, Object>(1);
-					vars.put(CasesBPMProcessConstants.caseIdentifier, identifier);
+					vars.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, identifier);
 					
 					view.populateVariables(vars);
 					

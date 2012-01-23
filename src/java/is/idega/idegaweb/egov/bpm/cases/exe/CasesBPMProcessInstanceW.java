@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
@@ -24,6 +23,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.bpm.exe.DefaultBPMProcessInstanceW;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -129,14 +129,12 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 		}
 	}
 
-	public static final String caseDescriptionVariableName = "string_caseDescription";
-
 	@Override
 	@Transactional(readOnly = true)
 	public String getProcessDescription() {
 
 		String description = (String) getProcessInstance().getContextInstance()
-				.getVariable(caseDescriptionVariableName);
+				.getVariable(ProcessConstants.CASE_DESCRIPTION);
 
 		return description;
 	}
@@ -146,7 +144,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	public String getProcessIdentifier() {
 
 		return (String) getProcessInstance().getContextInstance().getVariable(
-				CasesBPMProcessConstants.caseIdentifier);
+				ProcessConstants.CASE_IDENTIFIER);
 	}
 
 	@Override

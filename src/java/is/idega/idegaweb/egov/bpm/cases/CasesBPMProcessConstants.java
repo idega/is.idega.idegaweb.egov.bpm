@@ -18,9 +18,8 @@ public class CasesBPMProcessConstants {
 	public static final String caseStatusVariableName = "string_caseStatus";
 	public static final String caseOwnerFirstNameVariableName = "string_ownerFirstName";
 	public static final String caseOwnerLastNameVariableName = "string_ownerLastName";
-	public static final String caseIdentifier = "string_caseIdentifier";
-	
 	public static final String caseIdentifierNumberParam = "caseIdentifierNumber";
+	public static final String caseIdentifier = "caseIdentifier";
 	public static final String userIdActionVariableName = "userId";
 	public static final String caseCategoryIdActionVariableName = "caseCategoryId";
 	public static final String caseTypeActionVariableName = "caseType";

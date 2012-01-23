@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.messages;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -9,15 +10,14 @@ import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.identity.BPMUserFactory;
 import com.idega.user.data.User;
 
-
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.2 $
  *
  * Last modified: $Date: 2009/01/22 17:29:22 $ by $Author: anton $
  */
-@Scope("singleton")
 @Service
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 public class CaseUserFactory {
 	
 	@Autowired private BPMFactory bpmFactory;

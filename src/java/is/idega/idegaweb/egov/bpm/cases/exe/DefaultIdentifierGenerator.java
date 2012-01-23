@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -9,6 +8,7 @@ import javax.ejb.FinderException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.data.IDOLookup;
 import com.idega.data.MetaData;
 import com.idega.data.MetaDataBMPBean;
@@ -99,10 +99,10 @@ public abstract class DefaultIdentifierGenerator {
 	private boolean isStoredInVariables(String identifier) throws Exception {
 		if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("check_identifier_in_jbpm", Boolean.TRUE)) {
 			try {
-				return getVariablesQuerier().isVariableStored(CasesBPMProcessConstants.caseIdentifier, identifier);
+				return getVariablesQuerier().isVariableStored(ProcessConstants.CASE_IDENTIFIER, identifier);
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error occurred while selecting " + VariableInstanceInfo.class + " objects by variable name: " +
-						CasesBPMProcessConstants.caseIdentifier + " and value: " + identifier, e);
+						ProcessConstants.CASE_IDENTIFIER + " and value: " + identifier, e);
 			}
 			return false;
 		}

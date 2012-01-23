@@ -10,68 +10,68 @@
 
 	<ui:composition template="#{IWURIResource.res['/idegaweb/bundles/is.idega.idegaweb.egov.bpm.bundle/facelets/UICasesBPMAssetsTemplate.xhtml']}">
 
-	<ui:define name="title">
-		#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.title.form_view']}
-	</ui:define>
-	<ui:define name="actions">
-		<div>
-			<t:commandLink rendered="#{!casesBPMAssetsState.showSpecialBackPage}" forceId="true" id="backToCaseOverviewAfterSubmitted" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
-			<t:div rendered="#{casesBPMAssetsState.showSpecialBackPage}">
-				<a href="#{casesBPMAssetsState.specialBackPage}">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
-			</t:div>
-			<t:commandLink rendered="#{casesBPMAssetsState.showNextTask}" immediate="true" value="#{casesBPMAssetsState.nextTaskName}" onclick="showLoadingMessage('#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.loading']}');" ondblclick="return false;">
-				<f:param name="prm_case_pk" value="#{casesBPMAssetsState.nextCaseId}" />
-				<f:param name="tiId" value="#{casesBPMAssetsState.nextTaskId}" />
-				<f:param name="nextProcessInstanceIdParameter" value="true" />
-				<f:param name="nextTaskInstanceIdParameter" value="true" />
-				<f:param name="nextCaseIdParameter" value="true" />
-				<f:param name="cp_prm_action" value="8" />
-			</t:commandLink>
-		</div>
-	</ui:define>
-	<ui:define name="content">
-		<div style="display: none;">
-			<t:inputHidden name="prm_case_pk" value="#{casesBPMAssetsState.caseId}" id="prm_case_pk_id" forceId="true" />
-		</div>
-	
-		<t:div styleClass="assetsView" rendered="false">
-			<div class="assetSection">
-				<div class="assetHeader">
-					#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_summary']}
-				</div>
-				<div class="assetContent">
-					<div class="assetEntry">
-						<div class="assetEntryLeft">
-							#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_name']}
-						</div>
-						<div class="assetEntryRight">
-							#{casesBPMAssetsState.taskView.taskName}
-						</div>
-					</div>
-					<div class="assetEntry">
-						<div class="assetEntryLeft">
-							#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_identifier']}
-						</div>
-						<div class="assetEntryRight">
-							#{casesBPMAssetsState.processView.caseIdentifier}
-						</div>
-					</div>
-					<div class="assetEntry">
-						<div class="assetEntryLeft">
-							#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.time_created']}
-						</div>
-						<div class="assetEntryRight">
-							#{casesBPMAssetsState.taskView.createdDate}
-						</div>
-					</div>
-				</div>
+		<ui:define name="title">
+			#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.title.form_view']}
+		</ui:define>
+		<ui:define name="actions">
+			<div>
+				<t:commandLink rendered="#{!casesBPMAssetsState.showSpecialBackPage}" forceId="true" id="backToCaseOverviewAfterSubmitted" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+				<t:div rendered="#{casesBPMAssetsState.showSpecialBackPage}">
+					<a href="#{casesBPMAssetsState.specialBackPage}">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
+				</t:div>
+				<t:commandLink rendered="#{casesBPMAssetsState.showNextTask}" immediate="true" value="#{casesBPMAssetsState.nextTaskName}" onclick="showLoadingMessage('#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.loading']}');" ondblclick="return false;">
+					<f:param name="prm_case_pk" value="#{casesBPMAssetsState.nextCaseId}" />
+					<f:param name="tiId" value="#{casesBPMAssetsState.nextTaskId}" />
+					<f:param name="nextProcessInstanceIdParameter" value="true" />
+					<f:param name="nextTaskInstanceIdParameter" value="true" />
+					<f:param name="nextCaseIdParameter" value="true" />
+					<f:param name="cp_prm_action" value="8" />
+				</t:commandLink>
 			</div>
-		</t:div>
-	</ui:define>
-	<ui:define name="chibaform">
-		<t:div styleClass="formView">
-			<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
-		</t:div>
-	</ui:define>
+		</ui:define>
+		<ui:define name="content">
+			<div style="display: none;">
+				<t:inputHidden name="prm_case_pk" value="#{casesBPMAssetsState.caseId}" id="prm_case_pk_id" forceId="true" />
+			</div>
+		
+			<t:div styleClass="assetsView" rendered="false">
+				<div class="assetSection">
+					<div class="assetHeader">
+						#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_summary']}
+					</div>
+					<div class="assetContent">
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.task_name']}
+							</div>
+							<div class="assetEntryRight">
+								#{casesBPMAssetsState.taskView.taskName}
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.case_identifier']}
+							</div>
+							<div class="assetEntryRight">
+								#{casesBPMAssetsState.processView.caseIdentifier}
+							</div>
+						</div>
+						<div class="assetEntry">
+							<div class="assetEntryLeft">
+								#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.time_created']}
+							</div>
+							<div class="assetEntryRight">
+								#{casesBPMAssetsState.taskView.createdDate}
+							</div>
+						</div>
+					</div>
+				</div>
+			</t:div>
+		</ui:define>
+		<ui:define name="chibaform">
+			<t:div styleClass="formView">
+				<jp:BPMTaskViewer taskInstanceId="#{casesBPMAssetsState.viewSelected}" />
+			</t:div>
+		</ui:define>	
 	</ui:composition>
 </div>

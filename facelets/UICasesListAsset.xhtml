@@ -9,6 +9,7 @@
 	<t:div styleClass="#{casesBPMAssetsState.gridStyleClasses}">
 		<t:div style="display: none;" styleClass="processInstanceIdValueHolderContainer">
 			<input type="hidden" class="processInstanceIdValueHolder" value="#{casesBPMAssetsState.processInstanceId}" />
+			<input type="hidden" name="showBackButton" value="#{casesBPMAssetsState.showBackButton}" />
 		</t:div>
 		<t:div styleClass="sendCaseEmailStyleInBPMCaseViewer" rendered="#{casesBPMAssetsState.renderCaseEmailContainer}" style="display: none;">
 			<a href="#{casesBPMAssetsState.caseEmailSubject}" title="#{casesBPMAssetsState.sendEmailTitle}">
@@ -52,5 +53,9 @@
 			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['contacts']}"/></t:div>
 			<table class="caseContacts" border="0" />
 		</t:div>
-	</t:div>		
+	</t:div>
+	
+	<t:div styleClass="caseViewBackButtonStyle" rendered="#{casesBPMAssetsState.showBackButton}">
+		<input type="button" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['back']}" onclick="history.back();" />
+	</t:div>
 </div>

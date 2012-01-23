@@ -3,7 +3,6 @@ package is.idega.idegaweb.egov.bpm.cases.manager;
 import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
@@ -42,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.CasesRetrievalManagerImpl;
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseCode;
 import com.idega.block.process.presentation.beans.CaseManagerState;
@@ -134,7 +134,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return getBpmContext().execute(new JbpmCallback() {
 
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				return context.getProcessInstance(piId).getContextInstance().getVariable(CasesBPMProcessConstants.caseIdentifier);
+				return context.getProcessInstance(piId).getContextInstance().getVariable(ProcessConstants.CASE_IDENTIFIER);
 			}
 		});
 	}
