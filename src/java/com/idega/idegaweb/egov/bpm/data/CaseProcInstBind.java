@@ -22,6 +22,7 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.Index;
 
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.jbpm.data.BPMVariableData;
 
 /**
@@ -147,14 +148,14 @@ import com.idega.jbpm.data.BPMVariableData;
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = vdata.variable_id " +
-				"where lower(vdata.stringvalue) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" + CasesBPMProcessConstants.caseIdentifier + "' " +
+				"where lower(vdata.stringvalue) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" + ProcessConstants.CASE_IDENTIFIER + "' " +
 				"group by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumberNoMirrow, resultSetMapping="caseId", 
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ where lower(var.STRINGVALUE_) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" +
-				CasesBPMProcessConstants.caseIdentifier + "' group by cp.case_id"
+				ProcessConstants.CASE_IDENTIFIER + "' group by cp.case_id"
 			),
 			
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 

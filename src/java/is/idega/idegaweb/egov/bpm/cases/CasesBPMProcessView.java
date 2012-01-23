@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.CaseManagersProvider;
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -235,7 +236,7 @@ public class CasesBPMProcessView {
 				String createDate = time.getLocaleDate(iwc.getLocale());
 				
 				String caseIdentifier = (String) pi.getContextInstance()
-				        .getVariable(CasesBPMProcessConstants.caseIdentifier);
+				        .getVariable(ProcessConstants.CASE_IDENTIFIER);
 				
 				String caseCategory;
 				String caseType;
