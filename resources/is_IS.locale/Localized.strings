@@ -105,3 +105,8 @@ bpm_variable.string_vesselRegistryNr=Skipan\u00FAmer
 bpm_variable.string_musicSchoolCandidateName=Nafn
 bpm_variable.string_applicantSocialSecurityCode=Kennitala
 bpm_variable.string_addressOfApplicant=Heimilisfang
+
+bpm_variable.string_schoolSeason=Velj\u00ED sk\u00F3la\u00E1ri
+bpm_variable.string_musicSchoolBand= Velj\u00ED t\u00F3nlistarsk\u00F3la\ hlj\u00F3msveit\ nafn
+bpm_variable.string_educationStage=Velj\u00ED n\u00E1mstig
+bpm_variable.string_requestedInstrumentsByLearning=Velj\u00ED\u00F0 hlj\u00F3\u00F0f\u00E6r\u00ED

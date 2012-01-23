@@ -56,8 +56,7 @@ public class TaskViewerRedirector extends BaseFilter implements Filter {
 	}
 
 	private boolean canRedirect(HttpServletRequest request) {
-		@SuppressWarnings("unchecked")
-		Map map = request.getParameterMap();
+		Map<?, ?> map = request.getParameterMap();
 		return map.containsKey(TaskViewerHelperImp.TASK_VIEWER_PAGE_REQUESTED_PARAMETER) &&
 				map.containsKey(TaskViewerHelperImp.PROCESS_INSTANCE_ID_PARAMETER) && map.containsKey(TaskViewerHelperImp.TASK_NAME_PARAMETER);
 	}

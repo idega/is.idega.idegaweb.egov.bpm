@@ -260,7 +260,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		
 		short cellRow = 0;
-		short cellIndex = 0;
+		int cellIndex = 0;
 		
 		//	Default header labels
 		HSSFRow row = sheet.createRow(cellRow++);
@@ -334,7 +334,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 	
 	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet, HSSFCellStyle bigStyle,
-			Locale locale, boolean isAdmin, short cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
+			Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
 		if (ListUtil.isEmpty(variablesByProcessDefinition)) {
 			return;
 		}
@@ -416,7 +416,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			for (CasePresentation theCase: cases) {
 				fileCellsIndexes = new ArrayList<Integer>();
 				HSSFRow row = sheet.createRow(rowNumber++);
-				short cellIndex = 0;
+				int cellIndex = 0;
 
 				//	Default header values
 				row.createCell(cellIndex++).setCellValue(theCase.getCaseIdentifier());

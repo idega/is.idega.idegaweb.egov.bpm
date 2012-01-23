@@ -51,3 +51,8 @@ cases_bpm.process_is_being_watched=aktuella \u00C4rendeet lades till i din bevak
 cases_bpm.process_was_removed_from_watch_list=Aktuella \u00E4rendet togs bort fr\u00E5n bevakningslistan
 cases_bpm.followup.subject=\u00C4rendet kr\u00E4ver din uppm\u00E4rksamhet
 cases_bpm.followup.message=Hej, {0}. En handl\u00E4ggare har beg\u00E4rt ett svarfr\u00E5n dig.
+
+bpm_variable.string_schoolSeason=V\u00E4lj l\u00E4s\u00E5ret
+bpm_variable.string_musicSchoolBand=V\u00E4lj musikskolan bandnamn
+bpm_variable.string_educationStage=V\u00E4lj utbildningsniv\u00E5
+bpm_variable.string_requestedInstrumentsByLearning=V\u00E4lj instarument

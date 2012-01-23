@@ -334,11 +334,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (!ListUtil.isEmpty(searchParams.getProcessVariables())) {
 			for (BPMProcessVariable variable: searchParams.getProcessVariables()) {
 				String value = variable.getValue();
-				
 				String name = variable.getName();
 				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name)
 						|| name.startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) || name.startsWith(VariableInstanceType.LIST.getPrefix())
-						|| name.equals("string_harbourNr")) {
+						|| isResolverExist(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName())
+						) {
 					MultipleSelectionVariablesResolver resolver = null;
 					try {
 						resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName());
@@ -874,5 +874,39 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		Collections.sort(allProcesses, new AdvancedPropertyComparator(iwc.getCurrentLocale()));
 
 		return allProcesses;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.cases.business.CasesEngine#isResolverExist(java.lang.String)
+	 */
+	@Override
+	public boolean isResolverExist(String beanName) {
+		Map<String, Boolean> cache = getResolversCache();
+		if (cache == null) {
+			getLogger().log(Level.WARNING, "Unable to get cache!");
+			return Boolean.FALSE;
+		}
+
+		if (cache.containsKey(beanName)){
+			return cache.get(beanName);
+		}
+
+		try {
+			MultipleSelectionVariablesResolver resolver = 
+				ELUtil.getInstance().getBean(beanName);
+
+			if (resolver != null) {
+				cache.put(beanName, Boolean.TRUE);
+				return Boolean.TRUE;
+			} 
+		} catch (Throwable e) {}
+
+		cache.put(beanName, Boolean.FALSE);
+		return Boolean.FALSE;
+	}
+
+	private Map<String, Boolean> getResolversCache() {
+		return getCache("BEAN_NAMES_FOR_BPM_PROCESS_SEARCH");
 	}
 }

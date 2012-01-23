@@ -5,6 +5,7 @@
 	<allow>
 		<create creator="spring" javascript="CasesEngine">
 	    	<param name="beanName" value="casesEngineDWR" />
+	    	<include method="isResolverExist" />
 	    	<include method="getCaseManagerView" />
 	    	<include method="getProcessInstanceId" />
 	    	<include method="setCaseSubject" />

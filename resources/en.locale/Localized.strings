@@ -73,3 +73,8 @@ bpm_variable.string_vesselRegistryNr=Vessel number
 bpm_variable.string_musicSchoolCandidateName=Applicant
 bpm_variable.string_applicantSocialSecurityCode=Personal ID
 bpm_variable.string_addressOfApplicant=Address
+
+bpm_variable.string_schoolSeason=School year
+bpm_variable.string_musicSchoolBand=Music school band name
+bpm_variable.string_educationStage=Education level
+bpm_variable.string_requestedInstrumentsByLearning=Instrument
