@@ -67,3 +67,4 @@ bpm_variable.string_applicantSocialSecurityCode=Personal ID
 bpm_variable.string_addressOfApplicant=Address
 
 back=Back
+loading=Loading...
