@@ -226,7 +226,8 @@ public class CaseProcInstBind implements Serializable {
 	
 	public static final String TABLE_NAME = "BPM_CASES_PROCESSINSTANCES";
 	
-	public static final String procInstIdColumnName = "process_instance_id";
+	public static final String	procInstIdColumnName = "process_instance_id",
+								caseIdColumnName = "case_id";
 
 	public static final String procInstIdProp = "procInstId";
 	@Id
@@ -235,8 +236,8 @@ public class CaseProcInstBind implements Serializable {
     private Long procInstId;
 	
 	public static final String caseIdProp = "caseId";
-	@Index(columnNames={"case_id"}, name="caseIdIndex")
-	@Column(name="case_id", nullable=false, unique=true)
+	@Index(columnNames={caseIdColumnName}, name="caseIdIndex")
+	@Column(name=caseIdColumnName, nullable=false, unique=true)
 	private Integer caseId;
 	
 	public static final String caseIdentierIDProp = "caseIdentierID";
