@@ -802,7 +802,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	 * (non-Javadoc)
 	 * @see is.idega.idegaweb.egov.cases.business.CasesEngine#getAvailableProcesses(com.idega.presentation.IWContext)
 	 */
-	@Override
 	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc) {
 		ApplicationBusiness appBusiness = null;
 		try {
@@ -880,7 +879,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	 * (non-Javadoc)
 	 * @see is.idega.idegaweb.egov.cases.business.CasesEngine#isResolverExist(java.lang.String)
 	 */
-	@Override
 	public boolean isResolverExist(String beanName) {
 		Map<String, Boolean> cache = getResolversCache();
 		if (cache == null) {

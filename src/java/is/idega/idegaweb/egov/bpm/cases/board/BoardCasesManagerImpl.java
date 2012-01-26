@@ -775,7 +775,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		this.variablesQuerier = variablesQuerier;
 	}
 
-	@Override
 	public List<AdvancedProperty> getAvailableVariables(String processName) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null)
