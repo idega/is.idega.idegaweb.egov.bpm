@@ -54,33 +54,33 @@ import com.idega.util.ListUtil;
 @SendMessageType("caseMessage")
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 public class SendCaseMessageImpl extends SendMailMessageImpl {
-	
+
 	private static final Logger LOGGER = Logger.getLogger(SendCaseMessageImpl.class.getName());
-	
+
 	public static final TypeRef caseUserBean = new TypeRef("bean", "caseUser");
 
 	@Autowired
 	private CaseUserFactory caseUserFactory;
-	
+
 	@Override
 	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
 		final Integer caseId = (Integer)context;
-	
+
 		final IWContext iwc = CoreUtil.getIWContext();
 		final IWMainApplication iwma = iwc == null ? IWMainApplication.getDefaultIWMainApplication() : iwc.getIWMainApplication();
-		
+
 		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
 		final UserBusiness userBusiness  = getUserBusiness(iwc);
-		
+
 		Locale defaultLocale = iwma.getDefaultLocale();
 		//	Making sure default locale is not null
 		defaultLocale = defaultLocale == null ? iwc.getCurrentLocale() : defaultLocale;
 		defaultLocale = defaultLocale == null ? Locale.ENGLISH : defaultLocale;
-		
+
 		final List<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
 		try {
 			CasesBusiness casesBusiness = getCasesBusiness(iwc);
-			
+
 			final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
 			Collection<User> users = null;
 			if (msgs.getRecipientUserId() != null) {
@@ -90,38 +90,38 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			else {
 				users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
 			}
-			
+
 			long pid = pi.getId();
 			ProcessInstanceW piw = getBpmFactory().getProcessManagerByProcessInstanceId(pid).getProcessInstance(pid);
-			
+
 			Map<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
-			
+
 			if (mvCtx == null)
 				mvCtx = new MessageValueContext(3);
-			
+
 			for (User user : users) {
 				Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
-				
+
 				if (preferredLocale == null)
 					preferredLocale = defaultLocale;
-				
+
 				CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(user, piw);
 
 				mvCtx.setValue(MessageValueContext.userBean, user);
 				mvCtx.setValue(caseUserBean, caseUser);
 				mvCtx.setValue(MessageValueContext.piwBean, piw);
-				
+
 				String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
-				
+
 				String subject = subjNMsg[0];
 				String text = subjNMsg[1];
 				if (subject == null || text == null) {
 					LOGGER.warning("Unable to send message because subject (" + subject + ") or/and text (" + text + ") is null!");
 					continue;
 				}
-					
+
 				LOGGER.finer("Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+") name="+user.getName());
-				
+
 				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
 				msgValsToSend.add(mv);
 			}
@@ -130,12 +130,12 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 		} catch (FinderException e) {
 			LOGGER.log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
 		}
-		
-		if (ListUtil.isEmpty(msgValsToSend)) {
+
+		if (ListUtil.isEmpty(msgValsToSend))
 			return;
-		}
-			
+
 		new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					for (MessageValue messageValue : msgValsToSend) {
@@ -148,7 +148,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			}
 		}).start();
 	}
-	
+
 	protected CommuneMessageBusiness getCommuneMessageBusiness(IWApplicationContext iwac) {
 		try {
 			return IBOLookup.getServiceInstance(iwac, CommuneMessageBusiness.class);
@@ -156,7 +156,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			throw new IBORuntimeException(ile);
 		}
 	}
-	
+
 	@Override
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
@@ -165,7 +165,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			throw new IBORuntimeException(ile);
 		}
 	}
-	
+
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
 			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
@@ -173,7 +173,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			throw new IBORuntimeException(ile);
 		}
 	}
-	
+
 	CaseUserFactory getCaseUserFactory() {
 		return caseUserFactory;
 	}
