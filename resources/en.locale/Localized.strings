@@ -79,5 +79,8 @@ bpm_variable.string_musicSchoolBand=Music school band name
 bpm_variable.string_educationStage=Education level
 bpm_variable.string_requestedInstrumentsByLearning=Instrument
 
+bpm_variable.string_ownerFullName=Sender
+bpm_variable.string_caseDescription=Description
+
 back=Back
 loading=Loading...
