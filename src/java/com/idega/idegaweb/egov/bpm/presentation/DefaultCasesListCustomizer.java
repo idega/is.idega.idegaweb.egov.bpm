@@ -53,7 +53,6 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		this.variablesQuerier = variablesQuerier;
 	}
 
-	@Override
 	public List<String> getHeaders(List<String> headersKeys) {
 		if (ListUtil.isEmpty(headersKeys))
 			return null;
@@ -66,7 +65,6 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		return headers;
 	}
 
-	@Override
 	public Map<String, Map<String, String>> getLabelsForHeaders(List<String> casesIds, List<String> headersKeys) {
 		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(headersKeys))
 			return null;

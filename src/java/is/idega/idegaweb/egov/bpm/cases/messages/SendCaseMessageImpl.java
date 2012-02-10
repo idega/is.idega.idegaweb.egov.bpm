@@ -135,7 +135,6 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			return;
 
 		new Thread(new Runnable() {
-			@Override
 			public void run() {
 				try {
 					for (MessageValue messageValue : msgValsToSend) {
