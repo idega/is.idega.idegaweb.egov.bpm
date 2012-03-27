@@ -107,7 +107,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	private List<String> variables;
 
-	@Override
 	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName, String uuid) {
 		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
 
@@ -457,12 +456,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return gradings;
 	}
 
-	@Override
 	public boolean isColumnOfDomain(String currentColumn, String columnOfDomain) {
 		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
 	}
 
-	@Override
 	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, String processName, String uuid) {
 		if (iwc == null)
 			return null;
@@ -531,7 +528,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return data;
 	}
 
-	@Override
 	public AdvancedProperty getHandlerInfo(IWContext iwc, User handler) {
 		if (handler == null) {
 			return null;
@@ -563,7 +559,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	private static final String LOCALIZATION_PREFIX = "case_board_viewer.";
 
-	@Override
 	public List<String> getCustomColumns(String uuid) {
 		if (StringUtil.isEmpty(uuid))
 			return Collections.emptyList();
@@ -578,7 +573,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return null;
 	}
 
-	@Override
 	public Map<Integer, AdvancedProperty> getColumns(IWResourceBundle iwrb, String uuid) {
 		Map<Integer, AdvancedProperty> columns = new TreeMap<Integer, AdvancedProperty>();
 		int index = 1;
@@ -645,7 +639,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return values;
 	}
 
-	@Override
 	public int getIndexOfColumn(String column, String uuid) {
 		List<String> columns = getVariables(uuid);
 		return columns.indexOf(column);
@@ -771,7 +764,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		this.caseProcessInstanceRelation = caseProcessInstanceRelation;
 	}
 
-	@Override
 	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage, String taskName) {
 		return getTaskViewer().getLinkToTheTaskRedirector(iwc, basePage, caseId, processInstanceId, backPage, taskName);
 	}
@@ -786,7 +778,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		this.variablesQuerier = variablesQuerier;
 	}
 
-	@Override
 	public List<AdvancedProperty> getAvailableVariables(String processName) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null)
