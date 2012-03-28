@@ -11,6 +11,7 @@ import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.process.presentation.beans.CasesListCustomizer;
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -53,6 +54,11 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		this.variablesQuerier = variablesQuerier;
 	}
 
+	protected String getLocalizedHeader(IWResourceBundle iwrb, String key) {
+		return iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(key), key);
+	}
+
+	@Override
 	public List<String> getHeaders(List<String> headersKeys) {
 		if (ListUtil.isEmpty(headersKeys))
 			return null;
@@ -60,11 +66,16 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		List<String> headers = new ArrayList<String>();
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
 		for (String key: headersKeys) {
-			headers.add(iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(key), key));
+			headers.add(getLocalizedHeader(iwrb, key));
 		}
 		return headers;
 	}
 
+	protected AdvancedProperty getLabel(VariableInstanceInfo variable) {
+		return new AdvancedProperty(variable.getName(), variable.getValue().toString());
+	}
+
+	@Override
 	public Map<String, Map<String, String>> getLabelsForHeaders(List<String> casesIds, List<String> headersKeys) {
 		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(headersKeys))
 			return null;
@@ -107,7 +118,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				if (value == null)
 					continue;
 
-				caseLabels.put(info.getName(), value.toString());
+				AdvancedProperty label = getLabel(info);
+				caseLabels.put(label.getId(), label.getValue());
 			}
 		}
 
