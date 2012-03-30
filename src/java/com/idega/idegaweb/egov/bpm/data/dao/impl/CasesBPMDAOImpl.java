@@ -483,11 +483,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		return CoreConstants.EMPTY;
 	}
-
+	
 	public List<Integer> getOpenCasesIds(User user, List<String> caseCodes,
 	        List<String> caseStatusesToShow, List<String> caseStatusesToHide,
 	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases) {
 
+		boolean showClosedCases = false;
+		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY)) {
+			showClosedCases = true;
+		}
+		
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, IdentityType.USER.toString()));
@@ -511,7 +516,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("identityTypeRole", IdentityType.ROLE.toString()));
 		}
 		builder.append("ni.identity_id = :identityId  and  ni.identity_type = :identityType) ");
-		builder.append("and act.process_instance_id is not null and pi.end_ is null ");
+		builder.append("and act.process_instance_id is not null ");
+		if (!showClosedCases) {
+			builder.append("and pi.end_ is null ");
+		}
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		if (!ListUtil.isEmpty(caseCodes))
 			builder.append(" and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes)) ");
@@ -537,6 +545,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
+		boolean showClosedCases = false;
+		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY)) {
+			showClosedCases = true;
+		}
+
 		List<Param> params = new ArrayList<Param>();
 		if (!ListUtil.isEmpty(caseCodes)) {
 			params.add(new Param("caseCodes", caseCodes));
@@ -549,7 +562,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		        .append("inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id ")
 		        .append("left join bpm_native_identities ni on act.actor_id = ni.actor_fk ")
 		        .append("where ");
-		builder.append(" act.process_instance_id is not null and pi.end_ is null ");
+		builder.append(" act.process_instance_id is not null ");
+		if (!showClosedCases) {
+			builder.append("and pi.end_ is null ");
+		}
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		if (!ListUtil.isEmpty(caseCodes))
 			builder.append(" and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes))");
