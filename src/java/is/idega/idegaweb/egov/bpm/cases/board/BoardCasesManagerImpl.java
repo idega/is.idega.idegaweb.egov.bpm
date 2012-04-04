@@ -154,11 +154,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				CasesBoardViewer.CASE_FIELDS.get(7).getId(),
 				CasesBoardViewer.CASE_FIELDS.get(8).getId(),
 
-				//	TODO: verify
-//				CasesBoardViewer.CASE_FIELDS.get(15).getId()
 				ProcessConstants.BOARD_FINANCING_SUGGESTION,
-
-//				CasesBoardViewer.CASE_FIELDS.get(16).getId()
 				ProcessConstants.BOARD_FINANCING_DECISION
 		);
 
