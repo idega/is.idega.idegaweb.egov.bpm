@@ -26,6 +26,7 @@ import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.presentation.IWContext;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
@@ -35,20 +36,27 @@ import com.idega.util.StringUtil;
 @Service("boardCasesManagerBean")
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 public class BoardCasesManagerFacade extends DefaultSpringBean {
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	@Autowired
 	private TaskViewerHelper taskViewer;
-	
+
 	@Transactional(propagation = Propagation.REQUIRED)
-	public AdvancedProperty setCaseVariableValue(Integer caseId, String variableName, String value, String role, String backPage) {
+	public AdvancedProperty setCaseVariableValue(Integer caseId, String variableName, String value, String role, String backPage, Integer valueIndex,
+			Integer totalValues) {
 		if (caseId == null || StringUtil.isEmpty(variableName) || StringUtil.isEmpty(value))
 			return null;
+
+		boolean useNumberSign = valueIndex != null && totalValues != null;
+		if (valueIndex == null)
+			valueIndex = 0;
+		if (totalValues == null)
+			totalValues = 1;
 
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null || !iwc.isLoggedOn())
@@ -86,6 +94,35 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 			Map<String, Object> variables = view.resolveVariables();
 			if (variables == null)
 				variables = new HashMap<String, Object>();
+
+			if (useNumberSign) {
+				String[] currentValues = null;
+				Object currentValue = variables.get(variableName);
+				if (currentValue instanceof String)
+					currentValues = currentValue.toString().split("#");
+
+				StringBuffer newValue = new StringBuffer();
+				for (int i = 0; i < totalValues; i++) {
+					if (i == valueIndex)
+						newValue.append(value);
+					else {
+						if (ArrayUtil.isEmpty(currentValues))
+							newValue.append(String.valueOf(0));
+						else {
+							if (i < currentValues.length)
+								newValue.append(currentValues[i]);
+							else
+								newValue.append(String.valueOf(0));
+						}
+					}
+
+					if (i < totalValues)
+						newValue.append("#");
+				}
+
+				value = newValue.toString();
+			}
+
 			variables.put(variableName, value);
 
 			viewSubmission.populateParameters(view.resolveParameters());
@@ -104,7 +141,7 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 
 		return null;
 	}
-	
+
 	public String saveCustomizedColumns(String uuid, List<String> columns) {
 		String errorMessage = "Some error occurred. Reload a page and try again";
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
@@ -116,20 +153,20 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 			getLogger().warning("No columns selected");
 			return iwrb.getLocalizedString("no_columns_selected", "Please select some columns to display");
 		}
-		
+
 		IWContext iwc = CoreUtil.getIWContext();
 		iwc.setSessionAttribute(CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid, columns);
 		return null;
 	}
-	
+
 	public String resetCustomizedColumns(String uuid) {
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
 		if (StringUtil.isEmpty(uuid))
 			return iwrb.getLocalizedString("error_resetting_custom_columns", "Some error occurred. Reload a page and try again");
-		
+
 		IWContext iwc = CoreUtil.getIWContext();
 		iwc.removeSessionAttribute(CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid);
 		return null;
 	}
-	
+
 }
