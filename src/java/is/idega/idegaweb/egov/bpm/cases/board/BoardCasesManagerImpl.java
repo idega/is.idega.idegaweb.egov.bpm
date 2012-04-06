@@ -391,6 +391,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		value = value.replace(CoreConstants.DOT, CoreConstants.EMPTY);
 		value = value.replace("þús", CoreConstants.EMPTY);
 		value = value.replaceAll("kr", CoreConstants.EMPTY);
+		value = StringHandler.replace(value, "d", CoreConstants.EMPTY);
+		value = StringHandler.replace(value, CoreConstants.QOUTE_SINGLE_MARK, CoreConstants.EMPTY);
 
 		if (StringUtil.isEmpty(value))
 			return Long.valueOf(0);
