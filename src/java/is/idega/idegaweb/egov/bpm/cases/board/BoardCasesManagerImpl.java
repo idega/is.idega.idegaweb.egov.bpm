@@ -141,7 +141,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	private List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers, String uuid) {
-		List<String> variablesToQuery = getVariables(uuid);
+		List<String> variablesToQuery = new ArrayList<String>(getVariables(uuid));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
 			variablesToQuery.add(ProcessConstants.FINANCING_OF_THE_TASKS);
@@ -631,6 +631,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 		long boardAmountTotal = 0;
 		long grantAmountSuggestionTotal = 0;
+		boolean financingTableAdded = false;
 		String uniqueCaseId = "uniqueCaseId";
 		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<CaseBoardTableBodyRowBean>(boardCases.size());
 		for (CaseBoardBean caseBoard: boardCases) {
@@ -690,6 +691,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 					//	Financing table
 					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.WORK_ITEM)) {
+						financingTableAdded = true;
 						rowBean.setFinancingInfo(tasksInfo);
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(ProcessConstants.FINANCING_OF_THE_TASKS,
 								CoreConstants.EMPTY)));
@@ -719,7 +721,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		data.setBodyBeans(bodyRows);
 
 		// Footer
-		data.setFooterValues(getFooterValues(iwrb, grantAmountSuggestionTotal, boardAmountTotal, uuid));
+		data.setFooterValues(getFooterValues(iwrb, data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? 3 : 0),
+				grantAmountSuggestionTotal, boardAmountTotal, uuid));
 
 		// Everything is OK
 		data.setFilledWithData(Boolean.TRUE);
@@ -841,20 +844,23 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return getColumns(iwrb, uuid);
 	}
 
-	private List<String> getFooterValues(IWResourceBundle iwrb, long grantAmountSuggestionTotal, long boardAmountTotal, String uuid) {
-		List<String> columns = getVariables(uuid);
+	private List<String> getFooterValues(IWResourceBundle iwrb, int numberOfColumns, long grantAmountSuggestionTotal, long boardAmountTotal,
+			String uuid) {
+
 		List<String> values = new ArrayList<String>();
 
-		int indexOfSuggestion = getIndexOfColumn(ProcessConstants.FINANCING_OF_THE_TASKS, uuid) + 2;
-		indexOfSuggestion = indexOfSuggestion < 1 ? Integer.MAX_VALUE : indexOfSuggestion;
+		int indexOfTotal = getIndexOfColumn(ProcessConstants.FINANCING_OF_THE_TASKS, uuid);
+		if (indexOfTotal < 0)
+			indexOfTotal = getIndexOfColumn(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN, uuid);
+		indexOfTotal++;
+		int indexOfSuggestion = indexOfTotal + 1;
 		int indexOfDecision = indexOfSuggestion + 1;
-		int indexOfTotal = Math.min(indexOfSuggestion, indexOfDecision) - 1;
 
-		for (int i = 0; i < columns.size(); i++) {
+		String total = iwrb.getLocalizedString("case_board_viewer.total_sum", "Total").concat(CoreConstants.COLON).toString();
+		for (int i = 0; i < numberOfColumns; i++) {
 			if (indexOfTotal > -1 && indexOfTotal == i) {
 				// SUMs label
-				values.add(new StringBuilder(iwrb.getLocalizedString("case_board_viewer.total_sum", "Total")).append(CoreConstants.COLON)
-						.toString());
+				values.add(total);
 			} else if (i == indexOfSuggestion) {
 				// Grant amount suggestions
 				values.add(String.valueOf(grantAmountSuggestionTotal));
@@ -864,6 +870,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			} else
 				values.add(CoreConstants.EMPTY);
 		}
+		if (values.size() <= indexOfTotal)
+			values.add(total);
+		if (values.size() <= indexOfSuggestion)
+			values.add(String.valueOf(grantAmountSuggestionTotal));
 		if (values.size() <= indexOfDecision)
 			values.add(String.valueOf(boardAmountTotal));
 
