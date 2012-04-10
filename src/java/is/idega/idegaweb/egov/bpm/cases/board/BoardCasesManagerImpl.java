@@ -10,6 +10,7 @@ import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewCustomizer;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardBean;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBean;
@@ -141,6 +142,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	private List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers, String uuid) {
 		List<String> variablesToQuery = getVariables(uuid);
+		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
+			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
+			variablesToQuery.add(ProcessConstants.FINANCING_OF_THE_TASKS);
+		}
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_SUGGESTION);
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_DECISION);
 		List<String> allVariables = new ArrayList<String>(variablesToQuery);
@@ -636,9 +641,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 			//	Table of financing
 			List<Map<String, String>> tasksInfo = caseBoard.getFinancingOfTheTasks();
-			if (ListUtil.isEmpty(tasksInfo)) {
-				//	TODO
-			} else {
+			if (!ListUtil.isEmpty(tasksInfo)) {
 				int tasksIndex = 0;
 				Map<Integer, Map<String, String>> valuesToReplace = new TreeMap<Integer, Map<String,String>>();
 				for (Map<String, String> taskInfo: tasksInfo) {
@@ -726,9 +729,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	@Override
 	public AdvancedProperty getHandlerInfo(IWContext iwc, User handler) {
-		if (handler == null) {
+		if (handler == null)
 			return null;
-		}
 
 		UserBusiness userBusiness = null;
 		try {
@@ -799,18 +801,35 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					iwrb.getLocalizedString(new StringBuilder(LOCALIZATION_PREFIX)
 					.append(CaseHandlerAssignmentHandler.handlerUserIdVarName).toString(), "Case handler"))));
 		} else {
+			String localized = null;
 			IWContext iwc = CoreUtil.getIWContext();
 			IWResourceBundle bpmIWRB = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 			for (String column: customColumns) {
-				String localized = iwrb.getLocalizedString(LOCALIZATION_PREFIX.concat(column), column);
-				if (column.equals(localized))
-					localized = bpmIWRB.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(column), column);
-				if (column.equals(localized)) {
-					LOGGER.warning("Variable " + column + " is not localized");
+				if (CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN.equals(column)) {
+					columns.put(index, Arrays.asList(
+							new AdvancedProperty(CasesBoardViewer.WORK_ITEM, iwrb.getLocalizedString(CasesBoardViewer.WORK_ITEM, "Work item")),
+							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST,
+									"Estimated cost")),
+							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION,
+									"Board suggestion")),
+							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION,
+									"Board decision"))
+					));
+				} else if (CasesBoardViewer.ESTIMATED_COST.equals(column) || CasesBoardViewer.BOARD_SUGGESTION.equals(column) ||
+						CasesBoardViewer.BOARD_DECISION.equals(column))
 					continue;
+				else {
+					localized = iwrb.getLocalizedString(LOCALIZATION_PREFIX.concat(column), column);
+					if (column.equals(localized))
+						localized = bpmIWRB.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(column), column);
+					if (column.equals(localized)) {
+						LOGGER.warning("Variable " + column + " is not localized");
+						continue;
+					}
+
+					columns.put(index, Arrays.asList(new AdvancedProperty(column, localized)));
 				}
 
-				columns.put(index, Arrays.asList(new AdvancedProperty(column, localized)));
 				index++;
 			}
 		}
@@ -826,16 +845,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		List<String> columns = getVariables(uuid);
 		List<String> values = new ArrayList<String>();
 
-		int indexOfSuggestion = getIndexOfColumn(ProcessConstants.BOARD_FINANCING_SUGGESTION, uuid) - 1;
+		int indexOfSuggestion = getIndexOfColumn(ProcessConstants.FINANCING_OF_THE_TASKS, uuid) + 2;
 		indexOfSuggestion = indexOfSuggestion < 1 ? Integer.MAX_VALUE : indexOfSuggestion;
-		int indexOfDecision = getIndexOfColumn(ProcessConstants.BOARD_FINANCING_DECISION, uuid) - 1;
-		indexOfDecision = indexOfDecision < 1 ? Integer.MAX_VALUE : indexOfDecision;
+		int indexOfDecision = indexOfSuggestion + 1;
 		int indexOfTotal = Math.min(indexOfSuggestion, indexOfDecision) - 1;
 
 		for (int i = 0; i < columns.size(); i++) {
 			if (indexOfTotal > -1 && indexOfTotal == i) {
 				// SUMs label
-				values.add(new StringBuilder(iwrb.getLocalizedString("case_board_viewer.total_sum", "Total")).append(CoreConstants.COLON).toString());
+				values.add(new StringBuilder(iwrb.getLocalizedString("case_board_viewer.total_sum", "Total")).append(CoreConstants.COLON)
+						.toString());
 			} else if (i == indexOfSuggestion) {
 				// Grant amount suggestions
 				values.add(String.valueOf(grantAmountSuggestionTotal));
@@ -845,6 +864,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			} else
 				values.add(CoreConstants.EMPTY);
 		}
+		if (values.size() <= indexOfDecision)
+			values.add(String.valueOf(boardAmountTotal));
 
 		values.add(CoreConstants.EMPTY);
 
@@ -862,9 +883,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	private String getStringValue(String value) {
-		if (StringUtil.isEmpty(value) || "no_value".equals(value) || CoreConstants.MINUS.equals(value)) {
+		if (StringUtil.isEmpty(value) || "no_value".equals(value) || CoreConstants.MINUS.equals(value))
 			return CoreConstants.EMPTY;
-		}
 
 		return value;
 	}
