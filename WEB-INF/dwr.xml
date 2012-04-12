@@ -45,6 +45,8 @@
 		  List<String> ApplicationTypeBPM.getRolesCanStartProcessDWR(Long, String);
 		  
 		  CasesEngine.getCaseManagerView(CasesBPMAssetProperties);
+		  
+		  BoardCasesManager.saveCustomizedColumns(String, List<String>);
 		]]>
 	</signatures>
 </dwr>
