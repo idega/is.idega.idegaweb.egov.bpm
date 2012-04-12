@@ -58,7 +58,6 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		return iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(key), key);
 	}
 
-	@Override
 	public List<String> getHeaders(List<String> headersKeys) {
 		if (ListUtil.isEmpty(headersKeys))
 			return null;
@@ -75,7 +74,6 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		return new AdvancedProperty(variable.getName(), variable.getValue().toString());
 	}
 
-	@Override
 	public Map<String, Map<String, String>> getLabelsForHeaders(List<String> casesIds, List<String> headersKeys) {
 		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(headersKeys))
 			return null;
