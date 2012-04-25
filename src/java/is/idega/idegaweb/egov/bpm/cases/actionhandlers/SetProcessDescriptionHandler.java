@@ -30,12 +30,12 @@ import com.idega.presentation.IWContext;
 import com.idega.util.ListUtil;
 
 /**
- * 
+ *
  * @author <a href="anton@idega.com">Anton Makarov</a>
  * @version Revision: 1.0
- * 
+ *
  *          Last modified: Jun 27, 2008 by Author: Anton
- * 
+ *
  */
 @Service("setProcessDescriptionHandler")
 @Scope("prototype")
@@ -49,6 +49,7 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 	@Autowired
 	private BPMFactory bpmFactory;
 
+	@Override
 	public void execute(ExecutionContext ctx) throws Exception {
 		final ProcessInstance pi = ctx.getProcessInstance();
 
@@ -57,22 +58,26 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 				.getProcessInstance(pi.getId());
 
 		String processDescription = getDescription() == null ? piw.getProcessDescription() : getDescription();
-		
+
 		setCaseSubject(pi.getId(), processDescription, piw.getProcessDefinitionW().getProcessDefinition().getName());
 	}
-	
-	protected void setCaseSubject(Long processInstanceId, String caseSubject, String caseCode) throws Exception {
+
+	protected Case getCase(Long processInstanceId) throws Exception {
 		CaseProcInstBind cpi = getBpmBindsDAO().find(CaseProcInstBind.class, processInstanceId);
 		Integer caseId = cpi.getCaseId();
 
 		CasesBusiness casesBusiness = getCasesBusiness(getIWAC());
-		final Case theCase = casesBusiness.getCase(caseId);
+		return casesBusiness.getCase(caseId);
+	}
+
+	protected void setCaseSubject(Long processInstanceId, String caseSubject, String caseCode) throws Exception {
+		final Case theCase = getCase(processInstanceId);
 
 		setCaseCode(theCase, caseCode);
 		theCase.setSubject(caseSubject);
 		theCase.store();
 	}
-	
+
 	private void setCaseCode(Case theCase, String processDefinitionName) {
 		ApplicationHome applicationHome = null;
 		try {
@@ -83,7 +88,7 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 		if (applicationHome == null) {
 			return;
 		}
-		
+
 		Collection<Application> applications = null;
 		try {
 			applications = applicationHome.findAllByApplicationUrl(processDefinitionName);
@@ -93,7 +98,7 @@ public class SetProcessDescriptionHandler implements ActionHandler {
 		if (ListUtil.isEmpty(applications)) {
 			return;
 		}
-		
+
 		CaseCode code = null;
 		for (Iterator<Application> appsIter = applications.iterator(); (appsIter.hasNext() && code == null);) {
 			code = appsIter.next().getCaseCode();

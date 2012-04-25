@@ -26,7 +26,7 @@ import com.idega.util.StringUtil;
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.4 $
- * 
+ *
  *          Last modified: $Date: 2009/06/23 10:22:22 $ by $Author: valdas $
  */
 @Service("endCaseProcessHandler")
@@ -34,15 +34,16 @@ import com.idega.util.StringUtil;
 public class EndCaseProcessHandler implements ActionHandler {
 
 	private static final long serialVersionUID = -2378842409705431642L;
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
 	@Autowired
 	private CasesStatusMapperHandler casesStatusMapper;
-	
+
 	private String caseStatus;
-	
+
+	@Override
 	public void execute(ExecutionContext ctx) throws Exception {
 
 		CaseProcInstBind bind = getCasesBPMDAO().find(CaseProcInstBind.class, ctx.getProcessInstance().getId());
@@ -52,16 +53,20 @@ public class EndCaseProcessHandler implements ActionHandler {
 		CasesBusiness casesBusiness = getCasesBusiness(iwc);
 
 		GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-		changeCaseStatus(casesBusiness, theCase, iwc.getCurrentUser());
+		changeCaseStatus(casesBusiness, theCase, getCurrentUser(iwc, ctx));
 	}
-	
+
+	protected User getCurrentUser(IWContext iwc, ExecutionContext executionContext) {
+		return iwc.getCurrentUser();
+	}
+
 	private void changeCaseStatus(CasesBusiness casesBusiness, GeneralCase theCase, User user) throws Exception {
 		if (StringUtil.isEmpty(caseStatus)) {
 			caseStatus = casesBusiness.getCaseStatusReady().getStatus();
 		} else {
 			caseStatus = getCasesStatusMapper().getStatusCodeByMappedName(caseStatus);
 		}
-		
+
 		casesBusiness.changeCaseStatus(theCase, caseStatus, user);
 	}
 
