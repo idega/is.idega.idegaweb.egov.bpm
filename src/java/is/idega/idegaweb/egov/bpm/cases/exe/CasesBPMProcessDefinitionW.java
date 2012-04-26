@@ -72,78 +72,78 @@ import com.idega.util.StringUtil;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Service(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER)
 public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
-	
+
 	public static final String SPRING_BEAN_IDENTIFIER = "casesPDW";
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Autowired
 	@Qualifier(CaseIdentifier.QUALIFIER)
 	private CaseIdentifier caseIdentifier;
-	
+
 	@Autowired
 	private CasesStatusMapperHandler casesStatusMapperHandler;
 	@Autowired
 	private AppSupportsManagerFactory appSupportsManagerFactory;
-	
+
 	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = false)
 	@Override
-	public void startProcess(final ViewSubmission viewSubmission) {
+	public Long startProcess(final ViewSubmission viewSubmission) {
 		final Long processDefinitionId = viewSubmission.getProcessDefinitionId();
-		
-		if (!processDefinitionId.equals(getProcessDefinitionId())) {
+
+		if (!processDefinitionId.equals(getProcessDefinitionId()))
 			throw new IllegalArgumentException("View submission was for different process definition id than tried to submit to");
-		}
-		
+
 		final ProcessDefinition pd = getProcessDefinition();
-		
+
 		getLogger().info("Starting process for process definition id = " + processDefinitionId + ", process definition name: " + pd.getName());
-		
+
 		Map<String, String> parameters = viewSubmission.resolveParameters();
-		
+
 		getLogger().finer("Params " + parameters);
-		
+
 		final Integer userId = parameters.containsKey(CasesBPMProcessConstants.userIdActionVariableName) ?
 				Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName)) : null;
-		
+
 		final String caseStatusKey = parameters.containsKey(CasesBPMProcessConstants.caseStatusVariableName) ?
 				parameters.get(CasesBPMProcessConstants.caseStatusVariableName) : null;
-		
+
 		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		final String caseIdentifier = parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER);
 		final String realCaseCreationDate = parameters.get(CasesBPMProcessConstants.caseCreationDateParam);
-		
+
 		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ? new Date() : new IWTimestamp(realCaseCreationDate).getDate();
-		
-		Object submitted = getBpmContext().execute(new JbpmCallback() {
-			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
+
+		Long piId = getBpmContext().execute(new JbpmCallback() {
+			@Override
+			public Long doInJbpm(JbpmContext context) throws JbpmException {
 				try {
 					ProcessInstance pi = new ProcessInstance(pd);
 					TaskInstance ti = pi.getTaskMgmtInstance().createStartTaskInstance();
-					
+
 					View view = getBpmFactory().getView(viewSubmission.getViewId(), viewSubmission.getViewType(), false);
-					
+
 					// binding view to task instance
 					view.getViewToTask().bind(view, ti);
-					
+
 					getLogger().info("New process instance created for the process " + pd.getName());
-					
+
 					pi.setStart(new Date());
-					
+
 					IWApplicationContext iwac = getIWAC();
 					IWMainApplication iwma = iwac.getIWMainApplication();
-					
+
 					UserBusiness userBusiness = getUserBusiness(iwac);
 					User user = userId == null ? null : userBusiness.getUser(userId);
-					
+
 					CasesBusiness casesBusiness = getCasesBusiness(iwac);
-					
+
 					CaseTypesProcDefBind bind = getCasesBPMDAO().find(CaseTypesProcDefBind.class, pd.getName());
 					Long caseCategoryId = bind.getCasesCategoryId();
 					Long caseTypeId = bind.getCasesTypeId();
-					
+
 					IWResourceBundle iwrb = null;
 					GeneralCase genCase = null;
 					try {
@@ -168,12 +168,12 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						CoreUtil.sendExceptionNotification(message, e);
 						throw new RuntimeException(message, e);
 					}
-					
+
 					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
-					
+
 					pi.setStart(caseCreated);
-					notifyAboutNewProcess(pd.getName(), pi.getId());					
-					
+					notifyAboutNewProcess(pd.getName(), pi.getId());
+
 					Map<String, Object> caseData = new HashMap<String, Object>();
 					caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
 					caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
@@ -181,37 +181,37 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
 					caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
 					caseData.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, caseIdentifier);
-					
+
 					Collection<CaseStatus> allStatuses = casesBusiness.getCaseStatuses();
-					
+
 					CasesStatusMapperHandler casesStatusMapper = getCasesStatusMapperHandler();
-					
+
 					for (CaseStatus caseStatus : allStatuses)
 						caseData.put(casesStatusMapper.getStatusVariableNameFromStatusCode(caseStatus.getStatus()), caseStatus.getStatus());
-					
+
 					final Locale dateLocale;
 					IWContext iwc = CoreUtil.getIWContext();
 					dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
 					IWTimestamp created = new IWTimestamp(genCase.getCreated());
 					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT, IWTimestamp.SHORT));
-					
+
 					CaseProcInstBind piBind = new CaseProcInstBind();
 					piBind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
 					piBind.setProcInstId(pi.getId());
 					piBind.setCaseIdentierID(caseIdentifierNumber);
-					
+
 					piBind.setDateCreated(caseCreated);
 					piBind.setCaseIdentifier(caseIdentifier);
 					getCasesBPMDAO().persist(piBind);
 					getLogger().info("Bind was created: process instance ID=" + pi.getId() + ", case ID=" + genCase.getPrimaryKey());
-					
+
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
 					getLogger().info("Variables were set: " + caseData);
-					
+
 					Map<String, Object> variables = viewSubmission.resolveVariables();
 					submitVariablesAndProceedProcess(ti, variables, true);
-					
+
 					if (variables != null && variables.containsKey(BPMConstants.PUBLIC_PROCESS)) {
 						Object publicProcess = variables.get(BPMConstants.PUBLIC_PROCESS);
 						if (Boolean.valueOf(publicProcess.toString())) {
@@ -219,10 +219,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 							genCase.store();
 						}
 					}
-					
+
 					getLogger().info("Variables were submitted and a process proceeded");
-					
-					return Boolean.TRUE;
+
+					return pi.getId();
 				} catch (JbpmException e) {
 					throw e;
 				} catch (RuntimeException e) {
@@ -232,61 +232,63 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				}
 			}
 		});
-		getLogger().info("Process was created: " + submitted);
+		getLogger().info("Process was created: " + piId);
+		return piId;
 	}
-	
+
 	@Override
 	@Transactional(readOnly = false)
 	public View loadInitView(final Integer initiatorId) {
 		try {
 			return getBpmContext().execute(new JbpmCallback() {
-				
+
+				@Override
 				public Object doInJbpm(JbpmContext context) throws JbpmException {
 					Long processDefinitionId = getProcessDefinitionId();
 					ProcessDefinition pd = getProcessDefinition();
-					
+
 					Long startTaskId = pd.getTaskMgmtDefinition().getStartTask().getId();
-					
+
 					List<String> preferred = new ArrayList<String>(1);
 					preferred.add(XFormsView.VIEW_TYPE);
 					View view = getBpmFactory().getViewByTask(startTaskId, true, preferred);
 					view.takeView();
-					
+
 					// we don't know yet the task instance id, so we store the
 					// view id
 					// and type, to resolve later in start process. Only then we
 					// will
 					// bind view with task instance
-					
+
 					Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
 					Integer identifierNumber = (Integer) identifiers[0];
 					String identifier = (String) identifiers[1];
-					
+
 					IWTimestamp realCreationDate = new IWTimestamp();
 					String realCreationDateString = realCreationDate.toString();
 					Map<String, String> parameters = new HashMap<String, String>(7);
-					
+
 					parameters.put(ProcessConstants.START_PROCESS, ProcessConstants.START_PROCESS);
 					parameters.put(ProcessConstants.PROCESS_DEFINITION_ID, String.valueOf(processDefinitionId));
 					parameters.put(ProcessConstants.VIEW_ID, view.getViewId());
 					parameters.put(ProcessConstants.VIEW_TYPE, view.getViewType());
-					
+
 					if (initiatorId != null)
 						parameters.put(CasesBPMProcessConstants.userIdActionVariableName, initiatorId.toString());
-					
+
 					parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam, String.valueOf(identifierNumber));
 					parameters.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, String.valueOf(identifier));
 					parameters.put(CasesBPMProcessConstants.caseCreationDateParam, realCreationDateString);
-					
+
 					view.populateParameters(parameters);
-					
+
 					HashMap<String, Object> vars = new HashMap<String, Object>(1);
 					vars.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, identifier);
-					
+
 					view.populateVariables(vars);
-					
+
 					// --
-					
+
 					return view;
 				}
 			});
@@ -296,24 +298,24 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			throw new RuntimeException(e);
 		}
 	}
-	
+
 	@Override
 	@Transactional(readOnly = true)
 	public List<String> getRolesCanStartProcess(Object context) {
 		final Integer applicationId = new Integer(context.toString());
-		
+
 		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory().getAppSupportsManager(applicationId, getProcessDefinition().getName());
-		
+
 		List<String> rolesCanStartProcess = appSupportsManager.getRolesCanStartProcess();
 		return rolesCanStartProcess;
 	}
-	
+
 	/**
 	 * <p>
 	 * TODO: this is probably totally incorrect implementation, review and fix!
 	 * </p>
 	 * sets roles, whose users can start process (and see application).
-	 * 
+	 *
 	 * @param rolesKeys
 	 *            - idega roles keys (<b>not</b> process roles)
 	 * @param processContext
@@ -325,13 +327,13 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	public void setRolesCanStartProcess(List<String> rolesKeys, Object processContext) {
 		if (rolesKeys == null)
 			rolesKeys = Collections.emptyList();
-		
+
 		final Integer applicationId = new Integer(processContext.toString());
-		
+
 		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory().getAppSupportsManager(applicationId, getProcessDefinition().getName());
 		appSupportsManager.updateRolesCanStartProcess(rolesKeys);
 	}
-	
+
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
@@ -340,7 +342,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			throw new IBORuntimeException(ile);
 		}
 	}
-	
+
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
 			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
@@ -348,27 +350,27 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			throw new IBORuntimeException(ile);
 		}
 	}
-	
+
 	private IWApplicationContext getIWAC() {
 		IWContext iwc = CoreUtil.getIWContext();
 		return iwc == null ? IWMainApplication.getDefaultIWApplicationContext() : iwc;
 	}
-	
+
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
-	
+
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public CaseIdentifier getCaseIdentifier() {
 		String qualifier = CaseIdentifier.QUALIFIER;
-		
+
 		Map<String, ? extends CaseIdentifier> identifierGenerators = WebApplicationContextUtils.getWebApplicationContext(getIWAC().getIWMainApplication()
 				.getServletContext()).getBeansOfType(CaseIdentifier.class);
-		
+
 		if (identifierGenerators == null || identifierGenerators.isEmpty()) {
 			getLogger().warning("There are no beans (type of '"+CaseIdentifier.class+"') to generate case identifier!");
 			return caseIdentifier;
@@ -384,28 +386,29 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				return identifierGenerator;
 			}
 		}
-		
+
 		return caseIdentifier;
 	}
-	
+
 	@Override
 	public String getProcessName(Locale locale) {
 		if (locale == null) {
 			return null;
 		}
-		
+
 		return getProcessName(getProcessDefinitionId(), locale);
 	}
-	
+
 	//	TODO: make caching?
 	@Transactional(readOnly = true)
 	public String getProcessName(final Long processDefinitionId, final Locale locale) {
 		if (processDefinitionId == null) {
 			return null;
 		}
-		
+
 		return getBpmContext().execute(new JbpmCallback() {
-			
+
+			@Override
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				ProcessDefinition pd = context.getGraphSession().getProcessDefinition(processDefinitionId);
 				try {
@@ -417,12 +420,12 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			}
 		});
 	}
-	
+
 	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, Locale locale, ApplicationHome appHome) {
 		if (pd == null || locale == null || appHome == null) {
 			return null;
 		}
-		
+
 		Collection<Application> apps = null;
 		try {
 			apps = appHome.findAllByApplicationUrl(pd.getName());
@@ -433,7 +436,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName() + ", returning standard name!");
 			return pd.getName();
 		}
-		
+
 		ApplicationBusiness applicationBusiness = null;
 		try {
 			applicationBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
@@ -444,10 +447,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		if (applicationBusiness == null) {
 			return pd.getName();
 		}
-		
+
 		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
 	}
-	
+
 	//	TODO: make caching?
 	@Transactional(readOnly = true)
 	public String getProcessName(String processName, Locale locale) {
@@ -455,20 +458,20 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		if (pd == null) {
 			return null;
 		}
-		
+
 		try {
 			return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
 		} catch (IDOLookupException e) {
 			e.printStackTrace();
 		}
-		
+
 		return null;
 	}
-	
+
 	public CasesStatusMapperHandler getCasesStatusMapperHandler() {
 		return casesStatusMapperHandler;
 	}
-	
+
 	AppSupportsManagerFactory getAppSupportsManagerFactory() {
 		return appSupportsManagerFactory;
 	}
