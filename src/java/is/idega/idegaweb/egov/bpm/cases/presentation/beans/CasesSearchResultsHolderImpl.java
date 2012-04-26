@@ -9,6 +9,7 @@ import is.idega.idegaweb.egov.cases.util.CasesConstants;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -67,12 +68,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsHolderImpl.class.getName());
 	private static final int DEFAULT_CELL_WIDTH = 40 * 256;
-	
+
 	private Map<String, CasesSearchResults> allResults = new HashMap<String, CasesSearchResults>();
 	private Map<String, List<CasePresentation>> externalData = new HashMap<String, List<CasePresentation>>();
-	
+
 	private List<String> concatenatedData = new ArrayList<String>();
-	
+
 	private MemoryFileBuffer memory;
 
 	@Autowired
@@ -85,7 +86,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private RolesManager rolesManager;
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
-	
+
+	@Override
 	public void setSearchResults(String id, CasesSearchResults results) {
 		allResults.put(id, results);
 	}
@@ -93,14 +95,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private Collection<CasePresentation> getCases(String id) {
 		return getCases(id, false);
 	}
-	
+
 	private Collection<CasePresentation> getCases(String id, boolean loadExternalData) {
 		CasesSearchResults results = allResults.get(id);
 		Collection<CasePresentation> data = results == null ? null : results.getCases();
-		
+
 		if (loadExternalData) {
 			List<CasePresentation> externalData = this.externalData.get(id);
-			
+
 			if (externalData != null) {
 				if (data == null) {
 					return externalData;
@@ -111,41 +113,42 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				}
 			}
 		}
-		
+
 		return data;
 	}
-	
+
+	@Override
 	public boolean doExport(String id) {
 		Collection<CasePresentation> cases = getCases(id, true);
 		if (ListUtil.isEmpty(cases)) {
 			return false;
 		}
-		
+
 		memory = getExportedData(id);
-		
+
 		return memory == null ? false : true;
 	}
-	
+
 	private String getSheetName(Locale locale, String processNameOrCategoryId) {
 		if (locale == null || StringUtil.isEmpty(processNameOrCategoryId)) {
 			return CoreConstants.MINUS;
 		}
-		
+
 		String sheetName = null;
 		Integer id = getNumber(processNameOrCategoryId);
 		if (id == null) {
 			sheetName = getCaseManagersProvider().getCaseManager().getProcessName(processNameOrCategoryId, locale);
 		}
-		
+
 		sheetName = getCategoryName(locale, processNameOrCategoryId.equals(CasesStatistics.UNKOWN_CATEGORY_ID) ? null : getCaseCategory(id));
 		return StringUtil.isEmpty(sheetName) ? CoreConstants.MINUS : sheetName;
 	}
-	
+
 	private CaseCategory getCaseCategory(Object primaryKey) {
 		if (primaryKey == null) {
 			return null;
 		}
-		
+
 		try {
 			CaseCategoryHome caseHome = (CaseCategoryHome) IDOLookup.getHome(CaseCategory.class);
 			return caseHome.findByPrimaryKey(primaryKey);
@@ -154,15 +157,15 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 		return null;
 	}
-	
+
 	private String getCategoryName(Locale locale, CaseCategory caseCategory) {
 		if (caseCategory == null) {
 			return getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getLocalizedString(CasesStatistics.UNKOWN_CATEGORY_ID, "Unkown category");
 		}
-		
+
 		return caseCategory.getLocalizedCategoryName(locale);
 	}
-		
+
 	private String getCaseCreator(CasePresentation caze) {
 		String name = null;
 		if (caze.getOwner() != null) {
@@ -171,10 +174,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (StringUtil.isEmpty(name)) {
 			name = getResourceBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getLocalizedString("cases.unknown_owner", "Unkown");
 		}
-		
+
 		return name;
 	}
-	
+
 	private String getCaseCreatorPersonalId(CasePresentation caze) {
 		String personalId = null;
 		if (caze.getOwner() != null) {
@@ -183,13 +186,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (StringUtil.isEmpty(personalId)) {
 			personalId = getResourceBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getLocalizedString("cases.unknown_owner_personal_id", "Unkown");
 		}
-		
+
 		return personalId;
 	}
-	
+
 	private String getCaseCreatorEmail(CasePresentation theCase) {
 		String emailAddress = null;
-		
+
 		User owner = theCase.getOwner();
 		if (owner != null) {
 			try {
@@ -201,11 +204,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				LOGGER.log(Level.WARNING, "Error getting main email for user: " + owner, e);
 			}
 		}
-		
+
 		return StringUtil.isEmpty(emailAddress) ?
 				getResourceBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getLocalizedString("cases.unknown_owner_email", "Unkown") : emailAddress;
 	}
-	
+
 	private UserBusiness getUserBusiness() {
 		try {
 			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), UserBusiness.class);
@@ -214,7 +217,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 		return null;
 	}
-	
+
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessDefinition(Locale locale, String processDefinition, boolean isAdmin) {
 		Collection<VariableInstanceInfo> variablesByProcessDefinition = null;
@@ -223,10 +226,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variables for process: " + processDefinition, e);
 		}
-		
+
 		return getAvailableVariables(variablesByProcessDefinition, locale, isAdmin, false);
 	}
-	
+
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessInstanceId(Locale locale, Long processInstanceId, boolean isAdmin) {
 		Collection<VariableInstanceInfo> variablesByProcessInstance = null;
@@ -235,51 +238,51 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variables for process instance: " + processInstanceId, e);
 		}
-		
+
 		return getAvailableVariables(variablesByProcessInstance, locale, isAdmin, true);
 	}
-	
+
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
 		if (ListUtil.isEmpty(variables)) {
 			return null;
 		}
-		
+
 		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 		return variablesProvider.getAvailableVariables(variables, locale, isAdmin, useRealValue);
 	}
-	
+
 	private List<AdvancedProperty> createHeaders(HSSFSheet sheet, HSSFCellStyle bigStyle, Locale locale, String processName, boolean isAdmin,
 			List<String> standardFieldsInfo) {
 		IWResourceBundle iwrb = getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
-		
+
 		short cellIndexInRow = 0;
-		
+
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 		sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
-		
+
 		short cellRow = 0;
 		int cellIndex = 0;
-		
+
 		//	Default header labels
 		HSSFRow row = sheet.createRow(cellRow++);
 		HSSFCell cell = row.createCell(cellIndex++);
 		cell.setCellValue(iwrb.getLocalizedString("case_nr", "Case nr."));
 		cell.setCellStyle(bigStyle);
-		
+
 		cell = row.createCell(cellIndex++);
 		cell.setCellValue(iwrb.getLocalizedString("sender", "Sender"));
 		cell.setCellStyle(bigStyle);
-		
+
 		cell = row.createCell(cellIndex++);
 		cell.setCellValue(iwrb.getLocalizedString("personal_id", "Personal ID"));
 		cell.setCellStyle(bigStyle);
-		
+
 		cell = row.createCell(cellIndex++);
 		cell.setCellValue(iwrb.getLocalizedString("sender_e-mail", "E-mail"));
 		cell.setCellStyle(bigStyle);
-		
+
 		if (!ListUtil.isEmpty(standardFieldsInfo)) {
 			for (String standardFieldLabel: standardFieldsInfo) {
 				cell = row.createCell(cellIndex++);
@@ -287,34 +290,34 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				cell.setCellStyle(bigStyle);
 			}
 		}
-		
+
 		//	Labels of variables
 		List<AdvancedProperty> availableVariables = getAvailableVariablesByProcessDefinition(locale, processName, isAdmin);
 		if (!ListUtil.isEmpty(availableVariables)) {
 			for (AdvancedProperty variable: availableVariables) {
 				sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
-				
+
 				cell = row.createCell(cellIndex++);
 				cell.setCellValue(variable.getValue());
 				cell.setCellStyle(bigStyle);
 			}
 		}
-		
+
 		return availableVariables;
 	}
-	
+
 	private Integer getNumber(String value) {
 		if (StringUtil.isEmpty(value)) {
 			return null;
 		}
-		
+
 		try {
 			return Integer.valueOf(value);
 		} catch(Exception e) {}
-		
+
 		return null;
 	}
-	
+
 	private List<AdvancedProperty> getVariablesForCase(CasePresentation theCase, Locale locale, boolean isAdmin) {
 		List<AdvancedProperty> vars = theCase.getExternalData();
 		if (ListUtil.isEmpty(vars)) {
@@ -329,48 +332,50 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 			vars = getAvailableVariablesByProcessInstanceId(locale, processInstanceId, isAdmin);
 		}
-		
+
 		return vars;
 	}
-	
+
 	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet, HSSFCellStyle bigStyle,
 			Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
 		if (ListUtil.isEmpty(variablesByProcessDefinition)) {
 			return;
 		}
-		
+
 		AdvancedProperty variable = null;
 		List<AdvancedProperty> variablesByProcessInstance = getVariablesForCase(theCase, locale, isAdmin);
 		if (ListUtil.isEmpty(variablesByProcessInstance)) {
 			return;
 		}
-		
+
 		for (AdvancedProperty processVariable: variablesByProcessDefinition) {
 			variable = getVariableByValue(variablesByProcessInstance, processVariable.getValue());
 			row.createCell(cellIndex++).setCellValue(variable == null ? CoreConstants.EMPTY : variable.getId());
 		}
 	}
-	
+
 	private AdvancedProperty getVariableByValue(List<AdvancedProperty> variables, String value) {
 		if (ListUtil.isEmpty(variables) || StringUtil.isEmpty(value)) {
 			return null;
 		}
-		
+
 		for (AdvancedProperty variable: variables) {
 			if (value.equals(variable.getValue())) {
 				return variable;
 			}
 		}
-		
+
 		return null;
 	}
-	
+
 	private MemoryFileBuffer getExportedData(String id) {
-		Map<String, List<CasePresentation>> casesByProcessDefinition = getCasesByProcessDefinition(id);
-		if (casesByProcessDefinition == null || ListUtil.isEmpty(casesByProcessDefinition.values())) {
+		return getExportedData(getCasesByProcessDefinition(id), id);
+	}
+
+	private MemoryFileBuffer getExportedData(Map<String, List<CasePresentation>> casesByProcessDefinition, String id) {
+		if (casesByProcessDefinition == null || ListUtil.isEmpty(casesByProcessDefinition.values()))
 			return null;
-		}
-		
+
 		MemoryFileBuffer memory = new MemoryFileBuffer();
 		OutputStream streamOut = new MemoryOutputStream(memory);
 		HSSFWorkbook workBook = new HSSFWorkbook();
@@ -380,7 +385,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		bigFont.setFontHeightInPoints((short) 13);
 		HSSFCellStyle bigStyle = workBook.createCellStyle();
 		bigStyle.setFont(bigFont);
-		
+
 		boolean isAdmin = false;
 		List<CasePresentation> cases = null;
 		Locale locale = null;
@@ -394,25 +399,25 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (locale == null) {
 			locale = Locale.ENGLISH;
 		}
-		
+
 		List<String> standardFieldsLabels = getStandardFieldsLabels(id, locale);
 		List<String> createdSheets = new ArrayList<String>();
-		
+
 		for (String processName: casesByProcessDefinition.keySet()) {
 			if (processName == null) {
 				continue;
 			}
-			
+
 			cases = casesByProcessDefinition.get(processName);
-			
+
 			String sheetName = StringHandler.shortenToLength(getSheetName(locale, processName), 30);
 			HSSFSheet sheet = createdSheets.contains(sheetName) ? workBook.getSheet(sheetName) : workBook.createSheet(sheetName);
 			createdSheets.add(sheetName);
-			
+
 			List<AdvancedProperty> variablesByProcessDefinition = createHeaders(sheet, bigStyle, locale, processName, isAdmin, standardFieldsLabels);
 			List<Integer> fileCellsIndexes = null;
 			short rowNumber = 1;
-			
+
 			for (CasePresentation theCase: cases) {
 				fileCellsIndexes = new ArrayList<Integer>();
 				HSSFRow row = sheet.createRow(rowNumber++);
@@ -423,7 +428,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				row.createCell(cellIndex++).setCellValue(getCaseCreator(theCase));
 				row.createCell(cellIndex++).setCellValue(getCaseCreatorPersonalId(theCase));
 				row.createCell(cellIndex++).setCellValue(getCaseCreatorEmail(theCase));
-				
+
 				if (!ListUtil.isEmpty(standardFieldsLabels)) {
 					List<String> standardFieldsValues = getStandardFieldsValues(id, theCase);
 					if (!ListUtil.isEmpty(standardFieldsValues)) {
@@ -432,12 +437,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						}
 					}
 				}
-				
+
 				//	Variable values
 				addVariables(variablesByProcessDefinition, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes, fileNameLabel);
 			}
 		}
-		
+
 		try {
 			workBook.write(streamOut);
 		} catch (Exception e) {
@@ -446,52 +451,54 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		} finally {
 			IOUtil.closeOutputStream(streamOut);
 		}
-		
+
 		return memory;
 	}
-	
+
 	private List<String> getStandardFieldsLabels(String id, Locale locale) {
+		if (StringUtil.isEmpty(id))
+			return Collections.emptyList();
+
 		CasesSearchCriteriaBean criteria = getSearchCriteria(id);
-		if (criteria == null) {
+		if (criteria == null)
 			return null;
-		}
-		
+
 		IWResourceBundle iwrb = null;
 		List<String> labels = new ArrayList<String>();
 		if (!StringUtil.isEmpty(criteria.getDescription())) {
 			iwrb = getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER);
 			labels.add(iwrb.getLocalizedString("description", "Description"));
 		}
-		
+
 		if (!StringUtil.isEmpty(criteria.getContact())) {
 			iwrb = iwrb == null ? getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER) : iwrb;
 			labels.add(iwrb.getLocalizedString("contact", "Contact"));
 		}
-		
+
 		if (!StringUtil.isEmpty(criteria.getStatusId())) {
 			iwrb = iwrb == null ? getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER) : iwrb;
 			labels.add(iwrb.getLocalizedString("status", "Status"));
 		}
-		
+
 		if (!StringUtil.isEmpty(criteria.getDateRange())) {
 			iwrb = iwrb == null ? getResourceBundle(locale, CasesConstants.IW_BUNDLE_IDENTIFIER) : iwrb;
 			labels.add(iwrb.getLocalizedString("date_range", "Date range"));
 		}
-		
+
 		return ListUtil.isEmpty(labels) ? null : labels;
 	}
-	
+
 	private List<String> getStandardFieldsValues(String id, CasePresentation theCase) {
 		CasesSearchCriteriaBean criteria = getSearchCriteria(id);
 		if (criteria == null) {
 			return null;
 		}
-		
+
 		List<String> values = new ArrayList<String>();
 		if (!StringUtil.isEmpty(criteria.getDescription())) {
 			values.add(theCase.getSubject());
 		}
-		
+
 		if (!StringUtil.isEmpty(criteria.getContact())) {
 			Collection<User> usersByContactInfo = null;
 			UserBusiness userBusiness = getUserBusiness();
@@ -502,17 +509,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					LOGGER.log(Level.WARNING, "Error getting users by name, email or phone by fraze: " + criteria.getContact(), e);
 				}
 			}
-			
+
 			if (ListUtil.isEmpty(usersByContactInfo)) {
 				values.add(CoreConstants.MINUS);
 			} else {
 				StringBuilder info = new StringBuilder();
 				for (Iterator<User> usersIter = usersByContactInfo.iterator(); usersIter.hasNext();) {
 					User user = usersIter.next();
-					
+
 					if (isUserConnectedToCase(user, theCase)) {
 						info.append(user.getName());
-						
+
 						Email email = null;
 						try {
 							email = userBusiness.getUsersMainEmail(user);
@@ -524,7 +531,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						if (!StringUtil.isEmpty(emailAddress)) {
 							info.append(CoreConstants.SPACE).append(emailAddress);
 						}
-						
+
 						Phone workPhone = null;
 						try {
 							workPhone = userBusiness.getUsersWorkPhone(user);
@@ -536,7 +543,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						if (!StringUtil.isEmpty(workPhoneNumber)) {
 							info.append(CoreConstants.SPACE).append(workPhoneNumber);
 						}
-						
+
 						if (usersIter.hasNext()) {
 							info.append(CoreConstants.COMMA);
 						}
@@ -545,18 +552,18 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				values.add(StringUtil.isEmpty(info.toString()) ? CoreConstants.MINUS : info.toString());
 			}
 		}
-		
+
 		if (!StringUtil.isEmpty(criteria.getStatusId())) {
 			values.add(theCase.getLocalizedStatus());
 		}
-		
+
 		if (!StringUtil.isEmpty(criteria.getDateRange())) {
 			values.add(criteria.getDateRange());
 		}
-		
+
 		return ListUtil.isEmpty(values) ? null : values;
 	}
-	
+
 	private boolean isUserConnectedToCase(User user, CasePresentation theCase) {
 		List<Long> ids = null;
 		try {
@@ -564,24 +571,24 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error getting case IDs for user: " + user, e);
 		}
-		
+
 		if (ListUtil.isEmpty(ids)) {
 			return false;
 		}
-		
+
 		for (Object id: ids) {
 			if (theCase.getId().equals(id.toString())) {
 				return true;
 			}
 		}
-		
+
 		return false;
 	}
-	
+
 	private IWResourceBundle getResourceBundle(Locale locale, String bundleIdentifier) {
 		return IWMainApplication.getDefaultIWMainApplication().getBundle(bundleIdentifier).getResourceBundle(locale);
 	}
-	
+
 	private IWResourceBundle getResourceBundle(String bundleIdentifier) {
 		IWContext iwc = CoreUtil.getIWContext();
 		try {
@@ -592,22 +599,24 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 
+	@Override
 	public MemoryFileBuffer getExportedSearchResults(String id) {
 		if (memory != null) {
 			return memory;
 		}
-		
+
 		if (doExport(id)) {
 			return memory;
 		}
-		
+
 		return null;
 	}
 
+	@Override
 	public boolean isSearchResultStored(String id) {
 		return isSearchResultStored(id, false);
 	}
-	
+
 	private boolean isSearchResultStored(String id, boolean loadExternalData) {
 		if (StringUtil.isEmpty(id)) {
 			return false;
@@ -615,24 +624,40 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		Collection<CasePresentation> cases = getCases(id, loadExternalData);
 		return ListUtil.isEmpty(cases) ? Boolean.FALSE : Boolean.TRUE;
 	}
-	
+
+	@Override
+	public MemoryFileBuffer getExportedCases(String id) {
+		if (StringUtil.isEmpty(id))
+			return null;
+
+		List<CasePresentation> cases = externalData.remove(id);
+		if (ListUtil.isEmpty(cases))
+			return null;
+
+		Map<String, List<CasePresentation>> casesByProcDef = getCasesByProcessDefinition(cases);
+		return getExportedData(casesByProcDef, null);
+	}
+
 	private Map<String, List<CasePresentation>> getCasesByProcessDefinition(String id) {
 		if (!isSearchResultStored(id, true)) {
 			return null;
 		}
-		
+
 		Collection<CasePresentation> cases = getCases(id, true);
-		
+		return getCasesByProcessDefinition(cases);
+	}
+
+	private Map<String, List<CasePresentation>> getCasesByProcessDefinition(Collection<CasePresentation> cases) {
 		boolean putToMap = false;
 		Map<String, List<CasePresentation>> casesByCategories = new HashMap<String, List<CasePresentation>>();
 		for (CasePresentation theCase: cases) {
 			String processName = theCase.isBpm() ? theCase.getProcessName() : theCase.getCategoryId();
 			putToMap = false;
-			
+
 			if (StringUtil.isEmpty(processName)) {
 				processName = CasesStatistics.UNKOWN_CATEGORY_ID;
 			}
-		
+
 			List<CasePresentation> casesByProcessDefinition = casesByCategories.get(processName);
 			if (ListUtil.isEmpty(casesByProcessDefinition)) {
 				casesByProcessDefinition = new ArrayList<CasePresentation>();
@@ -645,7 +670,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				casesByCategories.put(processName, casesByProcessDefinition);
 			}
 		}
-		
+
 		return casesByCategories;
 	}
 
@@ -672,16 +697,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	public void setCaseManagersProvider(CaseManagersProvider caseManagersProvider) {
 		this.caseManagersProvider = caseManagersProvider;
 	}
-	
+
+	@Override
 	public Integer getNextCaseId(String id, Integer currentId, String processDefinitionName) {
 		if (currentId == null || !isSearchResultStored(id)) {
 			LOGGER.info("Unkown current case's id or no search results stored!");
 			return null;
 		}
-		
+
 		Collection<CasePresentation> cases = getCases(id);
 		CasePresentation nextCase = null;
-		
+
 		if (!StringUtil.isEmpty(processDefinitionName)) {
 			List<CasePresentation> casesFromTheSameProcessDefinition = new ArrayList<CasePresentation>();
 			for (CasePresentation theCase: cases) {
@@ -691,10 +717,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 			cases = casesFromTheSameProcessDefinition;
 		}
-		
+
 		for (Iterator<CasePresentation> casesIter = cases.iterator(); (casesIter.hasNext() && nextCase == null);) {
 			nextCase = casesIter.next();
-			
+
 			if (nextCase.getPrimaryKey().intValue() == currentId.intValue() && casesIter.hasNext()) {
 				nextCase = casesIter.next();
 			}
@@ -702,15 +728,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				nextCase = null;
 			}
 		}
-	
+
 		LOGGER.info("Next case id: " + (nextCase == null ? "unknown" : nextCase.getPrimaryKey()) + " in: " + cases + ", for current case: " + currentId);
 		return nextCase == null ? null : nextCase.getPrimaryKey();
 	}
-	
+
+	@Override
 	public Integer getNextCaseId(String id, Integer currentId) {
 		return getNextCaseId(id, currentId, null);
 	}
 
+	@Override
 	public boolean clearSearchResults(String id) {
 		allResults.remove(id);
 		externalData.remove(id);
@@ -718,19 +746,21 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return Boolean.TRUE;
 	}
 
+	@Override
 	public Collection<CasePresentation> getSearchResults(String id) {
 		if (StringUtil.isEmpty(id)) {
 			return null;
 		}
-		
+
 		return getCases(id);
 	}
-	
+
+	@Override
 	public CasesSearchCriteriaBean getSearchCriteria(String id) {
 		if (StringUtil.isEmpty(id)) {
 			return null;
 		}
-		
+
 		CasesSearchResults results = allResults.get(id);
 		return results == null ? null : results.getCriterias();
 	}
@@ -751,16 +781,18 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		this.variablesQuerier = variablesQuerier;
 	}
 
+	@Override
 	public boolean isAllDataLoaded(String id) {
 		CasesSearchCriteriaBean criterias = getSearchCriteria(id);
 		return criterias == null ? Boolean.FALSE : criterias.isAllDataLoaded();
 	}
 
+	@Override
 	public void concatExternalData(String id, List<CasePresentation> externalData) {
 		if (StringUtil.isEmpty(id) || ListUtil.isEmpty(externalData) || concatenatedData.contains(id)) {
 			return;
 		}
-		
+
 		concatenatedData.add(id);
 		List<CasePresentation> data = this.externalData.get(id);
 		if (data == null) {
@@ -769,6 +801,15 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		} else {
 			data.addAll(externalData);
 		}
+	}
+
+	@Override
+	public boolean setCasesToExport(String id, List<CasePresentation> cases) {
+		if (StringUtil.isEmpty(id) || ListUtil.isEmpty(cases))
+			return false;
+
+		externalData.put(id, cases);
+		return true;
 	}
 
 }

@@ -49,32 +49,33 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	private static final long serialVersionUID = 5469235199056822371L;
 
 	private static final Logger LOGGER = Logger.getLogger(BPMProcessVariablesBeanImpl.class.getName());
-	
+
 	private Long processDefinitionId;
-	
+
 	private List<SelectItem> processVariables;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
-	
+
+	@Override
 	public List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
 		IWResourceBundle iwrb = getBundle().getResourceBundle(locale);
 		return getAvailableVariables(variables, iwrb, locale, isAdmin, useRealValue);
 	}
-	
+
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, IWResourceBundle iwrb, Locale locale, boolean isAdmin,
 			boolean useRealValue) {
-		
+
 		if (ListUtil.isEmpty(variables))
 			return null;
-		
+
 		String at = "@";
 		String name = null;
 		String type = null;
@@ -82,23 +83,23 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		List<String> addedVariables = new ArrayList<String>();
 		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
 		for (VariableInstanceInfo variable: variables) {
-			name = variable.getName();		
+			name = variable.getName();
 			if (StringUtil.isEmpty(name) || addedVariables.contains(name)) {
 				continue;
 			}
-			
+
 			VariableInstanceType varType = variable.getType();
 			type = varType == null ? null : varType.getTypeKeys().get(0);
 			if (StringUtil.isEmpty(type)) {
 				continue;
 			}
-			
+
 			localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
 			if (StringUtil.isEmpty(localizedName))
 				continue;
 			if (!isAdmin && localizedName.equals(name))
 				continue;
-			
+
 			String realValue = null;
 			if (useRealValue) {
 				realValue = getVariableRealValue(variable, locale);
@@ -111,21 +112,22 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		if (ListUtil.isEmpty(availableVariables)) {
 			return null;
 		}
-		
+
 		Collections.sort(availableVariables, new AdvancedPropertyComparator(locale));
 		return availableVariables;
 	}
-	
+
+	@Override
 	@Transactional(readOnly=true)
 	public List<SelectItem> getProcessVariables() {
 		if (processVariables != null) {
 			return processVariables;
 		}
-		
+
 		if (processDefinitionId == null) {
 			return null;
 		}
-		
+
 		ProcessDefinitionW procDef = null;
 		try {
 			procDef = getBpmFactory().getProcessManager(processDefinitionId).getProcessDefinition(processDefinitionId);
@@ -135,7 +137,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		if (procDef == null) {
 			return null;
 		}
-		
+
 		Collection<VariableInstanceInfo> variables = null;
 		try {
 			String procDefName = procDef.getProcessDefinition().getName();
@@ -147,7 +149,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			processVariables = Collections.emptyList();
 			return processVariables;
 		}
-		
+
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -161,45 +163,45 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			return null;
 		}
 		availableVariables.add(0, new AdvancedProperty(String.valueOf(-1), iwrb.getLocalizedString("cases_search.select_variable", "Select variable")));
-		
+
 		processVariables = new ArrayList<SelectItem>();
 		for (AdvancedProperty variable: availableVariables) {
 			processVariables.add(new SelectItem(variable.getId(), variable.getValue()));
 		}
-		
+
 		return processVariables;
 	}
-	
+
 	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
 		String localizedName = iwrb.getLocalizedString(new StringBuilder(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX).append(name).toString(), isAdmin ? name : null);
-		
+
 		if (StringUtil.isEmpty(localizedName)) {
 			return isAdmin ? name : null;	//	No translation found
 		}
-		
+
 		if ("null".equals(localizedName) || localizedName.startsWith("null")) {
 			return isAdmin ? name : null;	//	Checks because localizer bugs
 		}
-		
+
 		if (localizedName.equals(name)) {
 			return isAdmin ? localizedName : null;	//	Administrator can see not localized variables
 		}
-		
+
 		return localizedName;
 	}
-	
+
 	private String getVariableRealValue(VariableInstanceInfo variable, Locale locale) {
 		Serializable value = variable.getValue();
 		if (value == null) {
 			return null;	//	Invalid value
 		}
-		
+
 		BPMProcessVariable bpmVariable = new BPMProcessVariable(variable.getName(), value.toString(), variable.getType().getTypeKeys().get(0));
 		Serializable realValue = bpmVariable.getRealValue();
 		if (realValue == null) {
 			return null;
 		}
-		
+
 		if (realValue instanceof String) {
 			return (String) realValue;
 		}
@@ -207,25 +209,31 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 			IWTimestamp date = new IWTimestamp((Date) value);
 			return date.getLocaleDate(locale, DateFormat.SHORT);
 		}
-		
+
 		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(variable.getName())
 				|| variable.getName().startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) || variable.getName().startsWith(VariableInstanceType.LIST.getPrefix())
 				|| variable.getName().equals("string_harbourNr")) {
-			return getResolver(variable.getName()).getPresentation(variable);
+			MultipleSelectionVariablesResolver resolver = getResolver(variable.getName());
+			return resolver == null ? null : resolver.getPresentation(variable);
 		}
-		
+
 		return realValue.toString();
 	}
-	
+
 	private MultipleSelectionVariablesResolver getResolver(String variableName) {
-		MultipleSelectionVariablesResolver resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variableName);
+		MultipleSelectionVariablesResolver resolver = null;
+		try {
+			resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variableName);
+		} catch (Exception e) {}
 		return resolver;
 	}
-	
+
+	@Override
 	public Long getProcessDefinitionId() {
 		return processDefinitionId;
 	}
 
+	@Override
 	public void setProcessDefinitionId(Long processDefinitionId) {
 		this.processDefinitionId = processDefinitionId;
 	}
@@ -246,10 +254,12 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
+	@Override
 	public boolean isDisplayVariables() {
 		return !isDisplayNoVariablesText();
 	}
 
+	@Override
 	public boolean isDisplayNoVariablesText() {
 		return ListUtil.isEmpty(getProcessVariables());
 	}
@@ -257,11 +267,13 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	private IWBundle getBundle() {
 		return IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 	}
-	
+
+	@Override
 	public String getDeleteImagePath() {
 		return getBundle().getVirtualPathWithFileNameString("images/delete.png");
 	}
 
+	@Override
 	public String getLoadingMessage() {
 		try {
 			return getBundle().getLocalizedString("loading", "Loading...");
@@ -271,6 +283,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		return "Loading...";
 	}
 
+	@Override
 	public String getAddVariableImage() {
 		return getBundle().getVirtualPathWithFileNameString("images/add.png");
 	}
