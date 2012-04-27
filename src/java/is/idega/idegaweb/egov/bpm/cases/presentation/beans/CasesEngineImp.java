@@ -16,6 +16,7 @@ import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -636,27 +637,44 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		User user = iwc.getCurrentUser();
 		String type = service.getProperty(pageKey, instanceId, ":method:1:implied:void:setType:java.lang.String:");
 		type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
-		List<String> caseCodes = null;
-		List<String> statusesToHide = null;
-		List<String> statusesToShow = null;
-		boolean onlySubscribedCases = false;
+
+		String codes = service.getProperty(pageKey, instanceId, ":method:1:implied:void:setCaseCodes:java.lang.String:");
+		List<String> caseCodes = StringUtil.isEmpty(codes) ? null : new ArrayList<String>(Arrays.asList(codes.split(CoreConstants.COMMA)));
+
+		String hide = service.getProperty(pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToHide:java.lang.String:");
+		List<String> statusesToHide = StringUtil.isEmpty(hide) ? null : new ArrayList<String>(Arrays.asList(hide.split(CoreConstants.COMMA)));
+
+		String show = service.getProperty(pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToShow:java.lang.String:");
+		List<String> statusesToShow = StringUtil.isEmpty(show) ? null : new ArrayList<String>(Arrays.asList(show.split(CoreConstants.COMMA)));
+
+		String subscribedOnly = service.getProperty(pageKey, instanceId, ":method:1:implied:void:setOnlySubscribedCases:boolean:");
+		boolean onlySubscribedCases = StringUtil.isEmpty(subscribedOnly) ? false : "T".equals(subscribedOnly) ||
+				Boolean.TRUE.toString().equals(subscribedOnly);
+
 		PagedDataCollection<CasePresentation> cases = getCaseManagersProvider().getCaseManager().getCases(user, type, iwc.getCurrentLocale(),
 				caseCodes, statusesToHide, statusesToShow, Integer.MAX_VALUE, -1, onlySubscribedCases, true);
-		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
-			return null;
 
 		AdvancedProperty result = new AdvancedProperty(Boolean.FALSE.toString());
+		String errorMessage = getResourceBundle(iwc).getLocalizedString("unable_to_export_all_cases", "Sorry, unable to export cases to Excel");
+
+		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
+			result.setValue(errorMessage);
+			return result;
+		}
+
 		CasesSearchResultsHolder resultsHolder = null;
 		try {
 			resultsHolder = getSearchResultsHolder();
 		} catch (NullPointerException e) {
-			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_all_cases", "Sorry, unable to export cases to Excel"));
+			result.setValue(errorMessage);
 			return result;
 		}
 
 		List<CasePresentation> casesToExport = new ArrayList<CasePresentation>(cases.getCollection());
-		if (!resultsHolder.setCasesToExport(instanceId, casesToExport))
-			return null;
+		if (!resultsHolder.setCasesToExport(instanceId, casesToExport)) {
+			result.setValue(errorMessage);
+			return result;
+		}
 
 		result.setId(Boolean.TRUE.toString());
 		URIUtil uriUtil = new URIUtil(iwc.getIWMainApplication().getMediaServletURI());
