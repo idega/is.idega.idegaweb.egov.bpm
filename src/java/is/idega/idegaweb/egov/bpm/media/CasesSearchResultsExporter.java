@@ -11,6 +11,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.core.file.util.MimeTypeUtil;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;
 import com.idega.io.MemoryFileBuffer;
@@ -20,10 +21,11 @@ import com.idega.util.expression.ELUtil;
 
 public class CasesSearchResultsExporter extends DownloadWriter implements MediaWritable {
 
-	public static final String ID_PARAMETER = "casesSearchResultsExportId";
-	
+	public static final String ID_PARAMETER = "casesSearchResultsExportId",
+								ALL_CASES_DATA = "allCasesExportedId";
+
 	private MemoryFileBuffer memory;
-	
+
 	@Override
 	public String getMimeType() {
 		return MimeTypeUtil.MIME_TYPE_EXCEL_2;
@@ -31,21 +33,30 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 
 	@Override
 	public void init(HttpServletRequest req, IWContext iwc) {
+		String fileName = null;
+		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
+
 		CasesSearchResultsHolder searchResultHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
-		String id = iwc.getParameter(ID_PARAMETER);
-		memory = searchResultHolder.getExportedSearchResults(id);
-		
+		if (iwc.isParameterSet(ID_PARAMETER)) {
+			String id = iwc.getParameter(ID_PARAMETER);
+			memory = searchResultHolder.getExportedSearchResults(id);
+			fileName = iwrb.getLocalizedString("exported_search_results_in_excel_file_name", "Exported search results");
+		} else if (iwc.isParameterSet(ALL_CASES_DATA)) {
+			String instanceId = iwc.getParameter(ALL_CASES_DATA);
+			memory = searchResultHolder.getExportedCases(instanceId);
+			fileName = iwrb.getLocalizedString("exported_all_cases_data", "Exported cases");
+		} else
+			return;
+
 		memory.setMimeType(MimeTypeUtil.MIME_TYPE_EXCEL_2);
-		setAsDownload(iwc, new StringBuilder(iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc)
-								.getLocalizedString("exported_search_results_in_excel_file_name", "Exported search results")).append(".xls").toString(),
-					memory.length());
+		setAsDownload(iwc, fileName.concat(".xls"),	memory.length());
 	}
 
 	@Override
 	public void writeTo(OutputStream streamOut) throws IOException {
 		InputStream streamIn = new ByteArrayInputStream(memory.buffer());
 		FileUtil.streamToOutputStream(streamIn, streamOut);
-		
+
 		streamOut.flush();
 		streamOut.close();
 		streamIn.close();
