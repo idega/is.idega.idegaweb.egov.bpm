@@ -36,6 +36,7 @@ import com.idega.jbpm.data.BPMVariableData;
 @NamedQueries({
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId in (:"+CaseProcInstBind.casesIdsParam + ")"),
+	@NamedQuery(name=CaseProcInstBind.BIND_BY_PROCESSES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.procInstId in (:"+CaseProcInstBind.procInstIdsParam + ")"),
 	@NamedQuery(name=CaseProcInstBind.getLatestByDateQN, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = :"+CaseProcInstBind.dateCreatedProp+" and cp."+CaseProcInstBind.caseIdentierIDProp+" = (select max(cp2."+CaseProcInstBind.caseIdentierIDProp+") from CaseProcInstBind cp2 where cp2."+CaseProcInstBind.dateCreatedProp+" = cp."+CaseProcInstBind.dateCreatedProp+")"),
 	@NamedQuery(name=CaseProcInstBind.getLastCreatedCase, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = (select max(cp2."+CaseProcInstBind.dateCreatedProp+") from CaseProcInstBind cp2) order by cp."+CaseProcInstBind.dateCreatedProp + ", cp."+CaseProcInstBind.caseIdentierIDProp),
 	@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
@@ -56,7 +57,7 @@ import com.idega.jbpm.data.BPMVariableData;
 					"inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ where pd.name_ in (:" + CaseProcInstBind.processDefinitionNameProp +
 					") and pc.CASE_STATUS in (:" + CaseProcInstBind.caseStatusParam + ")"
 			),
-	
+
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded, resultSetMapping="caseId",
 							query=
 				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
@@ -71,34 +72,34 @@ import com.idega.jbpm.data.BPMVariableData;
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pi.id_ " +
 				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pi.end_ is null"
 			),
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
 				"inner join "+ ProcessUserBind.TABLE_NAME+" pu " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu.process_instance_id " +
 				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :"+ProcessUserBind.statusProp
 			),
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessUserStatus, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessUserStatus, resultSetMapping="caseId",
 					query=
-				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME+" cp inner join " + ProcessUserBind.TABLE_NAME + " pu on cp." + 
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME+" cp inner join " + ProcessUserBind.TABLE_NAME + " pu on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = pu.process_instance_id where pu.user_status = :" + ProcessUserBind.statusProp
 			),
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp +
 				" group by cp.case_id"
 			),
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionName, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionName, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
-				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pd.NAME_ = :" + 
+				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " where pd.NAME_ = :" +
 				CaseProcInstBind.processDefinitionNameProp + " group by cp.case_id"
 			),
-			
+
 			/** Variable queries start **/
 			//	Query to case IDs by DATE variables
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
@@ -107,7 +108,7 @@ import com.idega.jbpm.data.BPMVariableData;
 				CaseProcInstBind.variablesValuesPropEnd + " group by cp.case_id"
 			),
 			//	Query to case IDs by DOUBLE variables
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
@@ -115,7 +116,7 @@ import com.idega.jbpm.data.BPMVariableData;
 				") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp + " and var.DOUBLEVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
 			//	Query to case IDs by LONG variables
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
 				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
@@ -124,7 +125,7 @@ import com.idega.jbpm.data.BPMVariableData;
 			),
 			//	Queries to case IDs by STRING variables
 			//	Using mirrow table
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = pi.ID_ inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.ID_ " +
@@ -134,7 +135,7 @@ import com.idega.jbpm.data.BPMVariableData;
 				" group by cp.case_id"
 			),
 			//	Not using a mirrow table
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = pi.ID_ inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.ID_ " +
@@ -143,56 +144,57 @@ import com.idega.jbpm.data.BPMVariableData;
 				" and lower(var.STRINGVALUE_) like :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
 			/** Variable queries end **/
-			
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumber, resultSetMapping="caseId", 
+
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumber, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = vdata.variable_id " +
 				"where lower(vdata.stringvalue) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" + ProcessConstants.CASE_IDENTIFIER + "' " +
 				"group by cp.case_id"
 			),
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumberNoMirrow, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseNumberNoMirrow, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ where lower(var.STRINGVALUE_) like :" + CaseProcInstBind.caseNumberProp + " and var.NAME_ = '" +
 				ProcessConstants.CASE_IDENTIFIER + "' group by cp.case_id"
 			),
-			
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId", 
+
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatus, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ inner join " + BPMVariableData.TABLE_NAME + " vdata on var.ID_ = vdata.variable_id"+
 				" where var.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName + "' and vdata.stringvalue in (:" + CaseProcInstBind.caseStatusesProp +
 				") group by cp.case_id"
 			),
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatusNoMirrow, resultSetMapping="caseId", 
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByCaseStatusNoMirrow, resultSetMapping="caseId",
 					query=
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_VARIABLEINSTANCE var on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = var.PROCESSINSTANCE_ where var.NAME_ = '" + CasesBPMProcessConstants.caseStatusVariableName +
 				"' and var.STRINGVALUE_ in (:" + CaseProcInstBind.caseStatusesProp + ") group by cp.case_id"
 			),
-			
-			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByUserIds, resultSetMapping="caseId", 
+
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByUserIds, resultSetMapping="caseId",
 					query=
-				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_TASKINSTANCE ti on cp." + 
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_TASKINSTANCE ti on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = ti.PROCINST_ where ti.ACTORID_ in (:" + ProcessUserBind.userIdParam + ") and ti.END_ is not null group" +
 				" by cp.case_id"
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByDateRange, resultSetMapping="caseId",
 					query=
-				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." + 
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = pi.id_ where pi.start_ between :" + CaseProcInstBind.caseStartDateProp + " and :" +
 				CaseProcInstBind.caseEndDateProp
 			)
-			
+
 		}
 )
 public class CaseProcInstBind implements Serializable {
-	
+
 	private static final long serialVersionUID = -335682330238243547L;
-	
+
 	public static final String BIND_BY_CASEID_QUERY_NAME = "CaseProcInstBind.bindByCaseIdQuery";
-	public static final String BIND_BY_CASES_IDS_QUERY_NAME = "CaseProcInstBind.bindByCasesIdsQuery";
+	public static final String BIND_BY_CASES_IDS_QUERY_NAME = "CaseProcInstBind.bindByCasesIdsQuery",
+								BIND_BY_PROCESSES_IDS_QUERY_NAME = "CaseProcInstBind.bindByProcInstIdsQuery";
 	public static final String getLatestByDateQN = "CaseProcInstBind.getLatestByDate";
 	public static final String getLastCreatedCase = "CaseProcInstBind.getLastCreatedCase";
 	public static final String getCaseIdByProcessInstanceId="CaseProcInstBind.getCaseIdByPIID";
@@ -218,14 +220,15 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
 	public static final String getProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getProcInstIdsByCaseStatus";
-		
+
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
-	public static final String casesIdsParam = "casesIds";
+	public static final String casesIdsParam = "casesIds",
+								procInstIdsParam = "procInstIds";
 	public static final String caseStatusParam = "caseStatus";
-	
+
 	public static final String TABLE_NAME = "BPM_CASES_PROCESSINSTANCES";
-	
+
 	public static final String	procInstIdColumnName = "process_instance_id",
 								caseIdColumnName = "case_id";
 
@@ -234,29 +237,29 @@ public class CaseProcInstBind implements Serializable {
 	@Index(columnNames={procInstIdColumnName}, name="procInstIdIndex")
 	@Column(name=procInstIdColumnName)
     private Long procInstId;
-	
+
 	public static final String caseIdProp = "caseId";
 	@Index(columnNames={caseIdColumnName}, name="caseIdIndex")
 	@Column(name=caseIdColumnName, nullable=false, unique=true)
 	private Integer caseId;
-	
+
 	public static final String caseIdentierIDProp = "caseIdentierID";
 	@Column(name="case_identifier_id", unique=false)
 	private Integer caseIdentierID;
-	
+
 	public static final String dateCreatedProp = "dateCreated";
-	
+
 	/**
 	 * this date means identifier creation date, NOT PROCESS/case creation date.
 	 */
 	@Column(name="date_created")
 	@Temporal(TemporalType.DATE)
 	private Date dateCreated;
-	
+
 	public static final String caseIdentifierProp = "caseIdentifier";
 	@Column(name="case_identifier", unique=false)
 	private String caseIdentifier;
-	
+
 	public static final String processDefinitionIdsProp = "processDefinitionIds";
 	public static final String processDefinitionNameProp = "processDefinitionName";
 	public static final String caseNumberProp = "caseNumber";
