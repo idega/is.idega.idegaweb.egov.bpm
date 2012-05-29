@@ -923,4 +923,32 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		return subscribed;
 	}
+
+	@Override
+	public List<Long> getProcessInstanceIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName) {
+		String query = "select distinct pi.id_ from jbpm_processinstance pi, jbpm_processdefinition pd, proc_case c, " + CaseProcInstBind.TABLE_NAME +
+				" b where c." + CaseBMPBean.COLUMN_USER + " = " + user.getId() + " and c." + CaseBMPBean.TABLE_NAME + "_ID = b." +
+				CaseProcInstBind.caseIdColumnName + " and b." + CaseProcInstBind.procInstIdColumnName + " = pi.id_ and pd.name_ = '" +
+				processDefinitionName + "' and pi.PROCESSDEFINITION_ = pd.id_";
+		List<Serializable[]> data = null;
+		try {
+			data = SimpleQuerier.executeQuery(query, 1);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error executing query:\n" + query, e);
+		}
+		if (ListUtil.isEmpty(data))
+			return null;
+
+		List<Long> ids = new ArrayList<Long>();
+		for (Serializable[] id: data) {
+			if (ArrayUtil.isEmpty(id))
+				continue;
+
+			Serializable piId = id[0];
+			if (piId instanceof Number)
+				ids.add(((Number) piId).longValue());
+		}
+
+		return ids;
+	}
 }
