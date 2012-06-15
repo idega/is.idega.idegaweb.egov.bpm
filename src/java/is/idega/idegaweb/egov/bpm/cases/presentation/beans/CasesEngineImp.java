@@ -160,6 +160,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				stateBean.setShowOnlyCreatorInContacts(properties.isShowOnlyCreatorInContacts());
 				stateBean.setAutoShowComments(properties.isAutoShowComments());
 				stateBean.setShowLogExportButton(properties.isShowLogExportButton());
+				stateBean.setShowComments(properties.isShowComments());
+				stateBean.setShowContacts(properties.isShowContacts());
 				stateBean.setSpecialBackPage(properties.getSpecialBackPage());
 			}
 

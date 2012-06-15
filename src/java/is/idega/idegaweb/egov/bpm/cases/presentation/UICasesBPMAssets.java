@@ -48,7 +48,7 @@ import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
 /**
- * 
+ *
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.56 $
  *
@@ -56,23 +56,16 @@ import com.idega.webface.WFUtil;
  *
  */
 public class UICasesBPMAssets extends IWBaseComponent {
-	
+
 	public static final String COMPONENT_TYPE = "com.idega.UICasesBPMAssets";
 
-	private static final String assetsFacet = "assets";
-	private static final String assetViewFacet = "assetView";
-	
-	private boolean fullView = false;
-	private boolean inCasesComponent = false;
-	private boolean usePdfDownloadColumn = true;
-	private boolean allowPDFSigning = true;
-	private boolean hideEmptySection = true;
-	private boolean showAttachmentStatistics;
-	private boolean showOnlyCreatorInContacts;
-	private boolean showLogExportButton;
-	
+	private static final String assetsFacet = "assets", assetViewFacet = "assetView";
+
+	private boolean fullView = false, inCasesComponent = false, usePdfDownloadColumn = true, allowPDFSigning = true, hideEmptySection = true,
+			showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, showComments = true, showContacts = true;
+
 	private String commentsPersistenceManagerIdentifier, specialBackPage;
-	
+
 	private Long processInstanceId;
 	private Integer caseId;
 
@@ -80,7 +73,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	private JQuery jQuery;
 	@Autowired
 	private Web2Business web2;
-	
+
 	@Override
 	protected void initializeComponent(FacesContext context) {
 		super.initializeComponent(context);
@@ -91,46 +84,43 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		}
 
 		ELUtil.getInstance().autowire(this);
-		
-//		<assets grid component>
+
 		HtmlTag div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		String clientId = null;
 		if (CoreUtil.isSingleComponentRenderingProcess(context)) {
 			Random numberGenerator = new Random();
 			clientId = new StringBuilder(CoreConstants.UNDER).append(numberGenerator.nextInt(Integer.MAX_VALUE)).toString();
-		}
-		else {
+		} else
 			clientId = context.getViewRoot().createUniqueId();
-		}
 		div.setId(clientId);
 		div.setStyleClass(clientId);
 		div.setValue(divTag);
-		
+
 		HtmlTag linksContainer = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		linksContainer.setValue(divTag);
 		linksContainer.setStyleClass("hiddenLinksForCasesContainerStyle");
 		div.getChildren().add(linksContainer);
-		
+
 		DownloadLink attachmentLink = new DownloadLink();
 		attachmentLink.setStyleClass(CasesEngineImp.FILE_DOWNLOAD_LINK_STYLE_CLASS);
 		attachmentLink.setMediaWriterClass(AttachmentWriter.class);
 		linksContainer.getChildren().add(attachmentLink);
-		
+
 		DownloadLink pdfLink = new DownloadLink();
 		pdfLink.setStyleClass(CasesEngineImp.PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS);
 		pdfLink.setMediaWriterClass(XFormToPDFWriter.class);
 		linksContainer.getChildren().add(pdfLink);
-		
+
 		DownloadLink casePDFLink = new DownloadLink();
 		casePDFLink.setStyleClass(CasesEngineImp.CASE_LOGS_PDF_DOWNLOAD_LINK_STYLE_CLASS);
 		casePDFLink.setMediaWriterClass(CaseLogsToPDFWriter.class);
 		linksContainer.getChildren().add(casePDFLink);
-		
+
 		DownloadLink taskInPdf = new DownloadLink();
 		taskInPdf.setStyleClass(CasesEngineImp.DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS);
 		taskInPdf.setMediaWriterClass(BPMTaskPDFPrinter.class);
 		linksContainer.getChildren().add(taskInPdf);
-		
+
 		IWBundle bundle = getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesListAsset.xhtml"));
@@ -138,73 +128,88 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetsRendered}", Boolean.class));
 		getFacets().put(assetsFacet, div);
-//		</assets grid component>
-//		<asset view>
-		
+
 		CasesBPMAssetsState stateBean = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
 		stateBean.setCaseId(getCaseId());
-		
-		String commentsManagerIdentifier = StringUtil.isEmpty(commentsPersistenceManagerIdentifier) ? BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER :
-			commentsPersistenceManagerIdentifier;
+
 		IWContext iwc = IWContext.getIWContext(context);
-		if (iwc.isParameterSet(CasesRetrievalManager.COMMENTS_PERSISTENCE_MANAGER_IDENTIFIER)) {
-			commentsManagerIdentifier = iwc.getParameter(CasesRetrievalManager.COMMENTS_PERSISTENCE_MANAGER_IDENTIFIER);
+
+		if (isShowComments()) {
+			String commentsManagerIdentifier = StringUtil.isEmpty(commentsPersistenceManagerIdentifier) ?
+					BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER : commentsPersistenceManagerIdentifier;
+			if (iwc.isParameterSet(CasesRetrievalManager.COMMENTS_PERSISTENCE_MANAGER_IDENTIFIER)) {
+				commentsManagerIdentifier = iwc.getParameter(CasesRetrievalManager.COMMENTS_PERSISTENCE_MANAGER_IDENTIFIER);
+			}
+			CommentsPersistenceManager commentsManager = ELUtil.getInstance().getBean(commentsManagerIdentifier);
+			if (commentsManager.hasRightsToViewComments(stateBean.getProcessInstanceId())) {
+				CommentsViewer comments = new CommentsViewer();
+				comments.setShowViewController(false);
+				comments.setSpringBeanIdentifier(commentsManagerIdentifier);
+				comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
+				comments.setNewestEntriesOnTop(true);
+				comments.setShowCommentsList(stateBean.isAutoShowComments() ||
+						(iwc.isParameterSet(CommentsViewer.AUTO_SHOW_COMMENTS) && iwc.getParameter(CommentsViewer.AUTO_SHOW_COMMENTS).equals(Boolean.TRUE.toString())));
+				comments.setAddLoginbyUUIDOnRSSFeedLink(true);
+				comments.setStyleClass("commentsViewerForTaskViewerInCasesList");
+				div.getChildren().add(comments);
+			}
 		}
-		CommentsPersistenceManager commentsManager = ELUtil.getInstance().getBean(commentsManagerIdentifier);
-		if (commentsManager.hasRightsToViewComments(stateBean.getProcessInstanceId())) {
-			CommentsViewer comments = new CommentsViewer();
-			comments.setShowViewController(false);
-			comments.setSpringBeanIdentifier(commentsManagerIdentifier);
-			comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
-			comments.setNewestEntriesOnTop(true);
-			comments.setShowCommentsList(stateBean.isAutoShowComments() ||
-					(iwc.isParameterSet(CommentsViewer.AUTO_SHOW_COMMENTS) && iwc.getParameter(CommentsViewer.AUTO_SHOW_COMMENTS).equals(Boolean.TRUE.toString())));
-			comments.setAddLoginbyUUIDOnRSSFeedLink(true);
-			comments.setStyleClass("commentsViewerForTaskViewerInCasesList");
-			div.getChildren().add(comments);
-		}
-		
+
 		if (iwc.isParameterSet(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER)) {
 			stateBean.setSpecialBackPage(iwc.getParameter(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER));
 		} else if (!StringUtil.isEmpty(getSpecialBackPage()))
 			stateBean.setSpecialBackPage(getSpecialBackPage());
-		
+
 		div = (HtmlTag)context.getApplication().createComponent(HtmlTag.COMPONENT_TYPE);
 		div.setValue(divTag);
-		
+
 		facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesBPMAssetView.xhtml"));
 
 		div.getChildren().add(facelet);
 		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetViewRendered}", Boolean.class));
 		getFacets().put(assetViewFacet, div);
-//		</asset view>
-		
+
 		if (!CoreUtil.isSingleComponentRenderingProcess(iwc)) {
 			IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 			PresentationUtil.addJavaScriptActionToBody(iwc, "jQuery(document).ready(function() {showLoadingMessage('"+iwrb.getLocalizedString("loading", "Loading...")+"');});");
 		}
 	}
-	
+
+	public boolean isShowComments() {
+		return showComments;
+	}
+
+	public void setShowComments(boolean showComments) {
+		this.showComments = showComments;
+	}
+
+	public boolean isShowContacts() {
+		return showContacts;
+	}
+
+	public void setShowContacts(boolean showContacts) {
+		this.showContacts = showContacts;
+	}
+
 	@Override
 	public boolean getRendersChildren() {
 		return true;
 	}
-	
+
 	@Override
 	public void encodeChildren(FacesContext context) throws IOException {
 		super.encodeChildren(context);
-		
+
 		UIComponent assets = getFacet(assetsFacet);
 		UIComponent assetView = getFacet(assetViewFacet);
-		
-		if(assets.isRendered()) {
-			
+
+		if (assets.isRendered()) {
 //			TODO: add assets grid client resources
 			addClientResources(IWContext.getIWContext(context), assets);
 			renderChild(context, assets);
-			
-		} else if(assetView.isRendered()) {
+
+		} else if (assetView.isRendered()) {
 //			TODO: add asset client resources
 			renderChild(context, assetView);
 		}
@@ -227,7 +232,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	public void setInCasesComponent(boolean inCasesComponent) {
 		this.inCasesComponent = inCasesComponent;
 	}
-	
+
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
 			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
@@ -236,28 +241,23 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			throw new IBORuntimeException(ile);
 		}
 	}
-	
+
 	protected Long resolveProcessInstanceId(FacesContext fctx) {
-		
 		String piIdParam = fctx.getExternalContext().getRequestParameterMap().get(ProcessManagerBind.processInstanceIdParam);
 		Long piId;
-		
-		if(piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
 
+		if (piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
 			piId = new Long(piIdParam);
 		} else
 			piId = null;
-		
+
 		return piId;
 	}
-	
+
 	public Long getProcessInstanceId(FacesContext fctx) {
-		
-		if(processInstanceId == null) {
-			
+		if (processInstanceId == null)
 			processInstanceId = resolveProcessInstanceId(fctx);
-		}
-		
+
 		return processInstanceId;
 	}
 
@@ -268,45 +268,43 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	public void setProcessInstanceId(Long processInstanceId) {
 		this.processInstanceId = processInstanceId;
 	}
-	
+
 	public CasesBPMProcessView getCasesBPMProcessView() {
-		
-		return (CasesBPMProcessView)WFUtil.getBeanInstance(CasesBPMProcessView.BEAN_IDENTIFIER);
+		return (CasesBPMProcessView) WFUtil.getBeanInstance(CasesBPMProcessView.BEAN_IDENTIFIER);
 	}
-	
+
 	public Integer getCaseId() {
 		return caseId;
 	}
 
 	public void setCaseId(Integer caseId) {
-		
 		if (caseId != null) {
 			CasesBPMAssetsState stateBean = getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 			stateBean.setCaseId(caseId);
 		}
 		this.caseId = caseId;
 	}
-	
+
 	private Web2Business getWeb2Business() {
-		if (web2 == null) {
+		if (web2 == null)
 			ELUtil.getInstance().autowire(this);
-		}
+
 		return web2;
 	}
-	
+
 	private JQuery getJQuery() {
-		if (jQuery == null) {
+		if (jQuery == null)
 			ELUtil.getInstance().autowire(this);
-		}
+
 		return jQuery;
 	}
-	
+
 	private void addClientResources(IWContext iwc, UIComponent container) {
 		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
-		
+
 		Web2Business web2 = getWeb2Business();
 		JQuery jQuery = getJQuery();
-		
+
 		//	CSS sources
 		List<String> cssFiles = new ArrayList<String>();
 		cssFiles.add(web2.getBundleUriToLinkLinksWithFilesStyleFile());
@@ -315,9 +313,9 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		cssFiles.add(iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getVirtualPathWithFileNameString("style/case.css"));
 		cssFiles.add(web2.getBundleURIToFancyBoxStyleFile());
 		PresentationUtil.addStyleSheetsToHeader(iwc, cssFiles);
-		
+
 		boolean isSingle = CoreUtil.isSingleComponentRenderingProcess(iwc);
-		
+
 		//	JS sources
 		List<String> scripts = new ArrayList<String>();
 		if (!isSingle) {
@@ -340,7 +338,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
 		String gridLocalization = new StringBuilder(
 				"if(CasesBPMAssets.Loc == null || !CasesBPMAssets.Loc.inited) { \nif(CasesBPMAssets.Loc == null) { CasesBPMAssets.Loc = { inited: false }; }\n")
-		
+
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_CONTACT_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.human_name", "Name")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_TASK_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.task_name", "Task name")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_FORM_NAME = '")				.append(iwrb.getLocalizedString("cases_bpm.document_name", "Document name")).append("';\n")
@@ -360,32 +358,33 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_GENERATING_PDF = '")			.append(iwrb.getLocalizedString("cases_bpm.generating_pdf", "Downloading PDF")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_LOADING = '")					.append(iwrb.getLocalizedString("cases_bpm.loading", "Loading...")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_ARE_YOU_SURE = '")				.append(iwrb.getLocalizedString("cases_bpm.are_you_sure", "Are you sure?")).append("';\n")
-			
+
 			.append("CasesBPMAssets.Loc.inited = true; }\n")
-			
+
 			.toString();
-		
+
 		String clientId = container.getClientId(iwc);
 		if (clientId == null) {
 			container.setId(iwc.getViewRoot().createUniqueId());
 			clientId = container.getClientId(iwc);
 		}
-		
+
 		CasesBPMAssetsState stateBean = getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 		Long processInstanceId = stateBean.getProcessInstanceId();
 		Integer caseId = stateBean.getCaseId();
-		
+
 		String specialBackPage = getSpecialBackPage();
 		StringBuffer mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
 			.append(processInstanceId == null ? String.valueOf(-1) : processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ")
 			.append(isUsePdfDownloadColumn()).append(", ").append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(", ")
-			.append(isShowAttachmentStatistics()).append(", ").append(isShowOnlyCreatorInContacts()).append(", ").append(isShowLogExportButton()).append(", ");
+			.append(isShowAttachmentStatistics()).append(", ").append(isShowOnlyCreatorInContacts()).append(", ").append(isShowLogExportButton())
+			.append(", ").append(isShowComments()).append(", ").append(isShowContacts()).append(", ");
 		if (StringUtil.isEmpty(specialBackPage))
 			mainAction.append("null");
 		else
 			mainAction.append("'").append(specialBackPage).append("'");
 		mainAction.append(");").toString();
-		
+
 		if (!isSingle)
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction.toString()).append("\n});");
 		PresentationUtil.addJavaScriptActionToBody(iwc, mainAction.toString());
@@ -454,5 +453,5 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	public void setSpecialBackPage(String specialBackPage) {
 		this.specialBackPage = specialBackPage;
 	}
-	
+
 }

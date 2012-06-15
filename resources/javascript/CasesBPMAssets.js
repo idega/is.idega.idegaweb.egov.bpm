@@ -49,7 +49,8 @@ CasesBPMAssets.openedCase = {
 }
 
 CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-										showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, specialBackPage) {
+										showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, showComments, showContacts,
+										specialBackPage) {
 	CasesBPMAssets.openedCase.caseId = caseId || null;
 	CasesBPMAssets.openedCase.piId = piId || null;
 	CasesBPMAssets.openedCase.container = container || null;
@@ -61,11 +62,13 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container, hasRightChangeR
 	CasesBPMAssets.openedCase.showAttachmentStatistics = showAttachmentStatistics || false;
 	CasesBPMAssets.openedCase.showOnlyCreatorInContacts = showOnlyCreatorInContacts || false;
 	CasesBPMAssets.openedCase.showLogExportButton = showLogExportButton || false;
+	CasesBPMAssets.openedCase.showComments = showComments || false;
+	CasesBPMAssets.openedCase.showContacts = showContacts || false;
 	CasesBPMAssets.specialBackPage = specialBackPage || null;
 }
 
-CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics, showOnlyCreatorInContacts,
-	showLogExportButton, specialBackPage) {
+CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
+	showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, showComments, showContacts, specialBackPage) {
 	
 	jQuery(container).mouseover(function() {
 		if (CasesBPMAssets.openedCase.caseId == caseId) {
@@ -73,12 +76,12 @@ CasesBPMAssets.initGridsContainer = function(container, piId, caseId, usePdfDown
 		}
 		
 		CasesBPMAssets.setOpenedCase(caseId, piId, container, null, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
-			showOnlyCreatorInContacts, showLogExportButton, specialBackPage);
+			showOnlyCreatorInContacts, showLogExportButton, showComments, showContacts, specialBackPage);
 	});
 }
 
 CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
-									showOnlyCreatorInContacts, showLogExportButton, specialBackPage) {
+									showOnlyCreatorInContacts, showLogExportButton, showComments, showContacts, specialBackPage) {
 	if (container == null) {
 		return false;
 	}
@@ -109,7 +112,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 
 		CasesBPMAssets.initTakeCaseSelector(container, piId);
 		CasesBPMAssets.initGridsContainer(container, piId, caseId, usePdfDownloadColumn, allowPDFSigning, hideEmptySection, showAttachmentStatistics, showOnlyCreatorInContacts,
-			showLogExportButton, specialBackPage);
+			showLogExportButton, showComments, showContacts, specialBackPage);
 		
 		jQuery('img.reloadCaseStyleClass', container).each(function() {
 			if (typeof CasesEngine == 'undefined' || typeof CasesListHelper == 'undefined') {
@@ -166,14 +169,15 @@ CasesBPMAssets.initGrid = function(container, piId, caseId, usePdfDownloadColumn
 						onGridInitedFunction('caseEmailsPart', jQuery('div.caseEmailsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
 					}
 				);
-				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts,
+				CasesBPMAssets.initContactsGrid(piId, container, hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, showContacts,
 					function() {
 						onGridInitedFunction('caseContactsPart', jQuery('div.caseContactsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
 					}
 				);
 				
 				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-											showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, specialBackPage);
+											showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, showComments, showContacts,
+											specialBackPage);
 			}
 		});
 	});
@@ -571,7 +575,14 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     							hasRightChangeRights, null);
 };
 
-CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, onContactsInited) {
+CasesBPMAssets.initContactsGrid = function(piId, customerView, hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, showContacts,
+	onContactsInited) {
+	
+	if (!showContacts) {
+		CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT--;
+		return;
+	}
+	
     var identifier = 'caseContacts';
     
     var populatingFunction = function(params, callback) {
