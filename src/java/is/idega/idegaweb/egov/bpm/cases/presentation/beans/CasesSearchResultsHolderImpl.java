@@ -49,6 +49,7 @@ import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.identity.RolesManager;
+import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.NoEmailFoundException;
 import com.idega.user.business.NoPhoneFoundException;
@@ -344,20 +345,41 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		AdvancedProperty variable = null;
 		List<AdvancedProperty> variablesByProcessInstance = getVariablesForCase(theCase, locale, isAdmin);
-		if (ListUtil.isEmpty(variablesByProcessInstance)) {
+		if (ListUtil.isEmpty(variablesByProcessInstance))
 			return;
-		}
 
 		for (AdvancedProperty processVariable: variablesByProcessDefinition) {
 			variable = getVariableByValue(variablesByProcessInstance, processVariable.getValue());
-			row.createCell(cellIndex++).setCellValue(variable == null ? CoreConstants.EMPTY : variable.getId());
+			String value = getVariableValue(processVariable.getId(), variable);
+			row.createCell(cellIndex++).setCellValue(value);
 		}
 	}
 
-	private AdvancedProperty getVariableByValue(List<AdvancedProperty> variables, String value) {
-		if (ListUtil.isEmpty(variables) || StringUtil.isEmpty(value)) {
-			return null;
+	private String getVariableValue(String beanName, AdvancedProperty variable) {
+		if (variable == null)
+			return CoreConstants.EMPTY;
+
+		MultipleSelectionVariablesResolver valueResolver = null;
+		try {
+			String bean = MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + beanName.split(CoreConstants.AT)[0];
+			valueResolver = ELUtil.getInstance().getBean(bean);
+		} catch (Exception e) {}
+
+		if (valueResolver == null)
+			return variable.getId();
+
+		try {
+			return valueResolver.getPresentation(variable.getId());
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
+
+		return CoreConstants.EMPTY;
+	}
+
+	private AdvancedProperty getVariableByValue(List<AdvancedProperty> variables, String value) {
+		if (ListUtil.isEmpty(variables) || StringUtil.isEmpty(value))
+			return null;
 
 		for (AdvancedProperty variable: variables) {
 			if (value.equals(variable.getValue())) {
@@ -404,9 +426,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		List<String> createdSheets = new ArrayList<String>();
 
 		for (String processName: casesByProcessDefinition.keySet()) {
-			if (processName == null) {
+			if (processName == null)
 				continue;
-			}
 
 			cases = casesByProcessDefinition.get(processName);
 
