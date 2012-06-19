@@ -4,8 +4,6 @@ import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
-import javax.faces.context.FacesContext;
-
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +14,14 @@ import org.springframework.stereotype.Service;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
 
 /**
@@ -31,7 +32,7 @@ import com.idega.util.StringUtil;
  */
 @Service("endCaseProcessHandler")
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
-public class EndCaseProcessHandler implements ActionHandler {
+public class EndCaseProcessHandler extends DefaultSpringBean implements ActionHandler {
 
 	private static final long serialVersionUID = -2378842409705431642L;
 
@@ -45,18 +46,18 @@ public class EndCaseProcessHandler implements ActionHandler {
 
 	@Override
 	public void execute(ExecutionContext ctx) throws Exception {
-
 		CaseProcInstBind bind = getCasesBPMDAO().find(CaseProcInstBind.class, ctx.getProcessInstance().getId());
 		Integer caseId = bind.getCaseId();
 
-		IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
-		CasesBusiness casesBusiness = getCasesBusiness(iwc);
+		CasesBusiness casesBusiness = getCasesBusiness(IWMainApplication.getDefaultIWApplicationContext());
 
 		GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-		changeCaseStatus(casesBusiness, theCase, getCurrentUser(iwc, ctx));
+		changeCaseStatus(casesBusiness, theCase, getCurrentUser(CoreUtil.getIWContext(), ctx));
 	}
 
-	protected User getCurrentUser(IWContext iwc, ExecutionContext executionContext) {
+	protected User getCurrentUser(IWContext iwc, ExecutionContext ctx) {
+		if (iwc == null)
+			return super.getCurrentUser();
 		return iwc.getCurrentUser();
 	}
 
@@ -72,8 +73,7 @@ public class EndCaseProcessHandler implements ActionHandler {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
-					CasesBusiness.class);
+			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}

@@ -18,7 +18,7 @@ public class EndPublicCaseProcessHandler extends EndCaseProcessHandler {
 
 	@Override
 	protected User getCurrentUser(IWContext iwc, ExecutionContext executionContext) {
-		if (iwc.isLoggedOn())
+		if (iwc != null && iwc.isLoggedOn())
 			return iwc.getCurrentUser();
 
 		Object userId = executionContext.getVariable("string_userId");
