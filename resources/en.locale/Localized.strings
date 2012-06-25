@@ -62,6 +62,18 @@ bpm_variable.string_ownerMunicipality=Area
 bpm_variable.string_vehicleManufacturer=Vehicle manufacturer
 bpm_variable.string_vehicleModel=Vehicle model
 
+bpm_variable.string_violatorPersonalID=Violator personal ID
+bpm_variable.string_ticketNumber=Parking ticket number
+bpm_variable.string_vehicleNumber=Vehicle registration number
+bpm_variable.date_ticketDate=Ticket date
+bpm_variable.string_violatorPostalCode=Violator postal code
+bpm_variable.string_ticketStreetAddress=Ticket street address
+bpm_variable.string_ticketStreetDescription=Ticket street description
+bpm_variable.string_caseStatus=Ticket status
+bpm_variable.string_ticketType=Ticket type
+bpm_variable.list_ticketViolationsNumbers=Ticket violation number
+bpm_variable.string_officerNumber=Ticket officer number
+
 bpm_variable.handlerUserId=Handler
 bpm_variable.objlist_violationPersons=Violator personal ID
 bpm_variable.objlist_violationCompanies=Violator company ID
