@@ -19,6 +19,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.utils.JBPMConstants;
+import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
@@ -58,6 +59,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		return iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(key), key);
 	}
 
+	@Override
 	public List<String> getHeaders(List<String> headersKeys) {
 		if (ListUtil.isEmpty(headersKeys))
 			return null;
@@ -70,10 +72,39 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		return headers;
 	}
 
-	protected AdvancedProperty getLabel(VariableInstanceInfo variable) {
-		return new AdvancedProperty(variable.getName(), variable.getValue().toString());
+	private MultipleSelectionVariablesResolver getResolver(String name) {
+		Map<String, Boolean> resolvers = getCache("multipleSelectionVariablesResolverCache");
+		String key = MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + name;
+		Boolean validResolver = resolvers.get(key);
+		MultipleSelectionVariablesResolver resolver = null;
+		if (validResolver == null) {
+			try {
+				resolver = ELUtil.getInstance().getBean(key);
+			} catch (Exception e) {}
+			validResolver = resolver != null;
+			resolvers.put(key, validResolver);
+		}
+
+		if (resolver != null)
+			return resolver;
+
+		if (validResolver != null && validResolver)
+			return ELUtil.getInstance().getBean(key);
+
+		return null;
 	}
 
+	protected AdvancedProperty getLabel(VariableInstanceInfo variable) {
+		String name = variable.getName();
+
+		MultipleSelectionVariablesResolver resolver = getResolver(name);
+		if (resolver != null)
+			return new AdvancedProperty(name, resolver.getPresentation(variable.getValue().toString()));
+
+		return new AdvancedProperty(name, variable.getValue().toString());
+	}
+
+	@Override
 	public Map<String, Map<String, String>> getLabelsForHeaders(List<String> casesIds, List<String> headersKeys) {
 		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(headersKeys))
 			return null;
