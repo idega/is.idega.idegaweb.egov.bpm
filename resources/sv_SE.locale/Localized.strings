@@ -52,6 +52,18 @@ cases_bpm.process_was_removed_from_watch_list=Aktuella \u00E4rendet togs bort fr
 cases_bpm.followup.subject=\u00C4rendet kr\u00E4ver din uppm\u00E4rksamhet
 cases_bpm.followup.message=Hej, {0}. En handl\u00E4ggare har beg\u00E4rt ett svarfr\u00E5n dig.
 
+bpm_variable.string_violatorPersonalID=Kr\u00E4nkare\ personnummer
+bpm_variable.string_ticketNumber=Parkeringsbiljett nummer
+bpm_variable.string_vehicleNumber=Fordonets registreringsnummer
+bpm_variable.date_ticketDate=Biljett dag
+bpm_variable.string_violatorPostalCode=Kr\u00E4nkare\  postnummer
+bpm_variable.string_ticketStreetAddress=Biljett gatuadress
+bpm_variable.string_ticketStreetDescription=Biljett gata beskrivning
+bpm_variable.string_caseStatus=Biljett statusen
+bpm_variable.string_ticketType=Biljettyp
+bpm_variable.list_ticketViolationsNumbers=Biljett\ \u00F6vertr\u00E4delse\ antal
+bpm_variable.string_officerNumber=Biljett kommendera antal
+
 bpm_variable.string_schoolSeason=L\u00E4s\u00E5ret
 bpm_variable.string_musicSchoolBand=Musikskolan bandnamn
 bpm_variable.string_educationStage=Utbildningsniv\u00E5

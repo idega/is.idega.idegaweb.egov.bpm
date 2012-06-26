@@ -96,6 +96,10 @@ bpm_variable.string_ticketMeterNumber=N\u00FAmer gjaldm\u00E6lis
 bpm_variable.string_violatorPostalCode=P\u00F3stn\u00FAmer
 bpm_variable.string_realViolatorAddressMunicipality=Sveitarf\u00E9lag
 bpm_variable.string_officerNumber=N\u00FAmer st\u00F6\u00F0uvar\u00F0ar
+bpm_variable.date_ticketDate=Dagsetning (d\u00E6mi\: 21.06.2009)
+bpm_variable.string_ticketStreetAddress=G\u00F6tuheiti
+bpm_variable.string_ticketStreetDescription=G\u00F6tun\u00FAmer/afsta\u00F0a
+bpm_variable.string_caseStatus=Mi\u00F0a st\u00F6\u00F0u
 
 bpm_variable.list_violationTypes=Tegund brots
 bpm_variable.string_harbourNr=H\u00F6fn

@@ -71,6 +71,24 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		}
 		return headers;
 	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see com.idega.block.process.presentation.beans.CasesListCustomizer#
+	 * 		getHeadersAndVariables(java.util.List)
+	 */
+	@Override
+	public java.util.Map<String, String> getHeadersAndVariables(List<String> headersKeys) {
+		if (ListUtil.isEmpty(headersKeys))
+			return null;
+
+		Map<String, String> headers = new HashMap<String, String>(headersKeys.size());
+		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
+		for (String key: headersKeys) {
+			headers.put(key, getLocalizedHeader(iwrb, key));
+		}
+		return headers;
+	}
 
 	private MultipleSelectionVariablesResolver getResolver(String name) {
 		Map<String, Boolean> resolvers = getCache("multipleSelectionVariablesResolverCache");
