@@ -59,7 +59,6 @@ bpm_variable.date_ticketDate=Biljett dag
 bpm_variable.string_violatorPostalCode=Kr\u00E4nkare\  postnummer
 bpm_variable.string_ticketStreetAddress=Biljett gatuadress
 bpm_variable.string_ticketStreetDescription=Biljett gata beskrivning
-bpm_variable.string_caseStatus=Biljett statusen
 bpm_variable.string_ticketType=Biljettyp
 bpm_variable.list_ticketViolationsNumbers=Biljett\ \u00F6vertr\u00E4delse\ antal
 bpm_variable.string_officerNumber=Biljett kommendera antal
