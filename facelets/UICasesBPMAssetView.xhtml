@@ -15,7 +15,9 @@
 		</ui:define>
 		<ui:define name="actions">
 			<div>
-				<t:commandLink rendered="#{!casesBPMAssetsState.showSpecialBackPage}" forceId="true" id="backToCaseOverviewAfterSubmitted" value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}" action="#{casesBPMAssetsState.showAssets}" immediate="true" />
+				<t:div rendered="#{!casesBPMAssetsState.showSpecialBackPage}">
+					<a id="backToCaseOverviewAfterSubmitted" href="javascript:void(0);" onclick="window.location.href = window.location.pathname + '?prm_case_pk=' + jQuery.url.param('prm_case_pk');">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
+				</t:div>
 				<t:div rendered="#{casesBPMAssetsState.showSpecialBackPage}">
 					<a href="#{casesBPMAssetsState.specialBackPage}">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
 				</t:div>
