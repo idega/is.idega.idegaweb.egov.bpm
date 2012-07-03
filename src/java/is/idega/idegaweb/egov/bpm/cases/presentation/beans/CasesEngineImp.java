@@ -991,4 +991,16 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	private Map<String, Boolean> getResolversCache() {
 		return getCache("BEAN_NAMES_FOR_BPM_PROCESS_SEARCH");
 	}
+
+	@Override
+	public boolean showCaseAssets() {
+		try {
+			CasesBPMAssetsState assetsState = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
+			assetsState.showAssets();
+			return true;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error while setting instruction to show assets", e);
+		}
+		return false;
+	}
 }

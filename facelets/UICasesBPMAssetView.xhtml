@@ -16,7 +16,7 @@
 		<ui:define name="actions">
 			<div>
 				<t:div rendered="#{!casesBPMAssetsState.showSpecialBackPage}">
-					<a id="backToCaseOverviewAfterSubmitted" href="javascript:void(0);" onclick="window.location.href = window.location.pathname + '?prm_case_pk=' + jQuery.url.param('prm_case_pk');">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
+					<a id="backToCaseOverviewAfterSubmitted" href="javascript:void(0);" onclick="showLoadingMessage('');LazyLoader.loadMultiple(['/dwr/interface/CasesEngine.js', '/dwr/engine.js'], function() {CasesEngine.showCaseAssets({callback: function() {window.location.href = window.location.pathname + '?prm_case_pk=' + jQuery.url.param('prm_case_pk');}}); }, null);">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>
 				</t:div>
 				<t:div rendered="#{casesBPMAssetsState.showSpecialBackPage}">
 					<a href="#{casesBPMAssetsState.specialBackPage}">#{localizedStrings['is.idega.idegaweb.egov.bpm']['cases_bpm.back_case_overview']}</a>

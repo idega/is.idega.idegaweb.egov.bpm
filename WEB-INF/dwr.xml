@@ -16,6 +16,7 @@
 	    	<include method="getCaseStatus"/>
 	    	<include method="setCasesPagerAttributes"/>
 	    	<include method="getExportedCases"/>
+	    	<include method="showCaseAssets"/>
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">
