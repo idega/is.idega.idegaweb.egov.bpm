@@ -126,7 +126,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesListAsset.xhtml"));
 		div.getChildren().add(facelet);
 
-		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetsRendered}", Boolean.class));
+		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetsRendered}",
+				Boolean.class));
 		getFacets().put(assetsFacet, div);
 
 		CasesBPMAssetsState stateBean = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
@@ -148,7 +149,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 				comments.setIdentifier(String.valueOf(stateBean.getProcessInstanceId()));
 				comments.setNewestEntriesOnTop(true);
 				comments.setShowCommentsList(stateBean.isAutoShowComments() ||
-						(iwc.isParameterSet(CommentsViewer.AUTO_SHOW_COMMENTS) && iwc.getParameter(CommentsViewer.AUTO_SHOW_COMMENTS).equals(Boolean.TRUE.toString())));
+						(iwc.isParameterSet(CommentsViewer.AUTO_SHOW_COMMENTS) && iwc.getParameter(CommentsViewer.AUTO_SHOW_COMMENTS)
+								.equals(Boolean.TRUE.toString())));
 				comments.setAddLoginbyUUIDOnRSSFeedLink(true);
 				comments.setStyleClass("commentsViewerForTaskViewerInCasesList");
 				div.getChildren().add(comments);
@@ -167,12 +169,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesBPMAssetView.xhtml"));
 
 		div.getChildren().add(facelet);
-		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetViewRendered}", Boolean.class));
+		div.setValueExpression(renderedAtt, WFUtil.createValueExpression(context.getELContext(), "#{casesBPMAssetsState.assetViewRendered}",
+				Boolean.class));
 		getFacets().put(assetViewFacet, div);
 
 		if (!CoreUtil.isSingleComponentRenderingProcess(iwc)) {
 			IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
-			PresentationUtil.addJavaScriptActionToBody(iwc, "jQuery(document).ready(function() {showLoadingMessage('"+iwrb.getLocalizedString("loading", "Loading...")+"');});");
+			PresentationUtil.addJavaScriptActionToBody(iwc, "jQuery(document).ready(function() {showLoadingMessage('" +
+					iwrb.getLocalizedString("loading", "Loading...") + "');});");
 		}
 	}
 
