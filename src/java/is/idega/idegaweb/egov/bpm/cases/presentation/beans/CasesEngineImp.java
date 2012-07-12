@@ -346,7 +346,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				String name = variable.getName();
 				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name)
 						|| name.startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) || name.startsWith(VariableInstanceType.LIST.getPrefix())
-						|| isResolverExist(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName())
+						|| !StringUtil.isEmpty(isResolverExist(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName()))
 						) {
 					MultipleSelectionVariablesResolver resolver = null;
 					try {
@@ -963,32 +963,31 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	 * @see is.idega.idegaweb.egov.cases.business.CasesEngine#isResolverExist(java.lang.String)
 	 */
 	@Override
-	public boolean isResolverExist(String beanName) {
-		Map<String, Boolean> cache = getResolversCache();
+	public String isResolverExist(String beanName) {
+		Map<String, String> cache = getResolversCache();
 		if (cache == null) {
 			getLogger().log(Level.WARNING, "Unable to get cache!");
-			return Boolean.FALSE;
+			return null;
 		}
 
-		if (cache.containsKey(beanName)){
+		if (cache.containsKey(beanName))
 			return cache.get(beanName);
-		}
 
 		try {
-			MultipleSelectionVariablesResolver resolver =
-				ELUtil.getInstance().getBean(beanName);
+			MultipleSelectionVariablesResolver resolver = ELUtil.getInstance().getBean(beanName);
 
 			if (resolver != null) {
-				cache.put(beanName, Boolean.TRUE);
-				return Boolean.TRUE;
+				String className = resolver.getPresentationClass().getName();
+				cache.put(beanName, className);
+				return className;
 			}
 		} catch (Throwable e) {}
 
-		cache.put(beanName, Boolean.FALSE);
-		return Boolean.FALSE;
+		cache.put(beanName, CoreConstants.EMPTY);
+		return CoreConstants.EMPTY;
 	}
 
-	private Map<String, Boolean> getResolversCache() {
+	private Map<String, String> getResolversCache() {
 		return getCache("BEAN_NAMES_FOR_BPM_PROCESS_SEARCH");
 	}
 
