@@ -114,6 +114,7 @@ bpm_variable.string_musicSchoolBand=T\u00F3nlistarsk\u00F3la\ hlj\u00F3msveit\ n
 bpm_variable.string_educationStage=N\u00E1mstig
 bpm_variable.string_requestedInstrumentsByLearning=Hlj\u00F3\u00F0f\u00E6r\u00ED
 bpm_variable.string_presentElementarySchool=Grunnsk\u00F3la
+bpm_variable.string_managingMusicSchoolDecision=\u00C1kv\u00F6r\u00F0un um ums\u00F3kn
 
 bpm_variable.string_ownerFullName=Ums\u00E6kjandi
 bpm_variable.string_caseDescription=Ums\u00F3kn
