@@ -78,6 +78,7 @@ bpm_variable.string_musicSchoolCandidateName=Applicant
 bpm_variable.string_applicantSocialSecurityCode=Personal ID
 bpm_variable.string_addressOfApplicant=Address
 bpm_variable.string_managingMusicSchoolDecision=Decision about application
+bpm_variable.string_presentElementarySchoolClass=Class
 
 bpm_variable.string_ownerFullName=Sender
 bpm_variable.string_caseDescription=Description

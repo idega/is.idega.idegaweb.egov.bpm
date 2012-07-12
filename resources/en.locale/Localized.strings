@@ -91,6 +91,7 @@ bpm_variable.string_educationStage=Education level
 bpm_variable.string_requestedInstrumentsByLearning=Instrument
 bpm_variable.string_presentElementarySchool=School
 bpm_variable.string_managingMusicSchoolDecision=Decision about application
+bpm_variable.string_presentElementarySchoolClass=Class
 
 bpm_variable.string_ownerFullName=Sender
 bpm_variable.string_caseDescription=Description
