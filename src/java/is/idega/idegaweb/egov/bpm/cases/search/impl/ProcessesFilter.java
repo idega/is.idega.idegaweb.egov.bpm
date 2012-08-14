@@ -36,12 +36,12 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
-	
+
 	@Autowired
 	private CasesBPMDAO casesDAO;
-	
+
 	private String procDefName;
-	
+
 	@Override
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		String processDefinitionId = getProcessId();
@@ -49,7 +49,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		if (CasesConstants.GENERAL_CASES_TYPE.equals(processDefinitionId)) {
 			//	Getting ONLY none "BPM" cases
 			try {
-				casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds, 
+				casesByProcessDefinition = getCasesBusiness().getFilteredProcesslessCasesIds(casesIds,
 						CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
 			} catch (Exception e) {
 				getLogger().log(Level.WARNING, "Error getting non BPM cases", e);
@@ -58,31 +58,33 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			//	Getting "BPM" cases
 			casesByProcessDefinition = getCasesByProcessDefinition(processDefinitionId, getProcessVariables());
 		}
-		
+
 		if (ListUtil.isEmpty(casesByProcessDefinition)) {
-			getLogger().warning("No cases found by process definition (ID: " + processDefinitionId + ", name: " + getProcessDefinitionName() + ") and variables (" +
-					getProcessVariables() + ")");
+			getLogger().warning("No cases found by process definition (ID: " + processDefinitionId + ", name: " + getProcessDefinitionName() +
+					") and variables (" + getProcessVariables() + ")");
 		} else {
-			getLogger().info("Found cases by process definition (ID: " + processDefinitionId + ", name: " + getProcessDefinitionName() + ") and variables (" +
-					getProcessVariables() + "): " + casesByProcessDefinition);
+			getLogger().info("Found " + casesByProcessDefinition.size() + " case(s) by process definition (ID: " + processDefinitionId + ", name: " +
+					getProcessDefinitionName() + ") and variables (" + getProcessVariables() + "): " + (casesByProcessDefinition.size() >= 1000 ?
+					casesByProcessDefinition.subList(0, 999) + " ..." : casesByProcessDefinition));
 		}
-			
+
 		return casesByProcessDefinition;
 	}
-	
+
 	@Override
 	protected String getInfo() {
-		return "Looking for cases by process definition. ID: " + getProcessId() + ", name: " + getProcessDefinitionName() + " and BPM variables: " + getProcessVariables();
+		return "Looking for cases by process definition. ID: " + getProcessId() + ", name: " + getProcessDefinitionName() + " and BPM variables: " +
+				getProcessVariables();
 	}
-	
+
 	private String getProcessDefinitionName() {
 		return procDefName;
 	}
-	
+
 	private List<Integer> getCasesByProcessDefinition(String processDefinitionId, List<BPMProcessVariable> vars) {
 		if (StringUtil.isEmpty(processDefinitionId))
 			return null;
-		
+
 		ProcessDefinition processDefinition = null;
 		try {
 			Long procDefId = Long.valueOf(processDefinitionId);
@@ -96,9 +98,9 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		this.procDefName = procDefName;
 
 		getLogger().info(getInfo());
-		
+
 		List<BPMProcessVariable> variables = new ArrayList<BPMProcessVariable>(vars);
-		
+
 		Object tmp = null;
 		BPMProcessVariable handlerVariable = null;
 		List<BPMProcessVariable> varsToRemove = new ArrayList<BPMProcessVariable>();
@@ -124,21 +126,23 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 				}
 			}
 		}
-		
+
 		List<Integer> casesIdsByMultipleValues = null;
 		if (!multValues.isEmpty()) {
 			casesIdsByMultipleValues = getConvertedFromNumbers(getCasesIdsByMultipleVariableValues(procDefName, multValues));
 			if (ListUtil.isEmpty(casesIdsByMultipleValues))
 				return null;
-			getLogger().info("Found cases by multiple variables: " + multValues + " and process definition: " + procDefName + ": " + casesIdsByMultipleValues);
+
+			getLogger().info("Found cases by multiple variables: " + multValues + " and process definition: " + procDefName + ": " +
+				casesIdsByMultipleValues);
 		}
-		
+
 		if (handlerVariable != null) {
 			List<Integer> casesIdsByHandlers = getCaseIdsByHandlers(handlerVariable.getName(), handlerVariable.getValue(), procDefName);
 			if (ListUtil.isEmpty(casesIdsByHandlers))
 				return null;
 			getLogger().info("Found cases by handler: " + handlerVariable + " and process definition: " + procDefName + ": " + casesIdsByHandlers);
-			
+
 			if (casesIdsByMultipleValues == null) {
 				//	Just handler variable was specified
 				casesIdsByMultipleValues = new ArrayList<Integer>(casesIdsByHandlers);
@@ -148,62 +152,65 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 				if (ListUtil.isEmpty(casesIdsByMultipleValues))
 					return null;
 			}
-			
+
 			variables.remove(handlerVariable);
 		}
-		
+
 		if (!ListUtil.isEmpty(varsToRemove))
 			variables.removeAll(varsToRemove);
-		
+
 		List<Integer> casesIds = null;
 		try {
-			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionNameAndVariables(procDefName, variables));
-			casesIds = ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues, casesIdsByOtherVars);
+			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionNameAndVariables(procDefName,
+					variables));
+			casesIds = ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues,
+					casesIdsByOtherVars);
 		} catch(Exception e) {
 			getLogger().log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = "+
 					processDefinitionId + ", variables: " + variables, e);
 		}
-		
-		
+
+
 		return casesIds;
 	}
-	
+
 	private List<Long> getCasesIdsByMultipleVariableValues(String processDefinitionName, Map<String, List<Serializable>> multipleValues) {
 		List<String> procDefNames = Arrays.asList(processDefinitionName);
-		
+
 		List<Long> procInstIds = new ArrayList<Long>();
 		for (String variableName: multipleValues.keySet()) {
-			Collection<VariableInstanceInfo> vars = getVariablesQuerier().getProcessVariablesByNameAndValue(variableName, multipleValues.get(variableName), procDefNames);
+			Collection<VariableInstanceInfo> vars = getVariablesQuerier().getProcessVariablesByNameAndValue(variableName,
+					multipleValues.get(variableName), procDefNames);
 			procInstIds = getProcInstIdsFromVars(vars, procInstIds);
 		}
-		
+
 		return getCasesBPMDAO().getCaseIdsByProcessInstanceIds(procInstIds);
 	}
-	
+
 	private List<Long> getProcInstIdsFromVars(Collection<VariableInstanceInfo> vars, List<Long> ids) {
 		if (ListUtil.isEmpty(vars))
 			return null;
-		
+
 		ids = ids == null ? new ArrayList<Long>() : ids;
 		for (VariableInstanceInfo var: vars) {
 			Long procInstId = var.getProcessInstanceId();
 			if (procInstId == null)
 				continue;
-			
+
 			if (!ids.contains(procInstId))
 				ids.add(procInstId);
 		}
 		return ids;
 	}
-	
+
 	private List<Integer> getCaseIdsByHandlers(String varName, String handlers, String procDefName) {
 		if (StringUtil.isEmpty(handlers))
 			return null;
-		
+
 		String[] ids = handlers.split(CoreConstants.SEMICOLON);
 		if (ArrayUtil.isEmpty(ids))
 			return null;
-		
+
 		List<Integer> usersIds = new ArrayList<Integer>();
 		for (String id: ids) {
 			Integer handlerId = null;
@@ -218,11 +225,11 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 				}
 				handlerId = null;
 			}
-			
+
 			if (handlerId != null)
 				usersIds.add(handlerId);
 		}
-		
+
 		return getCasesDAO().getCasesIdsByHandlersAndProcessDefinition(usersIds, procDefName);
 	}
 
@@ -240,13 +247,13 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		}
 		return true;
 	}
-	
+
 	VariableInstanceQuerier getVariablesQuerier() {
 		if (variablesQuerier == null)
 			ELUtil.getInstance().autowire(this);
 		return variablesQuerier;
 	}
-	
+
 	CasesBPMDAO getCasesDAO() {
 		if (casesDAO == null)
 			ELUtil.getInstance().autowire(this);
