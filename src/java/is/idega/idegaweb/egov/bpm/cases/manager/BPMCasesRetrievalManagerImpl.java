@@ -297,6 +297,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			roles = params.getRoles();
 			groups = params.getGroups();
 			casecodes = params.getCodes();
+			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
 
 			caseIds = getCachedIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, roles, groups, casecodes);
 			if (!ListUtil.isEmpty(caseIds))
@@ -320,7 +321,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
 				caseIds = getCasesBPMDAO().getPublicCasesIds(statusesToShow, statusesToHide, caseCodes);
 			} else {
-				getLogger().warning("Unknown cases list type:" + type);
+				getLogger().warning("Unknown cases list type: '" + type + "'");
 			}
 		} catch (Exception e) {
 			throw new RuntimeException(e);
