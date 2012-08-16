@@ -5,6 +5,7 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -71,22 +72,17 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		}
 		return headers;
 	}
-	
-	/*
-	 * (non-Javadoc)
-	 * @see com.idega.block.process.presentation.beans.CasesListCustomizer#
-	 * 		getHeadersAndVariables(java.util.List)
-	 */
+
 	@Override
-	public java.util.Map<String, String> getHeadersAndVariables(List<String> headersKeys) {
+	public Map<String, String> getHeadersAndVariables(List<String> headersKeys) {
 		if (ListUtil.isEmpty(headersKeys))
 			return null;
 
-		Map<String, String> headers = new HashMap<String, String>(headersKeys.size());
+		Map<String, String> headers = new LinkedHashMap<String, String>(headersKeys.size());
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
-		for (String key: headersKeys) {
+		for (String key: headersKeys)
 			headers.put(key, getLocalizedHeader(iwrb, key));
-		}
+
 		return headers;
 	}
 
@@ -144,7 +140,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		if (MapUtil.isEmpty(vars))
 			return null;
 
-		Map<String, Map<String, String>> labels = new HashMap<String, Map<String,String>>();
+		Map<String, Map<String, String>> labels = new LinkedHashMap<String, Map<String,String>>();
 		for (Long procId: vars.keySet()) {
 			String caseId = procIds.get(procId);
 			if (StringUtil.isEmpty(caseId))
