@@ -212,7 +212,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public Document getRenderedCasesByQuery(CasesSearchCriteriaBean criteriaBean) {
-		return criteriaBean instanceof CasesListSearchCriteriaBean ? getCasesListByUserQuery((CasesListSearchCriteriaBean) criteriaBean) : null;
+		if (criteriaBean instanceof CasesListSearchCriteriaBean)
+			return getCasesListByUserQuery((CasesListSearchCriteriaBean) criteriaBean);
+
+		getLogger().warning("Criterias " + criteriaBean + " are not instance of " + CasesListSearchCriteriaBean.class + " (actual implementation: " +
+				criteriaBean.getClass().getName() + "), returning null");
+		return null;
 	}
 
 	@Override
@@ -233,6 +238,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				.append(criteriaBean.getStatusId()).append(", dateRange: ").append(criteriaBean.getDateRange()).append(", casesListType: ")
 				.append(criteriaBean.getCaseListType()).append(", contact: ").append(criteriaBean.getContact()).append(", variables provided: ")
 				.append(ListUtil.isEmpty(criteriaBean.getProcessVariables()) ? "none" : criteriaBean.getProcessVariables())
+				.append(", process instance IDs: ").append(criteriaBean.getProcInstIds())
 		.toString());
 
 		IWContext iwc = CoreUtil.getIWContext();
@@ -386,8 +392,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criteriaBean) {
-		return criteriaBean instanceof CasesListSearchCriteriaBean ?
-				getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criteriaBean) : null;
+		if (criteriaBean instanceof CasesListSearchCriteriaBean)
+			return getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criteriaBean);
+
+		getLogger().warning("Unable to get cases by query " + criteriaBean + " because it is not instance of " +
+				CasesListSearchCriteriaBean.class.getName() + ". Actual implementation: " + criteriaBean.getClass().getName());
+		return null;
 	}
 
 	private boolean isPagingTurnedOn() {
@@ -396,12 +406,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
 		User currentUser = null;
-		if(!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
+		if (!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
 			return null;
 		}
 
-		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_MY : criteriaBean.getCaseListType();
+		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : criteriaBean.getCaseListType();
 		List<Integer> casesIds = null;
 		try {
 			if (criteriaBean.isShowAllCases()) {
@@ -423,40 +433,36 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 
 			casesIds = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(),
-					criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases(), criteriaBean.isShowAllCases());
+					criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases(),
+					criteriaBean.isShowAllCases());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criteriaBean, e);
 		}
-		if (ListUtil.isEmpty(casesIds)) {
+		if (ListUtil.isEmpty(casesIds))
 			return null;
-		}
 
-		if (criteriaBean.getStatusId() != null) {
+		if (criteriaBean.getStatusId() != null)
 			criteriaBean.setStatuses(new String[] {criteriaBean.getStatusId()});
-		}
 
 		PagedDataCollection<CasePresentation> cases = null;
 
 		if (ListUtil.isEmpty(criteriaBean.getProcInstIds())) {
 			List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criteriaBean);
-			if (ListUtil.isEmpty(filters)) {
+			if (ListUtil.isEmpty(filters))
 				return null;
-			}
 
-			for (CasesListSearchFilter filter: filters) {
+			for (CasesListSearchFilter filter: filters)
 				casesIds = filter.doFilter(casesIds);
-			}
 		} else {
 			List<Integer> ids = casesBPMDAO.getCasesIdsByProcInstIds(criteriaBean.getProcInstIds());
-			if (ListUtil.isEmpty(ids)) {
+			if (ListUtil.isEmpty(ids))
 				return null;
-			}
+
 			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, ids);
 		}
 
-		if (ListUtil.isEmpty(casesIds)) {
+		if (ListUtil.isEmpty(casesIds))
 			return null;
-		}
 
 		int totalCount = 0;
 		int count = 0;
@@ -490,9 +496,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(casesIds, locale);
 		}
 
-		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
+		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
 			return null;
-		}
 
 		List<CasePresentation> casesToSort = new ArrayList<CasePresentation>(cases.getCollection());
 		if (usePaging && !noSortingOptions) {
@@ -811,6 +816,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return cases.getCollection();
 		}
 
+		getLogger().warning("Unable to get cases by query " + criterias + " because it is not instance of " +
+				CasesListSearchCriteriaBean.class.getName() + ". Actual implementation: " + criterias.getClass().getName());
 		return null;
 	}
 
