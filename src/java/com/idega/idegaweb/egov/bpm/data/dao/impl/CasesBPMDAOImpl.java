@@ -978,11 +978,29 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public boolean doSubscribeToCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName) {
-		if (user == null)
+		return doSubscribeToCases(user, getCasesByProcessDefinition(processDefinitionName));
+	}
+
+	@Override
+	public boolean doSubscribeToCasesByProcessInstanceIds(com.idega.user.data.User user, List<Long> procInstIds) {
+		if (ListUtil.isEmpty(procInstIds))
 			return false;
 
-		Collection<Case> cases = getCasesByProcessDefinition(processDefinitionName);
-		if (ListUtil.isEmpty(cases))
+		List<Integer> casesIds = getCasesIdsByProcInstIds(procInstIds);
+		if (ListUtil.isEmpty(casesIds))
+			return false;
+
+		try {
+			CaseBusiness caseBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
+			return doSubscribeToCases(user, caseBusiness.getCasesByIds(casesIds));
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error subscribing to cases " + casesIds, e);
+		}
+		return false;
+	}
+
+	private boolean doSubscribeToCases(com.idega.user.data.User user, Collection<Case> cases) {
+		if (user == null || ListUtil.isEmpty(cases))
 			return false;
 
 		for (Case theCase: cases) {
