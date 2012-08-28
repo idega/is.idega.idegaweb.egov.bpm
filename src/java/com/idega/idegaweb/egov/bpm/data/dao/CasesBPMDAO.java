@@ -107,4 +107,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Long> getProcessInstanceIdsForSubscribedCases(Integer userId, List<Long> procInstIds);
 
 	public List<Long> getProcessInstanceIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
+
+	public boolean doSubscribeToCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
+	public boolean doUnSubscribeFromCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
 }

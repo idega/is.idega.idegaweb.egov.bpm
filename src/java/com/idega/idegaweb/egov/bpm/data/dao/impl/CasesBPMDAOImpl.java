@@ -21,11 +21,15 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
+import com.idega.business.IBOLookup;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
 import com.idega.data.SimpleQuerier;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
@@ -950,5 +954,69 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		return ids;
+	}
+
+	private Collection<Case> getCasesByProcessDefinition(String processDefinition) {
+		if (StringUtil.isEmpty(processDefinition))
+			return null;
+
+		List<Long> casesIds = getCaseIdsByProcessDefinition(processDefinition);
+		if (ListUtil.isEmpty(casesIds))
+			return null;
+
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Long id: casesIds)
+			ids.add(id.intValue());
+		try {
+			CaseBusiness caseBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
+			return caseBusiness.getCasesByIds(ids);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	@Override
+	public boolean doSubscribeToCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName) {
+		if (user == null)
+			return false;
+
+		Collection<Case> cases = getCasesByProcessDefinition(processDefinitionName);
+		if (ListUtil.isEmpty(cases))
+			return false;
+
+		for (Case theCase: cases) {
+			try {
+				theCase.addSubscriber(user);
+				theCase.store();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	@Override
+	public boolean doUnSubscribeFromCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName) {
+		if (user == null)
+			return false;
+
+		Collection<Case> cases = getCasesByProcessDefinition(processDefinitionName);
+		if (ListUtil.isEmpty(cases))
+			return false;
+
+		for (Case theCase: cases) {
+			try {
+				theCase.removeSubscriber(user);
+				theCase.store();
+			} catch (Exception e) {
+				e.printStackTrace();
+				return false;
+			}
+		}
+
+		return true;
 	}
 }
