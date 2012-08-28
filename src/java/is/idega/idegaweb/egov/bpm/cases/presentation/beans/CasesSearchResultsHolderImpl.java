@@ -273,6 +273,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		cell.setCellStyle(bigStyle);
 
 		cell = row.createCell(cellIndex++);
+		cell.setCellValue(iwrb.getLocalizedString("status", "Status"));
+		cell.setCellStyle(bigStyle);
+
+		cell = row.createCell(cellIndex++);
 		cell.setCellValue(iwrb.getLocalizedString("sender", "Sender"));
 		cell.setCellStyle(bigStyle);
 
@@ -446,6 +450,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 				//	Default header values
 				row.createCell(cellIndex++).setCellValue(theCase.getCaseIdentifier());
+				row.createCell(cellIndex++).setCellValue(theCase.getCaseStatusLocalized());
 				row.createCell(cellIndex++).setCellValue(getCaseCreator(theCase));
 				row.createCell(cellIndex++).setCellValue(getCaseCreatorPersonalId(theCase));
 				row.createCell(cellIndex++).setCellValue(getCaseCreatorEmail(theCase));
