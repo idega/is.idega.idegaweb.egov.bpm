@@ -20,7 +20,7 @@ import com.idega.bpm.process.messages.SendMessagesHandler;
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.10 $
- * 
+ *
  *          Last modified: $Date: 2008/12/05 05:45:47 $ by $Author: civilis $
  */
 @Service("sendCaseMessagesHandler")
@@ -30,9 +30,9 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	private static final long serialVersionUID = 1212382470685233437L;
 
 	private static final Logger LOGGER = Logger.getLogger(SendCaseMessagesHandler.class.getName());
-	
+
 	private SendMessage sendMessage;
-	
+
 	/**
 	 * defines the process instance, from which the message is sent. The case id
 	 * is resolved by this process instance
@@ -43,6 +43,7 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	public void execute(ExecutionContext ectx) throws Exception {
 		final String sendToRoles = getSendToRoles();
 		final Integer recipientUserId = getRecipientUserID();
+		LOGGER.info("Will send message to role(s) " + sendToRoles + " or/and user " + recipientUserId);
 
 		ProcessInstance candPI;
 		String caseIdStr;
@@ -57,10 +58,16 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 			caseIdStr = (String) ectx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
 		}
 
+		if (candPI == null)
+			LOGGER.warning("Unable to resolve process instance, will not send message to role(s) " + sendToRoles + " or/and user with ID " +
+					recipientUserId);
+		else
+			LOGGER.info("Sending message to process instance " + candPI.getId());
+
 		if (caseIdStr == null) {
 			// no case id variable found, trying to get it from super process
 			Token superToken = candPI.getSuperProcessToken();
-			
+
 			// TODO: propagate searching to the last super token
 			if (superToken != null) {
 				// found super process, trying to get variable from there
