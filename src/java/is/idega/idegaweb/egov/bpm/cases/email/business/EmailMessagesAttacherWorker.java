@@ -226,7 +226,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
 				taskInstance.submit(emailViewSubmission, false);
 				LOGGER.info("Submitted task instance " + taskInstance.getTaskInstanceId() + " with data from email message (sender: " + fromAddress +
-						", subject: " + subject + ")");
+						", subject: " + subject + ") for process instance: " + taskInstance.getProcessInstanceW().getProcessInstanceId());
 
 				Map<String, InputStream> attachments = message.getAttachments();
 				Collection<File> attachedFiles = message.getAttachedFiles();
