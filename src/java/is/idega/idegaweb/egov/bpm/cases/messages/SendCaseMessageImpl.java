@@ -74,7 +74,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 		Locale defaultLocale = iwma.getDefaultLocale();
 		//	Making sure default locale is not null
-		defaultLocale = defaultLocale == null ? iwc.getCurrentLocale() : defaultLocale;
+		defaultLocale = iwc == null ? defaultLocale : iwc.getCurrentLocale();
 		defaultLocale = defaultLocale == null ? Locale.ENGLISH : defaultLocale;
 
 		final List<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
