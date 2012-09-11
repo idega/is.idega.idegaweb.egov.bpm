@@ -175,7 +175,13 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public CasesBPMProcessViewBean getProcessView() {
-		return getCasesBPMProcessView().getProcessView(getProcessInstanceId(), getCaseId());
+		try {
+			return getCasesBPMProcessView().getProcessView(getProcessInstanceId(), getCaseId());
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting " + CasesBPMProcessViewBean.class.getName() + " bean by process instance ID " +
+					getProcessInstanceId() + " and case ID " + getCaseId(), e);
+		}
+		return null;
 	}
 
 	public CasesBPMTaskViewBean getTaskView() {
@@ -286,7 +292,8 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public String getTasksVisibilityProperty() {
-		Boolean processHasEnded = getProcessView().getEnded();
+		CasesBPMProcessViewBean view = getProcessView();
+		Boolean processHasEnded = view == null || view.getEnded();
 		if (processHasEnded != null && processHasEnded) {
 			return "caseListTasksSectionNotVisibleStyleClass";
 		}
