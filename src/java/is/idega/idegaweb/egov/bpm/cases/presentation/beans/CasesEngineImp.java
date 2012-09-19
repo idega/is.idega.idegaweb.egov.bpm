@@ -232,13 +232,15 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			clearSearchResults(criteriaBean.getId());
 		}
 
+		List<Long> piIds = criteriaBean.getProcInstIds();
 		LOGGER.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criteriaBean.getCaseNumber()).append(", description: ")
 				.append(criteriaBean.getDescription()).append(", name: ").append(criteriaBean.getName()).append(", personalId: ")
 				.append(criteriaBean.getPersonalId()).append(", processId: ").append(criteriaBean.getProcessId()).append(", statusId: ")
 				.append(criteriaBean.getStatusId()).append(", dateRange: ").append(criteriaBean.getDateRange()).append(", casesListType: ")
 				.append(criteriaBean.getCaseListType()).append(", contact: ").append(criteriaBean.getContact()).append(", variables provided: ")
 				.append(ListUtil.isEmpty(criteriaBean.getProcessVariables()) ? "none" : criteriaBean.getProcessVariables())
-				.append(", process instance IDs: ").append(criteriaBean.getProcInstIds())
+				.append(", process instance IDs: ").append(ListUtil.isEmpty(piIds) ? "none" :
+					piIds.size() >= 1000 ? new ArrayList<Long>(piIds).subList(0, 999) + " ..." : piIds)
 		.toString());
 
 		IWContext iwc = CoreUtil.getIWContext();
