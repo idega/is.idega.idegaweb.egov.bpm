@@ -481,9 +481,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 			totalCount = casesIds.size();
 			criteriaBean.setFoundResults(totalCount);
+			if (criteriaBean.getPageSize() <= 0)
+				criteriaBean.setPageSize(20);
+			if (criteriaBean.getPage() <= 0)
+				criteriaBean.setPage(1);
 			criteriaBean.setAllDataLoaded(!(totalCount > criteriaBean.getPageSize()));
-			count = criteriaBean.getPageSize() <= 0 ? 20 : criteriaBean.getPageSize();
-			startIndex = criteriaBean.getPage() <= 0 ? 0 : (criteriaBean.getPage() - 1) * count;
+			count = criteriaBean.getPageSize();
+			startIndex = (criteriaBean.getPage() - 1) * count;
 		} else {
 			criteriaBean.setPageSize(-1);
 		}
