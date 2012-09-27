@@ -200,7 +200,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			return super.getView(iwc, caseId, type, caseManagerType);
 		}
 
-		CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
+		CasesBPMAssetsState stateBean = WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 		stateBean.setDisplayPropertyForStyleAttribute(Boolean.FALSE);
 		stateBean.setStandAloneComponent(Boolean.FALSE);
 

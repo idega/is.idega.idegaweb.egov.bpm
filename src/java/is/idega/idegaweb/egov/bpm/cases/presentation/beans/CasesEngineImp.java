@@ -150,7 +150,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 
 		try {
-			CasesBPMAssetsState stateBean = (CasesBPMAssetsState) WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
+			CasesBPMAssetsState stateBean = WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 			if (stateBean != null) {
 				stateBean.setUsePDFDownloadColumn(properties.isUsePDFDownloadColumn());
 				stateBean.setAllowPDFSigning(properties.isAllowPDFSigning());
