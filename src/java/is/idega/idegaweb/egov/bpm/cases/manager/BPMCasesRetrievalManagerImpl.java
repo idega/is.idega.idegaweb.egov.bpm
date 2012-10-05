@@ -73,8 +73,10 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.Group;
 import com.idega.user.data.GroupBMPBean;
 import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
@@ -758,19 +760,20 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public String resolveCaseId(IWContext iwc) {
 		String caseId = super.resolveCaseId(iwc);
-		if (!StringUtil.isEmpty(caseId)) {
+		if (!StringUtil.isEmpty(caseId))
 			return caseId;
-		}
 
 		String processInstanceId = iwc.getParameter(ProcessManagerBind.processInstanceIdParam);
-		if (StringUtil.isEmpty(processInstanceId)) {
+		if (StringUtil.isEmpty(processInstanceId))
 			return null;
-		}
 
+		processInstanceId = StringHandler.replace(processInstanceId, CoreConstants.DOT, CoreConstants.EMPTY);
+		processInstanceId = StringHandler.replace(processInstanceId, CoreConstants.SPACE, CoreConstants.EMPTY);
 		try {
-			return getCaseId(Long.valueOf(processInstanceId));
+			Long piId = Long.valueOf(processInstanceId);
+			return getCaseId(piId);
 		} catch(NumberFormatException e) {
-			e.printStackTrace();
+			getLogger().log(Level.WARNING, "Error converting process instance ID '" + processInstanceId + "' to Long");
 		}
 		return null;
 	}
