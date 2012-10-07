@@ -376,13 +376,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		try {
 			WebApplicationContext webAppContext = WebApplicationContextUtils.getWebApplicationContext(servletContext);
-			@SuppressWarnings("unchecked")
-			Map<Object, CasesListSearchFilter> filters = webAppContext.getBeansOfType(CasesListSearchFilter.class);
+			Map<?, ?> filters = webAppContext.getBeansOfType(CasesListSearchFilter.class);
 			if (filters == null || filters.isEmpty()) {
 				return filtersList;
 			}
 
-			for (CasesListSearchFilter filter: filters.values()) {
+			for (Object filterObject: filters.values()) {
+				CasesListSearchFilter filter = (CasesListSearchFilter) filterObject;
 				filter.setCriterias(criterias);
 				filtersList.add(filter);
 			}

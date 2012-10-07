@@ -98,7 +98,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			}
 		}
 
-		Map<Object, Object> parsersProviders = null;
+		Map<?, ?> parsersProviders = null;
 		try {
 			parsersProviders = WebApplicationContextUtils.getWebApplicationContext(IWMainApplication.getDefaultIWMainApplication()
 					.getServletContext()).getBeansOfType(EmailsParsersProvider.class);
