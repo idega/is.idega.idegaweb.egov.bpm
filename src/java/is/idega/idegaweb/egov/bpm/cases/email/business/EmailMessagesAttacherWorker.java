@@ -85,7 +85,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		parseAndAttachMessages();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void parseAndAttachMessages() {
 		Map<String, FoundMessagesInfo> messagesToParse = new HashMap<String, FoundMessagesInfo>();
 
