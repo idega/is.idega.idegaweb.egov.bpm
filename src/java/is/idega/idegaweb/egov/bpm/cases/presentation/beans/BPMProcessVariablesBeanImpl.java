@@ -207,7 +207,13 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		}
 		if (realValue instanceof Date) {
 			IWTimestamp date = new IWTimestamp((Date) value);
-			return date.getLocaleDate(locale, DateFormat.SHORT);
+			String dateValue = null;
+			try {
+				dateValue = date.getLocaleDateAndTime(locale, DateFormat.SHORT, DateFormat.SHORT);
+			} catch (Exception e) {}
+			if (dateValue == null)
+				return date.getLocaleDate(locale, DateFormat.SHORT);
+			return dateValue;
 		}
 
 		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(variable.getName())
