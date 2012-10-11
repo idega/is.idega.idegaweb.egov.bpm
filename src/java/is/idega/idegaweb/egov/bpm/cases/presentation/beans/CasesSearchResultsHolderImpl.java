@@ -363,19 +363,19 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (variable == null)
 			return CoreConstants.EMPTY;
 
-		MultipleSelectionVariablesResolver valueResolver = null;
+		MultipleSelectionVariablesResolver resolver = null;
 		try {
 			String bean = MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + beanName.split(CoreConstants.AT)[0];
-			valueResolver = ELUtil.getInstance().getBean(bean);
+			resolver = ELUtil.getInstance().getBean(bean);
 		} catch (Exception e) {}
 
-		if (valueResolver == null)
+		if (resolver == null)
 			return variable.getId();
 
 		try {
-			return valueResolver.getPresentation(variable.getId());
+			return resolver.isValueUsedForExport() ? resolver.getPresentation(variable.getId()) : variable.getId();
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.log(Level.WARNING, "Error resolving value for variable" + variable + " and using resolver " + resolver, e);
 		}
 
 		return CoreConstants.EMPTY;
