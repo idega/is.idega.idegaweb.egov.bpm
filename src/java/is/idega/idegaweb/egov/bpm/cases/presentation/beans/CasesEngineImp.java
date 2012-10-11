@@ -414,6 +414,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
+		long start = System.currentTimeMillis();
 		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : criteriaBean.getCaseListType();
 		List<Integer> casesIds = null;
 		try {
@@ -444,6 +445,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (ListUtil.isEmpty(casesIds))
 			return null;
 
+		long end = System.currentTimeMillis();
+		LOGGER.info("Cases IDs were resolved in " + (end - start) + " ms");
+
 		if (criteriaBean.getStatusId() != null)
 			criteriaBean.setStatuses(new String[] {criteriaBean.getStatusId()});
 
@@ -463,6 +467,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, ids);
 		}
+		start = System.currentTimeMillis();
+		LOGGER.info("Searh was executed in " + (start - end) + " ms");
 
 		if (ListUtil.isEmpty(casesIds))
 			return null;
@@ -515,6 +521,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		Collections.sort(casesToSort, getCasePresentationComparator(criteriaBean, locale));
 
 		cases = new PagedDataCollection<CasePresentation>(casesToSort);
+		LOGGER.info("Sorting and paging was executed in " + (System.currentTimeMillis() - start) + " ms");
 		return cases;
 	}
 
