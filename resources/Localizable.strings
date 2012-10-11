@@ -64,6 +64,7 @@ bpm_variable.string_caseStatus=Ticket status
 bpm_variable.string_ticketType=Ticket type
 bpm_variable.list_ticketViolationsNumbers=Ticket violation number
 bpm_variable.string_officerNumber=Ticket officer number
+bpm_variable.string_invoiceNumber=Invoice number
 
 bpm.caseHandler=Handler
 bpm_variable.handlerUserId=Handler

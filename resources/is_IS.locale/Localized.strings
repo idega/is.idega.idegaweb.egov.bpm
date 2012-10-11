@@ -85,7 +85,7 @@ bpm_variable.string_ownerFullName=Nafn eiganda
 bpm_variable.string_ticketType=Tegund gjalds
 bpm_variable.string_vehicleNumber=Fastan\u00FAmer
 bpm_variable.string_protestText=Andm\u00E6latexti
-bpm_variable.string_violatorPersonalID=Kennitala
+bpm_variable.string_violatorPersonalID=Kennitala eiganda
 bpm_variable.parkingReportFilterDateRangeFrom=Dags. fr\u00E1
 bpm_variable.parkingReportFilterDateRangeTo=Dags. til
 bpm_variable.string_vehicleType=Tegund \u00F6kut\u00E6kis
@@ -101,6 +101,7 @@ bpm_variable.string_ticketStreetAddress=G\u00F6tuheiti
 bpm_variable.string_ticketStreetDescription=G\u00F6tun\u00FAmer/afsta\u00F0a
 bpm_variable.parkingReportFilterDateRangeFrom=Fr\u00E1
 bpm_variable.parkingReportFilterDateRangeTo=Til
+bpm_variable.string_invoiceNumber=Reikningsn\u00FAmer
 
 bpm_variable.list_violationTypes=Tegund brots
 bpm_variable.string_harbourNr=H\u00F6fn
