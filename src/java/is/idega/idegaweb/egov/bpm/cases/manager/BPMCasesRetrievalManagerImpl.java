@@ -850,6 +850,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		for (CasesCacheCriteria criteria: cache.keySet()) {
 			Map<Integer, Boolean> cachedIds = cache.get(criteria);
 
+			if (ommitClearing && (!MapUtil.isEmpty(cachedIds) && cachedIds.containsKey(caseId)))
+				continue;	//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
+
 			User user = getUser(criteria.getUserId());
 			List<Integer> ids = null;
 			try {
