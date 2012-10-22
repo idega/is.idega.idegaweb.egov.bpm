@@ -69,6 +69,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.data.ProcessManagerBind;
+import com.idega.jbpm.events.ProcessInstanceCreatedEvent;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -831,63 +832,95 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return null;
 	}
 
-	@Override
-	public void onApplicationEvent(final ApplicationEvent event) {
-		if (event instanceof CaseModifiedEvent) {
-			Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
-			if (MapUtil.isEmpty(cache))
-				return;
+	private void doManageCasesCache(Case theCase, boolean ommitClearing) {
+		if (theCase == null)
+			return;
 
-			Object source = event.getSource();
-			if (!(source instanceof Case))
-				return;
+		Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
+		if (MapUtil.isEmpty(cache))
+			return;
 
-			boolean updateCache = getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
-			if (!updateCache) {
+		boolean updateCache = getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
+		if (!updateCache) {
+			cache.clear();
+			return;
+		}
+
+		Integer caseId = Integer.valueOf(theCase.getId());
+		for (CasesCacheCriteria criteria: cache.keySet()) {
+			Map<Integer, Boolean> cachedIds = cache.get(criteria);
+
+			User user = getUser(criteria.getUserId());
+			List<Integer> ids = null;
+			try {
+				ids = getCaseIds(
+						user,
+						criteria.getType(),
+						criteria.getCaseCodes(),
+						criteria.getStatusesToHide(),
+						criteria.getStatusesToShow(),
+						criteria.isOnlySubscribedCases(),
+						criteria.isShowAllCases(),
+						caseId
+					);
+			} catch (Exception e) {
+				String message = "Error while verifying if modified case" + theCase + " belongs to the cache by key " + criteria.getKey();
+				LOGGER.log(Level.WARNING, message, e);
+				CoreUtil.sendExceptionNotification(message, e);
 				cache.clear();
 				return;
 			}
 
-			Case theCase = (Case) source;
-			Integer caseId = Integer.valueOf(theCase.getId());
-			for (CasesCacheCriteria criteria: cache.keySet()) {
-				Map<Integer, Boolean> cachedIds = cache.get(criteria);
-
-				User user = getUser(criteria.getUserId());
-				List<Integer> ids = null;
-				try {
-					ids = getCaseIds(
-							user,
-							criteria.getType(),
-							criteria.getCaseCodes(),
-							criteria.getStatusesToHide(),
-							criteria.getStatusesToShow(),
-							criteria.isOnlySubscribedCases(),
-							criteria.isShowAllCases(),
-							caseId
-						);
-				} catch (Exception e) {
-					String message = "Error while verifying if modified case" + theCase + " belongs to the cache by key " + criteria.getKey();
-					LOGGER.log(Level.WARNING, message, e);
-					CoreUtil.sendExceptionNotification(message, e);
-					cache.clear();
-					return;
+			boolean contains = ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
+			if (contains) {
+				if (cachedIds == null) {
+					cachedIds = new LinkedHashMap<Integer, Boolean>();
+					cache.put(criteria, cachedIds);
 				}
-
-				boolean contains = ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
-				if (contains) {
-					if (cachedIds == null) {
-						cachedIds = new LinkedHashMap<Integer, Boolean>();
-						cache.put(criteria, cachedIds);
-					}
-					cachedIds.put(caseId, Boolean.TRUE);
-				} else {
-					LOGGER.info("Case ID " + caseId + " (identifier: '" + theCase.getCaseIdentifier() + "', status: " + theCase.getCaseStatus() +
-							", created: " + theCase.getCreated() + ") does not belong to the cases list for criterias " + criteria);
-					if (cachedIds != null)
-						cachedIds.remove(caseId);
-				}
+				cachedIds.put(caseId, Boolean.TRUE);
+			} else if (!ommitClearing) {
+				LOGGER.info("Case ID " + caseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" + theCase.getSubject() +
+						"', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() +
+						") does not belong to the cases list for criterias " + criteria);
+				if (cachedIds != null)
+					cachedIds.remove(caseId);
 			}
+		}
+	}
+
+	@Override
+	public void onApplicationEvent(final ApplicationEvent event) {
+		if (event instanceof CaseModifiedEvent) {
+			Object source = event.getSource();
+			if (!(source instanceof Case))
+				return;
+
+			Case theCase = (Case) source;
+			doManageCasesCache(theCase, StringUtil.isEmpty(theCase.getSubject()));
+		} else if (event instanceof ProcessInstanceCreatedEvent) {
+			Long piId = ((ProcessInstanceCreatedEvent) event).getProcessInstanceId();
+			if (piId == null)
+				return;
+
+			CaseProcInstBind bind = null;
+			try {
+				bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+			} catch (Exception e) {}
+			if (bind == null) {
+				getLogger().warning("Bind for process instance " + piId + " was not created yet!");
+				return;
+			}
+
+			Case theCase = null;
+			try {
+				theCase = getCaseBusiness().getCase(bind.getCaseId());
+			} catch (Exception e) {}
+			if (theCase == null) {
+				getLogger().warning("Case can not be found by ID " + bind.getCaseId() + " for process instance " + piId);
+				return;
+			}
+
+			doManageCasesCache(theCase, true);
 		} else if (event instanceof CaseDeletedEvent) {
 			Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 			if (cache == null)
