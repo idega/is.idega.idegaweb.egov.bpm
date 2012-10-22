@@ -882,6 +882,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 					}
 					cachedIds.put(caseId, Boolean.TRUE);
 				} else {
+					LOGGER.info("Case ID " + caseId + " (identifier: '" + theCase.getCaseIdentifier() + "', status: " + theCase.getCaseStatus() +
+							", created: " + theCase.getCreated() + ") does not belong to the cases list for criterias " + criteria);
 					if (cachedIds != null)
 						cachedIds.remove(caseId);
 				}
