@@ -373,7 +373,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return variable.getId();
 
 		try {
-			return resolver.isValueUsedForExport() ? resolver.getPresentation(variable.getId()) : variable.getId();
+			return resolver.isValueUsedForExport() ? resolver.getPresentation(variable.getId()) : resolver.getKeyPresentation(variable.getId());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error resolving value for variable" + variable + " and using resolver " + resolver, e);
 		}

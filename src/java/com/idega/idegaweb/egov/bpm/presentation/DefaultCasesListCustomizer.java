@@ -21,6 +21,7 @@ import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
+import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
@@ -113,7 +114,10 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 		MultipleSelectionVariablesResolver resolver = getResolver(name);
 		if (resolver != null)
-			return new AdvancedProperty(name, resolver.getPresentation(variable.getValue().toString()));
+			return new AdvancedProperty(name, resolver.isValueUsedForCaseList() ?
+					resolver.getPresentation(variable.getValue().toString()) :
+					resolver.getKeyPresentation(variable.getValue().toString())
+			);
 
 		return new AdvancedProperty(name, variable.getValue().toString());
 	}
@@ -163,6 +167,15 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 				AdvancedProperty label = getLabel(info);
 				caseLabels.put(label.getId(), label.getValue());
+			}
+
+			if (!ListUtil.isEmpty(headersKeys)) {
+				for (String headerKey: headersKeys) {
+					if (caseLabels.containsKey(headerKey))
+						continue;
+
+					caseLabels.put(headerKey, CoreConstants.MINUS);
+				}
 			}
 		}
 
