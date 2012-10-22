@@ -842,6 +842,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!(source instanceof Case))
 				return;
 
+			boolean updateCache = getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
+			if (!updateCache) {
+				cache.clear();
+				return;
+			}
+
 			Case theCase = (Case) source;
 			Integer caseId = Integer.valueOf(theCase.getId());
 			for (CasesCacheCriteria criteria: cache.keySet()) {
