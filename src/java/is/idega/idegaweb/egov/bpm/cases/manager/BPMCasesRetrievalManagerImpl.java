@@ -833,9 +833,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	private void doManageCasesCache(Case theCase, boolean ommitClearing) {
-		if (theCase == null)
-			return;
-
 		Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 		if (MapUtil.isEmpty(cache))
 			return;
@@ -846,7 +843,14 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			return;
 		}
 
-		Integer caseId = Integer.valueOf(theCase.getId());
+		if (theCase == null)
+			return;
+
+		String theCaseId = theCase.getId();
+		String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" + theCase.getSubject() +
+				"', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
+
+		Integer caseId = Integer.valueOf(theCaseId);
 		for (CasesCacheCriteria criteria: cache.keySet()) {
 			Map<Integer, Boolean> cachedIds = cache.get(criteria);
 
@@ -867,7 +871,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 						caseId
 					);
 			} catch (Exception e) {
-				String message = "Error while verifying if modified case" + theCase + " belongs to the cache by key " + criteria.getKey();
+				String message = "Error while verifying if modified case" + caseInfo + " belongs to the cache by key " + criteria.getKey() +
+						" and user" + user;
 				LOGGER.log(Level.WARNING, message, e);
 				CoreUtil.sendExceptionNotification(message, e);
 				cache.clear();
@@ -880,11 +885,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 					cachedIds = new LinkedHashMap<Integer, Boolean>();
 					cache.put(criteria, cachedIds);
 				}
+				LOGGER.info("************ " + caseInfo + " added to the cases cache for criterias " + criteria + " and user " + user);
 				cachedIds.put(caseId, Boolean.TRUE);
 			} else if (!ommitClearing) {
-				LOGGER.info("Case ID " + caseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" + theCase.getSubject() +
-						"', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() +
-						") does not belong to the cases list for criterias " + criteria);
+				LOGGER.warning("************ " + caseInfo + " does not belong to the cases list for criterias " + criteria + " and user " + user +
+						(cachedIds != null && cachedIds.containsKey(caseId) ? ", will remove it from cache" : CoreConstants.EMPTY));
 				if (cachedIds != null)
 					cachedIds.remove(caseId);
 			}
