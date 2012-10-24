@@ -834,17 +834,22 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 	private void doManageCasesCache(Case theCase, boolean ommitClearing) {
 		Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
-		if (MapUtil.isEmpty(cache))
+		if (MapUtil.isEmpty(cache)) {
+			getLogger().info("Cache is empty, nothing to handle");
 			return;
+		}
 
 		boolean updateCache = getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
 		if (!updateCache) {
+			getLogger().info("Cache handling is turned off, clearing all cache");
 			cache.clear();
 			return;
 		}
 
-		if (theCase == null)
+		if (theCase == null) {
+			getLogger().warning("Case is undefined, unable to manage cache");
 			return;
+		}
 
 		String theCaseId = theCase.getId();
 		String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" + theCase.getSubject() +
@@ -858,28 +863,39 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				continue;	//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
 
 			User user = getUser(criteria.getUserId());
-			List<Integer> ids = null;
+			boolean superAdmin = false;
 			try {
-				ids = getCaseIds(
-						user,
-						criteria.getType(),
-						criteria.getCaseCodes(),
-						criteria.getStatusesToHide(),
-						criteria.getStatusesToShow(),
-						criteria.isOnlySubscribedCases(),
-						criteria.isShowAllCases(),
-						caseId
-					);
+				superAdmin = user == null ?
+					false :
+					IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser().equals(user);
 			} catch (Exception e) {
-				String message = "Error while verifying if modified case" + caseInfo + " belongs to the cache by key " + criteria.getKey() +
-						" and user" + user;
-				LOGGER.log(Level.WARNING, message, e);
-				CoreUtil.sendExceptionNotification(message, e);
-				cache.clear();
-				return;
+				getLogger().log(Level.WARNING, "Error while resolving if user " + user + " is administrator");
 			}
 
-			boolean contains = ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
+			List<Integer> ids = null;
+			if (!superAdmin) {
+				try {
+					ids = getCaseIds(
+							user,
+							criteria.getType(),
+							criteria.getCaseCodes(),
+							criteria.getStatusesToHide(),
+							criteria.getStatusesToShow(),
+							criteria.isOnlySubscribedCases(),
+							criteria.isShowAllCases(),
+							caseId
+						);
+				} catch (Exception e) {
+					String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " + criteria.getKey() +
+							" and user" + user;
+					LOGGER.log(Level.WARNING, message, e);
+					CoreUtil.sendExceptionNotification(message, e);
+					cache.clear();
+					return;
+				}
+			}
+
+			boolean contains = superAdmin ? true : ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
 			if (contains) {
 				if (cachedIds == null) {
 					cachedIds = new LinkedHashMap<Integer, Boolean>();
@@ -903,10 +919,14 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!(source instanceof Case))
 				return;
 
+			getLogger().info("$$$$$$$$$$$$$$$$ Case " + source + " was modified, proceeding to cases cache manager");
 			Case theCase = (Case) source;
 			doManageCasesCache(theCase, StringUtil.isEmpty(theCase.getSubject()));
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
-			Long piId = ((ProcessInstanceCreatedEvent) event).getProcessInstanceId();
+			ProcessInstanceCreatedEvent procCreatedEvent = (ProcessInstanceCreatedEvent) event;
+			getLogger().info("$$$$$$$$$$$$$$$$ " + procCreatedEvent);
+
+			Long piId = procCreatedEvent.getProcessInstanceId();
 			if (piId == null)
 				return;
 
