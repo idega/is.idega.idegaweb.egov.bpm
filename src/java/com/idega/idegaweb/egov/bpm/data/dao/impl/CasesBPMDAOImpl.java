@@ -360,14 +360,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Long> getCaseIdsByProcessDefinition(String processDefinitionName) {
-		if (StringUtil.isEmpty(processDefinitionName)) {
+		if (StringUtil.isEmpty(processDefinitionName))
 			return null;
-		}
 
-		return getResultList(
-		    CaseProcInstBind.getCaseIdsByProcessDefinitionName, Long.class,
-		    new Param(CaseProcInstBind.processDefinitionNameProp,
-		            processDefinitionName));
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionName, Long.class,
+				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 	}
 
 	private List<Long> getCaseIdsByVariable(String queryName, String processDefinitionName, String variableName, Object value,
@@ -447,11 +444,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Long> getCaseIdsByProcessInstanceIds(List<Long> processInstanceIds) {
-		if (ListUtil.isEmpty(processInstanceIds)) {
+		if (ListUtil.isEmpty(processInstanceIds))
 			return null;
-		}
 
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class, new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class,
+				new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
 	}
 
 	// TODO: those queries are very similar, make some general query, and just append queries/joins
