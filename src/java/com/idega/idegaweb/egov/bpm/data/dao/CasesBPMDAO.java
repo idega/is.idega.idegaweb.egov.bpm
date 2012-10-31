@@ -66,10 +66,10 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 
 	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseCodes, List<String> caseStatuses, List<String> caseStatusesToHide,
-	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases, Integer caseId);
+	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
 
 	public abstract List<Integer> getClosedCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<Integer> groups,
-			Collection<String> roles, boolean onlySubscribedCases, Integer caseId);
+			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
 
 	/**
 	 * @param user
@@ -79,20 +79,22 @@ public interface CasesBPMDAO extends GenericDao {
 	 *         what user is watching
 	 */
 	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, boolean onlySubscribedCases,
-			Integer caseId);
+			Integer caseId, List<Long> procInstIds);
 
 	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes,
-			Collection<String> roles, boolean onlySubscribedCases, Integer caseId);
+			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
 
-	public abstract List<Integer> getPublicCasesIds(List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes, Integer caseId);
+	public abstract List<Integer> getPublicCasesIds(List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes,
+			Integer caseId, List<Long> procInstIds);
 
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(
 	        List<String> caseStatuses, List<String> caseStatusesToHide);
 
 	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes, List<String> caseStatusesToShow, List<String> caseStatusesToHide,
-			Integer caseId);
+			Integer caseId, List<Long> procInstIds);
 
-	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide, Integer caseId);
+	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide, Integer caseId,
+			List<Long> procInstIds);
 
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
 

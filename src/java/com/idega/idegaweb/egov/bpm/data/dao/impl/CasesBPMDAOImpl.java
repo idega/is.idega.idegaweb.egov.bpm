@@ -451,18 +451,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
 	}
 
-	// TODO: those queries are very similar, make some general query, and just append queries/joins
-	// in more special use cases
 	@Override
 	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, boolean onlySubscribedCases,
-			Integer caseId) {
+			Integer caseId, List<Long> procInstIds) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param("userStatus", ProcessUserBind.Status.PROCESS_WATCHED.toString()));
 
 		StringBuilder builder = new StringBuilder(1000);
 		builder.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
-				.append("inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id ")
+				.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ")
 		        .append("inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id ")
 		        .append("inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id ");
 		if (onlySubscribedCases) {
@@ -472,6 +470,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		        .append(" pu on cp.").append(CaseProcInstBind.procInstIdColumnName).append(" = pu.process_instance_id ").append("where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append("pi.end_ is null and ");
 		builder.append("(comm_case.handler = :"
@@ -487,8 +486,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("caseAuthor", user.getPrimaryKey()));
 		}
 		builder.append(") UNION (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
-			.append("inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where ");
+						.append("inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id ")
+						.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
+		builder.append(" where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" comm_case.handler = :").append(NativeIdentityBind.identityIdProperty);
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		builder.append(" and proc_case.case_manager_type is null) order by Created desc");
@@ -509,6 +513,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		String caseIdParam = "caseIdParam";
 		params.add(new Param(caseIdParam, caseId));
 		return " " + caseColumn + " = :".concat(caseIdParam).concat(" and ");
+	}
+
+	private String getConditionForProcInstIds(List<Param> params, List<Long> procInstIds, String columnName) {
+		if (ListUtil.isEmpty(procInstIds))
+			return " " + columnName + " = " + columnName + " and ";
+
+		String procInstIdsParam = "procInstIds";
+		params.add(new Param(procInstIdsParam, procInstIds));
+		return " " + columnName + " in (:".concat(procInstIdsParam).concat(") and ");
 	}
 
 	private String getConditionForCaseStatuses(List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
@@ -534,7 +547,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Integer> getOpenCasesIds(User user, List<String> caseCodes, List<String> caseStatusesToShow, List<String> caseStatusesToHide,
-	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases, Integer caseId) {
+	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds) {
 
 		boolean showClosedCases = false;
 		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
@@ -550,7 +563,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		StringBuilder builder = new StringBuilder(1000);
 		builder.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 		                + "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
-		                + "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
+		                + "inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id "
 		                + "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
 		                + "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
 		                + "left join bpm_native_identities ni on act.actor_id = ni.actor_fk ");
@@ -558,7 +571,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ");
 		}
 		builder.append("where");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" (");
 		if (!ListUtil.isEmpty(roles)) {
 			builder.append("(act.role_name in (:roles) or (ni.identity_type = :identityTypeRole and ni.identity_id in(:roles))) or ");
@@ -580,9 +596,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		//	The second part of a query
-		builder.append(") union (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case inner join proc_case on ")
-				.append("proc_case.proc_case_id = comm_case.comm_case_id where");
+		builder.append(") union (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
+						.append("inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id ")
+						.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
+		builder.append(" where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" proc_case.case_manager_type is null");
 		if (!ListUtil.isEmpty(groups)) {
 			builder.append(" and proc_case.handler_group_id in (:groups)");
@@ -598,7 +619,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes, List<String> caseStatusesToShow, List<String> caseStatusesToHide,
-			Integer caseId) {
+			Integer caseId, List<Long> procInstIds) {
 
 		boolean showClosedCases = false;
 		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
@@ -612,12 +633,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		StringBuilder builder = new StringBuilder(1000);
 		builder.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
 				.append("inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id ")
-		        .append("inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id ")
+		        .append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ")
 		        .append("inner join bpm_actors act on act.process_instance_id = cp.process_instance_id ")
 		        .append("inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id ")
 		        .append("left join bpm_native_identities ni on act.actor_id = ni.actor_fk ")
 		        .append("where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" act.process_instance_id is not null ");
 		if (!showClosedCases) {
 			builder.append("and pi.end_ is null ");
@@ -626,10 +650,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (!ListUtil.isEmpty(caseCodes))
 			builder.append(" and pi.processdefinition_ in (select id_ from jbpm_processdefinition where name_ in (:caseCodes))");
 
-		builder.append(") union"
-		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
-		                + "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where");
+		builder.append(") union (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
+						.append("inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id ")
+						.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
+		builder.append(" where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" proc_case.case_manager_type is null ");
 		if (!ListUtil.isEmpty(caseCodes))
 			builder.append(" and proc_case.case_code in (:caseCodes) ");
@@ -643,7 +671,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Integer> getClosedCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection<Integer> groups,
-			Collection<String> roles, boolean onlySubscribedCases, Integer caseId) {
+			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds) {
 
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
@@ -655,7 +683,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		StringBuilder builder = new StringBuilder(1000);
 		builder.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 		                + "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
-		                + "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
+		                + "inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id "
 		                + "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
 		                + "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
 		                + "left join bpm_native_identities ni on act.actor_id = ni.actor_fk ");
@@ -663,7 +691,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ");
 		}
 		builder.append("where");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" (");
 		if (!ListUtil.isEmpty(roles)) {
 			builder.append("(act.role_name in (:roles) or (ni.identity_type = :identityTypeRole and ni.identity_id in(:roles))) or ");
@@ -681,10 +712,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("subscriber", user.getPrimaryKey()));
 			params.add(new Param("caseAuthor", user.getPrimaryKey().toString()));
 		}
-		builder.append(") union"
-		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
-		                + "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where");
+		builder.append(") union (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
+						.append("inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id ")
+						.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
+		builder.append(" where");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" proc_case.case_status in (:statusesToShow) ");
 		if (!ListUtil.isEmpty(groups)) {
 			builder.append("and proc_case.handler_group_id in (:groups) ");
@@ -699,7 +734,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide, Integer caseId) {
+	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide, Integer caseId,
+			List<Long> procInstIds) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
 		if (!ListUtil.isEmpty(caseStatusesToHide))
@@ -708,21 +744,27 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		StringBuilder builder = new StringBuilder(1000);
 		builder.append("(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
 		                + "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
-		                + "inner join bpm_cases_processinstances cp on cp.case_id = comm_case.comm_case_id "
+		                + "inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id "
 		                + "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id "
 		                + "inner join jbpm_processinstance pi on pi.id_ = cp.process_instance_id "
 		                + "left join bpm_native_identities ni on act.actor_id = ni.actor_fk "
 		                + "where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" act.process_instance_id is not null and (pi.end_ is not null or proc_case.case_status in (:statusesToShow))");
 		if (!ListUtil.isEmpty(caseStatusesToHide))
 			builder.append("and proc_case.case_status not in (:statusesToHide) ");
 
-		builder.append(") union"
-		                + "(select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case "
-		                + "inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id where ");
+		builder.append(") union (select distinct comm_case.comm_case_id as caseId, proc_case.created as Created from comm_case ")
+						.append("inner join proc_case on proc_case.proc_case_id = comm_case.comm_case_id ")
+						.append(" inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
+		builder.append(" where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" proc_case.case_status in (:statusesToShow) ");
 		if (!ListUtil.isEmpty(caseStatusesToHide))
 			builder.append("and proc_case.case_status not in (:statusesToHide) ");
@@ -733,7 +775,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Integer> getUserCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, List<String> caseCodes,
-			Collection<String> roles, boolean onlySubscribedCases, Integer caseId) {
+			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds) {
 
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseCodes", caseCodes));
@@ -741,13 +783,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
 		StringBuilder builder = new StringBuilder(1000);
 		builder.append("(select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case "
-		                + "inner join bpm_cases_processinstances cp on cp.case_id = proc_case.proc_case_id "
+		                + "inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id "
 		                + "inner join bpm_actors act on act.process_instance_id = cp.process_instance_id ");
 		if (onlySubscribedCases) {
 			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ");
 		}
 		builder.append("left join bpm_native_identities ni on act.actor_id = ni.actor_fk where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" (");
 		if (!ListUtil.isEmpty(roles)) {
 			builder.append("(act.role_name in (:roles) or (ni.identity_type = :identityTypeRole and ni.identity_id in(:roles))) or ");
@@ -764,8 +809,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("subscriber", user.getPrimaryKey()));
 			params.add(new Param("caseAuthor", user.getPrimaryKey().toString()));
 		}
-		builder.append(") union (select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case where ");
+		builder.append(") union (select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ")
+						.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
+		builder.append(" where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" user_id=:identityId and proc_case.case_code not in (:caseCodes) ");
 
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
@@ -776,7 +826,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Integer> getPublicCasesIds(List<String> caseStatusesToShow, List<String> caseStatusesToHide, List<String> caseCodes, Integer caseId) {
+	public List<Integer> getPublicCasesIds(List<String> caseStatusesToShow, List<String> caseStatusesToHide, List<String> caseCodes, Integer caseId,
+			List<Long> procInstIds) {
 		List<Param> params = new ArrayList<Param>();
 
 		boolean useCaseCodes = !ListUtil.isEmpty(caseCodes);
@@ -784,8 +835,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("caseCodes", caseCodes));
 
 		StringBuilder builder = new StringBuilder(1000);
-		builder.append("select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case, comm_case where ");
+		builder.append("select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case, comm_case")
+				.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
+		builder.append(" where ");
+
 		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
+		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+
 		builder.append(" proc_case.PROC_CASE_ID = comm_case.COMM_CASE_ID and comm_case.IS_ANONYMOUS = 'Y' ");
 
 		if (useCaseCodes)
@@ -835,7 +891,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		List<Serializable[]> data = null;
-		String query = "select b.process_instance_id from BPM_CASES_PROCESSINSTANCES b, proc_case c where c.CASE_SUBJECT = '" + subject +
+		String query = "select b.process_instance_id from " + CaseProcInstBind.TABLE_NAME + " b, proc_case c where c.CASE_SUBJECT = '" + subject +
 				"' and b.case_id = c.PROC_CASE_ID";
 		try {
 			data = SimpleQuerier.executeQuery(query, 1);
@@ -867,9 +923,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			if (handlersIter.hasNext())
 				ids.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 		}
-		String query = "select distinct c.COMM_CASE_ID from comm_case c inner join BPM_CASES_PROCESSINSTANCES b on b.case_id = c.COMM_CASE_ID inner join jbpm_processinstance p"
-			.concat(" on p.id_ = b.process_instance_id inner join jbpm_processdefinition d on d.id_ = p.processdefinition_ where d.name_ = '").concat(procDefName)
-			.concat("' and c.handler in (").concat(ids.toString()).concat(")");
+		String query = "select distinct c.COMM_CASE_ID from comm_case c inner join " + CaseProcInstBind.TABLE_NAME +
+			" b on b.case_id = c.COMM_CASE_ID inner join jbpm_processinstance p"
+			.concat(" on p.id_ = b.process_instance_id inner join jbpm_processdefinition d on d.id_ = p.processdefinition_ where d.name_ = '")
+			.concat(procDefName).concat("' and c.handler in (").concat(ids.toString()).concat(")");
 		List<Serializable[]> cases = null;
 		try {
 			cases = SimpleQuerier.executeQuery(query, 1);

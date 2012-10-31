@@ -438,7 +438,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 			casesIds = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(),
 					criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases(),
-					criteriaBean.isShowAllCases());
+					criteriaBean.isShowAllCases(), criteriaBean.getProcInstIds());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criteriaBean, e);
 		}
