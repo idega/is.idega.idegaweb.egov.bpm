@@ -316,8 +316,17 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			caseIds = caseId == null ?
 					getCachedIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, roles, groups, casecodes, showAllCases) :
 					null;
-			if (!ListUtil.isEmpty(caseIds))
-				return caseIds;
+			if (!ListUtil.isEmpty(caseIds)) {
+				if (caseIds.size() > 5)
+					return caseIds;
+				else {
+					CasesCacheCriteria key = getCacheKey(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, roles, groups,
+							casecodes, showAllCases);
+					getLogger().warning("Resolved only few cases IDs (" + caseIds + ") from cache by key '" + key +
+							"', it is probably invalid cache entry, will delete it and will query DB");
+					getCache().remove(key);
+				}
+			}
 
 			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
 				caseIds = isSuperAdmin ?
@@ -832,6 +841,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return null;
 	}
 
+	private boolean isCacheUpdateTurnedOn() {
+		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
+	}
+
 	private void doManageCasesCache(Case theCase, boolean ommitClearing) {
 		Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 		if (MapUtil.isEmpty(cache)) {
@@ -839,7 +852,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			return;
 		}
 
-		boolean updateCache = getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
+		boolean updateCache = isCacheUpdateTurnedOn();
 		if (!updateCache) {
 			getLogger().info("Cache handling is turned off, clearing all cache");
 			cache.clear();
@@ -919,12 +932,16 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!(source instanceof Case))
 				return;
 
-			getLogger().info("$$$$$$$$$$$$$$$$ Case " + source + " was modified, proceeding to cases cache manager");
+			if (!isCacheUpdateTurnedOn())
+				getCache().clear();
+
 			Case theCase = (Case) source;
 			doManageCasesCache(theCase, StringUtil.isEmpty(theCase.getSubject()));
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
+			if (!isCacheUpdateTurnedOn())
+				getCache().clear();
+
 			ProcessInstanceCreatedEvent procCreatedEvent = (ProcessInstanceCreatedEvent) event;
-			getLogger().info("$$$$$$$$$$$$$$$$ " + procCreatedEvent);
 
 			Long piId = procCreatedEvent.getProcessInstanceId();
 			if (piId == null)
@@ -950,6 +967,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			doManageCasesCache(theCase, true);
 		} else if (event instanceof CaseDeletedEvent) {
+			if (!isCacheUpdateTurnedOn())
+				getCache().clear();
+
 			Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 			if (cache == null)
 				return;
