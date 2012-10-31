@@ -234,8 +234,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes, List<String> caseStatusesToHide,
-			List<String> caseStatusesToShow, int startIndex, int count, boolean onlySubscribedCases, boolean showAllCases) {
+	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes,
+			List<String> caseStatusesToHide, List<String> caseStatusesToShow, int startIndex, int count, boolean onlySubscribedCases,
+			boolean showAllCases) {
 
 		try {
 			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases, null);
@@ -286,7 +287,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	protected List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
+	protected List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String>
+	caseStatusesToShow,
 			boolean onlySubscribedCases, boolean showAllCases, Integer caseId, List<Long> procInstIds) throws Exception {
 
 		List<Integer> caseIds = null;
