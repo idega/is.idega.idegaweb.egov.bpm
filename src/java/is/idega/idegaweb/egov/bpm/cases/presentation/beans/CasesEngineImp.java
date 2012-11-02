@@ -13,7 +13,6 @@ import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.presentation.OpenCases;
@@ -53,7 +52,9 @@ import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.block.process.event.CaseModifiedEvent;
+import com.idega.block.process.presentation.CaseBlock;
 import com.idega.block.process.presentation.UICasesList;
+import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
@@ -859,8 +860,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				BuilderService service = getBuilderLogic().getBuilderService(iwac);
 
 				@SuppressWarnings("unchecked")
-				List<Class<? extends CasesProcessor>> classes = Arrays.asList(OpenCases.class, ClosedCases.class, MyCases.class, PublicCases.class);
-				for (Class<? extends CasesProcessor> theClass: classes) {
+				List<Class<? extends CaseBlock>> classes = Arrays.asList(
+						OpenCases.class,
+						ClosedCases.class,
+						MyCases.class,
+						PublicCases.class,
+						UserCases.class
+				);
+				for (Class<? extends CaseBlock> theClass: classes) {
 					Collection<ICObjectInstance> instances = null;
 					try {
 						ICObjectInstanceHome instanceHome = (ICObjectInstanceHome) IDOLookup.getHome(ICObjectInstance.class);
@@ -876,7 +883,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 							continue;
 
 						ICPage page = builder.findPageForModule(iwac, instanceId);
-						if (page == null)
+						if (page == null || page.getDeleted())
 							continue;
 						String pageKey = page.getId();
 
