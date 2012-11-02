@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.manager;
 import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
 import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
@@ -41,6 +42,7 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CasesCacheCriteria;
@@ -288,8 +290,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 	@Override
 	protected List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String>
-	caseStatusesToShow,
-			boolean onlySubscribedCases, boolean showAllCases, Integer caseId, List<Long> procInstIds) throws Exception {
+		caseStatusesToShow, boolean onlySubscribedCases, boolean showAllCases, Integer caseId, List<Long> procInstIds) throws Exception {
 
 		List<Integer> caseIds = null;
 
@@ -334,6 +335,21 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 					getLogger().warning("Resolved only few cases IDs (" + caseIds + ") from cache by key '" + key +
 							"', it is probably invalid cache entry, will delete it and will query DB");
 					getCache().remove(key);
+				}
+			}
+
+			if (onlySubscribedCases && user != null) {
+				try {
+					Map<?, ?> beans = WebApplicationContextUtils.getWebApplicationContext(getApplication().getServletContext())
+							.getBeansOfType(CasesSubcriberManager.class);
+					if (!MapUtil.isEmpty(beans)) {
+						for (Object bean: beans.values()) {
+							if (bean instanceof CasesSubcriberManager)
+								((CasesSubcriberManager) bean).doEnsureUserIsSubscribed(user);
+						}
+					}
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error while ensuring user " + user + " is subscribed to cases", e);
 				}
 			}
 
