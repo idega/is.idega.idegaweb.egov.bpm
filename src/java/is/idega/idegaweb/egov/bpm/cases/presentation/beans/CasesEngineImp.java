@@ -878,10 +878,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 						continue;
 
 					for (ICObjectInstance instance: instances) {
-						String instanceId = ICObjectBusiness.UUID_PREFIX.concat(instance.getUniqueId());
-						if (StringUtil.isEmpty(instanceId))
+						if (instance == null)
+							continue;
+						String uniqueId = instance.getUniqueId();
+						if (StringUtil.isEmpty(uniqueId))
 							continue;
 
+						String instanceId = ICObjectBusiness.UUID_PREFIX.concat(uniqueId);
 						ICPage page = builder.findPageForModule(iwac, instanceId);
 						if (page == null || page.getDeleted())
 							continue;

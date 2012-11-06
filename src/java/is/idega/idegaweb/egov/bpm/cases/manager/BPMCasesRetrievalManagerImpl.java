@@ -880,14 +880,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 	private void doManageCasesCache(Case theCase, boolean ommitClearing) {
 		Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
-		if (MapUtil.isEmpty(cache)) {
-			getLogger().info("Cache is empty, nothing to handle");
+		if (MapUtil.isEmpty(cache))
 			return;
-		}
 
 		boolean updateCache = isCacheUpdateTurnedOn();
 		if (!updateCache) {
-			getLogger().info("Cache handling is turned off, clearing all cache");
 			cache.clear();
 			return;
 		}
