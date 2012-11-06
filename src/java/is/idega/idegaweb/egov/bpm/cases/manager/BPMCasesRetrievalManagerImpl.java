@@ -897,6 +897,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		String theCaseId = theCase.getId();
 		Integer caseId = Integer.valueOf(theCaseId);
 		for (CasesCacheCriteria criteria: cache.keySet()) {
+			if (criteria == null)
+				continue;
+
 			Map<Integer, Boolean> cachedIds = cache.get(criteria);
 
 			if (ommitClearing && (!MapUtil.isEmpty(cachedIds) && cachedIds.containsKey(caseId)))
