@@ -406,6 +406,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 		CasesBusiness casesBusiness = getServiceInstance(CasesBusiness.class);
 		UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
+		AccessController accessController = IWMainApplication.getDefaultIWMainApplication().getAccessController();
 
 		if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
 			String[] caseStatuses = casesBusiness.getStatusesForOpenCases();
@@ -417,7 +418,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			}
 
 			if (!isSuperAdmin) {
-				roles = IWMainApplication.getDefaultIWMainApplication().getAccessController().getAllRolesForUser(user);
+				roles = accessController.getAllRolesForUser(user);
 				@SuppressWarnings("unchecked")
 				Collection<GroupBMPBean> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 				if (!ListUtil.isEmpty(groupBeans)) {
@@ -436,7 +437,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			}
 
 			if (!isSuperAdmin) {
-				roles = IWMainApplication.getDefaultIWMainApplication().getAccessController().getAllRolesForUser(user);
+				if (user != null)
+					roles = accessController.getAllRolesForUser(user);
 				@SuppressWarnings("unchecked")
 				Collection<GroupBMPBean> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 				if (!ListUtil.isEmpty(groupBeans)) {
@@ -457,7 +459,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 			statusesToShow = showAllCases ? statusesToShow : ListUtil.getFilteredList(statusesToShow);
 			CaseCode[] casecodes = getCaseBusiness().getCaseCodesForUserCasesList();
-			roles = IWMainApplication.getDefaultIWMainApplication().getAccessController().getAllRolesForUser(user);
+			if (user != null)
+				roles = accessController.getAllRolesForUser(user);
 
 			codes = new ArrayList<String>(casecodes.length);
 			for (CaseCode code : casecodes) {
@@ -492,10 +495,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		} catch (Exception e) {
 			throw new IBORuntimeException(e);
 		}
-	}
-
-	public UserBusiness getUserBusiness(IWContext iwc) {
-		return getServiceInstance(iwc, UserBusiness.class);
 	}
 
 	public CasesBPMDAO getCasesBPMDAO() {
@@ -933,7 +932,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 					String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
 							theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
 					String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " + criteria.getKey() +
-							" and user" + user;
+							" and user " + user;
 					LOGGER.log(Level.WARNING, message, e);
 					CoreUtil.sendExceptionNotification(message, e);
 					cache.clear();
@@ -966,7 +965,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				getCache().clear();
 
 			Case theCase = (Case) source;
-			doManageCasesCache(theCase, StringUtil.isEmpty(theCase.getSubject()));
+			doManageCasesCache(theCase, theCase == null || StringUtil.isEmpty(theCase.getSubject()));
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
 			if (!isCacheUpdateTurnedOn())
 				getCache().clear();
