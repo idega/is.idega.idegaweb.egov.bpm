@@ -527,22 +527,25 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	private String getConditionForCaseStatuses(List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
 		return getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, false);
 	}
-	private String getConditionForCaseStatuses(List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide, boolean notIn) {
+	private String getConditionForCaseStatuses(String columnName, List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide, boolean notIn) {
 		//	Using statuses to show by default
 		if (ListUtil.isEmpty(caseStatusesToShow)) {
 			if (!ListUtil.isEmpty(caseStatusesToHide)) {
 				Param param = new Param("statusesToHide", caseStatusesToHide);
 				if (params != null && !params.contains(param))
 					params.add(param);
-				return " and proc_case.case_status not in (:statusesToHide) ";
+				return " and " + columnName + ".case_status not in (:statusesToHide) ";
 			}
 		} else {
 			Param param = new Param("statusesToShow", caseStatusesToShow);
 			if (params != null && !params.contains(param))
 				params.add(param);
-			return " and proc_case.case_status " + (notIn ? "not" : CoreConstants.EMPTY) + " in (:statusesToShow) ";
+			return " and " + columnName + ".case_status " + (notIn ? "not" : CoreConstants.EMPTY) + " in (:statusesToShow) ";
 		}
 		return CoreConstants.EMPTY;
+	}
+	private String getConditionForCaseStatuses(List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide, boolean notIn) {
+		return getConditionForCaseStatuses("proc_case", params, caseStatusesToShow, caseStatusesToHide, notIn);
 	}
 
 	@Override
@@ -831,23 +834,43 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		List<Param> params = new ArrayList<Param>();
 
 		boolean useCaseCodes = !ListUtil.isEmpty(caseCodes);
-		if (useCaseCodes)
-			params.add(new Param("caseCodes", caseCodes));
+		boolean useProcDef = false;
+		if (useCaseCodes) {
+			try {
+				CaseBusiness caseBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
+						CaseBusiness.class);
+				List<String> allStatuses = caseBusiness.getAllCasesStatuses();
+				useProcDef = !allStatuses.contains(caseCodes.iterator().next());
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "", e);
+			}
+		}
 
 		StringBuilder builder = new StringBuilder(1000);
-		builder.append("select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case, comm_case")
-				.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
+		builder.append("select distinct pc.proc_case_id as caseId, pc.created as Created from proc_case pc, ");
+		if (useProcDef)
+			builder.append(" jbpm_processdefinition pd, jbpm_processinstance pi, ");
+		builder.append("comm_case inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
 		builder.append(" where ");
 
-		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
+		builder.append(getConditionForCaseId(params, caseId, "pc.proc_case_id"));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		if (useProcDef)
+			builder.append(" pd.id_ = pi.PROCESSDEFINITION_ and pi.id_ = cp.").append(CaseProcInstBind.procInstIdColumnName).append(" and ");
 
-		builder.append(" proc_case.PROC_CASE_ID = comm_case.COMM_CASE_ID and comm_case.IS_ANONYMOUS = 'Y' ");
+		builder.append(" pc.PROC_CASE_ID = comm_case.COMM_CASE_ID and comm_case.is_anonymous = 'Y' ");
 
-		if (useCaseCodes)
-			builder.append(" and proc_case.case_code in (:caseCodes) ");
+		if (useCaseCodes) {
+			if (useProcDef) {
+				builder.append(" and pd.name_ in (:caseCodes) ");
+			} else {
+				builder.append(" and pc.case_code in (:caseCodes) ");
+			}
 
-		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
+			params.add(new Param("caseCodes", caseCodes));
+		}
+
+		builder.append(getConditionForCaseStatuses("pc", params, caseStatusesToShow, caseStatusesToHide, false));
 		builder.append(" order by Created desc");
 
 		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params == null ?
@@ -1107,5 +1130,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		return true;
+	}
+
+	@Override
+	public List<Long> getProcessInstancesByCasesIds(List<Integer> casesIds) {
+		if (ListUtil.isEmpty(casesIds))
+			return Collections.emptyList();
+
+		List<Long> ids = getResultList(
+				CaseProcInstBind.getProcInstIds_BY_CASES_IDS_QUERY_NAME,
+				Long.class,
+				new Param(CaseProcInstBind.casesIdsParam, casesIds)
+		);
+
+		return ids;
 	}
 }
