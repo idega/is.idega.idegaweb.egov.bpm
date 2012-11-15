@@ -78,7 +78,8 @@ import com.idega.jbpm.data.BPMVariableData;
 				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
 				"inner join "+ ProcessUserBind.TABLE_NAME+" pu " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu.process_instance_id " +
-				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :"+ProcessUserBind.statusProp
+				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :" +
+				ProcessUserBind.statusProp
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessUserStatus, resultSetMapping="caseId",
 					query=

@@ -6,10 +6,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -44,6 +46,7 @@ import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.datastructures.map.MapUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -907,6 +910,53 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
+			List<String> procDefNames) {
+		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames))
+			return Collections.emptyMap();
+
+		StringBuilder statusesProp = new StringBuilder();
+		for (Iterator<String> statusesIter = caseStatuses.iterator(); statusesIter.hasNext();) {
+			statusesProp.append("'").append(statusesIter.next()).append("'");
+			if (statusesIter.hasNext())
+				statusesProp.append(", ");
+		}
+		StringBuilder procDefNamesProp = new StringBuilder();
+		for (Iterator<String> procDefNamesIter = procDefNames.iterator(); procDefNamesIter.hasNext();) {
+			procDefNamesProp.append("'").append(procDefNamesIter.next()).append("'");
+			if (procDefNamesIter.hasNext())
+				procDefNamesProp.append(", ");
+		}
+
+		String query =	"select bind." + CaseProcInstBind.procInstIdColumnName + ", bind." + CaseProcInstBind.caseIdColumnName + " from " +
+						CaseProcInstBind.TABLE_NAME + " bind, proc_case pc, JBPM_PROCESSINSTANCE pi, JBPM_PROCESSDEFINITION pd where " +
+						" pd.name_ in (" + procDefNamesProp.toString() + ") and pc.CASE_STATUS in (" + statusesProp.toString() + ") and bind." +
+						CaseProcInstBind.procInstIdColumnName + " = pi.id_ and bind." + CaseProcInstBind.caseIdColumnName +
+						" = pc.proc_case_id and pd.id_ = pi.processdefinition_";
+
+		List<Serializable[]> data = null;
+		try {
+			data = SimpleQuerier.executeQuery(query, 2);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (ListUtil.isEmpty(data))
+			return Collections.emptyMap();
+
+		Map<Long, Integer> results = new HashMap<Long, Integer>();
+		for (Serializable[] ids: data) {
+			if (ArrayUtil.isEmpty(ids) || ids.length != 2)
+				continue;
+
+			Serializable piId = ids[0];
+			Serializable caseId = ids[1];
+			if (piId instanceof Number && caseId instanceof Number)
+				results.put(((Number) piId).longValue(), ((Number) caseId).intValue());
+		}
+		return results;
+	}
+
+	@Override
 	public Long getProcessInstanceIdByCaseSubject(String subject) {
 		if (StringUtil.isEmpty(subject)) {
 			LOGGER.warning("Case subject is not provided!");
@@ -1024,31 +1074,41 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Long> getProcessInstanceIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName) {
-		String query = "select distinct pi.id_ from jbpm_processinstance pi, jbpm_processdefinition pd, proc_case c, " + CaseProcInstBind.TABLE_NAME +
-				" b where c." + CaseBMPBean.COLUMN_USER + " = " + user.getId() + " and c." + CaseBMPBean.TABLE_NAME + "_ID = b." +
-				CaseProcInstBind.caseIdColumnName + " and b." + CaseProcInstBind.procInstIdColumnName + " = pi.id_ and pd.name_ = '" +
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName) {
+		String query = "select distinct pi.id_, c.proc_case_id from jbpm_processinstance pi, jbpm_processdefinition pd, proc_case c, " +
+				CaseProcInstBind.TABLE_NAME + " b where c." + CaseBMPBean.COLUMN_USER + " = " + user.getId() + " and c." + CaseBMPBean.TABLE_NAME +
+				"_ID = b." + CaseProcInstBind.caseIdColumnName + " and b." + CaseProcInstBind.procInstIdColumnName + " = pi.id_ and pd.name_ = '" +
 				processDefinitionName + "' and pi.PROCESSDEFINITION_ = pd.id_";
 		List<Serializable[]> data = null;
 		try {
-			data = SimpleQuerier.executeQuery(query, 1);
+			data = SimpleQuerier.executeQuery(query, 2);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error executing query:\n" + query, e);
 		}
 		if (ListUtil.isEmpty(data))
 			return null;
 
-		List<Long> ids = new ArrayList<Long>();
-		for (Serializable[] id: data) {
-			if (ArrayUtil.isEmpty(id))
+		Map<Long, Integer> results = new HashMap<Long, Integer>();
+		for (Serializable[] ids: data) {
+			if (ArrayUtil.isEmpty(ids) || ids.length != 2)
 				continue;
 
-			Serializable piId = id[0];
-			if (piId instanceof Number)
-				ids.add(((Number) piId).longValue());
+			Serializable piId = ids[0];
+			Serializable caseId = ids[1];
+			if (piId instanceof Number && caseId instanceof Number)
+				results.put(((Number) piId).longValue(), ((Number) caseId).intValue());
 		}
 
-		return ids;
+		return results;
+	}
+
+	@Override
+	public List<Long> getProcessInstanceIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName) {
+		Map<Long, Integer> results = getProcessInstancesAndCasesIdsByUserAndProcessDefinition(user, processDefinitionName);
+		if (MapUtil.isEmpty(results))
+			return Collections.emptyList();
+
+		return new ArrayList<Long>(results.keySet());
 	}
 
 	private Collection<Case> getCasesByProcessDefinition(String processDefinition) {
@@ -1144,5 +1204,17 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		);
 
 		return ids;
+	}
+
+	@Override
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds) {
+		List<CaseProcInstBind> binds = getCasesProcInstBindsByCasesIds(casesIds);
+		if (ListUtil.isEmpty(binds))
+			return Collections.emptyMap();
+
+		Map<Long, Integer> results = new HashMap<Long, Integer>();
+		for (CaseProcInstBind bind: binds)
+			results.put(bind.getProcInstId(), bind.getCaseId());
+		return results;
 	}
 }

@@ -3,6 +3,7 @@ package com.idega.idegaweb.egov.bpm.data.dao;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.jbpm.graph.exe.Token;
 
@@ -42,7 +43,8 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public abstract CaseProcInstBind getLastCreatedCaseProcInstBind();
 
-	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs);
+	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates,
+			Collection<Integer> identifierIDs);
 
 	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
 
@@ -97,8 +99,11 @@ public interface CasesBPMDAO extends GenericDao {
 			List<Long> procInstIds);
 
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
+			List<String> procDefNames);
 
 	public List<Long> getProcessInstancesByCasesIds(List<Integer> casesIds);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds);
 
 	public Long getProcessInstanceIdByCaseSubject(String subject);
 
@@ -109,6 +114,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Long> getProcessInstanceIdsForSubscribedCases(Integer userId, List<Long> procInstIds);
 
 	public List<Long> getProcessInstanceIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
 
 	public boolean doSubscribeToCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
 	public boolean doSubscribeToCasesByProcessInstanceIds(com.idega.user.data.User user, List<Long> procInstIds);
