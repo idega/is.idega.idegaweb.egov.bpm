@@ -105,13 +105,15 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 				realValue = getVariableRealValue(variable, locale);
 			}
 			if (!useRealValue || !StringUtil.isEmpty(realValue)) {
-				availableVariables.add(new AdvancedProperty(useRealValue ? realValue : new StringBuilder(name).append(at).append(type).toString(),localizedName));
+				AdvancedProperty var = new AdvancedProperty(useRealValue ? realValue : new StringBuilder(name).append(at).append(type).toString(),
+						localizedName);
+				var.setExternalId(variable.getProcessInstanceId());
+				availableVariables.add(var);
 				addedVariables.add(name);
 			}
 		}
-		if (ListUtil.isEmpty(availableVariables)) {
+		if (ListUtil.isEmpty(availableVariables))
 			return null;
-		}
 
 		Collections.sort(availableVariables, new AdvancedPropertyComparator(locale));
 		return availableVariables;

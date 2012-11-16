@@ -343,9 +343,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet, HSSFCellStyle bigStyle,
 			Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
-		if (ListUtil.isEmpty(variablesByProcessDefinition)) {
+		if (ListUtil.isEmpty(variablesByProcessDefinition))
 			return;
-		}
 
 		AdvancedProperty variable = null;
 		List<AdvancedProperty> variablesByProcessInstance = getVariablesForCase(theCase, locale, isAdmin);
@@ -373,7 +372,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return variable.getId();
 
 		try {
-			return resolver.isValueUsedForExport() ? resolver.getPresentation(variable.getId()) : resolver.getKeyPresentation(variable.getId());
+			return resolver.isValueUsedForExport() ?
+					resolver.getPresentation(variable.getId(), variable.getExternalId()) :
+					resolver.getKeyPresentation(variable.getId());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error resolving value for variable" + variable + " and using resolver " + resolver, e);
 		}
