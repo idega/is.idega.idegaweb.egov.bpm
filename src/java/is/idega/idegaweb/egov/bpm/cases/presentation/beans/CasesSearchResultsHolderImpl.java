@@ -223,7 +223,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private List<AdvancedProperty> getAvailableVariablesByProcessDefinition(Locale locale, String processDefinition, boolean isAdmin) {
 		Collection<VariableInstanceInfo> variablesByProcessDefinition = null;
 		try {
-			variablesByProcessDefinition = getNumber(processDefinition) == null ? getVariablesQuerier().getVariablesByProcessDefinition(processDefinition) : null;
+			variablesByProcessDefinition = getNumber(processDefinition) == null ? getVariablesQuerier()
+					.getVariablesByProcessDefinition(processDefinition) : null;
 		} catch(Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting variables for process: " + processDefinition, e);
 		}
@@ -244,10 +245,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Transactional(readOnly=true)
-	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
-		if (ListUtil.isEmpty(variables)) {
+	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin,
+			boolean useRealValue) {
+		if (ListUtil.isEmpty(variables))
 			return null;
-		}
 
 		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 		return variablesProvider.getAvailableVariables(variables, locale, isAdmin, useRealValue);
@@ -341,8 +342,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return vars;
 	}
 
-	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet, HSSFCellStyle bigStyle,
-			Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
+	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet,
+			HSSFCellStyle bigStyle, Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
 		if (ListUtil.isEmpty(variablesByProcessDefinition))
 			return;
 
