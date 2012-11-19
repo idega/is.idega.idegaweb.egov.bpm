@@ -55,6 +55,7 @@ import com.idega.block.process.event.CaseDeletedEvent;
 import com.idega.block.process.event.CaseModifiedEvent;
 import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.process.presentation.beans.CasePresentation;
+import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -267,7 +268,13 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			} else
 				cases = new ArrayList<Case>();
 
-			return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), totalCount);
+			List<CasePresentation> casesPresentation = convertToPresentationBeans(cases, locale);
+
+			if (!ListUtil.isEmpty(casesPresentation) &&
+					IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE))
+				Collections.sort(casesPresentation, new CasePresentationComparator());
+
+			return new PagedDataCollection<CasePresentation>(casesPresentation, totalCount);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occurred while getting cases for user: " + user + " by type: " + type + ", by locale: " + locale +
 					", by case codes: " + caseCodes + ", by case statuses to hide: " + caseStatusesToHide + ", by case statuses to show: " +
