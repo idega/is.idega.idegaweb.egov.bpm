@@ -490,7 +490,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		boolean usePaging = isPagingTurnedOn();
 		boolean noSortingOptions = ListUtil.isEmpty(criteriaBean.getSortingOptions());
-		if (usePaging && noSortingOptions) {
+		if (usePaging) {
 			Comparator<Integer> c = new Comparator<Integer>() {
 				@Override
 				public int compare(Integer o1, Integer o2) {
