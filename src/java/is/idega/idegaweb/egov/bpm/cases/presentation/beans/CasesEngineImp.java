@@ -488,11 +488,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (ListUtil.isEmpty(casesIds))
 			return null;
 
-		int totalCount = 0;
-		int count = 0;
-		int startIndex = 0;
 		boolean usePaging = isPagingTurnedOn();
-		if (usePaging) {
+		boolean noSortingOptions = ListUtil.isEmpty(criteriaBean.getSortingOptions());
+		if (usePaging && noSortingOptions) {
 			Comparator<Integer> c = new Comparator<Integer>() {
 				@Override
 				public int compare(Integer o1, Integer o2) {
@@ -500,27 +498,26 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				}
 			};
 			Collections.sort(casesIds, c);
-
-			totalCount = casesIds.size();
-			criteriaBean.setFoundResults(totalCount);
-			if (criteriaBean.getPageSize() <= 0)
-				criteriaBean.setPageSize(20);
-			if (criteriaBean.getPage() <= 0)
-				criteriaBean.setPage(1);
-			criteriaBean.setAllDataLoaded(!(totalCount > criteriaBean.getPageSize()));
-			count = criteriaBean.getPageSize();
-			startIndex = (criteriaBean.getPage() - 1) * count;
-		} else {
-			criteriaBean.setPageSize(-1);
 		}
 
-		boolean noSortingOptions = ListUtil.isEmpty(criteriaBean.getSortingOptions());
+		int totalCount = casesIds.size();
+		criteriaBean.setFoundResults(totalCount);
+		if (criteriaBean.getPageSize() <= 0)
+			criteriaBean.setPageSize(20);
+		if (criteriaBean.getPage() <= 0)
+			criteriaBean.setPage(1);
+		criteriaBean.setAllDataLoaded(!(totalCount > criteriaBean.getPageSize()));
+		int count = criteriaBean.getPageSize();
+		int startIndex = (criteriaBean.getPage() - 1) * count;
+
 		Locale locale = iwc.getCurrentLocale();
 		if (!ListUtil.isEmpty(casesIds)) {
 			if (usePaging && noSortingOptions) {
 				//	No need to load all the cases, just for one page
 				casesIds = getSubList(casesIds, startIndex, count, totalCount);
 			}
+
+			//	Loading cases by IDs
 			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(casesIds, locale);
 		}
 
@@ -528,12 +525,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 
 		List<CasePresentation> casesToSort = new ArrayList<CasePresentation>(cases.getCollection());
-		if (usePaging && !noSortingOptions) {
-			//	Loaded all the cases (heavy task), will sort by user's preferences
-			casesToSort = getSubList(casesToSort, startIndex, count, totalCount);
-		}
-
 		Collections.sort(casesToSort, getCasePresentationComparator(criteriaBean, locale));
+		if (usePaging && !noSortingOptions)
+			casesToSort = getSubList(casesToSort, startIndex, count, totalCount);
 
 		cases = new PagedDataCollection<CasePresentation>(casesToSort);
 		LOGGER.info("Sorting and paging was executed in " + (System.currentTimeMillis() - start) + " ms");

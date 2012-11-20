@@ -35,23 +35,23 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 
 	private Locale locale;
 	private CasesListSearchCriteriaBean searchCriterias;
-	
+
 	private Map<String, List<VariableInstanceInfo>> variables;
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
-	
+
 	private Collator collator;
-	
+
 	public BPMCasePresentationComparator(Locale locale, CasesListSearchCriteriaBean searchCriterias) {
 		variables = new HashMap<String, List<VariableInstanceInfo>>();
-		
+
 		this.locale = locale;
 		this.searchCriterias = searchCriterias;
-		
+
 		collator = Collator.getInstance(this.locale);
 	}
 
@@ -60,21 +60,27 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 		StringBuilder compareValue1 = new StringBuilder();
 		StringBuilder compareValue2 = new StringBuilder();
 
+		boolean datesUsed = false;
+		String getCreatedSortingOption = "getCreated";
 		for (AdvancedProperty sortingOption: searchCriterias.getSortingOptions()) {
-			compareValue1.append(getSortableFieldValue(case1, sortingOption.getId()));
-			compareValue2.append(getSortableFieldValue(case2, sortingOption.getId()));
+			String sortingOptionValue = sortingOption.getId();
+			datesUsed = getCreatedSortingOption.equals(sortingOptionValue);
+
+			compareValue1.append(getSortableFieldValue(case1, sortingOptionValue));
+			compareValue2.append(getSortableFieldValue(case2, sortingOptionValue));
 		}
-		
-		return (StringUtil.isEmpty(compareValue1.toString()) && StringUtil.isEmpty(compareValue2.toString())) ? 0 :
+
+		int result = (StringUtil.isEmpty(compareValue1.toString()) && StringUtil.isEmpty(compareValue2.toString())) ? 0 :
 			collator.compare(compareValue1.toString(), compareValue2.toString());
+		return datesUsed ? -1 * result : result;
 	}
-	
+
 	private String getSortableFieldValue(CasePresentation theCase, String sortableIdentifier) {
 		if (theCase == null || StringUtil.isEmpty(sortableIdentifier)) {
 			Logger.getLogger(getClass().getName()).warning("Some parameters are not provided: case presentation: " + theCase + ", method: " + sortableIdentifier);
 			return CoreConstants.EMPTY;
 		}
-		
+
 		if (isDefaultField(sortableIdentifier)) {
 			try {
 				return MethodInvoker.getInstance().invokeMethodWithNoParameters(theCase, sortableIdentifier).toString();
@@ -85,15 +91,15 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 		else {
 			return getVariableValue(theCase, sortableIdentifier);
 		}
-		
+
 		return CoreConstants.EMPTY;
 	}
-	
+
 	private boolean isDefaultField(String methodName) {
 		if (StringUtil.isEmpty(methodName)) {
 			return false;
 		}
-		
+
 		for (Method method: CasePresentation.class.getMethods()) {
 			if (methodName.equals(method.getName())) {
 				return true;
@@ -101,14 +107,14 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 		}
 		return false;
 	}
-	
+
 	private List<VariableInstanceInfo> getCaseVariables(String caseId) {
 		List<VariableInstanceInfo> variables = this.variables.get(caseId);
 		if (variables == null) {
 			CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByCaseId(Integer.valueOf(caseId));
 			Long piId = cpi == null ? null : cpi.getProcInstId();
 			Collection<VariableInstanceInfo> tmpVariables = piId == null ? null : getVariablesQuerier().getFullVariablesByProcessInstanceId(piId);
-			
+
 			if (tmpVariables == null) {
 				variables = new ArrayList<VariableInstanceInfo>(0);
 			} else {
@@ -118,7 +124,7 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 		}
 		return variables;
 	}
-	
+
 	@Transactional(readOnly=true)
 	private String getVariableValue(CasePresentation theCase, String variableName) {
 		try {
@@ -126,11 +132,11 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 			if (ListUtil.isEmpty(variables)) {
 				return CoreConstants.EMPTY;
 			}
-			
+
 			String value = null;
 			for (Iterator<VariableInstanceInfo> variablesIter = variables.iterator(); (variablesIter.hasNext() && StringUtil.isEmpty(value));) {
 				VariableInstanceInfo variable = variablesIter.next();
-				
+
 				String name = variable.getName();
 				if (variableName.equals(name)) {
 					Serializable tmpValue = variable.getValue();
@@ -139,7 +145,7 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 					}
 				}
 			}
-			
+
 			return StringUtil.isEmpty(value) ? CoreConstants.EMPTY : value.toString();
 		} catch(Exception e) {
 			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error getting variable's value: " + variableName, e);
@@ -168,5 +174,5 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 	public void setVariablesQuerier(VariableInstanceQuerier variablesQuerier) {
 		this.variablesQuerier = variablesQuerier;
 	}
-	
+
 }
