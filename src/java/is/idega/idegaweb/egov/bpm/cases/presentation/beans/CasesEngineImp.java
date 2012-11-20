@@ -490,7 +490,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		boolean usePaging = isPagingTurnedOn();
 		boolean noSortingOptions = ListUtil.isEmpty(criteriaBean.getSortingOptions());
-		if (usePaging) {
+		if (usePaging && !criteriaBean.isNoOrdering()) {
 			Comparator<Integer> c = new Comparator<Integer>() {
 				@Override
 				public int compare(Integer o1, Integer o2) {
@@ -524,12 +524,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
 			return null;
 
-		List<CasePresentation> casesToSort = new ArrayList<CasePresentation>(cases.getCollection());
-		Collections.sort(casesToSort, getCasePresentationComparator(criteriaBean, locale));
+		List<CasePresentation> result = new ArrayList<CasePresentation>(cases.getCollection());
+		if (!criteriaBean.isNoOrdering())
+			Collections.sort(result, getCasePresentationComparator(criteriaBean, locale));
 		if (usePaging && !noSortingOptions)
-			casesToSort = getSubList(casesToSort, startIndex, count, totalCount);
+			result = getSubList(result, startIndex, count, totalCount);
 
-		cases = new PagedDataCollection<CasePresentation>(casesToSort);
+		cases = new PagedDataCollection<CasePresentation>(result);
 		LOGGER.info("Sorting and paging was executed in " + (System.currentTimeMillis() - start) + " ms");
 		return cases;
 	}
