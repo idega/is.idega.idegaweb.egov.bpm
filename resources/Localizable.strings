@@ -90,3 +90,4 @@ loading=Loading...
 bpm_variable.string_ticketMeterNumber=Meter number
 bpm_variable.parkingReportFilterDateRangeFrom=From
 bpm_variable.parkingReportFilterDateRangeTo=To
+bpm_variable.string_ticketViolationsLabels=Violation numbers

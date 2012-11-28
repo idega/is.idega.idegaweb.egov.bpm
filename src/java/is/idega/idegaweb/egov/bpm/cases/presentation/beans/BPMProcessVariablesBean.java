@@ -15,21 +15,22 @@ public interface BPMProcessVariablesBean extends Serializable {
 	public static final String SPRING_BEAN_IDENTIFIER = "bpmProcessVariablesBean";
 
 	public abstract List<SelectItem> getProcessVariables();
-	
+
 	public abstract Long getProcessDefinitionId();
 
 	public abstract void setProcessDefinitionId(Long processDefinitionId);
-	
+
 	public boolean isDisplayVariables();
-	
+
 	public boolean isDisplayNoVariablesText();
-	
+
 	public String getDeleteImagePath();
-	
+
 	public String getLoadingMessage();
-	
+
 	public String getAddVariableImage();
-	
+
 	public List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin, boolean useRealValue);
-	
+
+	public String getVariableLocalizedName(String name, Locale locale);
 }

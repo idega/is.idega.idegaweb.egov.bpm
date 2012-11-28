@@ -102,6 +102,7 @@ bpm_variable.string_ticketStreetDescription=L\u00FDsing
 bpm_variable.parkingReportFilterDateRangeFrom=Fr\u00E1
 bpm_variable.parkingReportFilterDateRangeTo=Til
 bpm_variable.string_invoiceNumber=Reikningsn\u00FAmer
+bpm_variable.string_ticketViolationsLabels=Brotan\u00FAmer
 
 bpm_variable.list_violationTypes=Tegund brots
 bpm_variable.string_harbourNr=H\u00F6fn
