@@ -511,7 +511,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				ids.append(", ");
 		}
 		String query = "select b." + CaseProcInstBind.caseIdColumnName + ", c." + CaseBMPBean.COLUMN_CREATED + " from " +
-				CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.TABLE_NAME + " c where b." + CaseProcInstBind.caseIdColumnName +
+				CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.TABLE_NAME + " c where b." + CaseProcInstBind.procInstIdColumnName +
 				" in (" + ids.toString() +") and b." + CaseProcInstBind.caseIdColumnName + " = c.proc_case_id";
 		List<Serializable[]> data = null;
 		try {
