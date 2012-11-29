@@ -4,6 +4,7 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -128,16 +129,15 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 
 		List<Integer> ids = new ArrayList<Integer>(casesIds.size());
-		for (String caseId: casesIds) {
+		for (String caseId: casesIds)
 			ids.add(Integer.valueOf(caseId));
-		}
 		List<CaseProcInstBind> binds = getCasesBPMDAO().getCasesProcInstBindsByCasesIds(ids);
 		if (ListUtil.isEmpty(binds))
 			return null;
+
 		Map<Long, String> procIds = new HashMap<Long, String>();
-		for (CaseProcInstBind bind: binds) {
+		for (CaseProcInstBind bind: binds)
 			procIds.put(bind.getProcInstId(), String.valueOf(bind.getCaseId()));
-		}
 
 		Map<Long, List<VariableInstanceInfo>> vars = getVariablesQuerier().getGroupedVariables(
 				getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(headersKeys, procIds.keySet(), false, false, false));
@@ -169,12 +169,20 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				caseLabels.put(label.getId(), label.getValue());
 			}
 
+			//	Making sure all labels are loaded
 			if (!ListUtil.isEmpty(headersKeys)) {
 				for (String headerKey: headersKeys) {
 					if (caseLabels.containsKey(headerKey))
 						continue;
 
-					caseLabels.put(headerKey, CoreConstants.MINUS);
+					Collection<VariableInstanceInfo> procVar = getVariablesQuerier().getVariableByProcessInstanceIdAndVariableName(procId, headerKey);
+					if (ListUtil.isEmpty(procVar)) {
+						getLogger().warning("No variable found for process instance by ID " + procId + " and variable name " + headerKey);
+						caseLabels.put(headerKey, CoreConstants.MINUS);
+					} else {
+						AdvancedProperty label = getLabel(procVar.iterator().next());
+						caseLabels.put(label.getId(), label.getValue());
+					}
 				}
 			}
 		}
