@@ -8,40 +8,40 @@ import com.idega.util.CoreConstants;
 import com.idega.util.StringUtil;
 
 public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
-	
+
 	private static final long serialVersionUID = 8071978111646904945L;
 
-	private String componentId;
-	private String criteriasId;
-	private String processId;
-	private String caseListType;
-	
+	private String	componentId,
+					criteriasId,
+					processId,
+					caseListType,
+					caseCodes,
+					statusesToShow,
+					statusesToHide;
+
 	private List<BPMProcessVariable> processVariables;
-	
-	private boolean usePDFDownloadColumn = true;
-	private boolean allowPDFSigning = true;
-	private boolean hideEmptySection;
-	private boolean showCaseNumberColumn = true;
-	private boolean showCreationTimeInDateColumn = true;
-	private boolean onlySubscribedCases;
-	private boolean clearResults = true;
-	
-	private String caseCodes;
-	private String statusesToShow;
-	private String statusesToHide;
-	
+
+	private boolean usePDFDownloadColumn = true,
+					allowPDFSigning = true,
+					hideEmptySection,
+					showCaseNumberColumn = true,
+					showCreationTimeInDateColumn = true,
+					onlySubscribedCases,
+					clearResults = true,
+					nothingFound;
+
 	public String getProcessId() {
 		return processId;
 	}
-	
+
 	public void setProcessId(String processId) {
 		this.processId = processId;
 	}
-	
+
 	public String getCaseListType() {
 		return caseListType;
 	}
-	
+
 	public void setCaseListType(String caseListType) {
 		this.caseListType = caseListType;
 	}
@@ -105,7 +105,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	public List<String> getStatusesToHideInList() {
 		return statusesToHide == null ? null : StringUtil.getValuesFromString(statusesToHide, CoreConstants.COMMA);
 	}
-	
+
 	public void setStatusesToHide(String statusesToHide) {
 		this.statusesToHide = statusesToHide;
 	}
@@ -117,7 +117,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	public String getStatusesToHide() {
 		return statusesToHide;
 	}
-	
+
 	public List<String> getCaseCodesInList() {
 		return caseCodes == null ? null : StringUtil.getValuesFromString(caseCodes, CoreConstants.COMMA);
 	}
@@ -153,13 +153,21 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	public void setCriteriasId(String criteriasId) {
 		this.criteriasId = criteriasId;
 	}
-	
+
 	public boolean isClearResults() {
 		return clearResults;
 	}
 
 	public void setClearResults(boolean clearResults) {
 		this.clearResults = clearResults;
+	}
+
+	public boolean isNothingFound() {
+		return nothingFound;
+	}
+
+	public void setNothingFound(boolean nothingFound) {
+		this.nothingFound = nothingFound;
 	}
 
 	@Override

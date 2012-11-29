@@ -236,24 +236,23 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criteriaBean) {
-		if (criteriaBean == null) {
+	public Document getCasesListByUserQuery(CasesListSearchCriteriaBean criterias) {
+		if (criterias == null) {
 			LOGGER.log(Level.SEVERE, "Can not execute search - search criterias unknown");
 			return null;
 		}
 
-		if (criteriaBean.isClearResults()) {
+		if (criterias.isClearResults())
 			//	Clearing search result before new search
-			clearSearchResults(criteriaBean.getId());
-		}
+			clearSearchResults(criterias.getId());
 
-		List<Long> piIds = criteriaBean.getProcInstIds();
-		LOGGER.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criteriaBean.getCaseNumber()).append(", description: ")
-				.append(criteriaBean.getDescription()).append(", name: ").append(criteriaBean.getName()).append(", personalId: ")
-				.append(criteriaBean.getPersonalId()).append(", processId: ").append(criteriaBean.getProcessId()).append(", statusId: ")
-				.append(criteriaBean.getStatusId()).append(", dateRange: ").append(criteriaBean.getDateRange()).append(", casesListType: ")
-				.append(criteriaBean.getCaseListType()).append(", contact: ").append(criteriaBean.getContact()).append(", variables provided: ")
-				.append(ListUtil.isEmpty(criteriaBean.getProcessVariables()) ? "none" : criteriaBean.getProcessVariables())
+		List<Long> piIds = criterias.getProcInstIds();
+		LOGGER.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criterias.getCaseNumber()).append(", description: ")
+				.append(criterias.getDescription()).append(", name: ").append(criterias.getName()).append(", personalId: ")
+				.append(criterias.getPersonalId()).append(", processId: ").append(criterias.getProcessId()).append(", statusId: ")
+				.append(criterias.getStatusId()).append(", dateRange: ").append(criterias.getDateRange()).append(", casesListType: ")
+				.append(criterias.getCaseListType()).append(", contact: ").append(criterias.getContact()).append(", variables provided: ")
+				.append(ListUtil.isEmpty(criterias.getProcessVariables()) ? "none" : criterias.getProcessVariables())
 				.append(", process instance IDs: ").append(ListUtil.isEmpty(piIds) ? "none" :
 					piIds.size() >= 1000 ? new ArrayList<Long>(piIds).subList(0, 999) + " ..." : piIds)
 		.toString());
@@ -264,44 +263,47 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
-		addSearchQueryToSession(iwc, criteriaBean);
+		addSearchQueryToSession(iwc, criterias);
 
-		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criteriaBean);
-		if (criteriaBean.isClearResults()) {
+		if (criterias.isNothingFound())
+			return null;
+
+		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criterias);
+		if (criterias.isClearResults()) {
 			if (cases == null) {
-				Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criteriaBean.getId());
+				Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criterias.getId());
 				if (externalData != null) {
-					setSearchResults(iwc, externalData, criteriaBean);
+					setSearchResults(iwc, externalData, criterias);
 				}
 			} else {
-				setSearchResults(iwc, cases.getCollection(), criteriaBean);
+				setSearchResults(iwc, cases.getCollection(), criterias);
 			}
 		}
 
 		CaseListPropertiesBean properties = new CaseListPropertiesBean();
 		properties.setType(ProcessConstants.CASE_LIST_TYPE_SEARCH_RESULTS);
-		properties.setUsePDFDownloadColumn(criteriaBean.isUsePDFDownloadColumn());
-		properties.setAllowPDFSigning(criteriaBean.isAllowPDFSigning());
-		properties.setShowStatistics(criteriaBean.isShowStatistics());
-		properties.setHideEmptySection(criteriaBean.isHideEmptySection());
-		properties.setPageSize(criteriaBean.getPageSize());
-		properties.setPage(criteriaBean.getPage());
-		properties.setInstanceId(criteriaBean.getInstanceId());
-		properties.setShowCaseNumberColumn(criteriaBean.isShowCaseNumberColumn());
-		properties.setShowCreationTimeInDateColumn(criteriaBean.isShowCreationTimeInDateColumn());
-		properties.setCaseCodes(criteriaBean.getCaseCodesInList());
-		properties.setStatusesToShow(criteriaBean.getStatusesToShowInList());
-		properties.setStatusesToHide(criteriaBean.getStatusesToHideInList());
-		properties.setOnlySubscribedCases(criteriaBean.isOnlySubscribedCases());
-		properties.setComponentId(criteriaBean.getComponentId());
-		properties.setCriteriasId(criteriaBean.getCriteriasId());
-		properties.setFoundResults(criteriaBean.getFoundResults());
-		properties.setCasesListCustomizer(criteriaBean.getCasesListCustomizer());
-		properties.setCustomColumns(criteriaBean.getCustomColumns());
-		properties.setShowLoadingMessage(criteriaBean.isShowLoadingMessage());
+		properties.setUsePDFDownloadColumn(criterias.isUsePDFDownloadColumn());
+		properties.setAllowPDFSigning(criterias.isAllowPDFSigning());
+		properties.setShowStatistics(criterias.isShowStatistics());
+		properties.setHideEmptySection(criterias.isHideEmptySection());
+		properties.setPageSize(criterias.getPageSize());
+		properties.setPage(criterias.getPage());
+		properties.setInstanceId(criterias.getInstanceId());
+		properties.setShowCaseNumberColumn(criterias.isShowCaseNumberColumn());
+		properties.setShowCreationTimeInDateColumn(criterias.isShowCreationTimeInDateColumn());
+		properties.setCaseCodes(criterias.getCaseCodesInList());
+		properties.setStatusesToShow(criterias.getStatusesToShowInList());
+		properties.setStatusesToHide(criterias.getStatusesToHideInList());
+		properties.setOnlySubscribedCases(criterias.isOnlySubscribedCases());
+		properties.setComponentId(criterias.getComponentId());
+		properties.setCriteriasId(criterias.getCriteriasId());
+		properties.setFoundResults(criterias.getFoundResults());
+		properties.setCasesListCustomizer(criterias.getCasesListCustomizer());
+		properties.setCustomColumns(criterias.getCustomColumns());
+		properties.setShowLoadingMessage(criterias.isShowLoadingMessage());
 
 		UIComponent component = null;
-		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criteriaBean.getCaseListType())) {
+		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criterias.getCaseListType())) {
 			properties.setAddCredentialsToExernalUrls(false);
 			component = getCasesListBuilder().getUserCasesList(iwc, cases, null, properties);
 		} else {
