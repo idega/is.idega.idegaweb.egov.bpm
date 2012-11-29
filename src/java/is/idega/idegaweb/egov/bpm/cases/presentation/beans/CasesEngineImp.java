@@ -226,12 +226,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public Document getRenderedCasesByQuery(CasesSearchCriteriaBean criteriaBean) {
-		if (criteriaBean instanceof CasesListSearchCriteriaBean)
-			return getCasesListByUserQuery((CasesListSearchCriteriaBean) criteriaBean);
+	public Document getRenderedCasesByQuery(CasesSearchCriteriaBean criterias) {
+		if (criterias instanceof CasesListSearchCriteriaBean)
+			return getCasesListByUserQuery((CasesListSearchCriteriaBean) criterias);
 
-		getLogger().warning("Criterias " + criteriaBean + " are not instance of " + CasesListSearchCriteriaBean.class + " (actual implementation: " +
-				criteriaBean.getClass().getName() + "), returning null");
+		getLogger().warning("Criterias " + criterias + " are not instance of " + CasesListSearchCriteriaBean.class + " (actual implementation: " +
+				criterias.getClass().getName() + "), returning null");
 		return null;
 	}
 
@@ -272,12 +272,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (criterias.isClearResults()) {
 			if (cases == null) {
 				Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criterias.getId());
-				if (externalData != null) {
+				if (externalData != null)
 					setSearchResults(iwc, externalData, criterias);
-				}
-			} else {
+
+			} else
 				setSearchResults(iwc, cases.getCollection(), criterias);
-			}
 		}
 
 		CaseListPropertiesBean properties = new CaseListPropertiesBean();
@@ -322,52 +321,52 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 	}
 
-	private void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean searchParams) {
+	private void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias) {
 		List<AdvancedProperty> searchFields = new ArrayList<AdvancedProperty>();
 
 		Locale locale = iwc.getCurrentLocale();
 		IWResourceBundle iwrb = getResourceBundle(iwc);
 
-		if (!StringUtil.isEmpty(searchParams.getCaseNumber())) {
-			searchFields.add(new AdvancedProperty("case_nr", searchParams.getCaseNumber()));
+		if (!StringUtil.isEmpty(criterias.getCaseNumber())) {
+			searchFields.add(new AdvancedProperty("case_nr", criterias.getCaseNumber()));
 		}
-		if (!StringUtil.isEmpty(searchParams.getDescription())) {
-			searchFields.add(new AdvancedProperty("description", searchParams.getDescription()));
+		if (!StringUtil.isEmpty(criterias.getDescription())) {
+			searchFields.add(new AdvancedProperty("description", criterias.getDescription()));
 		}
-		if (!StringUtil.isEmpty(searchParams.getName())) {
-			searchFields.add(new AdvancedProperty("name", searchParams.getName()));
+		if (!StringUtil.isEmpty(criterias.getName())) {
+			searchFields.add(new AdvancedProperty("name", criterias.getName()));
 		}
-		if (!StringUtil.isEmpty(searchParams.getPersonalId())) {
-			searchFields.add(new AdvancedProperty("personal_id", searchParams.getPersonalId()));
+		if (!StringUtil.isEmpty(criterias.getPersonalId())) {
+			searchFields.add(new AdvancedProperty("personal_id", criterias.getPersonalId()));
 		}
-		if (!StringUtil.isEmpty(searchParams.getContact())) {
-			searchFields.add(new AdvancedProperty("contact", searchParams.getContact()));
+		if (!StringUtil.isEmpty(criterias.getContact())) {
+			searchFields.add(new AdvancedProperty("contact", criterias.getContact()));
 		}
-		if (!StringUtil.isEmpty(searchParams.getProcessId())) {
+		if (!StringUtil.isEmpty(criterias.getProcessId())) {
 			String processName = null;
 			try {
 				ProcessDefinitionW bpmCasesManager = ELUtil.getInstance().getBean(CasesBPMProcessDefinitionW.SPRING_BEAN_IDENTIFIER);
-				bpmCasesManager.setProcessDefinitionId(Long.valueOf(searchParams.getProcessId()));
+				bpmCasesManager.setProcessDefinitionId(Long.valueOf(criterias.getProcessId()));
 				processName = bpmCasesManager.getProcessName(locale);
 			} catch(Exception e) {
-				LOGGER.log(Level.WARNING, "Error getting process name by: " + searchParams.getProcessId());
+				LOGGER.log(Level.WARNING, "Error getting process name by: " + criterias.getProcessId());
 			}
 			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ? "general_cases" : processName));
 		}
-		if (!StringUtil.isEmpty(searchParams.getStatusId())) {
+		if (!StringUtil.isEmpty(criterias.getStatusId())) {
 			String status = null;
 			try {
-				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(null, getCasesBusiness(iwc).getCaseStatus(searchParams.getStatusId()), locale);
+				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(null, getCasesBusiness(iwc).getCaseStatus(criterias.getStatusId()), locale);
 			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "Error getting status name by: " + searchParams.getStatusId(), e);
+				LOGGER.log(Level.WARNING, "Error getting status name by: " + criterias.getStatusId(), e);
 			}
 			searchFields.add(new AdvancedProperty("status", StringUtil.isEmpty(status) ? iwrb.getLocalizedString("unknown_status", "Unknown") : status));
 		}
-		if (!StringUtil.isEmpty(searchParams.getDateRange())) {
-			searchFields.add(new AdvancedProperty("date_range", searchParams.getDateRange()));
+		if (!StringUtil.isEmpty(criterias.getDateRange())) {
+			searchFields.add(new AdvancedProperty("date_range", criterias.getDateRange()));
 		}
-		if (!ListUtil.isEmpty(searchParams.getProcessVariables())) {
-			for (BPMProcessVariable variable: searchParams.getProcessVariables()) {
+		if (!ListUtil.isEmpty(criterias.getProcessVariables())) {
+			for (BPMProcessVariable variable: criterias.getProcessVariables()) {
 				String value = variable.getValue();
 				String name = variable.getName();
 				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name)
@@ -411,12 +410,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criteriaBean) {
-		if (criteriaBean instanceof CasesListSearchCriteriaBean)
-			return getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criteriaBean);
+	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias) {
+		if (criterias instanceof CasesListSearchCriteriaBean)
+			return getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criterias);
 
-		getLogger().warning("Unable to get cases by query " + criteriaBean + " because it is not instance of " +
-				CasesListSearchCriteriaBean.class.getName() + ". Actual implementation: " + criteriaBean.getClass().getName());
+		getLogger().warning("Unable to get cases by query " + criterias + " because it is not instance of " +
+				CasesListSearchCriteriaBean.class.getName() + ". Actual implementation: " + criterias.getClass().getName());
 		return null;
 	}
 
@@ -424,7 +423,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean(UICasesList.DYNAMIC_CASES_NAVIGATOR, Boolean.TRUE);
 	}
 
-	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criteriaBean) {
+	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criterias) {
 		User currentUser = null;
 		if (!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
@@ -432,10 +431,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 
 		long start = System.currentTimeMillis();
-		String casesProcessorType = criteriaBean.getCaseListType() == null ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : criteriaBean.getCaseListType();
+		String casesProcessorType = criterias.getCaseListType() == null ?
+				CasesRetrievalManager.CASE_LIST_TYPE_OPEN :
+				criterias.getCaseListType();
+
 		List<Integer> casesIds = null;
 		try {
-			if (criteriaBean.isShowAllCases()) {
+			if (criterias.isShowAllCases()) {
 				CasesBusiness casesBusiness = getCasesBusiness(iwc);
 				@SuppressWarnings("unchecked")
 				Collection<CaseStatus> statuses = casesBusiness.getCaseStatuses();
@@ -449,15 +451,15 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					}
 				}
 
-				criteriaBean.setStatusesToShow(allStatuses == null ? null : allStatuses.toString());
-				criteriaBean.setStatusesToHide(null);
+				criterias.setStatusesToShow(allStatuses == null ? null : allStatuses.toString());
+				criterias.setStatusesToHide(null);
 			}
 
-			casesIds = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criteriaBean.getCaseCodesInList(),
-					criteriaBean.getStatusesToHideInList(), criteriaBean.getStatusesToShowInList(), criteriaBean.isOnlySubscribedCases(),
-					criteriaBean.isShowAllCases(), criteriaBean.getProcInstIds());
+			casesIds = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criterias.getCaseCodesInList(),
+					criterias.getStatusesToHideInList(), criterias.getStatusesToShowInList(), criterias.isOnlySubscribedCases(),
+					criterias.isShowAllCases(), criterias.getProcInstIds());
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criteriaBean, e);
+			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
 		}
 		if (ListUtil.isEmpty(casesIds))
 			return null;
@@ -465,23 +467,24 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		long end = System.currentTimeMillis();
 		LOGGER.info("Cases IDs were resolved in " + (end - start) + " ms");
 
-		if (criteriaBean.getStatusId() != null)
-			criteriaBean.setStatuses(new String[] {criteriaBean.getStatusId()});
+		if (criterias.getStatusId() != null)
+			criterias.setStatuses(new String[] {criterias.getStatusId()});
 
-		PagedDataCollection<CasePresentation> cases = null;
-
-		if (ListUtil.isEmpty(criteriaBean.getProcInstIds())) {
-			List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criteriaBean);
+		if (ListUtil.isEmpty(criterias.getProcInstIds())) {
+			//	Filtering out the initial set of cases IDs by filters
+			List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criterias);
 			if (ListUtil.isEmpty(filters))
 				return null;
 
 			for (CasesListSearchFilter filter: filters)
 				casesIds = filter.doFilter(casesIds);
 		} else {
-			List<Integer> ids = casesBPMDAO.getCasesIdsByProcInstIds(criteriaBean.getProcInstIds());
+			//	Selecting cases IDs by provided process instance IDs
+			List<Integer> ids = casesBPMDAO.getCasesIdsByProcInstIds(criterias.getProcInstIds());
 			if (ListUtil.isEmpty(ids))
 				return null;
 
+			//	Making sure user will see cases that are available to her/him only
 			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, ids);
 		}
 		start = System.currentTimeMillis();
@@ -491,28 +494,30 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 
 		boolean usePaging = isPagingTurnedOn();
-		boolean noSortingOptions = ListUtil.isEmpty(criteriaBean.getSortingOptions());
-		if (usePaging && !criteriaBean.isNoOrdering()) {
+		boolean noSortingOptions = ListUtil.isEmpty(criterias.getSortingOptions());
+		if (usePaging && !criterias.isNoOrdering()) {
 			Comparator<Integer> c = new Comparator<Integer>() {
 				@Override
 				public int compare(Integer o1, Integer o2) {
 					return -o1.compareTo(o2);
 				}
 			};
+			getLogger().info("Sorting cases by IDs descending");
 			Collections.sort(casesIds, c);
 		}
 
 		int totalCount = casesIds.size();
-		criteriaBean.setFoundResults(totalCount);
-		if (criteriaBean.getPageSize() <= 0)
-			criteriaBean.setPageSize(20);
-		if (criteriaBean.getPage() <= 0)
-			criteriaBean.setPage(1);
-		criteriaBean.setAllDataLoaded(!(totalCount > criteriaBean.getPageSize()));
-		int count = criteriaBean.getPageSize();
-		int startIndex = (criteriaBean.getPage() - 1) * count;
+		criterias.setFoundResults(totalCount);
+		if (criterias.getPageSize() <= 0)
+			criterias.setPageSize(20);
+		if (criterias.getPage() <= 0)
+			criterias.setPage(1);
+		criterias.setAllDataLoaded(!(totalCount > criterias.getPageSize()));
+		int count = criterias.getPageSize();
+		int startIndex = (criterias.getPage() - 1) * count;
 
 		Locale locale = iwc.getCurrentLocale();
+		PagedDataCollection<CasePresentation> cases = null;
 		if (!ListUtil.isEmpty(casesIds)) {
 			if (usePaging && noSortingOptions) {
 				//	No need to load all the cases, just for one page
@@ -527,8 +532,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 
 		List<CasePresentation> result = new ArrayList<CasePresentation>(cases.getCollection());
-		if (!criteriaBean.isNoOrdering())
-			Collections.sort(result, getCasePresentationComparator(criteriaBean, locale));
+		if (!criterias.isNoOrdering()) {
+			CasePresentationComparator comparator = getCasePresentationComparator(criterias, locale);
+			getLogger().info("Sorting cases by comparator: " + comparator + " and sorting options: " + criterias.getSortingOptions());
+			Collections.sort(result, comparator);
+		}
 		if (usePaging && !noSortingOptions)
 			result = getSubList(result, startIndex, count, totalCount);
 
@@ -545,10 +553,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 	}
 
-	private CasePresentationComparator getCasePresentationComparator(CasesListSearchCriteriaBean searchCriterias, Locale locale) {
-		return (searchCriterias == null || ListUtil.isEmpty(searchCriterias.getSortingOptions())) ?
+	private CasePresentationComparator getCasePresentationComparator(CasesListSearchCriteriaBean criterias, Locale locale) {
+		return (criterias == null || ListUtil.isEmpty(criterias.getSortingOptions())) ?
 				new CasePresentationComparator() :
-				new BPMCasePresentationComparator(locale, searchCriterias);
+				new BPMCasePresentationComparator(locale, criterias);
 	}
 
 	private BuilderLogicWrapper getBuilderLogic() {
@@ -640,8 +648,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return resultsHolder;
 	}
 
-	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, CasesListSearchCriteriaBean criteriaBean) {
-		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE, criteriaBean);
+	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, CasesListSearchCriteriaBean criterias) {
+		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE, criterias);
 
 		CasesSearchResultsHolder resultsHolder = null;
 		try {
@@ -650,8 +658,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return false;
 		}
 
-		String id = criteriaBean.getId();
-		resultsHolder.setSearchResults(id, new CasesSearchResults(id, cases, criteriaBean));
+		String id = criterias.getId();
+		resultsHolder.setSearchResults(id, new CasesSearchResults(id, cases, criterias));
 		return true;
 	}
 
