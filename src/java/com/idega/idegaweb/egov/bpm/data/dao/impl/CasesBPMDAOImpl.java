@@ -5,6 +5,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -450,8 +451,91 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(processInstanceIds))
 			return null;
 
-		return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class,
-				new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
+		if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("cases_bpm_load_from_bind", Boolean.FALSE))
+			return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class,
+					new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
+
+		List<Long> ids = getCasesIds(processInstanceIds, null);
+		return ids;
+	}
+
+	private class CaseResult {
+		private Long id;
+		private Timestamp created;
+
+		private CaseResult(Long id, Timestamp created) {
+			this.id = id;
+			this.created = created;
+		}
+
+		@Override
+		public String toString() {
+			return id + ": " + created;
+		}
+	}
+
+	private List<Long> getCasesIds(List<Long> procInstIds, List<CaseResult> cases) {
+		if (ListUtil.isEmpty(procInstIds)) {
+			if (ListUtil.isEmpty(cases))
+				return null;
+
+			Comparator<CaseResult> comparator = new Comparator<CasesBPMDAOImpl.CaseResult>() {
+				@Override
+				public int compare(CaseResult r1, CaseResult r2) {
+					return -1 * (r1.created.compareTo(r2.created));
+				}
+			};
+			Collections.sort(cases, comparator);
+			List<Long> results = new ArrayList<Long>();
+			for (CaseResult theCase: cases)
+				results.add(theCase.id);
+			return results;
+		}
+
+		if (cases == null)
+			cases = new ArrayList<CasesBPMDAOImpl.CaseResult>();
+
+		List<Long> usedIds = null;
+		if (procInstIds.size() > 1000) {
+			usedIds = new ArrayList<Long>(procInstIds.subList(0, 1000));
+			procInstIds = new ArrayList<Long>(procInstIds.subList(1000,	procInstIds.size()));
+		} else {
+			usedIds = new ArrayList<Long>(procInstIds);
+			procInstIds = null;
+		}
+
+		StringBuilder ids = new StringBuilder();
+		for (Iterator<Long> idsIter = usedIds.iterator(); idsIter.hasNext();) {
+			ids.append(idsIter.next());
+			if (idsIter.hasNext())
+				ids.append(", ");
+		}
+		String query = "select b." + CaseProcInstBind.caseIdColumnName + ", c." + CaseBMPBean.COLUMN_CREATED + " from " +
+				CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.TABLE_NAME + " c where b." + CaseProcInstBind.caseIdColumnName +
+				" in (" + ids.toString() +") and b." + CaseProcInstBind.caseIdColumnName + " = c.proc_case_id";
+		List<Serializable[]> data = null;
+		try {
+			data = SimpleQuerier.executeQuery(query, 2);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (!ListUtil.isEmpty(data)) {
+			for (Serializable[] theCase: data) {
+				if (ArrayUtil.isEmpty(theCase) || theCase.length < 2)
+					continue;
+
+				Serializable id = theCase[0];
+				Serializable created = theCase[1];
+				if (id instanceof Number && created instanceof Timestamp)
+					cases.add(new CaseResult(((Number) id).longValue(), (Timestamp) created));
+				else
+					LOGGER.warning("ID (" + id + (id == null ? "" : ", class: " + id.getClass()) +
+							") is not Number and/or creation date (" + created + (created == null ? "" : ", class: " +
+							created.getClass()) + ") is not Timestamp");
+			}
+		}
+
+		return getCasesIds(procInstIds, cases);
 	}
 
 	@Override
