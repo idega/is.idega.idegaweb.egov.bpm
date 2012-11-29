@@ -395,7 +395,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		try {
 			return resolver.isValueUsedForExport() ?
-					resolver.getPresentation(variable.getId(), variable.getExternalId()) :
+					resolver.getPresentation(variable.getName(), variable.getId(), variable.getExternalId()) :
 					resolver.getKeyPresentation(variable.getId());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error resolving value for variable" + variable + " and using resolver " + resolver, e);
