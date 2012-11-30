@@ -170,22 +170,21 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				caseLabels.put(label.getId(), label.getValue());
 			}
 
-			//	Making sure all labels are loaded
-			if (!ListUtil.isEmpty(headersKeys)) {
-				for (String headerKey: headersKeys) {
-					if (caseLabels.containsKey(headerKey))
-						continue;
+			//	Marking which labels are missing
+			for (String headerKey: headersKeys) {
+				if (caseLabels.containsKey(headerKey))
+					continue;
 
-					List<String> names = missingValues.get(procId);
-					if (names == null) {
-						names = new ArrayList<String>();
-						missingValues.put(procId, names);
-					}
-					names.add(headerKey);
+				List<String> names = missingValues.get(procId);
+				if (names == null) {
+					names = new ArrayList<String>();
+					missingValues.put(procId, names);
 				}
+				names.add(headerKey);
 			}
 		}
 
+		//	Loading missing values
 		if (!MapUtil.isEmpty(missingValues)) {
 			List<Long> procInstIds = new ArrayList<Long>(missingValues.keySet());
 			Map<String, Boolean> variablesNames = new HashMap<String, Boolean>();
@@ -208,6 +207,17 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 					AdvancedProperty label = getLabel(var);
 					caseLabels.put(label == null ? var.getName() : label.getId(), label == null ? CoreConstants.MINUS : label.getValue());
 				}
+			}
+		}
+
+		//	Double check if all values were found
+		for (Long piId: missingValues.keySet()) {
+			for (String headerKey: headersKeys) {
+				Map<String, String> caseLabels = labels.get(procIds.get(piId));
+				if (MapUtil.isEmpty(caseLabels) || caseLabels.containsKey(headerKey))
+					continue;
+
+				caseLabels.put(headerKey, CoreConstants.MINUS);
 			}
 		}
 
