@@ -455,7 +455,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return getResultList(CaseProcInstBind.getCaseIdsByProcessInstanceIds, Long.class,
 					new Param(CaseProcInstBind.processInstanceIdsProp, processInstanceIds));
 
+		long start = System.currentTimeMillis();
 		List<Long> ids = getCasesIds(processInstanceIds, null);
+		LOGGER.info("Cases IDs were loaded and sorted by process instance IDs (total " + processInstanceIds.size() + ") in " +
+				(System.currentTimeMillis() - start) + " ms");
 		return ids;
 	}
 
@@ -485,7 +488,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					return -1 * (r1.created.compareTo(r2.created));
 				}
 			};
+			long start = System.currentTimeMillis();
 			Collections.sort(cases, comparator);
+			LOGGER.info("Cases IDs (total " + cases.size() + ") were sorted in " + (System.currentTimeMillis() - start) + " ms");
 			List<Long> results = new ArrayList<Long>();
 			for (CaseResult theCase: cases)
 				results.add(theCase.id);
