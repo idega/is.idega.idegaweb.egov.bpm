@@ -11,6 +11,7 @@ import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -115,7 +116,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		final String caseIdentifier = parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER);
 		final String realCaseCreationDate = parameters.get(CasesBPMProcessConstants.caseCreationDateParam);
 
-		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ? new Date() : new IWTimestamp(realCaseCreationDate).getDate();
+		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ?
+				new Timestamp(System.currentTimeMillis()) :
+				new IWTimestamp(realCaseCreationDate).getTimestamp();
 
 		Long piId = getBpmContext().execute(new JbpmCallback() {
 			@Override
