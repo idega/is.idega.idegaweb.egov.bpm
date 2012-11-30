@@ -145,6 +145,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 
 		Map<String, Map<String, String>> labels = new LinkedHashMap<String, Map<String,String>>();
+		Map<Long, List<String>> missingValues = new HashMap<Long, List<String>>();
 		for (Long procId: vars.keySet()) {
 			String caseId = procIds.get(procId);
 			if (StringUtil.isEmpty(caseId))
@@ -175,14 +176,37 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 					if (caseLabels.containsKey(headerKey))
 						continue;
 
-					Collection<VariableInstanceInfo> procVar = getVariablesQuerier().getVariableByProcessInstanceIdAndVariableName(procId, headerKey);
-					if (ListUtil.isEmpty(procVar)) {
-						getLogger().warning("No variable found for process instance by ID " + procId + " and variable name " + headerKey);
-						caseLabels.put(headerKey, CoreConstants.MINUS);
-					} else {
-						AdvancedProperty label = getLabel(procVar.iterator().next());
-						caseLabels.put(label.getId(), label.getValue());
+					List<String> names = missingValues.get(procId);
+					if (names == null) {
+						names = new ArrayList<String>();
+						missingValues.put(procId, names);
 					}
+					names.add(headerKey);
+				}
+			}
+		}
+
+		if (!MapUtil.isEmpty(missingValues)) {
+			List<Long> procInstIds = new ArrayList<Long>(missingValues.keySet());
+			Map<String, Boolean> variablesNames = new HashMap<String, Boolean>();
+			for (Collection<String> names: missingValues.values())
+				for (String name: names)
+					variablesNames.put(name, Boolean.TRUE);
+
+			Map<Long, List<VariableInstanceInfo>> missingVars = getVariablesQuerier().getGroupedVariables(getVariablesQuerier()
+					.getVariablesByProcessInstanceIdAndVariablesNames(procInstIds, false, new ArrayList<String>(variablesNames.keySet())));
+			if (MapUtil.isEmpty(missingVars))
+				return labels;
+
+			for (Long piId: missingValues.keySet()) {
+				List<VariableInstanceInfo> values = missingVars.get(piId);
+				if (ListUtil.isEmpty(values))
+					continue;
+
+				Map<String, String> caseLabels = labels.get(procIds.get(piId));
+				for (VariableInstanceInfo var: values) {
+					AdvancedProperty label = getLabel(var);
+					caseLabels.put(label == null ? var.getName() : label.getId(), label == null ? CoreConstants.MINUS : label.getValue());
 				}
 			}
 		}
