@@ -242,13 +242,15 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			boolean showAllCases) {
 
 		try {
-			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases, null);
+			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases,
+					null);
 
 			if (ListUtil.isEmpty(casesIds)) {
 				LOGGER.info("User '" + user + "' doesn't have any cases!");
 				return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
 			}
 
+			long start = System.currentTimeMillis();
 			int totalCount = casesIds.size();
 			Collection<? extends Case> cases = null;
 			if (startIndex < totalCount) {
@@ -273,6 +275,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!ListUtil.isEmpty(casesPresentation) &&
 					IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE))
 				Collections.sort(casesPresentation, new CasePresentationComparator());
+
+			getLogger().info("Cases (total: " + cases.size() + ") converted into beans in " + (System.currentTimeMillis() - start) + " ms");
 
 			return new PagedDataCollection<CasePresentation>(casesPresentation, totalCount);
 		} catch (Exception e) {
