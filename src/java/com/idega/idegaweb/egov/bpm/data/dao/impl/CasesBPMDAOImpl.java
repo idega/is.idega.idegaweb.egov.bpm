@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import org.hibernate.HibernateException;
 import org.jbpm.graph.exe.Token;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
@@ -38,8 +39,11 @@ import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.data.impl.VariableInstanceQuerierImpl;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
@@ -48,6 +52,7 @@ import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -59,6 +64,9 @@ import com.idega.util.datastructures.map.MapUtil;
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	private static final Logger LOGGER = Logger.getLogger(CasesBPMDAOImpl.class.getName());
+
+	@Autowired(required = false)
+	private VariableInstanceQuerier querier;
 
 	@Override
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
@@ -1305,5 +1313,45 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		for (CaseProcInstBind bind: binds)
 			results.put(bind.getProcInstId(), bind.getCaseId());
 		return results;
+	}
+
+	private VariableInstanceQuerier getVariableInstanceQuerier() {
+		if (querier == null)
+			ELUtil.getInstance().autowire(this);
+		return querier;
+	}
+
+	@Override
+	public Map<Long, List<VariableInstanceInfo>> getBPMValuesByCasesIdsAndVariablesNames(List<String> casesIds, List<String> names) {
+		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(names))
+			return null;
+
+		StringBuilder tmpCases = new StringBuilder();
+		for (Iterator<String> casesIdsIter = casesIds.iterator(); casesIdsIter.hasNext();) {
+			tmpCases.append(casesIdsIter.next());
+			if (casesIdsIter.hasNext())
+				tmpCases.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+		}
+		StringBuilder tmpNames = new StringBuilder();
+		for (Iterator<String> namesIter = names.iterator(); namesIter.hasNext();) {
+			tmpNames.append(CoreConstants.QOUTE_SINGLE_MARK).append(namesIter.next()).append(CoreConstants.QOUTE_SINGLE_MARK);
+			if (namesIter.hasNext())
+				tmpNames.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+		}
+
+		int columns = 10;
+		String query = "select v.id_, v.name_, v.class_, v.stringvalue_, v.LONGVALUE_, v.DOUBLEVALUE_, v.DATEVALUE_, v.BYTEARRAYVALUE_, " +
+				"v.processinstance_, b." + CaseProcInstBind.caseIdColumnName + " from jbpm_variableinstance v, " + CaseProcInstBind.TABLE_NAME +
+				" b where b." +	CaseProcInstBind.caseIdColumnName + " in (" + tmpCases.toString() + ") and v.processinstance_ = b." +
+				CaseProcInstBind.procInstIdColumnName + " and v.name_ in (" + tmpNames.toString() + ") and v.CLASS_ <> '" +
+				VariableInstanceType.NULL.getTypeKeys().get(0) + "'";
+		List<Serializable[]> data = null;
+		try {
+			data = SimpleQuerier.executeQuery(query, columns);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
+		}
+
+		return getVariableInstanceQuerier().getGroupedVariables(getVariableInstanceQuerier().getConverted(data, columns));
 	}
 }
