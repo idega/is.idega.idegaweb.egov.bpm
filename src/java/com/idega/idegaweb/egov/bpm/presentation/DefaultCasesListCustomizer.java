@@ -16,7 +16,6 @@ import com.idega.block.process.presentation.beans.CasesListCustomizer;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
@@ -69,9 +68,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 		List<String> headers = new ArrayList<String>();
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
-		for (String key: headersKeys) {
+		for (String key: headersKeys)
 			headers.add(getLocalizedHeader(iwrb, key));
-		}
 		return headers;
 	}
 
@@ -128,40 +126,29 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(headersKeys))
 			return null;
 
-		List<Integer> ids = new ArrayList<Integer>(casesIds.size());
-		for (String caseId: casesIds)
-			ids.add(Integer.valueOf(caseId));
-		List<CaseProcInstBind> binds = getCasesBPMDAO().getCasesProcInstBindsByCasesIds(ids);
-		if (ListUtil.isEmpty(binds))
-			return null;
-
-		Map<Long, String> procIds = new HashMap<Long, String>();
-		for (CaseProcInstBind bind: binds)
-			procIds.put(bind.getProcInstId(), String.valueOf(bind.getCaseId()));
-
-		Map<Long, List<VariableInstanceInfo>> vars = getVariablesQuerier().getGroupedVariables(
-				getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(headersKeys, procIds.keySet(), false, false, false));
+		Map<Long, List<VariableInstanceInfo>> vars = getCasesBPMDAO().getBPMValuesByCasesIdsAndVariablesNames(casesIds, headersKeys);
 		if (MapUtil.isEmpty(vars))
 			return null;
 
 		Map<String, Map<String, String>> labels = new LinkedHashMap<String, Map<String,String>>();
 		Map<Long, List<String>> missingValues = new HashMap<Long, List<String>>();
 		for (Long procId: vars.keySet()) {
-			String caseId = procIds.get(procId);
-			if (StringUtil.isEmpty(caseId))
-				continue;
-
-			Map<String, String> caseLabels = labels.get(caseId);
-			if (caseLabels == null) {
-				caseLabels = new HashMap<String, String>();
-				labels.put(caseId, caseLabels);
-			}
-
 			List<VariableInstanceInfo> procVars = vars.get(procId);
 			if (ListUtil.isEmpty(procVars))
 				continue;
 
+			Map<String, String> caseLabels = null;
 			for (VariableInstanceInfo info: procVars) {
+				String caseId = info.getCaseId();
+				if (StringUtil.isEmpty(caseId))
+					continue;
+
+				caseLabels = labels.get(caseId);
+				if (caseLabels == null) {
+					caseLabels = new HashMap<String, String>();
+					labels.put(caseId, caseLabels);
+				}
+
 				Serializable value = info.getValue();
 				if (value == null)
 					continue;
@@ -202,8 +189,9 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				if (ListUtil.isEmpty(values))
 					continue;
 
-				Map<String, String> caseLabels = labels.get(procIds.get(piId));
 				for (VariableInstanceInfo var: values) {
+					Map<String, String> caseLabels = labels.get(var.getCaseId());
+
 					AdvancedProperty label = getLabel(var);
 					caseLabels.put(label == null ? var.getName() : label.getId(), label == null ? CoreConstants.MINUS : label.getValue());
 				}
@@ -211,9 +199,9 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		}
 
 		//	Double check if all values were found
-		for (Long piId: missingValues.keySet()) {
+		for (String caseId: labels.keySet()) {
 			for (String headerKey: headersKeys) {
-				Map<String, String> caseLabels = labels.get(procIds.get(piId));
+				Map<String, String> caseLabels = labels.get(caseId);
 				if (MapUtil.isEmpty(caseLabels) || caseLabels.containsKey(headerKey))
 					continue;
 
