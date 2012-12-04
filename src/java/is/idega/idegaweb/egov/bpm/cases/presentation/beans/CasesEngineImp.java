@@ -841,6 +841,65 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 	}
 
+	@Override
+	public void doLoadCases(User user) {
+		if (user == null)
+			return;
+
+		getLogger().info("Loading cases for " + user);
+
+		BuilderLogic builder = BuilderLogic.getInstance();
+		IWApplicationContext iwac = getApplication().getIWApplicationContext();
+		BuilderService service = getBuilderLogic().getBuilderService(iwac);
+
+		@SuppressWarnings("unchecked")
+		List<Class<? extends CaseBlock>> classes = Arrays.asList(
+				OpenCases.class,
+				ClosedCases.class,
+				MyCases.class,
+				PublicCases.class,
+				UserCases.class
+		);
+		for (Class<? extends CaseBlock> theClass: classes) {
+			Collection<ICObjectInstance> instances = null;
+			try {
+				ICObjectInstanceHome instanceHome = (ICObjectInstanceHome) IDOLookup.getHome(ICObjectInstance.class);
+				instances = instanceHome.getByClassName(theClass);
+			} catch (FinderException e) {
+			} catch (Exception e) {}
+			if (ListUtil.isEmpty(instances))
+				continue;
+
+			for (ICObjectInstance instance: instances) {
+				if (instance == null)
+					continue;
+				String uniqueId = instance.getUniqueId();
+				if (StringUtil.isEmpty(uniqueId))
+					continue;
+
+				String instanceId = ICObjectBusiness.UUID_PREFIX.concat(uniqueId);
+				ICPage page = builder.findPageForModule(iwac, instanceId);
+				if (page == null || page.getDeleted())
+					continue;
+				String pageKey = page.getId();
+
+				String type = getType(service, pageKey, instanceId);
+				List<String> caseCodes = getCodes(service, pageKey, instanceId);
+				List<String> statusesToHide = getStatusesToHide(service, pageKey, instanceId);
+				List<String> statusesToShow = getStatusesToShow(service, pageKey, instanceId);
+				boolean onlySubscribedCases = isShowSubscribedOnly(service, pageKey, instanceId);
+
+				try {
+					getCaseManagersProvider().getCaseManager().getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow,
+							onlySubscribedCases, false);
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error loading cases for list " + theClass.getName() + " for user " + user +
+							" after login event", e);
+				}
+			}
+		}
+	}
+
 	private void doLoadCases(final Integer userId) {
 		if (!getApplication().getSettings().getBoolean("load_cases_on_user_login", Boolean.TRUE))
 			return;
@@ -857,59 +916,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				try {
 					user = userBusiness.getUser(userId);
 				} catch (Exception e) {}
-				if (user == null)
-					return;
-
-				BuilderLogic builder = BuilderLogic.getInstance();
-				IWApplicationContext iwac = getApplication().getIWApplicationContext();
-				BuilderService service = getBuilderLogic().getBuilderService(iwac);
-
-				@SuppressWarnings("unchecked")
-				List<Class<? extends CaseBlock>> classes = Arrays.asList(
-						OpenCases.class,
-						ClosedCases.class,
-						MyCases.class,
-						PublicCases.class,
-						UserCases.class
-				);
-				for (Class<? extends CaseBlock> theClass: classes) {
-					Collection<ICObjectInstance> instances = null;
-					try {
-						ICObjectInstanceHome instanceHome = (ICObjectInstanceHome) IDOLookup.getHome(ICObjectInstance.class);
-						instances = instanceHome.getByClassName(theClass);
-					} catch (FinderException e) {
-					} catch (Exception e) {}
-					if (ListUtil.isEmpty(instances))
-						continue;
-
-					for (ICObjectInstance instance: instances) {
-						if (instance == null)
-							continue;
-						String uniqueId = instance.getUniqueId();
-						if (StringUtil.isEmpty(uniqueId))
-							continue;
-
-						String instanceId = ICObjectBusiness.UUID_PREFIX.concat(uniqueId);
-						ICPage page = builder.findPageForModule(iwac, instanceId);
-						if (page == null || page.getDeleted())
-							continue;
-						String pageKey = page.getId();
-
-						String type = getType(service, pageKey, instanceId);
-						List<String> caseCodes = getCodes(service, pageKey, instanceId);
-						List<String> statusesToHide = getStatusesToHide(service, pageKey, instanceId);
-						List<String> statusesToShow = getStatusesToShow(service, pageKey, instanceId);
-						boolean onlySubscribedCases = isShowSubscribedOnly(service, pageKey, instanceId);
-
-						try {
-							getCaseManagersProvider().getCaseManager().getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow,
-									onlySubscribedCases, false);
-						} catch (Exception e) {
-							getLogger().log(Level.WARNING, "Error loading cases for list " + theClass.getName() + " for user " + user +
-									" after login event", e);
-						}
-					}
-				}
+				doLoadCases(user);
 			}
 		});
 		loader.start();
