@@ -947,7 +947,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 
 		getLogger().warning("Unable to get cases by query " + criterias + " because it is not instance of " +
-				CasesListSearchCriteriaBean.class.getName() + ". Actual implementation: " + criterias.getClass().getName());
+				CasesListSearchCriteriaBean.class.getName() + ". Actual implementation: " +
+				(criterias == null ? "null " : criterias.getClass().getName()));
 		return null;
 	}
 
