@@ -198,6 +198,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			}
 		}
 
+		Map<String, List<String>> missingLabels = new HashMap<String, List<String>>();
 		//	Double check if all values were found
 		for (String caseId: labels.keySet()) {
 			for (String headerKey: headersKeys) {
@@ -205,11 +206,42 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				if (MapUtil.isEmpty(caseLabels) || caseLabels.containsKey(headerKey))
 					continue;
 
-				caseLabels.put(headerKey, CoreConstants.MINUS);
+				List<String> varNames = missingLabels.get(caseId);
+				if (varNames == null) {
+					varNames = new ArrayList<String>();
+					missingLabels.put(caseId, varNames);
+				}
+				varNames.add(headerKey);
 			}
 		}
+		if (!MapUtil.isEmpty(missingLabels))
+			doResolveMissingLabels(labels, missingLabels);
 
 		return labels;
 	}
 
+	/**
+	 * Resolves missing values
+	 *
+	 * @param labels: case ID -> variable name: value
+	 * @param missingLabels: case ID -> variable names
+	 */
+	protected void doResolveMissingLabels(Map<String, Map<String, String>> labels, Map<String, List<String>> missingLabels) {
+		if (MapUtil.isEmpty(labels) || MapUtil.isEmpty(missingLabels))
+			return;
+
+		for (String caseId: missingLabels.keySet()) {
+			List<String> varNames = missingLabels.get(caseId);
+			if (ListUtil.isEmpty(varNames))
+				continue;
+
+			getLogger().warning("Missing labels for case (" + caseId + "): " + varNames);
+
+			Map<String, String> caseLabels = labels.get(caseId);
+			for (String varName: varNames) {
+				if (!caseLabels.containsKey(varName))
+					caseLabels.put(varName, CoreConstants.MINUS);
+			}
+		}
+	}
 }

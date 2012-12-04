@@ -380,16 +380,18 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 	}
 
+	private MultipleSelectionVariablesResolver getResolver(String name) {
+		try {
+			return ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + name);
+		} catch (Exception e) {}
+		return null;
+	}
+
 	private String getVariableValue(String beanName, AdvancedProperty variable) {
 		if (variable == null)
 			return CoreConstants.EMPTY;
 
-		MultipleSelectionVariablesResolver resolver = null;
-		try {
-			String bean = MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + beanName.split(CoreConstants.AT)[0];
-			resolver = ELUtil.getInstance().getBean(bean);
-		} catch (Exception e) {}
-
+		MultipleSelectionVariablesResolver resolver = getResolver(beanName.split(CoreConstants.AT)[0]);
 		if (resolver == null)
 			return variable.getId();
 
@@ -532,9 +534,15 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 							AdvancedProperty variable = null;
 							if (column.equals("string_violatorPostalCode"))
 								variable = getVariableByName(varsForCase, "string_ticketStreetAddress");
-							else
+							else if (column.equals("string_ticketType")) {
 								variable = getVariableByName(varsForCase, column);
-							value = getVariableValue(column, variable);
+								if (variable == null)
+									value = getResolver(column).getPresentation(column, theCase.getId());
+							} else
+								variable = getVariableByName(varsForCase, column);
+
+							if (value == null)
+								value = getVariableValue(column, variable);
 						}
 
 						row.createCell(cellIndex++).setCellValue(value);
