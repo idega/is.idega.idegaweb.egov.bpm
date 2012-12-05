@@ -127,8 +127,10 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 
 		Map<Long, List<VariableInstanceInfo>> vars = getCasesBPMDAO().getBPMValuesByCasesIdsAndVariablesNames(casesIds, headersKeys);
-		if (MapUtil.isEmpty(vars))
+		if (MapUtil.isEmpty(vars)) {
+			getLogger().warning("There are no values for cases " + casesIds + " and variables " + headersKeys);
 			return null;
+		}
 
 		Map<String, Map<String, String>> labels = new LinkedHashMap<String, Map<String,String>>();
 		Map<Long, List<String>> missingValues = new HashMap<Long, List<String>>();
@@ -173,6 +175,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 		//	Loading missing values
 		if (!MapUtil.isEmpty(missingValues)) {
+			getLogger().info("Will try to load missing values: " + missingValues);
+
 			List<Long> procInstIds = new ArrayList<Long>(missingValues.keySet());
 			Map<String, Boolean> variablesNames = new HashMap<String, Boolean>();
 			for (Collection<String> names: missingValues.values())
@@ -193,7 +197,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 					Map<String, String> caseLabels = labels.get(var.getCaseId());
 
 					AdvancedProperty label = getLabel(var);
-					caseLabels.put(label == null ? var.getName() : label.getId(), label == null ? CoreConstants.MINUS : label.getValue());
+					if (label != null)
+						caseLabels.put(label.getId(), label.getValue());
 				}
 			}
 		}
@@ -214,8 +219,10 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				varNames.add(headerKey);
 			}
 		}
-		if (!MapUtil.isEmpty(missingLabels))
+		if (!MapUtil.isEmpty(missingLabels)) {
+			getLogger().info("There are still missing labels: " + missingLabels + " will try to resolve them");
 			doResolveMissingLabels(labels, missingLabels);
+		}
 
 		return labels;
 	}
