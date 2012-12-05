@@ -843,8 +843,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public void doLoadCases(User user) {
-		if (user == null)
+		if (user == null) {
+			getLogger().warning("User is not provided!");
 			return;
+		}
 
 		getLogger().info("Loading cases for " + user);
 
