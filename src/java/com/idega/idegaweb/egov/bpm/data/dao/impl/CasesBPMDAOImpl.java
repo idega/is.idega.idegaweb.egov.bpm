@@ -539,8 +539,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 				Serializable id = theCase[0];
 				Serializable created = theCase[1];
-				if (id instanceof Number && created instanceof Timestamp)
-					cases.add(new CaseResult(((Number) id).longValue(), (Timestamp) created));
+				if (id instanceof Number && created instanceof Date)
+					cases.add(new CaseResult(((Number) id).longValue(), new IWTimestamp(((Date) created).getTime()).getTimestamp()));
 				else
 					LOGGER.warning("ID (" + id + (id == null ? "" : ", class: " + id.getClass()) +
 							") is not Number and/or creation date (" + created + (created == null ? "" : ", class: " +
