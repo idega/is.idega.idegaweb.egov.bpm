@@ -1012,24 +1012,74 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames))
 			return Collections.emptyMap();
 
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null);
+	}
+
+	@Override
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
+			List<Long> procInstIds) {
+		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procInstIds))
+			return Collections.emptyMap();
+
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, null, procInstIds, null);
+	}
+
+	private Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(List<String> caseStatuses, List<String> procDefNames,
+			List<Long> procInstIds, Map<Long, Integer> results) {
+
+		if (results == null)
+			results = new HashMap<Long, Integer>();
+
+		if (ListUtil.isEmpty(procDefNames) && ListUtil.isEmpty(procInstIds))
+			return results;
+
 		StringBuilder statusesProp = new StringBuilder();
 		for (Iterator<String> statusesIter = caseStatuses.iterator(); statusesIter.hasNext();) {
-			statusesProp.append("'").append(statusesIter.next()).append("'");
+			statusesProp.append(CoreConstants.QOUTE_SINGLE_MARK).append(statusesIter.next()).append(CoreConstants.QOUTE_SINGLE_MARK);
 			if (statusesIter.hasNext())
-				statusesProp.append(", ");
+				statusesProp.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 		}
-		StringBuilder procDefNamesProp = new StringBuilder();
-		for (Iterator<String> procDefNamesIter = procDefNames.iterator(); procDefNamesIter.hasNext();) {
-			procDefNamesProp.append("'").append(procDefNamesIter.next()).append("'");
-			if (procDefNamesIter.hasNext())
-				procDefNamesProp.append(", ");
+
+		boolean useProcDefs = !ListUtil.isEmpty(procDefNames);
+		StringBuilder processesProp = new StringBuilder();
+		if (useProcDefs) {
+			for (Iterator<String> procDefNamesIter = procDefNames.iterator(); procDefNamesIter.hasNext();) {
+				processesProp.append(CoreConstants.QOUTE_SINGLE_MARK).append(procDefNamesIter.next()).append(CoreConstants.QOUTE_SINGLE_MARK);
+				if (procDefNamesIter.hasNext())
+					processesProp.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+			}
+			procDefNames = null;
+		} else {
+			List<Long> usedIds = null;
+			if (procInstIds.size() > 1000) {
+				usedIds = new ArrayList<Long>(procInstIds.subList(0, 1000));
+				procInstIds = new ArrayList<Long>(procInstIds.subList(1000,	procInstIds.size()));
+			} else {
+				usedIds = new ArrayList<Long>(procInstIds);
+				procInstIds = null;
+			}
+			for (Iterator<Long> procInstIdsIter = usedIds.iterator(); procInstIdsIter.hasNext();) {
+				processesProp.append(procInstIdsIter.next());
+				if (procInstIdsIter.hasNext())
+					processesProp.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+			}
 		}
 
 		String query =	"select bind." + CaseProcInstBind.procInstIdColumnName + ", bind." + CaseProcInstBind.caseIdColumnName + " from " +
-						CaseProcInstBind.TABLE_NAME + " bind, proc_case pc, JBPM_PROCESSINSTANCE pi, JBPM_PROCESSDEFINITION pd where " +
-						" pd.name_ in (" + procDefNamesProp.toString() + ") and pc.CASE_STATUS in (" + statusesProp.toString() + ") and bind." +
-						CaseProcInstBind.procInstIdColumnName + " = pi.id_ and bind." + CaseProcInstBind.caseIdColumnName +
-						" = pc.proc_case_id and pd.id_ = pi.processdefinition_";
+						CaseProcInstBind.TABLE_NAME + " bind, proc_case pc, JBPM_PROCESSINSTANCE pi";
+		if (useProcDefs)
+			query += ", JBPM_PROCESSDEFINITION pd";
+		query += " where ";
+
+		if (useProcDefs)
+			query += " pd.name_ in (" + processesProp.toString() + ") ";
+		else
+			query += " pi.id_ in (" + processesProp.toString() + ")";
+
+		query += " and pc.CASE_STATUS in (" + statusesProp.toString() + ") and bind." +	CaseProcInstBind.procInstIdColumnName +
+				" = pi.id_ and bind." + CaseProcInstBind.caseIdColumnName + " = pc.proc_case_id";
+		if (useProcDefs)
+			query += " and pd.id_ = pi.processdefinition_";
 
 		List<Serializable[]> data = null;
 		try {
@@ -1040,7 +1090,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(data))
 			return Collections.emptyMap();
 
-		Map<Long, Integer> results = new HashMap<Long, Integer>();
 		for (Serializable[] ids: data) {
 			if (ArrayUtil.isEmpty(ids) || ids.length != 2)
 				continue;
@@ -1050,7 +1099,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			if (piId instanceof Number && caseId instanceof Number)
 				results.put(((Number) piId).longValue(), ((Number) caseId).intValue());
 		}
-		return results;
+
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, procInstIds, results);
 	}
 
 	@Override
@@ -1133,8 +1183,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (userId == null)
 			return null;
 
-		String query = "select distinct b." + CaseProcInstBind.procInstIdColumnName + " from " + CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.COLUMN_CASE_SUBSCRIBERS +
-				" s where s." + com.idega.user.data.User.FIELD_USER_ID + " = " + userId + " and s." + CaseBMPBean.PK_COLUMN + " = b." + CaseProcInstBind.caseIdColumnName;
+		String query = "select distinct b." + CaseProcInstBind.procInstIdColumnName + " from " + CaseProcInstBind.TABLE_NAME + " b, " +
+				CaseBMPBean.COLUMN_CASE_SUBSCRIBERS + " s where s." + com.idega.user.data.User.FIELD_USER_ID + " = " + userId + " and s." +
+				CaseBMPBean.PK_COLUMN + " = b." + CaseProcInstBind.caseIdColumnName;
 
 		//	Checking if concrete processes are provided
 		if (!ListUtil.isEmpty(procInstIds)) {
