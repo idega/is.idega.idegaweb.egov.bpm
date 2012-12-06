@@ -72,7 +72,6 @@ import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.core.accesscontrol.bean.UserHasLoggedInEvent;
-import com.idega.core.builder.business.BuilderService;
 import com.idega.core.builder.data.ICPage;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.component.bean.RenderedComponent;
@@ -82,6 +81,7 @@ import com.idega.core.component.data.ICObjectInstanceHome;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainSlideStartedEvent;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -94,7 +94,9 @@ import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ListNavigator;
 import com.idega.presentation.paging.PagedDataCollection;
+import com.idega.user.business.GroupBusiness;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.data.Group;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -663,33 +665,33 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return true;
 	}
 
-	private String getType(BuilderService service, String pageKey, String instanceId) {
-		String type = getProperty(service, pageKey, instanceId, ":method:1:implied:void:setType:java.lang.String:");
+	private String getType(BuilderLogic builder, String pageKey, String instanceId) {
+		String type = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setType:java.lang.String:");
 		return StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
 	}
 
-	private List<String> getCodes(BuilderService service, String pageKey, String instanceId) {
-		String codes = getProperty(service, pageKey, instanceId, ":method:1:implied:void:setCaseCodes:java.lang.String:");
+	private List<String> getCodes(BuilderLogic builder, String pageKey, String instanceId) {
+		String codes = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setCaseCodes:java.lang.String:");
 		return StringUtil.isEmpty(codes) ? null : new ArrayList<String>(Arrays.asList(codes.split(CoreConstants.COMMA)));
 	}
 
-	private List<String> getStatusesToHide(BuilderService service, String pageKey, String instanceId) {
-		String hide = getProperty(service, pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToHide:java.lang.String:");
+	private List<String> getStatusesToHide(BuilderLogic builder, String pageKey, String instanceId) {
+		String hide = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToHide:java.lang.String:");
 		return StringUtil.isEmpty(hide) ? null : new ArrayList<String>(Arrays.asList(hide.split(CoreConstants.COMMA)));
 	}
 
-	private List<String> getStatusesToShow(BuilderService service, String pageKey, String instanceId) {
-		String show = getProperty(service, pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToShow:java.lang.String:");
+	private List<String> getStatusesToShow(BuilderLogic builder, String pageKey, String instanceId) {
+		String show = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToShow:java.lang.String:");
 		return StringUtil.isEmpty(show) ? null : new ArrayList<String>(Arrays.asList(show.split(CoreConstants.COMMA)));
 	}
 
-	private boolean isShowSubscribedOnly(BuilderService service, String pageKey, String instanceId) {
-		String subscribedOnly = getProperty(service, pageKey, instanceId, ":method:1:implied:void:setOnlySubscribedCases:boolean:");
+	private boolean isShowSubscribedOnly(BuilderLogic builder, String pageKey, String instanceId) {
+		String subscribedOnly = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setOnlySubscribedCases:boolean:");
 		return StringUtil.isEmpty(subscribedOnly) ? false : "T".equals(subscribedOnly) || Boolean.TRUE.toString().equals(subscribedOnly);
 	}
 
-	private String getProperty(BuilderService service, String pageKey, String instanceId, String property) {
-		return service.getProperty(pageKey, instanceId, property);
+	private String getProperty(BuilderLogic builder, String pageKey, String instanceId, String property) {
+		return builder.getProperty(pageKey, instanceId, property);
 	}
 
 	@Override
@@ -701,16 +703,16 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (iwc == null || !iwc.isLoggedOn())
 			return null;
 
-		BuilderService service = getBuilderLogic().getBuilderService(iwc);
-		String pageKey = service.getPageKeyByURI(uri);
+		BuilderLogic builder = BuilderLogic.getInstance();
+		String pageKey = builder.getPageKeyByURI(uri, iwc.getDomain());
 
 		User user = iwc.getCurrentUser();
 
-		String type = getType(service, pageKey, instanceId);
-		List<String> caseCodes = getCodes(service, pageKey, instanceId);
-		List<String> statusesToHide = getStatusesToHide(service, pageKey, instanceId);
-		List<String> statusesToShow = getStatusesToShow(service, pageKey, instanceId);
-		boolean onlySubscribedCases = isShowSubscribedOnly(service, pageKey, instanceId);
+		String type = getType(builder, pageKey, instanceId);
+		List<String> caseCodes = getCodes(builder, pageKey, instanceId);
+		List<String> statusesToHide = getStatusesToHide(builder, pageKey, instanceId);
+		List<String> statusesToShow = getStatusesToShow(builder, pageKey, instanceId);
+		boolean onlySubscribedCases = isShowSubscribedOnly(builder, pageKey, instanceId);
 
 		PagedDataCollection<CasePresentation> cases = getCaseManagersProvider().getCaseManager().getCases(user, type, iwc.getCurrentLocale(),
 				caseCodes, statusesToHide, statusesToShow, Integer.MAX_VALUE, -1, onlySubscribedCases, true);
@@ -838,6 +840,66 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			cacheReseter.start();
 		} else if (event instanceof UserHasLoggedInEvent) {
 			doLoadCases(((UserHasLoggedInEvent) event).getUserId());
+		} else if (event instanceof IWMainSlideStartedEvent) {
+			doLoadCases(((IWMainSlideStartedEvent) event).getIWMA());
+		}
+	}
+
+	private void doLoadCases(IWMainApplication app) {
+		String groupId = app.getSettings().getProperty("load_cases_for_group");
+		if (StringUtil.isEmpty(groupId))
+			return;
+
+		try {
+			GroupBusiness groupBusiness = IBOLookup.getServiceInstance(app.getIWApplicationContext(), GroupBusiness.class);
+			Group group = groupBusiness.getGroupByGroupID(Integer.valueOf(groupId));
+			doLoadCases(app, group);
+
+			if (app.getSettings().getBoolean("load_cases_for_group_children", Boolean.FALSE)) {
+				@SuppressWarnings("unchecked")
+				Collection<Group> children = group.getChildren();
+				if (ListUtil.isEmpty(children)) {
+					LOGGER.warning("There are no children groups for group " + group + ", ID: " + group.getId());
+					return;
+				}
+
+				for (Group child: children)
+					doLoadCases(app, child);
+			}
+		} catch (FinderException e) {
+			LOGGER.warning("Group by ID '" + groupId + "' does not exist!");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private void doLoadCases(IWMainApplication app, Group group) {
+		if (group == null) {
+			LOGGER.warning("Group is not provided");
+			return;
+		}
+
+		try {
+			UserBusiness userBusiness = IBOLookup.getServiceInstance(app.getIWApplicationContext(), UserBusiness.class);
+			Collection<User> users = userBusiness.getUsersInGroup(group);
+			if (ListUtil.isEmpty(users)) {
+				LOGGER.warning("There are no users in group " + group + ", ID: " + group.getId());
+				return;
+			}
+
+			LOGGER.info("Will load cases for users: " + users);
+			for (final User user: users) {
+				Thread loader = new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						doLoadCases(user);
+					}
+				});
+				loader.start();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
@@ -851,8 +913,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		getLogger().info("Loading cases for " + user);
 
 		BuilderLogic builder = BuilderLogic.getInstance();
-		IWApplicationContext iwac = getApplication().getIWApplicationContext();
-		BuilderService service = getBuilderLogic().getBuilderService(iwac);
 
 		@SuppressWarnings("unchecked")
 		List<Class<? extends CaseBlock>> classes = Arrays.asList(
@@ -880,16 +940,16 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					continue;
 
 				String instanceId = ICObjectBusiness.UUID_PREFIX.concat(uniqueId);
-				ICPage page = builder.findPageForModule(iwac, instanceId);
+				ICPage page = builder.findPageForModule(getApplication(), instanceId);
 				if (page == null || page.getDeleted())
 					continue;
 				String pageKey = page.getId();
 
-				String type = getType(service, pageKey, instanceId);
-				List<String> caseCodes = getCodes(service, pageKey, instanceId);
-				List<String> statusesToHide = getStatusesToHide(service, pageKey, instanceId);
-				List<String> statusesToShow = getStatusesToShow(service, pageKey, instanceId);
-				boolean onlySubscribedCases = isShowSubscribedOnly(service, pageKey, instanceId);
+				String type = getType(builder, pageKey, instanceId);
+				List<String> caseCodes = getCodes(builder, pageKey, instanceId);
+				List<String> statusesToHide = getStatusesToHide(builder, pageKey, instanceId);
+				List<String> statusesToShow = getStatusesToShow(builder, pageKey, instanceId);
+				boolean onlySubscribedCases = isShowSubscribedOnly(builder, pageKey, instanceId);
 
 				try {
 					getCaseManagersProvider().getCaseManager().getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow,
