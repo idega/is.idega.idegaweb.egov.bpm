@@ -74,7 +74,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 		Locale defaultLocale = iwma.getDefaultLocale();
 		//	Making sure default locale is not null
-		defaultLocale = defaultLocale == null ? iwc.getCurrentLocale() : defaultLocale;
+		defaultLocale = iwc == null ? defaultLocale : iwc.getCurrentLocale();
 		defaultLocale = defaultLocale == null ? Locale.ENGLISH : defaultLocale;
 
 		final List<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
@@ -86,9 +86,14 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			if (msgs.getRecipientUserId() != null) {
 				users = new ArrayList<User>();
 				users.add(getUserBusiness(iwc).getUser(msgs.getRecipientUserId()));
-			}
-			else {
+			} else {
 				users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
+			}
+
+			if (ListUtil.isEmpty(users)) {
+				LOGGER.warning("There are no recipients to send message " + msgs);
+			} else {
+				LOGGER.info("Sending message " + msgs + " to " + users + " for case " + caseId);
 			}
 
 			long pid = pi.getId();
@@ -141,6 +146,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			return;
 
 		new Thread(new Runnable() {
+			@Override
 			public void run() {
 				try {
 					for (MessageValue messageValue : msgValsToSend) {

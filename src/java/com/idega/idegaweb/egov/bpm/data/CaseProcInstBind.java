@@ -36,13 +36,14 @@ import com.idega.jbpm.data.BPMVariableData;
 @NamedQueries({
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId in (:"+CaseProcInstBind.casesIdsParam + ")"),
+	@NamedQuery(name=CaseProcInstBind.getProcInstIds_BY_CASES_IDS_QUERY_NAME, query="select cp." + CaseProcInstBind.procInstIdProp + " from CaseProcInstBind cp where cp.caseId in (:"+CaseProcInstBind.casesIdsParam + ")"),
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_PROCESSES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.procInstId in (:"+CaseProcInstBind.procInstIdsParam + ")"),
 	@NamedQuery(name=CaseProcInstBind.getLatestByDateQN, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = :"+CaseProcInstBind.dateCreatedProp+" and cp."+CaseProcInstBind.caseIdentierIDProp+" = (select max(cp2."+CaseProcInstBind.caseIdentierIDProp+") from CaseProcInstBind cp2 where cp2."+CaseProcInstBind.dateCreatedProp+" = cp."+CaseProcInstBind.dateCreatedProp+")"),
 	@NamedQuery(name=CaseProcInstBind.getLastCreatedCase, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = (select max(cp2."+CaseProcInstBind.dateCreatedProp+") from CaseProcInstBind cp2) order by cp."+CaseProcInstBind.dateCreatedProp + ", cp."+CaseProcInstBind.caseIdentierIDProp),
 	@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getCaseIdByProcessInstanceId, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp."+ CaseProcInstBind.procInstIdProp + " = :" + CaseProcInstBind.procInstIdProp),
-	@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIds, query = "select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp." + CaseProcInstBind.procInstIdProp + " in (:" + CaseProcInstBind.processInstanceIdsProp + ") group by cp." + CaseProcInstBind.caseIdProp),
+	@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIds, query = "select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp." + CaseProcInstBind.procInstIdProp + " in (:" + CaseProcInstBind.processInstanceIdsProp + ") group by cp." + CaseProcInstBind.caseIdProp + " order by cp." + CaseProcInstBind.dateCreatedProp + " desc"),
 	@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null")
 })
 
@@ -77,7 +78,8 @@ import com.idega.jbpm.data.BPMVariableData;
 				"select cp.case_id caseId from "+CaseProcInstBind.TABLE_NAME+" cp " +
 				"inner join "+ ProcessUserBind.TABLE_NAME+" pu " +
 				"on cp."+CaseProcInstBind.procInstIdColumnName+" = pu.process_instance_id " +
-				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :"+ProcessUserBind.statusProp
+				"where cp."+CaseProcInstBind.procInstIdColumnName+" in (:"+CaseProcInstBind.procInstIdProp+") and pu.user_status = :" +
+				ProcessUserBind.statusProp
 			),
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessUserStatus, resultSetMapping="caseId",
 					query=
@@ -194,6 +196,7 @@ public class CaseProcInstBind implements Serializable {
 
 	public static final String BIND_BY_CASEID_QUERY_NAME = "CaseProcInstBind.bindByCaseIdQuery";
 	public static final String BIND_BY_CASES_IDS_QUERY_NAME = "CaseProcInstBind.bindByCasesIdsQuery",
+								getProcInstIds_BY_CASES_IDS_QUERY_NAME = "CaseProcInstBind.getProcInstIdsByCasesIdsQuery",
 								BIND_BY_PROCESSES_IDS_QUERY_NAME = "CaseProcInstBind.bindByProcInstIdsQuery";
 	public static final String getLatestByDateQN = "CaseProcInstBind.getLatestByDate";
 	public static final String getLastCreatedCase = "CaseProcInstBind.getLastCreatedCase";

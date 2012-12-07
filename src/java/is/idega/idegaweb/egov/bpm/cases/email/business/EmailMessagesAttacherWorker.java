@@ -54,7 +54,7 @@ import com.idega.util.expression.ELUtil;
 
 /**
  * Resolves messages to attach and attaches
- * 
+ *
  * @author <a href="mailto:valdas@idega.com">Valdas Žemaitis</a>
  * @version $Revision: 1.1 $ Last modified: $Date: 2009/04/22 12:56:21 $ by $Author: valdas $
  */
@@ -64,30 +64,30 @@ import com.idega.util.expression.ELUtil;
 public class EmailMessagesAttacherWorker implements Runnable {
 
 	private static final Logger LOGGER = Logger.getLogger(EmailMessagesAttacherWorker.class.getName());
-	
+
 	@Autowired
 	private BPMContext idegaJbpmContext;
 	@Autowired
 	private BPMFactory bpmFactory;
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
-	
+
 	private ApplicationEmailEvent emailEvent;
-	
+
 	public EmailMessagesAttacherWorker(ApplicationEmailEvent emailEvent) {
 		this.emailEvent = emailEvent;
-		
+
 		ELUtil.getInstance().autowire(this);
 	}
-	
+
+	@Override
 	public void run() {
 		parseAndAttachMessages();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void parseAndAttachMessages() {
 		Map<String, FoundMessagesInfo> messagesToParse = new HashMap<String, FoundMessagesInfo>();
-		
+
 		Map<String, FoundMessagesInfo> messagesInfo = emailEvent.getMessages();
 		if (messagesInfo != null && !messagesInfo.isEmpty()) {
 			for (Entry<String, FoundMessagesInfo> entry: messagesInfo.entrySet()) {
@@ -96,8 +96,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				}
 			}
 		}
-		
-		Map<Object, Object> parsersProviders = null;
+
+		Map<?, ?> parsersProviders = null;
 		try {
 			parsersProviders = WebApplicationContextUtils.getWebApplicationContext(IWMainApplication.getDefaultIWMainApplication()
 					.getServletContext()).getBeansOfType(EmailsParsersProvider.class);
@@ -107,28 +107,29 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		if (parsersProviders == null || parsersProviders.isEmpty()) {
 			return;
 		}
-		
+
 		EmailParams params = emailEvent.getEmailParams();
-		
+
 		Collection<BPMEmailMessage> allParsedMessages = new ArrayList<BPMEmailMessage>();
 		for (Object bean: parsersProviders.values()) {
 			if (bean instanceof EmailsParsersProvider) {
 				for (EmailParser parser: ((EmailsParsersProvider) bean).getAllParsers()) {
 					Collection<? extends EmailMessage> parsedMessages = parser.getParsedMessagesCollection(messagesToParse, params);
 					addParsedMessages(allParsedMessages, parsedMessages);
-					
+
 					parsedMessages = parser.getParsedMessages(emailEvent);
 					addParsedMessages(allParsedMessages, parsedMessages);
 				}
 			}
 		}
-		
+
 		if (ListUtil.isEmpty(allParsedMessages)) {
 			return;
 		}
-		
+
 		final Collection<BPMEmailMessage> messagesToAttach = allParsedMessages;
 		getIdegaJbpmContext().execute(new JbpmCallback() {
+			@Override
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				for (BPMEmailMessage message: messagesToAttach) {
 					if (!attachEmailMessage(context, message)) {
@@ -139,18 +140,18 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			}
 		});
 	}
-	
+
 	private void addParsedMessages(Collection<BPMEmailMessage> allParsedMessages, Collection<? extends EmailMessage> parsedMessages) {
 		if (ListUtil.isEmpty(parsedMessages))
 			return;
-		
+
 		for (EmailMessage message: parsedMessages) {
 			if (message instanceof BPMEmailMessage && !allParsedMessages.contains(message)) {
 				allParsedMessages.add((BPMEmailMessage) message);
 			}
 		}
 	}
-	
+
 	@Transactional
 	private boolean attachEmailMessage(JbpmContext ctx, BPMEmailMessage message) {
 		if (message.isParsed()) {
@@ -159,29 +160,29 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		if (ctx == null || message == null) {
 			return false;
 		}
-		
+
 		ProcessInstance pi = ctx.getProcessInstance(message.getProcessInstanceId());
 		@SuppressWarnings("unchecked")
 		List<Token> tkns = pi.findAllTokens();
 		if (ListUtil.isEmpty(tkns)) {
 			return false;
 		}
-		
+
 		for (Token tkn : tkns) {
 			ProcessInstance subPI = tkn.getSubProcessInstance();
 			if (subPI == null || !EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
 				continue;
 			}
-			
+
 			String subject = message.getSubject();
 			String text = message.getBody();
 			if (text == null)
 				text = CoreConstants.EMPTY;
 			String senderPersonalName = message.getSenderName();
 			String fromAddress = message.getFromAddress();
-			
+
 			List<String> varsNames = Arrays.asList("string_subject", "string_text", "string_fromPersonal", "string_fromAddress");
-			
+
 			Map<String, List<Serializable>> variablesWithValues = new HashMap<String, List<Serializable>>();
 			variablesWithValues.put(varsNames.get(0), Arrays.asList((Serializable) subject));
 			variablesWithValues.put(varsNames.get(2), Arrays.asList((Serializable) senderPersonalName));
@@ -198,31 +199,34 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					}
 				}
 			}
-			
+
 			try {
 				TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
 				ti.setName(subject);
-				
+
 				Map<String, Object> newVars = new HashMap<String, Object>(2);
 				newVars.put(varsNames.get(0), subject);
 				newVars.put(varsNames.get(1), text);
 				newVars.put(varsNames.get(2), senderPersonalName);
 				newVars.put(varsNames.get(3), fromAddress);
-				
+
 				BPMFactory bpmFactory = getBpmFactory();
-				
+
 				// taking here view for new task instance
-				View view = getBpmFactory().takeView(ti.getId(), false, null);
-				LOGGER.info("View for email message to attach: " + view);
-				
+				long tiId = ti.getId();
+				View view = getBpmFactory().takeView(tiId, false, null);
+				LOGGER.info("Task instance ID for email message to attach: " + tiId + ". View: " + view);
+
 				long pdId = ti.getProcessInstance().getProcessDefinition().getId();
-				
+
 				ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
 				emailViewSubmission.populateVariables(newVars);
-				
+
 				TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
 				taskInstance.submit(emailViewSubmission, false);
-				
+				LOGGER.info("Submitted task instance " + taskInstance.getTaskInstanceId() + " with data from email message (sender: " + fromAddress +
+						", subject: " + subject + ") for process instance: " + taskInstance.getProcessInstanceW().getProcessInstanceId());
+
 				Map<String, InputStream> attachments = message.getAttachments();
 				Collection<File> attachedFiles = message.getAttachedFiles();
 				if (!ListUtil.isEmpty(attachedFiles)) {
@@ -235,10 +239,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						}
 					}
 				}
-				
+
 				if (attachments != null && !attachments.isEmpty()) {
 					Variable variable = new Variable("attachments", VariableDataType.FILES);
-					
+
 					InputStream fileStream = null;
 					for (String fileName : attachments.keySet()) {
 						fileStream = attachments.get(fileName);
@@ -256,13 +260,13 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						}
 					}
 				}
-				
+
 				message.setParsed(true);
 				return true;
 			} catch (Exception e) {
 				LOGGER.log(Level.SEVERE, "Exception while attaching email msg (subject: " + message.getSubject() + ", body: " + message.getBody() + "). Token: " +
 						tkn.getName() + " (" + tkn.getId() + "), sub-process: " + subPI.getId(), e);
-			}	
+			}
 		}
 		return false;
 	}
@@ -282,5 +286,5 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
-	
+
 }

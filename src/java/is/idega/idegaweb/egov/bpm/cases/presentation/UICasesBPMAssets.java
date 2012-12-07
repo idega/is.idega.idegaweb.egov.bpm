@@ -224,7 +224,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	}
 
 	public void setFullView(boolean fullView) {
-		CaseManagerState caseHandlerState = (CaseManagerState)WFUtil.getBeanInstance(CaseManagerState.beanIdentifier);
+		CaseManagerState caseHandlerState = WFUtil.getBeanInstance(CaseManagerState.beanIdentifier);
 		caseHandlerState.setFullView(fullView);
 		this.fullView = fullView;
 	}
@@ -274,7 +274,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	}
 
 	public CasesBPMProcessView getCasesBPMProcessView() {
-		return (CasesBPMProcessView) WFUtil.getBeanInstance(CasesBPMProcessView.BEAN_IDENTIFIER);
+		return WFUtil.getBeanInstance(CasesBPMProcessView.BEAN_IDENTIFIER);
 	}
 
 	public Integer getCaseId() {

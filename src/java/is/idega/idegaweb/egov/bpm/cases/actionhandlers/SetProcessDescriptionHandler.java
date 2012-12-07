@@ -11,6 +11,7 @@ import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -19,6 +20,7 @@ import com.idega.block.process.data.CaseCode;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
@@ -38,8 +40,9 @@ import com.idega.util.ListUtil;
  *
  */
 @Service("setProcessDescriptionHandler")
-@Scope("prototype")
-public class SetProcessDescriptionHandler implements ActionHandler {
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
+public class SetProcessDescriptionHandler extends DefaultSpringBean implements ActionHandler {
+
 	private static final long serialVersionUID = -4735864635886588195L;
 
 	private String description;

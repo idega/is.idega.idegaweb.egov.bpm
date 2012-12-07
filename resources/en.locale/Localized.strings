@@ -71,10 +71,12 @@ bpm_variable.string_ticketStreetAddress=Ticket street address
 bpm_variable.string_ticketStreetDescription=Violation description
 bpm_variable.string_ticketType=Ticket type
 bpm_variable.list_ticketViolationsNumbers=Ticket violation number
-bpm_variable.string_officerNumber=Ticket officer number
+bpm_variable.officerID=Officer number
 bpm_variable.string_ticketMeterNumber=Meter number
 bpm_variable.parkingReportFilterDateRangeFrom=From
 bpm_variable.parkingReportFilterDateRangeTo=To
+bpm_variable.string_invoiceNumber=Invoice number
+bpm_variable.string_ticketViolationsLabels=Violation numbers
 
 bpm_variable.handlerUserId=Handler
 bpm_variable.objlist_violationPersons=Violator personal ID

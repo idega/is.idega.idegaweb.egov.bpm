@@ -11,6 +11,7 @@ import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -98,7 +99,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		final ProcessDefinition pd = getProcessDefinition();
 
-		getLogger().info("Starting process for process definition id = " + processDefinitionId + ", process definition name: " + pd.getName());
+		final String procDefName = pd.getName();
+		getLogger().info("Starting process for process definition id = " + processDefinitionId + ", process definition name: " + procDefName);
 
 		Map<String, String> parameters = viewSubmission.resolveParameters();
 
@@ -114,7 +116,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		final String caseIdentifier = parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER);
 		final String realCaseCreationDate = parameters.get(CasesBPMProcessConstants.caseCreationDateParam);
 
-		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ? new Date() : new IWTimestamp(realCaseCreationDate).getDate();
+		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ?
+				new Timestamp(System.currentTimeMillis()) :
+				new IWTimestamp(realCaseCreationDate).getTimestamp();
 
 		Long piId = getBpmContext().execute(new JbpmCallback() {
 			@Override
@@ -128,7 +132,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					// binding view to task instance
 					view.getViewToTask().bind(view, ti);
 
-					getLogger().info("New process instance created for the process " + pd.getName());
+					getLogger().info("New process instance created for the process " + procDefName);
 
 					pi.setStart(new Date());
 
@@ -140,7 +144,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					CasesBusiness casesBusiness = getCasesBusiness(iwac);
 
-					CaseTypesProcDefBind bind = getCasesBPMDAO().find(CaseTypesProcDefBind.class, pd.getName());
+					CaseTypesProcDefBind bind = getCasesBPMDAO().find(CaseTypesProcDefBind.class, procDefName);
 					Long caseCategoryId = bind.getCasesCategoryId();
 					Long caseTypeId = bind.getCasesTypeId();
 
@@ -162,8 +166,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						            false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
 						);
 					} catch (Exception e) {
-						String message = "Error creating case for BPM process: " + pi.getId() + ". User: " + user + ", case category ID: " + caseCategoryId + ", case type ID: "
-						+ caseTypeId + ", resource bunlde: " + iwrb + ", case identifier: " + caseIdentifier + ", case status key: " + caseStatusKey;
+						String message = "Error creating case for BPM process: " + pi.getId() + ". User: " + user + ", case category ID: " +
+								caseCategoryId + ", case type ID: "	+ caseTypeId + ", resource bunlde: " + iwrb + ", case identifier: " +
+								caseIdentifier + ", case status key: " + caseStatusKey;
 						getLogger().log(Level.SEVERE, message, e);
 						CoreUtil.sendExceptionNotification(message, e);
 						throw new RuntimeException(message, e);
@@ -172,7 +177,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
 
 					pi.setStart(caseCreated);
-					notifyAboutNewProcess(pd.getName(), pi.getId());
 
 					Map<String, Object> caseData = new HashMap<String, Object>();
 					caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
@@ -193,7 +197,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					IWContext iwc = CoreUtil.getIWContext();
 					dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
 					IWTimestamp created = new IWTimestamp(genCase.getCreated());
-					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT, IWTimestamp.SHORT));
+					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT,
+							IWTimestamp.SHORT));
 
 					CaseProcInstBind piBind = new CaseProcInstBind();
 					piBind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
@@ -232,8 +237,13 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				}
 			}
 		});
-		getLogger().info("Process was created: " + piId);
-		return piId;
+
+		try {
+			getLogger().info("Process was created: " + piId);
+			return piId;
+		} finally {
+			notifyAboutNewProcess(procDefName, piId);
+		}
 	}
 
 	@Override

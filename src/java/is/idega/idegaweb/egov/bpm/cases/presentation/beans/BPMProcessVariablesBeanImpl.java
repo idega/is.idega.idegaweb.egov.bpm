@@ -1,7 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -84,15 +83,13 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
 		for (VariableInstanceInfo variable: variables) {
 			name = variable.getName();
-			if (StringUtil.isEmpty(name) || addedVariables.contains(name)) {
+			if (StringUtil.isEmpty(name) || addedVariables.contains(name))
 				continue;
-			}
 
 			VariableInstanceType varType = variable.getType();
 			type = varType == null ? null : varType.getTypeKeys().get(0);
-			if (StringUtil.isEmpty(type)) {
+			if (StringUtil.isEmpty(type))
 				continue;
-			}
 
 			localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
 			if (StringUtil.isEmpty(localizedName))
@@ -101,17 +98,19 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 				continue;
 
 			String realValue = null;
-			if (useRealValue) {
+			if (useRealValue)
 				realValue = getVariableRealValue(variable, locale);
-			}
+
 			if (!useRealValue || !StringUtil.isEmpty(realValue)) {
-				availableVariables.add(new AdvancedProperty(useRealValue ? realValue : new StringBuilder(name).append(at).append(type).toString(),localizedName));
+				AdvancedProperty var = new AdvancedProperty(useRealValue ? realValue : new StringBuilder(name).append(at).append(type).toString(),
+						localizedName, name);
+				var.setExternalId(variable.getProcessInstanceId());
+				availableVariables.add(var);
 				addedVariables.add(name);
 			}
 		}
-		if (ListUtil.isEmpty(availableVariables)) {
+		if (ListUtil.isEmpty(availableVariables))
 			return null;
-		}
 
 		Collections.sort(availableVariables, new AdvancedPropertyComparator(locale));
 		return availableVariables;
@@ -172,6 +171,11 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		return processVariables;
 	}
 
+	@Override
+	public String getVariableLocalizedName(String name, Locale locale) {
+		return getVariableLocalizedName(name, getBundle().getResourceBundle(locale), false);
+	}
+
 	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
 		String localizedName = iwrb.getLocalizedString(new StringBuilder(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX).append(name).toString(), isAdmin ? name : null);
 
@@ -192,29 +196,30 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 
 	private String getVariableRealValue(VariableInstanceInfo variable, Locale locale) {
 		Serializable value = variable.getValue();
-		if (value == null) {
+		if (value == null)
 			return null;	//	Invalid value
-		}
+
+		MultipleSelectionVariablesResolver resolver = getResolver(variable.getName());
+		if (resolver != null)
+			return resolver.getPresentation(variable);
 
 		BPMProcessVariable bpmVariable = new BPMProcessVariable(variable.getName(), value.toString(), variable.getType().getTypeKeys().get(0));
 		Serializable realValue = bpmVariable.getRealValue();
-		if (realValue == null) {
+		if (realValue == null)
 			return null;
-		}
 
-		if (realValue instanceof String) {
+		if (realValue instanceof String)
 			return (String) realValue;
-		}
+
 		if (realValue instanceof Date) {
 			IWTimestamp date = new IWTimestamp((Date) value);
-			return date.getLocaleDate(locale, DateFormat.SHORT);
-		}
-
-		if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(variable.getName()) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(variable.getName())
-				|| variable.getName().startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) || variable.getName().startsWith(VariableInstanceType.LIST.getPrefix())
-				|| variable.getName().equals("string_harbourNr")) {
-			MultipleSelectionVariablesResolver resolver = getResolver(variable.getName());
-			return resolver == null ? null : resolver.getPresentation(variable);
+			String dateValue = null;
+			try {
+				dateValue = date.getLocaleDateAndTime(locale, DateFormat.SHORT, DateFormat.SHORT);
+			} catch (Exception e) {}
+			if (dateValue == null)
+				return date.getLocaleDate(locale, DateFormat.SHORT);
+			return dateValue;
 		}
 
 		return realValue.toString();

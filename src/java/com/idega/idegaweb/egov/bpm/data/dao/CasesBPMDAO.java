@@ -3,6 +3,7 @@ package com.idega.idegaweb.egov.bpm.data.dao;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import org.jbpm.graph.exe.Token;
 
@@ -12,6 +13,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.jbpm.bean.BPMProcessVariable;
+import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.util.IWTimestamp;
 
 /**
@@ -42,7 +44,8 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public abstract CaseProcInstBind getLastCreatedCaseProcInstBind();
 
-	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs);
+	public abstract List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates,
+			Collection<Integer> identifierIDs);
 
 	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
 
@@ -66,11 +69,10 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifier(Collection<String> identifiers);
 
 	public abstract List<Integer> getOpenCasesIds(User user, List<String> caseCodes, List<String> caseStatuses, List<String> caseStatusesToHide,
-	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases);
+	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
 
-	public abstract List<Integer> getClosedCasesIds(User user,
-	        List<String> caseStatuses, List<String> caseStatusesToHide,
-	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases);
+	public abstract List<Integer> getClosedCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, Collection<Integer> groups,
+			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
 
 	/**
 	 * @param user
@@ -79,24 +81,32 @@ public interface CasesBPMDAO extends GenericDao {
 	 * @return cases of not ended processes (end_ is null) whose user provided is handler of, or
 	 *         what user is watching
 	 */
-	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, boolean onlySubscribedCases);
+	public abstract List<Integer> getMyCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, boolean onlySubscribedCases,
+			Integer caseId, List<Long> procInstIds);
 
-	public abstract List<Integer> getUserCasesIds(User user,
-	        List<String> caseStatuses, List<String> caseStatusesToHide,
-	        List<String> caseCodes, Collection<String> roles, boolean onlySubscribedCases);
+	public abstract List<Integer> getUserCasesIds(User user, List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes,
+			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
 
-	public abstract List<Integer> getPublicCasesIds(List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes);
+	public abstract List<Integer> getPublicCasesIds(List<String> caseStatuses, List<String> caseStatusesToHide, List<String> caseCodes,
+			Integer caseId, List<Long> procInstIds);
 
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(
 	        List<String> caseStatuses, List<String> caseStatusesToHide);
 
-	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes,
-	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
+	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes, List<String> caseStatusesToShow, List<String> caseStatusesToHide,
+			Integer caseId, List<Long> procInstIds);
 
-	public List<Integer> getClosedCasesIdsForAdmin(
-	        List<String> caseStatusesToShow, List<String> caseStatusesToHide);
+	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide, Integer caseId,
+			List<Long> procInstIds);
 
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
+			List<String> procDefNames);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
+			List<Long> procInstIds);
+
+	public List<Long> getProcessInstancesByCasesIds(List<Integer> casesIds);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds);
 
 	public Long getProcessInstanceIdByCaseSubject(String subject);
 
@@ -107,8 +117,11 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Long> getProcessInstanceIdsForSubscribedCases(Integer userId, List<Long> procInstIds);
 
 	public List<Long> getProcessInstanceIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByUserAndProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
 
 	public boolean doSubscribeToCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
 	public boolean doSubscribeToCasesByProcessInstanceIds(com.idega.user.data.User user, List<Long> procInstIds);
 	public boolean doUnSubscribeFromCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
+
+	public Map<Long, List<VariableInstanceInfo>> getBPMValuesByCasesIdsAndVariablesNames(List<String> casesIds, List<String> names);
 }
