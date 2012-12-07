@@ -122,8 +122,14 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 				LOGGER.finer("Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+") name="+user.getName());
 
-				MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
-				msgValsToSend.add(mv);
+				//Hard coding of the death!
+				if (subject.equals("Vinsamlega endurnýjið veiðileyfi fyrir komandi fiskveiðiár")) {
+					//Don't add message...
+				}
+				else {
+					MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
+					msgValsToSend.add(mv);
+				}
 			}
 		} catch (RemoteException e) {
 			LOGGER.log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
