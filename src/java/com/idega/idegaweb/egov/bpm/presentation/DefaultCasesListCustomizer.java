@@ -133,8 +133,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 		}
 
+		//	Resolving labels
 		Map<String, Map<String, String>> labels = new LinkedHashMap<String, Map<String,String>>();
-		Map<Long, List<String>> missingValues = new HashMap<Long, List<String>>();
 		Map<String, Long> mappings = new HashMap<String, Long>();
 		for (Long procId: vars.keySet()) {
 			List<VariableInstanceInfo> procVars = vars.get(procId);
@@ -164,65 +164,13 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			}
 		}
 
-		//	Marking which labels are missing
-		for (String caseId: labels.keySet()) {
-			Map<String, String> caseLabels = labels.get(caseId);
-			Long procId = mappings.get(caseId);
-
-			for (String headerKey: headersKeys) {
-				if (caseLabels.containsKey(headerKey) && !StringUtil.isEmpty(caseLabels.get(headerKey)))
-					continue;
-
-				getLogger().info("Found missing label (" + headerKey + ") for case: " + caseId + ", proc. inst. ID: " + procId);
-
-				List<String> names = missingValues.get(procId);
-				if (names == null) {
-					names = new ArrayList<String>();
-					missingValues.put(procId, names);
-				}
-				names.add(headerKey);
-			}
-		}
-
-		/*//	Loading missing values
-		if (!MapUtil.isEmpty(missingValues)) {
-			getLogger().info("Will try to load missing values: " + missingValues);
-
-			List<Long> procInstIds = new ArrayList<Long>(missingValues.keySet());
-			Map<String, Boolean> variablesNames = new HashMap<String, Boolean>();
-			for (Collection<String> names: missingValues.values())
-				for (String name: names)
-					variablesNames.put(name, Boolean.TRUE);
-
-			Map<Long, List<VariableInstanceInfo>> missingVars = getVariablesQuerier().getGroupedVariables(getVariablesQuerier()
-					.getVariablesByProcessInstanceIdAndVariablesNames(procInstIds, false, new ArrayList<String>(variablesNames.keySet())));
-			if (MapUtil.isEmpty(missingVars))
-				return labels;
-
-			for (Long piId: missingValues.keySet()) {
-				List<VariableInstanceInfo> values = missingVars.get(piId);
-				if (ListUtil.isEmpty(values))
-					continue;
-
-				for (VariableInstanceInfo var: values) {
-					Map<String, String> caseLabels = labels.get(var.getCaseId());
-
-					AdvancedProperty label = getLabel(var);
-					if (label != null)
-						caseLabels.put(label.getId(), label.getValue());
-				}
-			}
-		}*/
-
+		//	Checking if everything was resolved
 		Map<String, List<String>> missingLabels = new HashMap<String, List<String>>();
-		//	Double check if all values were found
 		for (String caseId: labels.keySet()) {
 			for (String headerKey: headersKeys) {
 				Map<String, String> caseLabels = labels.get(caseId);
 				if (caseLabels.containsKey(headerKey) && !StringUtil.isEmpty(caseLabels.get(headerKey)))
 					continue;
-
-				getLogger().info("Label for key " + headerKey + " is still missing for case: " + caseId);
 
 				List<String> varNames = missingLabels.get(caseId);
 				if (varNames == null) {
@@ -233,7 +181,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			}
 		}
 		if (!MapUtil.isEmpty(missingLabels)) {
-			getLogger().info("There are still missing labels: " + missingLabels + " will try to resolve them");
+			getLogger().info("There are missing labels: " + missingLabels + " will try to resolve them");
 			doResolveMissingLabels(labels, missingLabels);
 		}
 
