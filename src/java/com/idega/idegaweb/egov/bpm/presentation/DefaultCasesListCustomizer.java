@@ -4,7 +4,6 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -185,7 +184,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			}
 		}
 
-		//	Loading missing values
+		/*//	Loading missing values
 		if (!MapUtil.isEmpty(missingValues)) {
 			getLogger().info("Will try to load missing values: " + missingValues);
 
@@ -213,14 +212,14 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 						caseLabels.put(label.getId(), label.getValue());
 				}
 			}
-		}
+		}*/
 
 		Map<String, List<String>> missingLabels = new HashMap<String, List<String>>();
 		//	Double check if all values were found
 		for (String caseId: labels.keySet()) {
 			for (String headerKey: headersKeys) {
 				Map<String, String> caseLabels = labels.get(caseId);
-				if ((MapUtil.isEmpty(caseLabels) || caseLabels.containsKey(headerKey)) && !StringUtil.isEmpty(caseLabels.get(headerKey)))
+				if (caseLabels.containsKey(headerKey) && !StringUtil.isEmpty(caseLabels.get(headerKey)))
 					continue;
 
 				getLogger().info("Label for key " + headerKey + " is still missing for case: " + caseId);
