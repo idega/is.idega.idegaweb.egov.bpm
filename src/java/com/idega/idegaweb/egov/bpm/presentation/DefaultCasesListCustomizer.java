@@ -123,8 +123,10 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 	@Override
 	public Map<String, Map<String, String>> getLabelsForHeaders(List<String> casesIds, List<String> headersKeys) {
-		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(headersKeys))
+		if (ListUtil.isEmpty(casesIds) || ListUtil.isEmpty(headersKeys)) {
+			getLogger().warning("There are no cases IDs or/and headers provided");
 			return null;
+		}
 
 		Map<Long, List<VariableInstanceInfo>> vars = getCasesBPMDAO().getBPMValuesByCasesIdsAndVariablesNames(casesIds, headersKeys);
 		if (MapUtil.isEmpty(vars)) {
@@ -134,6 +136,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 		Map<String, Map<String, String>> labels = new LinkedHashMap<String, Map<String,String>>();
 		Map<Long, List<String>> missingValues = new HashMap<Long, List<String>>();
+		Map<String, Long> mappings = new HashMap<String, Long>();
 		for (Long procId: vars.keySet()) {
 			List<VariableInstanceInfo> procVars = vars.get(procId);
 			if (ListUtil.isEmpty(procVars))
@@ -144,6 +147,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				String caseId = info.getCaseId();
 				if (StringUtil.isEmpty(caseId))
 					continue;
+
+				mappings.put(caseId, procId);
 
 				caseLabels = labels.get(caseId);
 				if (caseLabels == null) {
@@ -158,11 +163,18 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 				AdvancedProperty label = getLabel(info);
 				caseLabels.put(label.getId(), label.getValue());
 			}
+		}
 
-			//	Marking which labels are missing
+		//	Marking which labels are missing
+		for (String caseId: labels.keySet()) {
+			Map<String, String> caseLabels = labels.get(caseId);
+			Long procId = mappings.get(caseId);
+
 			for (String headerKey: headersKeys) {
-				if (caseLabels.containsKey(headerKey))
+				if (caseLabels.containsKey(headerKey) && !StringUtil.isEmpty(caseLabels.get(headerKey)))
 					continue;
+
+				getLogger().info("Found missing label (" + headerKey + ") for case: " + caseId + ", proc. inst. ID: " + procId);
 
 				List<String> names = missingValues.get(procId);
 				if (names == null) {
@@ -208,8 +220,10 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		for (String caseId: labels.keySet()) {
 			for (String headerKey: headersKeys) {
 				Map<String, String> caseLabels = labels.get(caseId);
-				if (MapUtil.isEmpty(caseLabels) || caseLabels.containsKey(headerKey))
+				if ((MapUtil.isEmpty(caseLabels) || caseLabels.containsKey(headerKey)) && !StringUtil.isEmpty(caseLabels.get(headerKey)))
 					continue;
+
+				getLogger().info("Label for key " + headerKey + " is still missing for case: " + caseId);
 
 				List<String> varNames = missingLabels.get(caseId);
 				if (varNames == null) {
