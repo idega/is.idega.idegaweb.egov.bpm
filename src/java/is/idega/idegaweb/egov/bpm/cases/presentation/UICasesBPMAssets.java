@@ -35,6 +35,7 @@ import com.idega.facelets.ui.FaceletComponent;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.presentation.IWBaseComponent;
@@ -302,6 +303,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 		return jQuery;
 	}
+	
+	@Autowired
+	private CasesBPMDAO casesDAO;
+	private CasesBPMDAO getCasesBPMDAO() {
+		if (casesDAO == null)
+			ELUtil.getInstance().autowire(this);
+		return casesDAO;
+	}
 
 	private void addClientResources(IWContext iwc, UIComponent container) {
 		IWBundle bundle = getBundle((FacesContext)iwc, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
@@ -376,6 +385,9 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		CasesBPMAssetsState stateBean = getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 		Long processInstanceId = stateBean.getProcessInstanceId();
 		Integer caseId = stateBean.getCaseId();
+		if (caseId == null && processInstanceId != null) {
+			caseId = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceId).getCaseId();
+		}
 
 		String specialBackPage = getSpecialBackPage();
 		StringBuffer mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
