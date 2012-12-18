@@ -32,6 +32,7 @@ import com.idega.business.IBOLookup;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
+import com.idega.data.MetaDataBMPBean;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -1012,20 +1013,27 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames))
 			return Collections.emptyMap();
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null);
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null, null, -1, -1);
 	}
+	
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
+			List<String> procDefNames, Param metadata, int offset, int maxCount) {
+		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames))
+			return Collections.emptyMap();
 
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null, metadata, offset, maxCount);
+	}
 	@Override
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
 			List<Long> procInstIds) {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procInstIds))
 			return Collections.emptyMap();
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, null, procInstIds, null);
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, null, procInstIds, null, null, -1, -1);
 	}
 
 	private Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(List<String> caseStatuses, List<String> procDefNames,
-			List<Long> procInstIds, Map<Long, Integer> results) {
+			List<Long> procInstIds, Map<Long, Integer> results, Param metadata, int offset, int maxCount) {
 
 		if (results == null)
 			results = new HashMap<Long, Integer>();
@@ -1066,9 +1074,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		String query =	"select bind." + CaseProcInstBind.procInstIdColumnName + ", bind." + CaseProcInstBind.caseIdColumnName + " from " +
-						CaseProcInstBind.TABLE_NAME + " bind, proc_case pc, JBPM_PROCESSINSTANCE pi";
+						CaseProcInstBind.TABLE_NAME + " bind, " + CaseBMPBean.TABLE_NAME + " pc, JBPM_PROCESSINSTANCE pi";
 		if (useProcDefs)
 			query += ", JBPM_PROCESSDEFINITION pd";
+		
+		boolean useMetaData = metadata != null;
+		if (useMetaData)
+			query += ", " + MetaDataBMPBean.TABLE_NAME + CoreConstants.UNDER + CaseBMPBean.TABLE_NAME + " mb, " + MetaDataBMPBean.TABLE_NAME + " m";
+		
 		query += " where ";
 
 		if (useProcDefs)
@@ -1080,6 +1093,17 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				" = pi.id_ and bind." + CaseProcInstBind.caseIdColumnName + " = pc.proc_case_id";
 		if (useProcDefs)
 			query += " and pd.id_ = pi.processdefinition_";
+		if (useMetaData) {
+			query += " and pc.proc_case_id = mb.proc_case_id and m.IC_METADATA_ID = mb.IC_METADATA_ID";
+			query += " and m." + MetaDataBMPBean.COLUMN_META_KEY + " = '" + metadata.getParamName() + "' and m." +
+					MetaDataBMPBean.COLUMN_META_VALUE + " = '" + metadata.getParamValue() + "'";
+		}
+		
+		query += " order by pc.created desc";
+		if (maxCount >= 0)
+			query += " limit " + maxCount;
+		if (offset > 0)
+			query += " offset " + (offset - 1);
 
 		List<Serializable[]> data = null;
 		try {
@@ -1100,7 +1124,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				results.put(((Number) piId).longValue(), ((Number) caseId).intValue());
 		}
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, procInstIds, results);
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, procInstIds, results, metadata, offset, maxCount);
 	}
 
 	@Override
