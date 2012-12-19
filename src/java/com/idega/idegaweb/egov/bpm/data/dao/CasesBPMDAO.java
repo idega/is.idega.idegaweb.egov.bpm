@@ -8,6 +8,7 @@ import java.util.Map;
 import org.jbpm.graph.exe.Token;
 
 import com.idega.core.persistence.GenericDao;
+import com.idega.core.persistence.Param;
 import com.idega.core.user.data.User;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
@@ -102,6 +103,8 @@ public interface CasesBPMDAO extends GenericDao {
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
 			List<String> procDefNames);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
+			List<String> procDefNames, Param metadata, int offset, int maxCount);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
 			List<Long> procInstIds);
 
