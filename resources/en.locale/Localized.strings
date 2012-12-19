@@ -103,3 +103,5 @@ bpm_variable.string_caseDescription=Description
 
 back=Back
 loading=Loading...
+
+bpm_variable.string_classification=Classification
