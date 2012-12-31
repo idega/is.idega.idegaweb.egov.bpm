@@ -398,7 +398,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		try {
 			return resolver.isValueUsedForExport() ?
 					resolver.getPresentation(variable.getName(), variable.getId(), variable.getExternalId()) :
-					resolver.getKeyPresentation(variable.getId());
+					resolver.getKeyPresentation(variable.getExternalId(), variable.getId());
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error resolving value for variable" + variable + " and using resolver " + resolver, e);
 		}
@@ -538,6 +538,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 								variable = getVariableByName(varsForCase, column);
 								if (variable == null)
 									value = getResolver(column).getPresentation(column, theCase.getId());
+							} else if (column.equals("string_ticketMeterNumber")) {
+								variable = getVariableByName(varsForCase, column);
+								if (variable == null || StringUtil.isEmpty(variable.getValue())) {
+									MultipleSelectionVariablesResolver resolver = getResolver(column);
+									value = resolver.isValueUsedForExport() ?
+											resolver.getPresentation(column, theCase.getId()) :
+											resolver.getKeyPresentation(Integer.valueOf(theCase.getId()), null);
+								}
 							} else
 								variable = getVariableByName(varsForCase, column);
 
