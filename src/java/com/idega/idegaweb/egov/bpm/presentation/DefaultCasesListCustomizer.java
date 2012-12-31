@@ -114,7 +114,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		if (resolver != null)
 			return new AdvancedProperty(name, resolver.isValueUsedForCaseList() ?
 					resolver.getPresentation(variable.getValue().toString()) :
-					resolver.getKeyPresentation(variable.getValue().toString())
+					resolver.getKeyPresentation(variable.getProcessInstanceId(), variable.getValue().toString())
 			);
 
 		return new AdvancedProperty(name, variable.getValue().toString());
