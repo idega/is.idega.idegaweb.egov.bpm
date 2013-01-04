@@ -45,41 +45,41 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 
 	public static final String rolesToStartCaseNeedToBeCheckedParam = "rolesToStartCaseNeedToBeChecked";
 	public static final String rolesToStartCaseParam = "rolesToStartCase";
-	
+
 	private Application application;
 	static final String MENU_PARAM = "procDefId";
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	@Autowired
 	private ApplicationTypeBPM applicationTypeBPM;
-	
+
 	@Autowired
 	private JQuery jQuery;
 
 	@Override
 	public void main(IWContext iwc) throws Exception {
-		String procDef = iwc.getParameter(MENU_PARAM);		
-		
+		String procDef = iwc.getParameter(MENU_PARAM);
+
 		DropdownMenu menu = new DropdownMenu(MENU_PARAM);
 		menu.setId(MENU_PARAM);
 		menu.addMenuElement("-1", "Select");
-		
+
 		ApplicationTypeBPM appTypeBPM = getApplicationTypeBPM();
 		appTypeBPM.fillMenu(menu);
-		
-		if(application != null) {		
+
+		if(application != null) {
 			menu.setSelectedElement(getApplicationTypeBPM().getSelectedElement(application));
 		}
 		if(procDef != null && !procDef.equals("-1")) {
 			menu.setSelectedElement(procDef);
 		}
-		
+
 		Layer container = new Layer(Layer.SPAN);
 		Layer errorItem = new Layer(Layer.SPAN);
 		errorItem.setStyleClass("error");
-		
+
 		Label label = new Label("BPM process", menu);
 		HtmlMessage msg = (HtmlMessage)iwc.getApplication().createComponent(HtmlMessage.COMPONENT_TYPE);
 		msg.setFor(menu.getId());
@@ -87,125 +87,127 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		container.add(label);
 		container.add(menu);
 		container.add(errorItem);
-		
+
 		Layer rolesContainer = new Layer(Layer.DIV);
 		container.add(rolesContainer);
-		
+
 		CheckBox cb = new CheckBox(rolesToStartCaseNeedToBeCheckedParam, Boolean.TRUE.toString());
-		
+
 		label = new Label("Only roles selected can submit application", cb);
-		
+
 		rolesContainer.add(label);
 		rolesContainer.add(cb);
-		
+
 		rolesContainer = new Layer(Layer.DIV);
 		container.add(rolesContainer);
-		
+
 		AccessController ac = iwc.getAccessController();
-		
-		Collection<ICRole> roles = ac.getAllRoles();
-		
+
+		Collection<ICRole> roles = ac.getAllRolesLegacy();
+
 		final List<String> selectedRoles;
-		
+
 		boolean isSelected = iwc.isParameterSet(rolesToStartCaseNeedToBeCheckedParam);
 
 		if(iwc.isParameterSet(rolesToStartCaseParam)) {
-			
+
 			String[] vals = iwc.getParameterValues(rolesToStartCaseParam);
 			selectedRoles = Arrays.asList(vals);
-			
+
 		} else if((procDef != null && !procDef.equals("-1")) || application != null) {
-			
+
 			final Long pdId;
 
 			if(procDef != null && !procDef.equals("-1")) {
-				
+
 				pdId = new Long(procDef);
-				
+
 			} else
 				pdId = new Long(getApplicationTypeBPM().getSelectedElement(application));
-			
+
 			selectedRoles = getApplicationTypeBPM().getRolesCanStartProcess(pdId, application.getPrimaryKey());
 			isSelected = selectedRoles != null && !selectedRoles.isEmpty();
-			
+
 		} else
 			selectedRoles = null;
-		
+
 		if(isSelected)
 			cb.setChecked(true, true);
-		
+
 		SelectPanel rolesMenu = new SelectPanel(rolesToStartCaseParam);
 		rolesMenu.setSize(10);
 		rolesMenu.setMultiple(true);
-		
+
 		if(roles != null) {
-			
+
 			for (ICRole role : roles) {
-		
+
 				SelectOption option = new SelectOption(role.getRoleKey(), role.getRoleKey());
-				
+
 				if(selectedRoles != null && selectedRoles.contains(role.getRoleKey()))
 					option.setSelected(true);
-				
+
 				rolesMenu.addOption(option);
 			}
 		}
-		
+
 		Layer rolesSpan = new Layer(Layer.SPAN);
-		
+
 		if(!isSelected)
 			rolesSpan.setStyleAttribute("display: none");
-		
+
 		label = new Label("Select roles", rolesMenu);
-		
+
 		rolesSpan.add(label);
 		rolesSpan.add(rolesMenu);
 		rolesContainer.add(rolesSpan);
-		
-		
+
+
 		IWBundle bundle = getBundle(iwc);
-		
+
 		String includeJs1 = "'"+getjQuery().getBundleURIToJQueryLib()+"', '"+bundle.getVirtualPathWithFileNameString("javascript/ApplicationTypeBPMHandler.js")+"'";
-		
+
 		String act = "LazyLoader.loadMultiple(["+includeJs1+"], function() {AppTypeBPM.processRolesCheckbox('"+cb.getId()+"', '"+rolesSpan.getId()+"', '"+rolesMenu.getId()+"')});";
-			
+
 		cb.setOnClick(act);
-		
+
 		String includeJs2 = "'"+CoreConstants.DWR_ENGINE_SCRIPT+"', '/dwr/interface/ApplicationTypeBPM.js'";
-		
+
 		act = "LazyLoader.loadMultiple(["+includeJs1+", "+includeJs2+"], function() {AppTypeBPM.processProcessesSelector('"+menu.getId()+"', '"+rolesMenu.getId()+"', '"+rolesSpan.getId()+"', '"+cb.getId()+"', "+(application != null ? application.getPrimaryKey().toString() : null)+");});";
-		
+
 		menu.setOnChange(act);
-		
+
 		add(container);
-		
+
 		//PresentationUtil.addJavaScriptActionToBody(iwc, "");
 	}
 
 	public void setApplication(Application application) {
 		this.application = application;
 	}
-	
+
 	@Override
 	public String getBundleIdentifier() {
 		return IWBundleStarter.IW_BUNDLE_IDENTIFIER;
 	}
-	
+
+	@Override
 	public UIComponent getUIComponent(FacesContext ctx, Application app) {
 
 		UIApplicationTypeBPMHandler h = new UIApplicationTypeBPMHandler();
 		h.setApplication(app);
-		
+
 		return h;
 	}
-	
+
+	@Override
 	public boolean validate(IWContext iwc) {
 		boolean valid = true;
 		IWResourceBundle iwrb = getResourceBundle(iwc);
-		
+
 		String procDef = iwc.getParameter(MENU_PARAM);
 		String action = iwc.getParameter(ApplicationCreator.ACTION);
-		
+
 		if((procDef == null || procDef.equals("-1")) && ApplicationCreator.SAVE_ACTION.equals(action)) {
 			iwc.addMessage(MENU_PARAM, new FacesMessage(iwrb.getLocalizedString("bpm_proc_select", "'BPM process' field value is not selected")));
 			valid = false;
@@ -214,10 +216,10 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 	}
 
 	public BPMFactory getBpmFactory() {
-		
+
 		if(bpmFactory == null)
 			ELUtil.getInstance().autowire(this);
-		
+
 		return bpmFactory;
 	}
 
@@ -230,10 +232,10 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 	}
 
 	public ApplicationTypeBPM getApplicationTypeBPM() {
-		
+
 		if(applicationTypeBPM == null)
 			ELUtil.getInstance().autowire(this);
-		
+
 		return applicationTypeBPM;
 	}
 

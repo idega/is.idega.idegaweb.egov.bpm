@@ -81,8 +81,8 @@ import com.idega.core.component.data.ICObjectInstanceHome;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.IWMainSlideStartedEvent;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.RepositoryStartedEvent;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MediaWritable;
@@ -441,7 +441,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		try {
 			if (criterias.isShowAllCases()) {
 				CasesBusiness casesBusiness = getCasesBusiness(iwc);
-				@SuppressWarnings("unchecked")
 				Collection<CaseStatus> statuses = casesBusiness.getCaseStatuses();
 				StringBuffer allStatuses = null;
 				if (!ListUtil.isEmpty(statuses)) {
@@ -840,8 +839,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			cacheReseter.start();
 		} else if (event instanceof UserHasLoggedInEvent) {
 			doLoadCases(((UserHasLoggedInEvent) event).getUserId());
-		} else if (event instanceof IWMainSlideStartedEvent) {
-			doLoadCases(((IWMainSlideStartedEvent) event).getIWMA());
+		} else if (event instanceof RepositoryStartedEvent) {
+			doLoadCases(((RepositoryStartedEvent) event).getIWMA());
 		}
 	}
 
@@ -856,7 +855,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			doLoadCases(app, group);
 
 			if (app.getSettings().getBoolean("load_cases_for_group_children", Boolean.FALSE)) {
-				@SuppressWarnings("unchecked")
 				Collection<Group> children = group.getChildren();
 				if (ListUtil.isEmpty(children)) {
 					LOGGER.warning("There are no children groups for group " + group + ", ID: " + group.getId());
