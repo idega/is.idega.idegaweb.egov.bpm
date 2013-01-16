@@ -476,8 +476,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			HSSFSheet sheet = createdSheets.contains(sheetName) ? workBook.getSheet(sheetName) : workBook.createSheet(sheetName);
 			createdSheets.add(sheetName);
 
+			int lastCellNumber = 0;
 			if (ListUtil.isEmpty(exportColumns)) {
-				List<AdvancedProperty> variablesByProcessDefinition = createHeaders(sheet, bigStyle, locale, processName, isAdmin, standardFieldsLabels);
+				List<AdvancedProperty> variablesByProcessDefinition = createHeaders(sheet, bigStyle, locale, processName, isAdmin,
+						standardFieldsLabels);
 				List<Integer> fileCellsIndexes = null;
 				short rowNumber = 1;
 
@@ -485,9 +487,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					fileCellsIndexes = new ArrayList<Integer>();
 					HSSFRow row = sheet.createRow(rowNumber++);
 					int cellIndex = 0;
-
+					
 					//	Default header values
 					row.createCell(cellIndex++).setCellValue(theCase.getCaseIdentifier());
+					
 					row.createCell(cellIndex++).setCellValue(theCase.getCaseStatusLocalized());
 					row.createCell(cellIndex++).setCellValue(getCaseCreator(theCase));
 					row.createCell(cellIndex++).setCellValue(getCaseCreatorPersonalId(theCase));
@@ -505,6 +508,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					//	Variable values
 					addVariables(variablesByProcessDefinition, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes,
 							fileNameLabel);
+					
+					lastCellNumber = row.getLastCellNum();
 				}
 			} else {
 				doCreateHeaders(sheet, bigStyle, exportColumns, locale);
@@ -555,8 +560,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 						row.createCell(cellIndex++).setCellValue(value);
 					}
+					
+					lastCellNumber = row.getLastCellNum();
 				}
 			}
+			
+			if (lastCellNumber > 0)
+				for (int i = 0; i < lastCellNumber; i++)
+					sheet.autoSizeColumn(i);
 		}
 
 		try {
