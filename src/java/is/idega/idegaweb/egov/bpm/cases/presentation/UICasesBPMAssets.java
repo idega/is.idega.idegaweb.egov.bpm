@@ -35,6 +35,7 @@ import com.idega.facelets.ui.FaceletComponent;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.jbpm.data.ProcessManagerBind;
@@ -303,7 +304,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 		return jQuery;
 	}
-	
+
 	@Autowired
 	private CasesBPMDAO casesDAO;
 	private CasesBPMDAO getCasesBPMDAO() {
@@ -386,12 +387,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		Long processInstanceId = stateBean.getProcessInstanceId();
 		Integer caseId = stateBean.getCaseId();
 		if (caseId == null && processInstanceId != null) {
-			caseId = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceId).getCaseId();
+			CaseProcInstBind bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceId);
+			caseId = bind == null ? null : bind.getCaseId();
 		}
 
 		String specialBackPage = getSpecialBackPage();
 		StringBuffer mainAction = new StringBuffer(gridLocalization).append("\n CasesBPMAssets.initGrid(jQuery('div.").append(clientId).append("')[0], ")
-			.append(processInstanceId == null ? String.valueOf(-1) : processInstanceId.toString()).append(", ").append(caseId.toString()).append(", ")
+			.append(processInstanceId == null ? String.valueOf(-1) : processInstanceId.toString()).append(", ")
+			.append(caseId == null ? String.valueOf(-1) : caseId.toString()).append(", ")
 			.append(isUsePdfDownloadColumn()).append(", ").append(isAllowPDFSigning()).append(", ").append(isHideEmptySection()).append(", ")
 			.append(isShowAttachmentStatistics()).append(", ").append(isShowOnlyCreatorInContacts()).append(", ").append(isShowLogExportButton())
 			.append(", ").append(isShowComments()).append(", ").append(isShowContacts()).append(", ");
