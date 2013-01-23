@@ -176,7 +176,9 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public CasesBPMProcessViewBean getProcessView() {
 		try {
-			return getCasesBPMProcessView().getProcessView(getProcessInstanceId(), getCaseId());
+			Long piId = getProcessInstanceId();
+			Integer caseId = getCaseId();
+			return getCasesBPMProcessView().getProcessView(piId, caseId);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting " + CasesBPMProcessViewBean.class.getName() + " bean by process instance ID " +
 					getProcessInstanceId() + " and case ID " + getCaseId(), e);
