@@ -19,6 +19,7 @@ import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Required;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,10 +45,10 @@ import com.idega.util.expression.ELUtil;
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.23 $
- * 
+ *
  *          Last modified: $Date: 2009/02/06 19:00:40 $ by $Author: civilis $
  */
-@Scope("prototype")
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Service("casesPIW")
 public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
@@ -71,6 +72,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 		getBpmContext().execute(new JbpmCallback() {
 
+			@Override
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				ProcessInstance pi = getProcessInstance();
 
@@ -86,7 +88,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 				ectx.setVariable(CaseHandlerAssignmentHandler.performerUserIdVarName, performerId);
 				Map<String, Object> createdVars = new HashMap<String, Object>();
 				createdVars.put(CaseHandlerAssignmentHandler.performerUserIdVarName, performerId);
-				
+
 				if (handlerUserId != null) {
 					ectx.setVariable(CaseHandlerAssignmentHandler.handlerUserIdVarName,	handlerUserId);
 					createdVars.put(CaseHandlerAssignmentHandler.handlerUserIdVarName, handlerUserId);
@@ -94,7 +96,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(this, pi.getProcessDefinition().getName(), pi.getId(), createdVars);
 				ELUtil.getInstance().publishEvent(performerVarCreated);
-				
+
 				pi.getProcessDefinition().fireEvent(handlerUserId != null ?
 						CaseHandlerAssignmentHandler.assignHandlerEventType	: CaseHandlerAssignmentHandler.unassignHandlerEventType, ectx);
 				return null;
@@ -178,6 +180,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 		Boolean res = getBpmContext().execute(new JbpmCallback() {
 
+			@Override
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				@SuppressWarnings("unchecked")
 				Map<String, Event> events = getProcessInstance()
