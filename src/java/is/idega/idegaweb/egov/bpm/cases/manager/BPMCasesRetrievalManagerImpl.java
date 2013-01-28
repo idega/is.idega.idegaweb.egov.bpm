@@ -388,7 +388,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
 				caseIds = getCasesBPMDAO().getPublicCasesIds(statusesToShow, statusesToHide, caseCodes, caseId, procInstIds);
-
+			
+			} else if (CasesRetrievalManager.CASE_LIST_TYPE_HANDLER.equals(type)) {
+				caseIds = getCasesBPMDAO().getHandlerCasesIds(user, 
+						caseStatusesToShow, caseStatusesToHide, casecodes, 
+						roles, onlySubscribedCases, caseId, procInstIds);
+				
 			} else {
 				getLogger().warning("Unknown cases list type: '" + type + "'");
 			}

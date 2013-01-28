@@ -878,8 +878,100 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Integer> getUserCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, List<String> caseCodes,
-			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds) {
+	public List<Integer> getHandlerCasesIds(User user, 
+			List<String> caseStatusesToShow, List<String> caseStatusesToHide, 
+			List<String> caseCodes, Collection<String> roles, 
+			boolean onlySubscribedCases, Integer caseId, 
+			List<Long> procInstIds) {
+		
+		if (user == null) {
+			return null;
+		}
+		
+		StringBuilder builder = new StringBuilder();
+		builder.append("SELECT DISTINCT p.proc_case_id AS caseId ")
+		.append("FROM bpm_cases_processinstances b, jbpm_variableinstance j, proc_case p, jbpm_processinstance pi ")
+		.append("WHERE b.process_instance_id = j.PROCESSINSTANCE_ ")
+		.append("AND p.PROC_CASE_ID = b.case_id ")
+		.append("AND j.NAME_='handlerUserId' ")
+		.append("AND j.LONGVALUE_='").append(user.getPrimaryKey()).append("' ");
+		
+		if (!ListUtil.isEmpty(caseStatusesToShow)) {
+			builder.append("AND p.CASE_STATUS IN (");
+			
+			for (Iterator<String> i = caseStatusesToShow.iterator(); i.hasNext();) {
+				builder.append("'").append(i.next()).append("'");
+				if (i.hasNext()) {
+					builder.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
+			}
+			
+			builder.append(") ");
+		}
+		
+		if (!ListUtil.isEmpty(caseStatusesToHide)) {
+			builder.append("AND p.CASE_STATUS NOT IN (");
+			
+			for (Iterator<String> i = caseStatusesToHide.iterator(); i.hasNext();) {
+				builder.append("'").append(i.next()).append("'");
+				if (i.hasNext()) {
+					builder.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
+			}
+			
+			builder.append(") ");
+		}
+		
+		if (!ListUtil.isEmpty(caseCodes)){
+			builder.append("AND pi.id_ = b.process_instance_id ")
+			.append("AND pi.processdefinition_ in (")
+			.append("SELECT id_ FROM jbpm_processdefinition WHERE name_ IN (");
+			
+			for (Iterator<String> i = caseCodes.iterator(); i.hasNext();) {
+				builder.append(CoreConstants.QOUTE_SINGLE_MARK)
+				.append(i.next())
+				.append(CoreConstants.QOUTE_SINGLE_MARK);
+				
+				if (i.hasNext()) {
+					builder.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
+			}
+			
+			builder.append(")) ");
+		}
+		
+		builder.append("ORDER BY p.created DESC").append(CoreConstants.SEMICOLON);
+
+		List<Serializable[]> results = null;
+		try {
+			results = SimpleQuerier.executeQuery(builder.toString(), 1);
+		} catch (Exception e) {
+			java.util.logging.Logger.getLogger(getClass().getName()).log(Level.WARNING, "", e);
+		}
+		
+		if (ListUtil.isEmpty(results)) {
+			return null;
+		}
+		
+		List<Integer> IDs = new ArrayList<Integer>();
+		for (Serializable[] result : results) {
+			for (Serializable id : result) {
+				if (id instanceof Integer) {
+					IDs.add((Integer) id);
+				}
+			}
+		}
+		
+		return IDs;
+	}
+
+	
+	@Override
+	public List<Integer> getUserCasesIds(
+			User user, List<String> caseStatusesToShow, 
+			List<String> caseStatusesToHide, List<String> caseCodes,
+			Collection<String> roles, boolean onlySubscribedCases, 
+			Integer caseId, List<Long> procInstIds) {
 
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseCodes", caseCodes));

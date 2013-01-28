@@ -93,3 +93,4 @@ bpm_variable.parkingReportFilterDateRangeTo=To
 bpm_variable.string_ticketViolationsLabels=Violation numbers
 
 bpm_variable.string_classification=Classification
+bpm_variable.string_ownerKennitala=Personal ID
