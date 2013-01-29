@@ -17,6 +17,7 @@ import com.idega.bpm.process.messages.SendMessage;
 import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.bpm.process.messages.SendMessagesHandler;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.util.CoreUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -75,10 +76,20 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 			caseIdStr = (String) ectx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
 		}
 
-		if (candPI == null)
-			LOGGER.warning("Unable to resolve process instance, will not send message to role(s) " + sendToRoles + " or/and user with ID " +
-					recipientUserId);
-		else
+		LocalizedMessages msgs = getLocalizedMessages();
+		if (msgs == null) {
+			String msg = "Unable to resolve localized message, will not send message to role(s) " + sendToRoles + " or/and user with ID " +
+					recipientUserId;
+			LOGGER.warning(msg);
+			CoreUtil.sendExceptionNotification(msg, null);
+		}
+
+		if (candPI == null) {
+			String msg = "Unable to resolve process instance, will not send message to role(s) " + sendToRoles + " or/and user with ID " +
+					recipientUserId + " and message:\n" + msgs;
+			LOGGER.warning(msg);
+			CoreUtil.sendExceptionNotification(msg, null);
+		} else
 			LOGGER.info("Sending message to process instance " + candPI.getId());
 
 		if (caseIdStr == null) {
@@ -91,12 +102,19 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 				candPI = superToken.getProcessInstance();
 				caseIdStr = (String) candPI.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdVariableName);
 			} else {
-				LOGGER.warning("Case id not found in the process instance (" + candPI.getId() + "), and no superprocess found");
+				String msg = "Case id not found in the process instance (" + candPI.getId() +
+						"), and no superprocess found, will not send message to role(s) " + sendToRoles + " or/and user with ID " +
+						recipientUserId + " and message:\n" + msgs;
+				LOGGER.warning(msg);
+				CoreUtil.sendExceptionNotification(msg, null);
 				return;
 			}
 
 			if (caseIdStr == null) {
-				LOGGER.warning("Case id not found in the process instance (" + candPI.getId() + ")");
+				String msg = "Case id not found in the process instance (" + candPI.getId() + "), will not send message to role(s) " +
+						sendToRoles + " or/and user with ID " + recipientUserId + " and message:\n" + msgs;
+				LOGGER.warning(msg);
+				CoreUtil.sendExceptionNotification(msg, null);
 				return;
 			}
 		}
@@ -104,7 +122,6 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		final ProcessInstance pi = candPI;
 		final Token tkn = ectx == null ? token : ectx.getToken();
 
-		LocalizedMessages msgs = getLocalizedMessages();
 		msgs.setSendToRoles(sendToRoles);
 		msgs.setRecipientUserId(recipientUserId);
 		getSendMessage().send(null, new Integer(caseIdStr), pi, msgs, tkn);

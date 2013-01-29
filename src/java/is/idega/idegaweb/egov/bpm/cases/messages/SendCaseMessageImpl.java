@@ -5,7 +5,6 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
 import is.idega.idegaweb.egov.message.business.MessageValue;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -151,7 +150,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 						Message message = messageBusiness.createUserMessage(messageValue);
 						message.store();
 					}
-				} catch (RemoteException e) {
+				} catch (Exception e) {
 					String message = "Exception while sending user messages (" + msgValsToSend + "), some messages might be not sent";
 					getLogger().log(Level.SEVERE, message, e);
 					CoreUtil.sendExceptionNotification(message, e);
