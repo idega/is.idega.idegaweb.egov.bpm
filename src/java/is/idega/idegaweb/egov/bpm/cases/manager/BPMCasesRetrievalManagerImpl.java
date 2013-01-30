@@ -388,12 +388,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
 				caseIds = getCasesBPMDAO().getPublicCasesIds(statusesToShow, statusesToHide, caseCodes, caseId, procInstIds);
-			
+
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_HANDLER.equals(type)) {
-				caseIds = getCasesBPMDAO().getHandlerCasesIds(user, 
-						caseStatusesToShow, caseStatusesToHide, casecodes, 
+				caseIds = getCasesBPMDAO().getHandlerCasesIds(user,
+						caseStatusesToShow, caseStatusesToHide, casecodes,
 						roles, onlySubscribedCases, caseId, procInstIds);
-				
+
 			} else {
 				getLogger().warning("Unknown cases list type: '" + type + "'");
 			}
@@ -893,81 +893,95 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
 	}
 
-	private void doManageCasesCache(Case theCase, boolean ommitClearing) {
-		Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
-		if (MapUtil.isEmpty(cache))
-			return;
+	private void doManageCasesCache(final Case theCase, final boolean ommitClearing) {
+		Thread cacheManager = new Thread(new Runnable() {
 
-		boolean updateCache = isCacheUpdateTurnedOn();
-		if (!updateCache) {
-			cache.clear();
-			return;
-		}
-
-		if (theCase == null) {
-			getLogger().warning("Case is undefined, unable to manage cache");
-			return;
-		}
-
-		String theCaseId = theCase.getId();
-		Integer caseId = Integer.valueOf(theCaseId);
-		for (CasesCacheCriteria criteria: cache.keySet()) {
-			if (criteria == null)
-				continue;
-
-			Map<Integer, Boolean> cachedIds = cache.get(criteria);
-
-			if (ommitClearing && (!MapUtil.isEmpty(cachedIds) && cachedIds.containsKey(caseId)))
-				continue;	//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
-
-			User user = getUser(criteria.getUserId());
-			boolean superAdmin = false;
-			try {
-				superAdmin = user == null ?
-					false :
-					IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser().equals(user);
-			} catch (Exception e) {
-				getLogger().log(Level.WARNING, "Error while resolving if user " + user + " is administrator");
-			}
-
-			List<Integer> ids = null;
-			if (!superAdmin) {
+			@Override
+			public void run() {
 				try {
-					ids = getCaseIds(
-							user,
-							criteria.getType(),
-							criteria.getCaseCodes(),
-							criteria.getStatusesToHide(),
-							criteria.getStatusesToShow(),
-							criteria.isOnlySubscribedCases(),
-							criteria.isShowAllCases(),
-							caseId,
-							criteria.getProcInstIds()
-						);
-				} catch (Exception e) {
-					String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
-							theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
-					String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " + criteria.getKey() +
-							" and user " + user;
-					LOGGER.log(Level.WARNING, message, e);
-					CoreUtil.sendExceptionNotification(message, e);
-					cache.clear();
-					return;
-				}
-			}
+					Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
+					if (MapUtil.isEmpty(cache))
+						return;
 
-			boolean contains = superAdmin ? true : ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
-			if (contains) {
-				if (cachedIds == null) {
-					cachedIds = new LinkedHashMap<Integer, Boolean>();
-					cache.put(criteria, cachedIds);
+					boolean updateCache = isCacheUpdateTurnedOn();
+					if (!updateCache) {
+						cache.clear();
+						return;
+					}
+
+					if (theCase == null) {
+						getLogger().warning("Case is undefined, unable to manage cache");
+						return;
+					}
+
+					String theCaseId = theCase.getId();
+					Integer caseId = Integer.valueOf(theCaseId);
+					for (CasesCacheCriteria criteria: cache.keySet()) {
+						if (criteria == null)
+							continue;
+
+						Map<Integer, Boolean> cachedIds = cache.get(criteria);
+
+						if (ommitClearing && (!MapUtil.isEmpty(cachedIds) && cachedIds.containsKey(caseId)))
+							//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
+							continue;
+
+						User user = getUser(criteria.getUserId());
+						boolean superAdmin = false;
+						try {
+							superAdmin = user == null ?
+								false :
+								IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser().equals(user);
+						} catch (Exception e) {
+							getLogger().log(Level.WARNING, "Error while resolving if user " + user + " is administrator");
+						}
+
+						List<Integer> ids = null;
+						if (!superAdmin) {
+							try {
+								ids = getCaseIds(
+										user,
+										criteria.getType(),
+										criteria.getCaseCodes(),
+										criteria.getStatusesToHide(),
+										criteria.getStatusesToShow(),
+										criteria.isOnlySubscribedCases(),
+										criteria.isShowAllCases(),
+										caseId,
+										criteria.getProcInstIds()
+									);
+							} catch (Exception e) {
+								String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
+										theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
+								String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " +
+										criteria.getKey() + " and user " + user;
+								LOGGER.log(Level.WARNING, message, e);
+								CoreUtil.sendExceptionNotification(message, e);
+								cache.clear();
+								return;
+							}
+						}
+
+						boolean contains = superAdmin ? true : ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
+						if (contains) {
+							if (cachedIds == null) {
+								cachedIds = new LinkedHashMap<Integer, Boolean>();
+								cache.put(criteria, cachedIds);
+							}
+							cachedIds.put(caseId, Boolean.TRUE);
+						} else if (!ommitClearing) {
+							if (cachedIds != null)
+								cachedIds.remove(caseId);
+						}
+					}
+				} catch (Exception e) {
+					String message = "Error updating cases list after case was modified or created: " + theCase;
+					getLogger().log(Level.WARNING, message, e);
+					CoreUtil.sendExceptionNotification(message, e);
 				}
-				cachedIds.put(caseId, Boolean.TRUE);
-			} else if (!ommitClearing) {
-				if (cachedIds != null)
-					cachedIds.remove(caseId);
 			}
-		}
+		});
+		cacheManager.start();
 	}
 
 	@Override
