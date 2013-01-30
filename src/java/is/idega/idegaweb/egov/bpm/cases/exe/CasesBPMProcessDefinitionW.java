@@ -65,6 +65,7 @@ import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.datastructures.map.MapUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -88,7 +89,95 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Autowired
 	private AppSupportsManagerFactory appSupportsManagerFactory;
 
-	@SuppressWarnings("unchecked")
+	@Override
+	public Object doPrepareProcess(Map<String, Object> parameters) {
+		try {
+			IWApplicationContext iwac = getIWAC();
+			IWMainApplication iwma = iwac.getIWMainApplication();
+			CasesBusiness casesBusiness = IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+			String caseId = null;
+			String procDefName = null;
+			User author = null;
+			String caseStatusKey = null;
+			String realCaseCreationDate = null;
+			String caseIdentifier = null;
+			if (!MapUtil.isEmpty(parameters)) {
+				caseId = parameters.containsKey(com.idega.block.process.business.ProcessConstants.CASE_ID) ?
+						parameters.get(com.idega.block.process.business.ProcessConstants.CASE_ID).toString() : null;
+
+				procDefName = parameters.containsKey(com.idega.block.process.business.ProcessConstants.ACTIVE_PROCESS_DEFINITION) ?
+						parameters.get(com.idega.block.process.business.ProcessConstants.ACTIVE_PROCESS_DEFINITION).toString() : null;
+
+				author = parameters.containsKey(CasesBPMProcessConstants.userIdActionVariableName) ?
+						(User) parameters.get(CasesBPMProcessConstants.userIdActionVariableName) : null;
+
+				caseStatusKey = parameters.containsKey(CasesBPMProcessConstants.caseStatusVariableName) ?
+						parameters.get(CasesBPMProcessConstants.caseStatusVariableName).toString() : null;
+
+				realCaseCreationDate = parameters.containsKey(CasesBPMProcessConstants.caseCreationDateParam) ?
+						parameters.get(CasesBPMProcessConstants.caseCreationDateParam).toString() : null;
+
+				caseIdentifier = parameters.containsKey(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER) ?
+						parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER).toString() : null;
+			}
+			return getCase(caseId, procDefName, casesBusiness, author, iwma, caseStatusKey, realCaseCreationDate, caseIdentifier);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error preparing process by parameters: " + parameters, e);
+		}
+		return null;
+	}
+
+	private GeneralCase getCase(String caseId, String procDefName, CasesBusiness casesBusiness, User author, IWMainApplication iwma,
+			String caseStatusKey, String realCaseCreationDate, String caseIdentifier) {
+		IWResourceBundle iwrb = null;
+		GeneralCase genCase = null;
+		if (!StringUtil.isEmpty(caseId)) {
+			try {
+				genCase = casesBusiness.getGeneralCase(Integer.valueOf(caseId));
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error finding case by ID: " + caseId, e);
+			}
+		}
+		if (genCase != null)
+			return genCase;
+
+		Long caseCategoryId = null;
+		Long caseTypeId = null;
+		try {
+			CaseTypesProcDefBind bind = getCasesBPMDAO().find(CaseTypesProcDefBind.class, procDefName);
+			caseCategoryId = bind.getCasesCategoryId();
+			caseTypeId = bind.getCasesTypeId();
+
+			final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ?
+					new Timestamp(System.currentTimeMillis()) :
+					new IWTimestamp(realCaseCreationDate).getTimestamp();
+
+			iwrb = casesBusiness.getIWResourceBundleForUser(author, null, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER));
+			genCase = casesBusiness.storeGeneralCase(
+						author,
+						caseCategoryId,
+						caseTypeId,
+						null,
+						null,
+						"This is simple cases-jbpm-formbuilder integration example.",
+						null,
+						BPMCasesRetrievalManagerImpl.caseHandlerType,
+						false,
+						iwrb,
+						false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
+			);
+		} catch (Exception e) {
+			String message = "Error creating case for BPM process definition: " + procDefName + ". Author: " + author + ", case category ID: " +
+					caseCategoryId + ", case type ID: "	+ caseTypeId + ", resource bunlde: " + iwrb + ", case identifier: " +
+					caseIdentifier + ", case status key: " + caseStatusKey;
+			getLogger().log(Level.SEVERE, message, e);
+			CoreUtil.sendExceptionNotification(message, e);
+			throw new RuntimeException(message, e);
+		}
+
+		return genCase;
+	}
+
 	@Transactional(readOnly = false)
 	@Override
 	public Long startProcess(final ViewSubmission viewSubmission) {
@@ -112,13 +201,22 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		final String caseStatusKey = parameters.containsKey(CasesBPMProcessConstants.caseStatusVariableName) ?
 				parameters.get(CasesBPMProcessConstants.caseStatusVariableName) : null;
 
-		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
-		final String caseIdentifier = parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER);
-		final String realCaseCreationDate = parameters.get(CasesBPMProcessConstants.caseCreationDateParam);
+		final IWApplicationContext iwac = getIWAC();
+		final CasesBusiness casesBusiness = getCasesBusiness(iwac);
 
-		final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ?
-				new Timestamp(System.currentTimeMillis()) :
-				new IWTimestamp(realCaseCreationDate).getTimestamp();
+		GeneralCase theCase = null;
+		final String caseId = parameters.get(com.idega.block.process.business.ProcessConstants.CASE_ID);
+		if (!StringUtil.isEmpty(caseId)) {
+			try {
+				theCase = casesBusiness.getGeneralCase(Integer.valueOf(caseId));
+			} catch (Exception e) {}
+		}
+
+		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
+		final String caseIdentifier = theCase == null ? parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER) :
+														theCase.getCaseIdentifier();
+		final String realCaseCreationDate = theCase == null ?	parameters.get(CasesBPMProcessConstants.caseCreationDateParam) :
+																String.valueOf(theCase.getCreated());
 
 		Long piId = getBpmContext().execute(new JbpmCallback() {
 			@Override
@@ -136,46 +234,16 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					pi.setStart(new Date());
 
-					IWApplicationContext iwac = getIWAC();
 					IWMainApplication iwma = iwac.getIWMainApplication();
 
 					UserBusiness userBusiness = getUserBusiness(iwac);
 					User user = userId == null ? null : userBusiness.getUser(userId);
 
-					CasesBusiness casesBusiness = getCasesBusiness(iwac);
-
-					CaseTypesProcDefBind bind = getCasesBPMDAO().find(CaseTypesProcDefBind.class, procDefName);
-					Long caseCategoryId = bind.getCasesCategoryId();
-					Long caseTypeId = bind.getCasesTypeId();
-
-					IWResourceBundle iwrb = null;
-					GeneralCase genCase = null;
-					try {
-						iwrb = casesBusiness.getIWResourceBundleForUser(user, null, iwma.getBundle(PresentationObject.CORE_IW_BUNDLE_IDENTIFIER));
-						genCase = casesBusiness.storeGeneralCase(
-						            user,
-						            caseCategoryId,
-						            caseTypeId,
-						            null,
-						            null,
-						            "This is simple cases-jbpm-formbuilder integration example.",
-						            null,
-						            BPMCasesRetrievalManagerImpl.caseHandlerType,
-						            false,
-						            iwrb,
-						            false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
-						);
-					} catch (Exception e) {
-						String message = "Error creating case for BPM process: " + pi.getId() + ". User: " + user + ", case category ID: " +
-								caseCategoryId + ", case type ID: "	+ caseTypeId + ", resource bunlde: " + iwrb + ", case identifier: " +
-								caseIdentifier + ", case status key: " + caseStatusKey;
-						getLogger().log(Level.SEVERE, message, e);
-						CoreUtil.sendExceptionNotification(message, e);
-						throw new RuntimeException(message, e);
-					}
-
+					GeneralCase genCase = getCase(caseId, procDefName, casesBusiness, user, iwma, caseStatusKey, realCaseCreationDate,
+							caseIdentifier);
 					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
 
+					Timestamp caseCreated = genCase.getCreated();
 					pi.setStart(caseCreated);
 
 					Map<String, Object> caseData = new HashMap<String, Object>();
@@ -190,12 +258,12 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					CasesStatusMapperHandler casesStatusMapper = getCasesStatusMapperHandler();
 
-					for (CaseStatus caseStatus : allStatuses)
+					for (CaseStatus caseStatus: allStatuses)
 						caseData.put(casesStatusMapper.getStatusVariableNameFromStatusCode(caseStatus.getStatus()), caseStatus.getStatus());
 
-					final Locale dateLocale;
 					IWContext iwc = CoreUtil.getIWContext();
-					dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
+					Locale dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
+					dateLocale = dateLocale == null ? Locale.ENGLISH : dateLocale;	//	TODO
 					IWTimestamp created = new IWTimestamp(genCase.getCreated());
 					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT,
 							IWTimestamp.SHORT));

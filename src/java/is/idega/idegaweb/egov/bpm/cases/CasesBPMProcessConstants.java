@@ -5,10 +5,10 @@ package is.idega.idegaweb.egov.bpm.cases;
  * @version $Revision: 1.17 $ Last modified: $Date: 2009/06/23 10:22:01 $ by $Author: valdas $
  */
 public class CasesBPMProcessConstants {
-	
+
 	private CasesBPMProcessConstants() {
 	}
-	
+
 	public static final String caseIdVariableName = "string_caseId";
 	public static final String caseTypeNameVariableName = "string_caseTypeName";
 	public static final String caseCategoryNameVariableName = "string_caseCategoryName";
@@ -24,7 +24,7 @@ public class CasesBPMProcessConstants {
 	public static final String caseCategoryIdActionVariableName = "caseCategoryId";
 	public static final String caseTypeActionVariableName = "caseType";
 	public static final String caseCreationDateParam = "caseCreationDate";
-	
+
 	// case status variable names
 	public static final String caseStatusClosedVariableName = "string_caseStatusClosed";
 	public static final String caseStatusDenied = "string_caseStatusDenied";
@@ -44,7 +44,7 @@ public class CasesBPMProcessConstants {
 	public static final String caseStatusCreated = "string_caseStatusCreated";
 	public static final String caseStatusFinished = "string_caseStatusFinished";
 	public static final String caseStatusClosed = "string_caseStatusClosed";
-	
+
 	// mapped case status names
 	public static final String CASE_STATUS_GRANTED_MAPNAME = "caseStatusGranted";
 	public static final String CASE_STATUS_DENIED_MAPNAME = "caseStatusDenied";
@@ -62,5 +62,5 @@ public class CasesBPMProcessConstants {
 	public static final String CASE_STATUS_CREATED_MAPNAME = "caseStatusCreated";
 	public static final String CASE_STATUS_FINISHED_MAPNAME = "caseStatusFinished";
 	public static final String CASE_STATUS_CLOSED_MAPNAME = "caseStatusClosed";
-	
+
 }

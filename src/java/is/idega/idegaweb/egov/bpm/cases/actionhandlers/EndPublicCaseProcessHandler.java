@@ -1,10 +1,12 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
+
 import org.jbpm.graph.exe.ExecutionContext;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.bpm.BPMConstants;
 import com.idega.business.IBOLookup;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
@@ -21,7 +23,7 @@ public class EndPublicCaseProcessHandler extends EndCaseProcessHandler {
 		if (iwc != null && iwc.isLoggedOn())
 			return iwc.getCurrentUser();
 
-		Object userId = executionContext.getVariable("string_userId");
+		Object userId = executionContext.getVariable(BPMConstants.USER_ID);
 		if (userId == null)
 			return null;
 
