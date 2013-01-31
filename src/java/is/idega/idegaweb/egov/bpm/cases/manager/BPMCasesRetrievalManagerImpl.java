@@ -991,14 +991,18 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!(source instanceof Case))
 				return;
 
-			if (!isCacheUpdateTurnedOn())
+			if (!isCacheUpdateTurnedOn()) {
 				getCache().clear();
+				return;
+			}
 
 			Case theCase = (Case) source;
 			doManageCasesCache(theCase, theCase == null || StringUtil.isEmpty(theCase.getSubject()));
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
-			if (!isCacheUpdateTurnedOn())
+			if (!isCacheUpdateTurnedOn()) {
 				getCache().clear();
+				return;
+			}
 
 			ProcessInstanceCreatedEvent procCreatedEvent = (ProcessInstanceCreatedEvent) event;
 
@@ -1026,12 +1030,14 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			doManageCasesCache(theCase, true);
 		} else if (event instanceof CaseDeletedEvent) {
-			if (!isCacheUpdateTurnedOn())
-				getCache().clear();
-
 			Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 			if (cache == null)
 				return;
+
+			if (!isCacheUpdateTurnedOn()) {
+				cache.clear();
+				return;
+			}
 
 			Object source = event.getSource();
 			if (!(source instanceof Case))
