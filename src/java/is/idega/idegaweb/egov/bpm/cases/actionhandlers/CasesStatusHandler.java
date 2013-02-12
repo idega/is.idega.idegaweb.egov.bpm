@@ -282,7 +282,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 		this.ifCaseStatusMappedName = ifCaseStatusMappedName;
 	}
 
-	BPMFactory getBpmFactory() {
+	protected BPMFactory getBpmFactory() {
 		return bpmFactory;
 	}
 
