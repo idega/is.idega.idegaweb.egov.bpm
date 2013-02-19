@@ -35,7 +35,7 @@ import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 import javax.servlet.ServletContext;
 
-import org.jdom.Document;
+import org.jdom2.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEvent;
