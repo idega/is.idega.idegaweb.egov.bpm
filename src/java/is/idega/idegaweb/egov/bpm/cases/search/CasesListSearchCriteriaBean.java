@@ -1,6 +1,8 @@
 package is.idega.idegaweb.egov.bpm.cases.search;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.jbpm.bean.BPMProcessVariable;
@@ -17,7 +19,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					caseListType,
 					caseCodes,
 					statusesToShow,
-					statusesToHide;
+					statusesToHide,
+					roles;
 
 	private List<BPMProcessVariable> processVariables;
 
@@ -170,6 +173,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 		this.nothingFound = nothingFound;
 	}
 
+	public Set<String> getRoles() {
+		return roles == null ? null : new HashSet<String>(StringUtil.getValuesFromString(roles, CoreConstants.COMMA));
+	}
+
+	public void setRoles(String roles) {
+		this.roles = roles;
+	}
+
 	@Override
 	public String toString() {
 		return new StringBuilder("Case number: " + getCaseNumber()).append("\n")
@@ -187,6 +198,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Case codes: " + caseCodes).append("\n")
 			.append("Statuses to show: " + statusesToShow).append("\n")
 			.append("Statuses to hide: " + statusesToHide).append("\n")
+			.append("Roles: " + roles).append("\n")
 			.append("Page: " + getPage()).append("\n")
 			.append("Page size: " + getPageSize()).append("\n")
 			.append("Component ID: " + componentId).append("\n")
