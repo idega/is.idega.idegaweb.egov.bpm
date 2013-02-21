@@ -83,7 +83,6 @@ import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.Group;
-import com.idega.user.data.GroupBMPBean;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -439,13 +438,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			if (!isSuperAdmin) {
 				roles = accessController.getAllRolesForUser(user);
-				@SuppressWarnings("unchecked")
-				Collection<GroupBMPBean> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
+				Collection<Group> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 				if (!ListUtil.isEmpty(groupBeans)) {
 					groups = new ArrayList<Integer>(groupBeans.size());
-					for (GroupBMPBean group : groupBeans) {
+					for (Group group : groupBeans)
 						groups.add(new Integer(group.getPrimaryKey().toString()));
-					}
 				}
 			}
 
@@ -459,11 +456,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!isSuperAdmin) {
 				if (user != null)
 					roles = accessController.getAllRolesForUser(user);
-				@SuppressWarnings("unchecked")
-				Collection<GroupBMPBean> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
+				Collection<Group> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 				if (!ListUtil.isEmpty(groupBeans)) {
 					groups = new ArrayList<Integer>(groupBeans.size());
-					for (GroupBMPBean group : groupBeans) {
+					for (Group group : groupBeans) {
 						groups.add(new Integer(group.getPrimaryKey().toString()));
 					}
 				}
