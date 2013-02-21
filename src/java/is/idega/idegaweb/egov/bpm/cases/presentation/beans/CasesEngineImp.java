@@ -151,14 +151,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public Document getCaseManagerView(CasesBPMAssetProperties properties) {
-		if (properties == null) {
+		if (properties == null)
 			return null;
-		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null) {
+		if (iwc == null)
 			return null;
-		}
 
 		String caseIdStr = properties.getCaseId();
 		if (caseIdStr == null || CoreConstants.EMPTY.equals(caseIdStr) || iwc == null) {
@@ -166,6 +164,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
+		Document caseView = null;
 		try {
 			CasesBPMAssetsState stateBean = WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 			if (stateBean != null) {
@@ -183,13 +182,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 
 			Integer caseId = new Integer(caseIdStr);
-			UIComponent caseAssets = getCasesBPMProcessView().getCaseManagerView(iwc, null, caseId, properties.getProcessorType());
+			UIComponent caseViewUI = getCasesBPMProcessView().getCaseManagerView(iwc, null, caseId, properties.getProcessorType());
 
-			Document rendered = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, caseAssets, true);
-
-			return rendered;
+			caseView = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, caseViewUI, true);
+			return caseView;
 		} catch (Exception e) {
-			LOGGER.log(Level.SEVERE, "Exception while resolving rendered component for case assets view", e);
+			LOGGER.log(Level.SEVERE, "Exception while rendering component for case (ID: " + caseIdStr + ") view", e);
 		}
 
 		return null;
