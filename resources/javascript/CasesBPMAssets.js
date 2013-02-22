@@ -1125,7 +1125,7 @@ CasesBPMAssets.openDocumentSignerWindow = function(uri, lightBoxTitle, closeLigh
 	var windowHeight = Math.round(windowinfo.getWindowHeight() * 0.8);
 	var windowWidth = Math.round(windowinfo.getWindowWidth() * 0.8);
 	var tmpFancyBoxLinkId = 'tmpFancyBoxLinkId_' + Math.ceil(1000 * Math.random());
-	jQuery(document.body).append('<a class=\'iframe\' style=\'display: none;\' id=\'' + tmpFancyBoxLinkId + '\' href=\'' + uri + '\' title=\'' + lightBoxTitle + '\'>' +
+	jQuery(document.body).append('<a class=\'iframe\' data-fancybox-type=\'iframe\' style=\'display: none;\' id=\'' + tmpFancyBoxLinkId + '\' href=\'' + uri + '\' title=\'' + lightBoxTitle + '\'>' +
 		lightBoxTitle + '</a>');
 	jQuery('#' + tmpFancyBoxLinkId).fancybox({
 		autoScale: false,
