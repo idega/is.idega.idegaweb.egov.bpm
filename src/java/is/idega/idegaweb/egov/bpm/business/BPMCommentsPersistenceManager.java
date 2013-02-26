@@ -350,7 +350,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return getServiceInstance(RSSBusiness.class);
 	}
 
-	// TODO: When access rights (to Slide resources) are fixed, use current user!
+	// TODO: When access rights (to repository resources) are fixed, use current user!
 	@Override
 	public User getUserAvailableToReadWriteCommentsFeed(IWContext iwc) {
 		User currentUser = null;
