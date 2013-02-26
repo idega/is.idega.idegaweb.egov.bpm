@@ -203,23 +203,6 @@ public class ApplicationTypeBPM implements ApplicationType {
 			if (pdName == null)
 				return url;
 
-			/*
-			 * Collection<ICPage> icpages = getPages(egovBPMPageType);
-			 *
-			 * ICPage icPage = null;
-			 *
-			 * if(icpages == null || icpages.isEmpty()) {
-			 *
-			 * // TODO: create egov bpm page, as not found throw new
-			 * RuntimeException("No egov bpm page found yet"); }
-			 *
-			 * if(icPage == null) icPage = icpages.iterator().next();
-			 *
-			 * String uri = icPage.getDefaultPageURI();
-			 *
-			 * if(!uri.startsWith("/pages")) uri = "/pages"+uri;
-			 */
-
 			String uri = getBuilderService(iwc).getFullPageUrlByPageType(iwc, egovBPMPageType, true);
 
 			long pdId = getBpmFactory().getBPMDAO().findLatestProcessDefinition(pdName).getId();

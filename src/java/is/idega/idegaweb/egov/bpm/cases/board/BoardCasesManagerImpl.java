@@ -66,11 +66,11 @@ import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
-@Service
+@Service(BoardCasesManager.BEAN_NAME)
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class BoardCasesManagerImpl implements BoardCasesManager {
 
-	private static final List<String> GRADING_VARIABLES = Collections.unmodifiableList(Arrays.asList(
+	protected static final List<String> GRADING_VARIABLES = Collections.unmodifiableList(Arrays.asList(
 	        		"string_ownerInnovationalValue",			//	0
 	        		"string_ownerCompetitionValue",				//	1
 	        		"string_ownerEntrepreneursValue",			//	2
@@ -139,7 +139,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return boardCases;
 	}
 
-	private List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers, String uuid) {
+	protected List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers, String uuid) {
 		List<String> variablesToQuery = new ArrayList<String>(getVariables(uuid));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
@@ -224,7 +224,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
-	private List<CaseBoardView> getVariablesValuesByNamesForCases(Map<Integer, User> casesIdsAndHandlers, List<String> variablesNames) {
+	protected List<CaseBoardView> getVariablesValuesByNamesForCases(Map<Integer, User> casesIdsAndHandlers, List<String> variablesNames) {
 		Map<Integer, Long> processes = getCaseProcessInstanceRelation().getCasesProcessInstancesIds(casesIdsAndHandlers.keySet());
 
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier()
@@ -386,7 +386,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return getNumberValue(value, false);
 	}
 
-	private Long getNumberValue(String value, boolean dropThousands) {
+	protected Long getNumberValue(String value, boolean dropThousands) {
 		if (StringUtil.isEmpty(getStringValue(value)))
 			return Long.valueOf(0);
 
@@ -533,7 +533,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return caseManager;
 	}
 
-	private List<String> getVariables(String uuid) {
+	protected List<String> getVariables(String uuid) {
 		if (variables == null) {
 			List<String> customColumns = getCustomColumns(uuid);
 			if (ListUtil.isEmpty(customColumns)) {
@@ -604,11 +604,12 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	public boolean isColumnOfDomain(String currentColumn, String columnOfDomain) {
 		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
 	}
-
-	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, String processName, String uuid) {
+	
+	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, 
+			String processName, String uuid) {
 		if (iwc == null)
 			return null;
-
+		
 		IWBundle bundle = iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
 		CaseBoardTableBean data = new CaseBoardTableBean();
@@ -891,7 +892,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return value;
 	}
 
-	private class CaseBoardView {
+	protected class CaseBoardView {
 		private String caseId;
 		private Long processInstanceId;
 

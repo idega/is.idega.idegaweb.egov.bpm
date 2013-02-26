@@ -5,7 +5,6 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
 import is.idega.idegaweb.egov.message.business.MessageValue;
 
-import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,9 +12,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.ejb.FinderException;
 
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
@@ -55,8 +51,6 @@ import com.idega.util.ListUtil;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 public class SendCaseMessageImpl extends SendMailMessageImpl {
 
-	private static final Logger LOGGER = Logger.getLogger(SendCaseMessageImpl.class.getName());
-
 	public static final TypeRef caseUserBean = new TypeRef("bean", "caseUser");
 
 	@Autowired
@@ -77,12 +71,12 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 		defaultLocale = iwc == null ? defaultLocale : iwc.getCurrentLocale();
 		defaultLocale = defaultLocale == null ? Locale.ENGLISH : defaultLocale;
 
+		Collection<User> users = null;
 		final List<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
 		try {
 			CasesBusiness casesBusiness = getCasesBusiness(iwc);
 
 			final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
-			Collection<User> users = null;
 			if (msgs.getRecipientUserId() != null) {
 				users = new ArrayList<User>();
 				users.add(getUserBusiness(iwc).getUser(msgs.getRecipientUserId()));
@@ -91,9 +85,9 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			}
 
 			if (ListUtil.isEmpty(users)) {
-				LOGGER.warning("There are no recipients to send message " + msgs);
+				getLogger().warning("There are no recipients to send message " + msgs);
 			} else {
-				LOGGER.info("Sending message " + msgs + " to " + users + " for case " + caseId);
+				getLogger().info("Sending message " + msgs + " to " + users + " for case " + caseId);
 			}
 
 			long pid = pi.getId();
@@ -104,7 +98,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			if (mvCtx == null)
 				mvCtx = new MessageValueContext(3);
 
-			for (User user : users) {
+			for (User user: users) {
 				Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
 
 				if (preferredLocale == null)
@@ -121,40 +115,45 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				String subject = subjNMsg[0];
 				String text = subjNMsg[1];
 				if (subject == null || text == null) {
-					LOGGER.warning("Unable to send message because subject (" + subject + ") or/and text (" + text + ") is null!");
+					getLogger().warning("Unable to send message because subject (" + subject + ") or/and text (" + text + ") is null!");
 					continue;
 				}
 
-				LOGGER.finer("Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+") name="+user.getName());
+				getLogger().info("Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+
+						") name="+user.getName());
 
 				//Hard coding of the death!
 				if (subject.equals("Vinsamlega endurnýjið veiðileyfi fyrir komandi fiskveiðiár")) {
 					//Don't add message...
-				}
-				else {
-					MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true);
+				} else {
+					MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null,
+							false, true);
 					msgValsToSend.add(mv);
 				}
 			}
-		} catch (RemoteException e) {
-			LOGGER.log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
-		} catch (FinderException e) {
-			LOGGER.log(Level.SEVERE, "Exception while creating user message value, some messages might be not sent", e);
+		} catch (Exception e) {
+			String message = "Error sending message (" + msgs + " to " + users + " for case " + caseId+ ") to users " + users;
+			getLogger().log(Level.SEVERE, message, e);
+			CoreUtil.sendExceptionNotification(message, e);
 		}
 
-		if (ListUtil.isEmpty(msgValsToSend))
+		if (ListUtil.isEmpty(msgValsToSend)) {
+			getLogger().warning("There are no messages to send!");
 			return;
+		}
 
 		new Thread(new Runnable() {
 			@Override
 			public void run() {
 				try {
-					for (MessageValue messageValue : msgValsToSend) {
+					for (MessageValue messageValue: msgValsToSend) {
 						Message message = messageBusiness.createUserMessage(messageValue);
 						message.store();
 					}
-				} catch (RemoteException e) {
-					LOGGER.log(Level.SEVERE, "Exception while sending user message, some messages might be not sent", e);
+				} catch (Exception e) {
+					String message = "Exception while sending user messages (" + msgValsToSend + "), some messages might be not sent";
+					getLogger().log(Level.SEVERE, message, e);
+					CoreUtil.sendExceptionNotification(message, e);
 				}
 			}
 		}).start();

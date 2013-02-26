@@ -102,7 +102,6 @@ bpm_variable.string_ticketStreetDescription=L\u00FDsing
 bpm_variable.parkingReportFilterDateRangeFrom=Fr\u00E1
 bpm_variable.parkingReportFilterDateRangeTo=Til
 bpm_variable.string_invoiceNumber=Reikningsn\u00FAmer
-bpm_variable.string_ticketViolationsLabels=Brotan\u00FAmer
 
 bpm_variable.list_violationTypes=Tegund brots
 bpm_variable.string_harbourNr=H\u00F6fn
@@ -128,4 +127,23 @@ bpm_variable.string_classification=Flokkun
 
 back=Til baka
 loading=Hle\u00F0ur...
+bpm_variable.string_ownerKennitala=Kennitala
 
+bpm_variable.string_ownerFullName=Umsækjandi
+bpm_variable.string_companyResponsiblePersonName=\u00C1byrg\u00F0ara\u00F0ili
+bpm_variable.string_responsiblePersonGenderName=Kyn\ \u00E1byrg\u00F0ara\u00F0ila
+bpm_variable.string_ownerPostCode=Póstnúmer
+bpm_variable.string_expectedBeneficiariesName=Kyn haghafa
+bpm_variable.string_caseIdentifier=Málsnúmer
+bpm_variable.string_caseDescription=Heiti verkefnis
+bpm_variable.string_projectNatureName=E\u00F0li\ verkefnis (s\u00F3tt\ \u00ED\ ums\u00F3knarey\u00F0ubla\u00F0i\u00F0)
+bpm_variable.string_ownerGrantAmount=Ums\u00F3tt\ upph\u00E6\u00F0
+bpm_variable.string_ownerBusinessConcept=Stutt\ l\u00FDsing\ verkefnis
+bpm_variable.sum_all_negative_grades=\u00DAtilokandi\ einkunn
+bpm_variable.string_overallRating=Einkunn
+bpm_variable.string_ownerTotalCost=\u00C1\u00E6tla\u00F0ur\ kostna\u00F0ur
+bpm_variable.string_ownerGradeComment=Tillaga\ stj\u00F3rnar
+bpm_variable.string_ownerGrantAmauntValue=Ni\u00F0ursta\u00F0a\ stj\u00F3rnar
+bpm_variable.string_ownerGrade=Ums\u00F6gn\ umsj\u00F3narmanns
+bpm_variable.string_ownerAnswer=Skilyrt til
+bpm_variable.handlerUserId=Umsj\u00F3nara\u00F0ili

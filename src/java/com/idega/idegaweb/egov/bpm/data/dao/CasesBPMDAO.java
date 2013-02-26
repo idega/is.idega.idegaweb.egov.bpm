@@ -127,4 +127,24 @@ public interface CasesBPMDAO extends GenericDao {
 	public boolean doUnSubscribeFromCasesByProcessDefinition(com.idega.user.data.User user, String processDefinitionName);
 
 	public Map<Long, List<VariableInstanceInfo>> getBPMValuesByCasesIdsAndVariablesNames(List<String> casesIds, List<String> names);
+
+	/**
+	 * 
+	 * <p>Searches cases in database, which is on administration 
+	 * by given handler.</p>
+	 * @param user - handler, which manages cases; 
+	 * @param caseStatusesToShow
+	 * @param caseStatusesToHide
+	 * @param caseCodes
+	 * @param roles
+	 * @param onlySubscribedCases
+	 * @param caseId
+	 * @param procInstIds
+	 * @return
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<Integer> getHandlerCasesIds(User user,
+			List<String> caseStatusesToShow, List<String> caseStatusesToHide,
+			List<String> caseCodes, Collection<String> roles,
+			boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
 }

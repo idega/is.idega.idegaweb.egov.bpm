@@ -1,97 +1,13 @@
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
-import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.application.data.ApplicationHome;
-import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
-import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.CaseCategory;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
-import java.rmi.RemoteException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-import javax.ejb.FinderException;
-import javax.faces.component.UIComponent;
-import javax.faces.component.UIViewRoot;
-
-import org.jbpm.JbpmContext;
-import org.jbpm.JbpmException;
-import org.jbpm.db.GraphSession;
-import org.jbpm.graph.def.ProcessDefinition;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.support.WebApplicationContextUtils;
-
-import com.idega.block.process.business.CaseBusiness;
-import com.idega.block.process.business.CasesCacheCriteria;
-import com.idega.block.process.business.CasesRetrievalManager;
-import com.idega.block.process.business.CasesRetrievalManagerImpl;
-import com.idega.block.process.business.ProcessConstants;
-import com.idega.block.process.data.Case;
-import com.idega.block.process.data.CaseCode;
-import com.idega.block.process.event.CaseDeletedEvent;
-import com.idega.block.process.event.CaseModifiedEvent;
-import com.idega.block.process.presentation.beans.CaseManagerState;
-import com.idega.block.process.presentation.beans.CasePresentation;
-import com.idega.block.process.presentation.beans.CasePresentationComparator;
-import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
-import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
-import com.idega.business.IBORuntimeException;
-import com.idega.core.accesscontrol.business.AccessController;
-import com.idega.core.builder.data.ICPage;
-import com.idega.core.builder.data.ICPageHome;
-import com.idega.data.IDOLookup;
-import com.idega.data.IDOLookupException;
-import com.idega.idegaweb.IWApplicationContext;
-import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.JbpmCallback;
-import com.idega.jbpm.data.ProcessManagerBind;
-import com.idega.jbpm.events.ProcessInstanceCreatedEvent;
-import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.exe.ProcessInstanceW;
-import com.idega.jbpm.exe.TaskInstanceW;
-import com.idega.jbpm.variables.VariablesHandler;
-import com.idega.presentation.IWContext;
-import com.idega.presentation.paging.PagedDataCollection;
-import com.idega.presentation.text.Link;
-import com.idega.user.business.UserBusiness;
-import com.idega.user.data.Group;
-import com.idega.user.data.User;
-import com.idega.util.CoreConstants;
-import com.idega.util.CoreUtil;
-import com.idega.util.ListUtil;
-import com.idega.util.StringHandler;
-import com.idega.util.StringUtil;
-import com.idega.util.datastructures.map.MapUtil;
-import com.idega.util.expression.ELUtil;
-import com.idega.webface.WFUtil;
+import src.java.com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import src.java.com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
+import src.java.com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import src.java.is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
+import src.java.is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
+import src.java.is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
+import src.java.is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
+import src.java.is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -396,6 +312,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
 				caseIds = getCasesBPMDAO().getPublicCasesIds(statusesToShow, statusesToHide, caseCodes, caseId, procInstIds);
+
+			} else if (CasesRetrievalManager.CASE_LIST_TYPE_HANDLER.equals(type)) {
+				caseIds = getCasesBPMDAO().getHandlerCasesIds(user,
+						caseStatusesToShow, caseStatusesToHide, casecodes,
+						roles, onlySubscribedCases, caseId, procInstIds);
 
 			} else {
 				getLogger().warning("Unknown cases list type: '" + type + "'");
@@ -893,81 +814,94 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
 	}
 
-	private void doManageCasesCache(Case theCase, boolean ommitClearing) {
-		Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
-		if (MapUtil.isEmpty(cache))
-			return;
+	private void doManageCasesCache(final Case theCase, final boolean ommitClearing) {
+		Thread cacheManager = new Thread(new Runnable() {
 
-		boolean updateCache = isCacheUpdateTurnedOn();
-		if (!updateCache) {
-			cache.clear();
-			return;
-		}
-
-		if (theCase == null) {
-			getLogger().warning("Case is undefined, unable to manage cache");
-			return;
-		}
-
-		String theCaseId = theCase.getId();
-		Integer caseId = Integer.valueOf(theCaseId);
-		for (CasesCacheCriteria criteria: cache.keySet()) {
-			if (criteria == null)
-				continue;
-
-			Map<Integer, Boolean> cachedIds = cache.get(criteria);
-
-			if (ommitClearing && (!MapUtil.isEmpty(cachedIds) && cachedIds.containsKey(caseId)))
-				continue;	//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
-
-			User user = getUser(criteria.getUserId());
-			boolean superAdmin = false;
-			try {
-				superAdmin = user == null ?
-					false :
-					IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser().equals(user);
-			} catch (Exception e) {
-				getLogger().log(Level.WARNING, "Error while resolving if user " + user + " is administrator");
-			}
-
-			List<Integer> ids = null;
-			if (!superAdmin) {
+			@Override
+			public void run() {
 				try {
-					ids = getCaseIds(
-							user,
-							criteria.getType(),
-							criteria.getCaseCodes(),
-							criteria.getStatusesToHide(),
-							criteria.getStatusesToShow(),
-							criteria.isOnlySubscribedCases(),
-							criteria.isShowAllCases(),
-							caseId,
-							criteria.getProcInstIds(),
-							criteria.getRoles()
-						);
-				} catch (Exception e) {
-					String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
-							theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
-					String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " + criteria.getKey() +
-							" and user " + user;
-					LOGGER.log(Level.WARNING, message, e);
-					cache.clear();
-					return;
-				}
-			}
+					Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
+					if (MapUtil.isEmpty(cache))
+						return;
 
-			boolean contains = superAdmin ? true : ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
-			if (contains) {
-				if (cachedIds == null) {
-					cachedIds = new LinkedHashMap<Integer, Boolean>();
-					cache.put(criteria, cachedIds);
+					boolean updateCache = isCacheUpdateTurnedOn();
+					if (!updateCache) {
+						cache.clear();
+						return;
+					}
+
+					if (theCase == null) {
+						getLogger().warning("Case is undefined, unable to manage cache");
+						return;
+					}
+
+					String theCaseId = theCase.getId();
+					Integer caseId = Integer.valueOf(theCaseId);
+					for (CasesCacheCriteria criteria: cache.keySet()) {
+						if (criteria == null)
+							continue;
+
+						Map<Integer, Boolean> cachedIds = cache.get(criteria);
+
+						if (ommitClearing && (!MapUtil.isEmpty(cachedIds) && cachedIds.containsKey(caseId)))
+							//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
+							continue;
+
+						User user = getUser(criteria.getUserId());
+						boolean superAdmin = false;
+						try {
+							superAdmin = user == null ?
+								false :
+								IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser().equals(user);
+						} catch (Exception e) {
+							getLogger().log(Level.WARNING, "Error while resolving if user " + user + " is administrator");
+						}
+
+						List<Integer> ids = null;
+						if (!superAdmin) {
+							try {
+								ids = getCaseIds(
+										user,
+										criteria.getType(),
+										criteria.getCaseCodes(),
+										criteria.getStatusesToHide(),
+										criteria.getStatusesToShow(),
+										criteria.isOnlySubscribedCases(),
+										criteria.isShowAllCases(),
+										caseId,
+										criteria.getProcInstIds()
+									);
+							} catch (Exception e) {
+								String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
+										theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
+								String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " +
+										criteria.getKey() + " and user " + user;
+								LOGGER.log(Level.WARNING, message, e);
+								CoreUtil.sendExceptionNotification(message, e);
+								cache.clear();
+								return;
+							}
+						}
+
+						boolean contains = superAdmin ? true : ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
+						if (contains) {
+							if (cachedIds == null) {
+								cachedIds = new LinkedHashMap<Integer, Boolean>();
+								cache.put(criteria, cachedIds);
+							}
+							cachedIds.put(caseId, Boolean.TRUE);
+						} else if (!ommitClearing) {
+							if (cachedIds != null)
+								cachedIds.remove(caseId);
+						}
+					}
+				} catch (Exception e) {
+					String message = "Error updating cases list after case was modified or created: " + theCase;
+					getLogger().log(Level.WARNING, message, e);
 				}
-				cachedIds.put(caseId, Boolean.TRUE);
-			} else if (!ommitClearing) {
-				if (cachedIds != null)
-					cachedIds.remove(caseId);
 			}
-		}
+		});
+		cacheManager.start();
 	}
 
 	@Override
@@ -977,14 +911,18 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!(source instanceof Case))
 				return;
 
-			if (!isCacheUpdateTurnedOn())
+			if (!isCacheUpdateTurnedOn()) {
 				getCache().clear();
+				return;
+			}
 
 			Case theCase = (Case) source;
 			doManageCasesCache(theCase, theCase == null || StringUtil.isEmpty(theCase.getSubject()));
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
-			if (!isCacheUpdateTurnedOn())
+			if (!isCacheUpdateTurnedOn()) {
 				getCache().clear();
+				return;
+			}
 
 			ProcessInstanceCreatedEvent procCreatedEvent = (ProcessInstanceCreatedEvent) event;
 
@@ -1012,12 +950,14 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			doManageCasesCache(theCase, true);
 		} else if (event instanceof CaseDeletedEvent) {
-			if (!isCacheUpdateTurnedOn())
-				getCache().clear();
-
 			Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 			if (cache == null)
 				return;
+
+			if (!isCacheUpdateTurnedOn()) {
+				cache.clear();
+				return;
+			}
 
 			Object source = event.getSource();
 			if (!(source instanceof Case))
