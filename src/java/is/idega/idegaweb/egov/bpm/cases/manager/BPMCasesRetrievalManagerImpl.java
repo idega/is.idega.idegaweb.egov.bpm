@@ -1,13 +1,97 @@
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
-import src.java.com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import src.java.com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import src.java.com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import src.java.is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
-import src.java.is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
-import src.java.is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
-import src.java.is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
-import src.java.is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
+import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
+import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.CaseCategory;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
+
+import java.rmi.RemoteException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ejb.FinderException;
+import javax.faces.component.UIComponent;
+import javax.faces.component.UIViewRoot;
+
+import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
+import org.jbpm.db.GraphSession;
+import org.jbpm.graph.def.ProcessDefinition;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.support.WebApplicationContextUtils;
+
+import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.business.CasesCacheCriteria;
+import com.idega.block.process.business.CasesRetrievalManager;
+import com.idega.block.process.business.CasesRetrievalManagerImpl;
+import com.idega.block.process.business.ProcessConstants;
+import com.idega.block.process.data.Case;
+import com.idega.block.process.data.CaseCode;
+import com.idega.block.process.event.CaseDeletedEvent;
+import com.idega.block.process.event.CaseModifiedEvent;
+import com.idega.block.process.presentation.beans.CaseManagerState;
+import com.idega.block.process.presentation.beans.CasePresentation;
+import com.idega.block.process.presentation.beans.CasePresentationComparator;
+import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
+import com.idega.core.accesscontrol.business.AccessController;
+import com.idega.core.builder.data.ICPage;
+import com.idega.core.builder.data.ICPageHome;
+import com.idega.data.IDOLookup;
+import com.idega.data.IDOLookupException;
+import com.idega.idegaweb.IWApplicationContext;
+import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.data.ProcessManagerBind;
+import com.idega.jbpm.events.ProcessInstanceCreatedEvent;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.variables.VariablesHandler;
+import com.idega.presentation.IWContext;
+import com.idega.presentation.paging.PagedDataCollection;
+import com.idega.presentation.text.Link;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.data.Group;
+import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
+import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
+import com.idega.util.StringUtil;
+import com.idega.util.datastructures.map.MapUtil;
+import com.idega.util.expression.ELUtil;
+import com.idega.webface.WFUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -869,7 +953,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 										criteria.isOnlySubscribedCases(),
 										criteria.isShowAllCases(),
 										caseId,
-										criteria.getProcInstIds()
+										criteria.getProcInstIds(),
+										criteria.getRoles()
 									);
 							} catch (Exception e) {
 								String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
