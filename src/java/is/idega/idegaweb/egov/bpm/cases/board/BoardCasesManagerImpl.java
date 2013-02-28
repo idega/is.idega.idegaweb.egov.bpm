@@ -48,6 +48,7 @@ import com.idega.business.IBOLookupException;
 import com.idega.core.contact.data.Email;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.bean.VariableByteArrayInstance;
 import com.idega.jbpm.bean.VariableInstanceInfo;
@@ -97,7 +98,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	            	"string_evaluationOfOtherGrantsGrade"		//	23
 	 ));
 
-	private static final Logger LOGGER = Logger.getLogger(BoardCasesManagerImpl.class.getName());
+	protected static final Logger LOGGER = Logger.getLogger(BoardCasesManagerImpl.class.getName());
 
 	public static final String BOARD_CASES_LIST_SORTING_PREFERENCES = "boardCasesListSortingPreferencesAttribute";
 
@@ -148,7 +149,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_SUGGESTION);
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_DECISION);
 		List<String> allVariables = new ArrayList<String>(variablesToQuery);
-		allVariables.addAll(GRADING_VARIABLES);
+		allVariables.addAll(getGradingVariables());
 
 		List<CaseBoardView> boardViews = getVariablesValuesByNamesForCases(casesIdsAndHandlers, allVariables);
 		if (ListUtil.isEmpty(boardViews))
@@ -415,6 +416,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				total += numberValue.longValue();
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting number value from: " + value);
+				return Long.valueOf(0);
 			}
 		}
 
@@ -547,6 +549,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return variables;
 	}
 
+	protected List<String> getGradingVariables() {
+		return GRADING_VARIABLES;
+	}
+	
 	/**
 	 *
 	 * @param view
@@ -554,11 +560,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	 * 1 element contains sum of negative grade values
 	 */
 	public String [] getGradingSum(CaseBoardView view) {
-		List<String> gradingValues = view.getValues(GRADING_VARIABLES);
+		List<String> gradingValues = view.getValues(getGradingVariables());
 		String[] gradings = new String[] {String.valueOf(0), String.valueOf(0)};
 		if (ListUtil.isEmpty(gradingValues))
 			return gradings;
-
+ 
 		long sum = 0;
 		long negativeSum = 0;
 		Long gradeValue = null;
@@ -638,46 +644,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			rowBean.setHandler(caseBoard.getHandler());
 
 			//	Table of financing
-			List<Map<String, String>> tasksInfo = caseBoard.getFinancingOfTheTasks();
-			if (!ListUtil.isEmpty(tasksInfo)) {
-				int tasksIndex = 0;
-				Map<Integer, Map<String, String>> valuesToReplace = new TreeMap<Integer, Map<String,String>>();
-				for (Map<String, String> taskInfo: tasksInfo) {
-					if (MapUtil.isEmpty(taskInfo))
-						continue;
-
-					String taskName = taskInfo.get("task");
-					if (StringUtil.isEmpty(taskName))
-						continue;
-
-					Long cost = getNumberValue(taskInfo.get("cost_estimate"), Boolean.FALSE);
-
-					Map<String, String> cells = new HashMap<String, String>();
-					cells.put(CasesBoardViewer.WORK_ITEM, taskName);
-					cells.put(CasesBoardViewer.ESTIMATED_COST, String.valueOf(cost));
-
-					String suggestion = taskInfo.get(CasesBoardViewer.BOARD_SUGGESTION);
-					cells.put(CasesBoardViewer.BOARD_SUGGESTION, StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
-
-					String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
-					cells.put(CasesBoardViewer.BOARD_DECISION, StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
-
-					valuesToReplace.put(tasksIndex, cells);
-					tasksIndex++;
-				}
-				tasksInfo = new ArrayList<Map<String,String>>();
-				for (Map<String, String> infoToReplace: valuesToReplace.values()) {
-					tasksInfo.add(infoToReplace);
-				}
-				caseBoard.setFinancingOfTheTasks(tasksInfo);
-			}
+			updateTasksInfo(caseBoard);
 
 			int index = 0;
 			Map<Integer, List<AdvancedProperty>> rowValues = new TreeMap<Integer, List<AdvancedProperty>>();
 			for (Integer key: columns.keySet()) {
 				List<AdvancedProperty> columnLabels = columns.get(key);
 
-				for (AdvancedProperty column: columnLabels) {
+				for (AdvancedProperty column: columnLabels) {					
 					if (isColumnOfDomain(column.getId(), CasesBoardViewer.CASE_FIELDS.get(5).getId()))
 						// Link to grading task
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(column.getId(), caseBoard.getCaseIdentifier())));
@@ -689,7 +663,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					//	Financing table
 					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.WORK_ITEM)) {
 						financingTableAdded = true;
-						rowBean.setFinancingInfo(tasksInfo);
+						rowBean.setFinancingInfo(caseBoard.getFinancingOfTheTasks());
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(ProcessConstants.FINANCING_OF_THE_TASKS,
 								CoreConstants.EMPTY)));
 					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
@@ -755,7 +729,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return info;
 	}
 
-	private static final String LOCALIZATION_PREFIX = "case_board_viewer.";
+	protected static final String LOCALIZATION_PREFIX = "case_board_viewer.";
 
 	public List<String> getCustomColumns(String uuid) {
 		if (StringUtil.isEmpty(uuid))
@@ -834,11 +808,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return columns;
 	}
 
-	private Map<Integer, List<AdvancedProperty>> getTableHeaders(IWResourceBundle iwrb, String uuid) {
+	protected Map<Integer, List<AdvancedProperty>> getTableHeaders(IWResourceBundle iwrb, String uuid) {
 		return getColumns(iwrb, uuid);
 	}
 
-	private List<String> getFooterValues(IWResourceBundle iwrb, int numberOfColumns, long grantAmountSuggestionTotal, long boardAmountTotal,
+	protected List<String> getFooterValues(IWResourceBundle iwrb, int numberOfColumns, long grantAmountSuggestionTotal, long boardAmountTotal,
 			String uuid) {
 
 		List<String> values = new ArrayList<String>();
@@ -1034,5 +1008,73 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariablesByProcessDefinition(processName);
 		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 		return variablesProvider.getAvailableVariables(variables, iwc.getCurrentLocale(), iwc.isSuperAdmin(), false);
+	}
+	
+	protected IWContext getIWContext() {
+		return CoreUtil.getIWContext();
+	}
+	
+	protected IWResourceBundle getIWResourceBundle(IWContext iwc) {
+		if (iwc == null) {
+			return null;
+		}
+		
+		IWMainApplication application = IWMainApplication.getIWMainApplication(iwc);
+		if (application == null) {
+			return null;
+		}
+		
+		IWBundle bundle = application.getBundle(
+				getBundleIdentifier()
+				);
+		if (bundle == null) {
+			return null;
+		}
+		
+		return bundle.getResourceBundle(iwc);
+	}
+
+	protected String getBundleIdentifier() {
+		return IWBundleStarter.IW_BUNDLE_IDENTIFIER;
+	}
+	
+	protected void updateTasksInfo(CaseBoardBean caseBoard) {
+		if (caseBoard == null) {
+			return;
+		}
+		
+		List<Map<String, String>> tasksInfo = caseBoard.getFinancingOfTheTasks();
+		if (!ListUtil.isEmpty(tasksInfo)) {
+			int tasksIndex = 0;
+			Map<Integer, Map<String, String>> valuesToReplace = new TreeMap<Integer, Map<String,String>>();
+			for (Map<String, String> taskInfo: tasksInfo) {
+				if (MapUtil.isEmpty(taskInfo))
+					continue;
+
+				String taskName = taskInfo.get("task");
+				if (StringUtil.isEmpty(taskName))
+					continue;
+
+				Long cost = getNumberValue(taskInfo.get("cost_estimate"), Boolean.FALSE);
+
+				Map<String, String> cells = new HashMap<String, String>();
+				cells.put(CasesBoardViewer.WORK_ITEM, taskName);
+				cells.put(CasesBoardViewer.ESTIMATED_COST, String.valueOf(cost));
+
+				String suggestion = taskInfo.get(CasesBoardViewer.BOARD_SUGGESTION);
+				cells.put(CasesBoardViewer.BOARD_SUGGESTION, StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
+
+				String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
+				cells.put(CasesBoardViewer.BOARD_DECISION, StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
+
+				valuesToReplace.put(tasksIndex, cells);
+				tasksIndex++;
+			}
+			tasksInfo = new ArrayList<Map<String,String>>();
+			for (Map<String, String> infoToReplace: valuesToReplace.values()) {
+				tasksInfo.add(infoToReplace);
+			}
+			caseBoard.setFinancingOfTheTasks(tasksInfo);
+		}
 	}
 }
