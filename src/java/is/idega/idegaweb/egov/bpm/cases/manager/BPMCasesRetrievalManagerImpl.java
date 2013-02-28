@@ -956,7 +956,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 								String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " +
 										criteria.getKey() + " and user " + user;
 								LOGGER.log(Level.WARNING, message, e);
-								CoreUtil.sendExceptionNotification(message, e);
 								cache.clear();
 								return;
 							}
@@ -977,7 +976,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				} catch (Exception e) {
 					String message = "Error updating cases list after case was modified or created: " + theCase;
 					getLogger().log(Level.WARNING, message, e);
-					CoreUtil.sendExceptionNotification(message, e);
 				}
 			}
 		});
