@@ -442,7 +442,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
-	@SuppressWarnings("unchecked")
 	public CaseIdentifier getCaseIdentifier() {
 		String qualifier = CaseIdentifier.QUALIFIER;
 
