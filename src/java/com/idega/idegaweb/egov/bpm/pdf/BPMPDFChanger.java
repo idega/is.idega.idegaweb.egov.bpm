@@ -3,6 +3,7 @@ package com.idega.idegaweb.egov.bpm.pdf;
 import java.util.Arrays;
 import java.util.List;
 
+import org.jdom2.Attribute;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.filter.Filters;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.pdf.business.PDFChanger;
 import com.idega.core.business.DefaultSpringBean;
+import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.xml.XmlUtil;
 
@@ -36,6 +38,15 @@ public class BPMPDFChanger extends DefaultSpringBean implements PDFChanger {
 		if (!ListUtil.isEmpty(scripts))
 			for (Element script: scripts)
 				script.detach();
+
+		List<Element> titles = XmlUtil.getContentByXPath(root, "//div", CoreConstants.EMPTY, Filters.element());
+		if (!ListUtil.isEmpty(titles)) {
+			for (Element title: titles) {
+				Attribute theClass = title.getAttribute("class");
+				if (theClass != null && "chibaXFormSessionKeyContainerStyle".equals(theClass.getValue()))
+					theClass.detach();
+			}
+		}
 
 		return doc;
 	}
