@@ -6,6 +6,8 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.taskmgmt.exe.TaskInstance;
@@ -13,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -24,6 +27,7 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
@@ -53,10 +57,9 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 	private BPMContext bpmContext;
 
 	@Override
+	@Transactional(readOnly = false)
 	public void execute(ExecutionContext ectx) throws Exception {
-
-		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class,
-		    processInstanceId);
+		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
 
 		Integer caseId = cpi.getCaseId();
 
@@ -77,15 +80,22 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 		genCase.setOwner(ownerUser);
 		genCase.store();
 
-		TaskInstance taskInstance = getBpmFactory()
-		        .getProcessManagerByProcessInstanceId(getProcessInstanceId())
-		        .getProcessInstance(getProcessInstanceId())
-		        .getStartTaskInstance().getTaskInstance();
+		final User taskOwner = ownerUser;
+		getBpmContext().execute(new JbpmCallback<Void>() {
+			@Override
+			public Void doInJbpm(JbpmContext context) throws JbpmException {
+				TaskInstance taskInstance = getBpmFactory()
+				        .getProcessManagerByProcessInstanceId(getProcessInstanceId())
+				        .getProcessInstance(getProcessInstanceId())
+				        .getStartTaskInstance().getTaskInstance(context);
 
-		if (ownerUser != null)
-			taskInstance.setActorId(ownerUser.getId());
+				if (taskOwner != null)
+					taskInstance.setActorId(taskOwner.getId());
 
-		getBpmContext().saveProcessEntity(taskInstance);
+				getBpmContext().saveProcessEntity(context, taskInstance);
+				return null;
+			}
+		});
 	}
 
 	protected User getLoggedInUser() {

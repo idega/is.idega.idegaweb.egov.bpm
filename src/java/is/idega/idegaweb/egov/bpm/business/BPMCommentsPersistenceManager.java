@@ -23,6 +23,7 @@ import javax.jcr.security.Privilege;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
+import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -116,9 +117,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 
 		final Long processInstanceId = Long.valueOf(prcInstId);
-		final String storePath = getBpmContext().execute(new JbpmCallback() {
+		final String storePath = getBpmContext().execute(new JbpmCallback<String>() {
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
+			public String doInJbpm(JbpmContext context) throws JbpmException {
 
 				String processName = context.getProcessInstance(processInstanceId).getProcessDefinition().getName();
 				String storePath = new StringBuilder(JBPMConstants.BPM_PATH).append(CoreConstants.SLASH).append(processName).append("/processComments/")
@@ -244,7 +245,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 			getRepositoryService().storeAccessControlList(acl);
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error while updating access rights for: " + uri, e);
+			LOGGER.warning("Error while updating access rights for: " + uri);
 		}
 	}
 
@@ -798,10 +799,13 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 		TaskInstanceW latestTask = null;
 		for (TaskInstanceW taskInstance: submittedTasks) {
-			if (taskName.equals(taskInstance.getTaskInstance().getName())) {
+			TaskInstance ti = taskInstance.getTaskInstance();
+			java.util.Date created = ti.getCreate();
+
+			if (taskName.equals(ti.getName())) {
 				if (latestTask == null) {
 					latestTask = taskInstance;
-				} else if (taskInstance.getTaskInstance().getCreate().after(latestTask.getTaskInstance().getCreate())) {
+				} else if (created.after(latestTask.getTaskInstance().getCreate())) {
 					latestTask = taskInstance;
 				}
 			}

@@ -54,6 +54,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
@@ -66,6 +67,7 @@ import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
+import com.idega.util.expression.ELUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -86,8 +88,18 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	@Autowired
 	private CasesStatusMapperHandler casesStatusMapperHandler;
+
 	@Autowired
 	private AppSupportsManagerFactory appSupportsManagerFactory;
+
+	@Autowired
+	private BPMDAO bpmDAO;
+
+	private BPMDAO getBPMDAO() {
+		if (bpmDAO == null)
+			ELUtil.getInstance().autowire(this);
+		return bpmDAO;
+	}
 
 	@Override
 	public Object doPrepareProcess(Map<String, Object> parameters) {
@@ -186,11 +198,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		if (!processDefinitionId.equals(getProcessDefinitionId()))
 			throw new IllegalArgumentException("View submission was for different process definition id than tried to submit to");
 
-		final ProcessDefinition pd = getProcessDefinition();
-
-		final String procDefName = pd.getName();
-		getLogger().info("Starting process for process definition id = " + processDefinitionId + ", process definition name: " + procDefName);
-
 		Map<String, String> parameters = viewSubmission.resolveParameters();
 
 		getLogger().finer("Params " + parameters);
@@ -218,12 +225,19 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		final String realCaseCreationDate = theCase == null ?	parameters.get(CasesBPMProcessConstants.caseCreationDateParam) :
 																String.valueOf(theCase.getCreated());
 
-		Long piId = getBpmContext().execute(new JbpmCallback() {
+		Long piId = getBpmContext().execute(new JbpmCallback<Long>() {
 			@Override
 			public Long doInJbpm(JbpmContext context) throws JbpmException {
 				try {
+					final ProcessDefinition pd = getProcessDefinition(context);
+					String procDefName = pd.getName();
+					getLogger().info("Starting process for process definition id = " + processDefinitionId + ", process definition name: " + procDefName);
+
 					ProcessInstance pi = new ProcessInstance(pd);
 					TaskInstance ti = pi.getTaskMgmtInstance().createStartTaskInstance();
+					if (ti == null || ti.getId() <= 0)
+						throw new JbpmException("Task instance for proc. def. (ID: " + processDefinitionId + ") and proc. inst. (ID: "
+								+ pi.getId() + ") was not created!");
 
 					View view = getBpmFactory().getView(viewSubmission.getViewId(), viewSubmission.getViewType(), false);
 
@@ -233,6 +247,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					getLogger().info("New process instance created for the process " + procDefName);
 
 					pi.setStart(new Date());
+
+					context.getSession().flush();
 
 					IWMainApplication iwma = iwac.getIWMainApplication();
 
@@ -263,7 +279,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					IWContext iwc = CoreUtil.getIWContext();
 					Locale dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
-					dateLocale = dateLocale == null ? Locale.ENGLISH : dateLocale;	//	TODO
+					dateLocale = dateLocale == null ? iwma.getDefaultLocale() : dateLocale;
+					dateLocale = dateLocale == null ? Locale.ENGLISH : dateLocale;
 					IWTimestamp created = new IWTimestamp(genCase.getCreated());
 					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT,
 							IWTimestamp.SHORT));
@@ -283,7 +300,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					getLogger().info("Variables were set: " + caseData);
 
 					Map<String, Object> variables = viewSubmission.resolveVariables();
-					submitVariablesAndProceedProcess(ti, variables, true);
+					submitVariablesAndProceedProcess(context, ti, variables, true);
 
 					if (variables != null && variables.containsKey(BPMConstants.PUBLIC_PROCESS)) {
 						Object publicProcess = variables.get(BPMConstants.PUBLIC_PROCESS);
@@ -310,7 +327,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			getLogger().info("Process was created: " + piId);
 			return piId;
 		} finally {
-			notifyAboutNewProcess(procDefName, piId);
+			notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(getProcessDefinitionId()), piId);
 		}
 	}
 
@@ -318,12 +335,12 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Transactional(readOnly = false)
 	public View loadInitView(final Integer initiatorId) {
 		try {
-			return getBpmContext().execute(new JbpmCallback() {
+			return getBpmContext().execute(new JbpmCallback<View>() {
 
 				@Override
-				public Object doInJbpm(JbpmContext context) throws JbpmException {
+				public View doInJbpm(JbpmContext context) throws JbpmException {
 					Long processDefinitionId = getProcessDefinitionId();
-					ProcessDefinition pd = getProcessDefinition();
+					ProcessDefinition pd = getProcessDefinition(context);
 
 					Long startTaskId = pd.getTaskMgmtDefinition().getStartTask().getId();
 
@@ -483,10 +500,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			return null;
 		}
 
-		return getBpmContext().execute(new JbpmCallback() {
-
+		return getBpmContext().execute(new JbpmCallback<String>() {
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
+			public String doInJbpm(JbpmContext context) throws JbpmException {
 				ProcessDefinition pd = context.getGraphSession().getProcessDefinition(processDefinitionId);
 				try {
 					return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));

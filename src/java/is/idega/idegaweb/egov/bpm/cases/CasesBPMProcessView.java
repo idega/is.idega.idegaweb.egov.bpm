@@ -61,31 +61,11 @@ public class CasesBPMProcessView {
 
 	@Transactional(readOnly = true)
 	public CasesBPMTaskViewBean getTaskView(final long taskInstanceId) {
-
-		return getIdegaJbpmContext().execute(new JbpmCallback() {
+		return getIdegaJbpmContext().execute(new JbpmCallback<CasesBPMTaskViewBean>() {
 
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
-
-				// ProcessInstanceW processInstanceW = getBPMFactory()
-				// .getProcessManagerByProcessInstanceId(processInstanceId)
-				// .getProcessInstance(processInstanceId);
-				//
-				// Collection<TaskInstanceW> taskInstances = processInstanceW
-				// .getAllTaskInstances();
-				//
-				// TaskInstanceW ti = null;
-				// for (TaskInstanceW task : taskInstances) {
-				// if (task.getTaskInstanceId() == taskInstanceId) {
-				// ti = task;
-				// }
-				// }
-
-				// TODO: changed the way tiw is resolved, test if it works!
-
-				TaskInstanceW tiw = getBPMFactory()
-				        .getProcessManagerByTaskInstanceId(taskInstanceId)
-				        .getTaskInstance(taskInstanceId);
+			public CasesBPMTaskViewBean doInJbpm(JbpmContext context) throws JbpmException {
+				TaskInstanceW tiw = getBPMFactory().getProcessManagerByTaskInstanceId(taskInstanceId).getTaskInstance(taskInstanceId);
 
 				if (tiw == null) {
 					Logger.getLogger(getClass().getName()).log(
@@ -95,7 +75,7 @@ public class CasesBPMProcessView {
 					return new CasesBPMTaskViewBean();
 				}
 
-				TaskInstance ti = tiw.getTaskInstance();
+				TaskInstance ti = tiw.getTaskInstance(context);
 
 				IWContext iwc = IWContext.getInstance();
 
@@ -197,11 +177,10 @@ public class CasesBPMProcessView {
 
 	@Transactional(readOnly = true)
 	public CasesBPMProcessViewBean getProcessView(final long processInstanceId, final int caseId) {
-
-		return getIdegaJbpmContext().execute(new JbpmCallback() {
+		return getIdegaJbpmContext().execute(new JbpmCallback<CasesBPMProcessViewBean>() {
 
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
+			public CasesBPMProcessViewBean doInJbpm(JbpmContext context) throws JbpmException {
 				ProcessInstance pi = context.getProcessInstance(processInstanceId);
 
 				if (pi == null) {
@@ -254,7 +233,6 @@ public class CasesBPMProcessView {
 	}
 
 	public BPMUser getCurrentBPMUser() {
-
 		return getBPMFactory().getBpmUserFactory().getCurrentBPMUser();
 	}
 

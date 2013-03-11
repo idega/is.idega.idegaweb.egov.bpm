@@ -4,8 +4,11 @@ import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHand
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -34,12 +37,14 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.events.VariableCreatedEvent;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.ListUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -69,12 +74,11 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	@Override
 	@Transactional(readOnly = false)
 	public void assignHandler(final Integer handlerUserId) {
-
-		getBpmContext().execute(new JbpmCallback() {
+		getBpmContext().execute(new JbpmCallback<Void>() {
 
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				ProcessInstance pi = getProcessInstance();
+			public Void doInJbpm(JbpmContext context) throws JbpmException {
+				ProcessInstance pi = getProcessInstance(context);
 
 				// creating new token, so there are no race conditions for
 				// variables
@@ -105,16 +109,10 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	}
 
 	private IWApplicationContext getIWAC() {
-
 		final IWContext iwc = IWContext.getCurrentInstance();
 		final IWApplicationContext iwac;
-		// trying to get iwma from iwc, if available, downgrading to default
-		// iwma, if not
-
 		if (iwc != null) {
-
 			iwac = iwc;
-
 		} else {
 			iwac = IWMainApplication.getDefaultIWApplicationContext();
 		}
@@ -124,37 +122,43 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
-					CasesBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
 	}
 
+	private <T extends Serializable> T getVariableValue(String variableName) {
+		Collection<VariableInstanceInfo> vars = getVariableInstanceQuerier()
+				.getVariableByProcessInstanceIdAndVariableName(getProcessInstanceId(), variableName);
+		if (ListUtil.isEmpty(vars))
+			return null;
+
+		T value = null;
+		for (Iterator<VariableInstanceInfo> varsIter = vars.iterator(); (varsIter.hasNext() && value == null);) {
+			value =  varsIter.next().getValue();
+		}
+		return value;
+	}
+
 	@Override
 	@Transactional(readOnly = true)
 	public String getProcessDescription() {
-
-		String description = (String) getProcessInstance().getContextInstance()
-				.getVariable(ProcessConstants.CASE_DESCRIPTION);
-
+		String description = getVariableValue(ProcessConstants.CASE_DESCRIPTION);
 		return description;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public String getProcessIdentifier() {
-
-		return (String) getProcessInstance().getContextInstance().getVariable(
-				ProcessConstants.CASE_IDENTIFIER);
+		String identifier = getVariableValue(ProcessConstants.CASE_IDENTIFIER);
+		return identifier;
 	}
 
 	@Override
 	@Transactional(readOnly = true)
 	public Integer getHandlerId() {
-
-		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class,
-				getProcessInstanceId());
+		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, getProcessInstanceId());
 
 		Integer caseId = cpi.getCaseId();
 
@@ -164,9 +168,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 			GeneralCase genCase = casesBusiness.getGeneralCase(caseId);
 			User currentHandler = genCase.getHandledBy();
 
-			return currentHandler == null ? null : new Integer(currentHandler
-					.getPrimaryKey().toString());
-
+			return currentHandler == null ? null : new Integer(currentHandler.getPrimaryKey().toString());
 		} catch (RemoteException e) {
 			throw new IBORuntimeException(e);
 		} catch (FinderException e) {
@@ -177,18 +179,14 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	@Override
 	@Transactional(readOnly = true)
 	public boolean hasHandlerAssignmentSupport() {
-
-		Boolean res = getBpmContext().execute(new JbpmCallback() {
+		Boolean res = getBpmContext().execute(new JbpmCallback<Boolean>() {
 
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
+			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
 				@SuppressWarnings("unchecked")
-				Map<String, Event> events = getProcessInstance()
-						.getProcessDefinition().getEvents();
+				Map<String, Event> events = getProcessInstance(context).getProcessDefinition().getEvents();
 
-				return events != null
-						&& events
-								.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
+				return events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
 			}
 		});
 

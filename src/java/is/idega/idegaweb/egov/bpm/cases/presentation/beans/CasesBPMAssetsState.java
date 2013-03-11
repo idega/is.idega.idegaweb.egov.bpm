@@ -651,8 +651,8 @@ public class CasesBPMAssetsState implements Serializable {
 
 	private String getCurrentTaskInstanceName() {
 		if (StringUtil.isEmpty(currentTaskInstanceName)) {
-			currentTaskInstanceName = getBpmFactory().getProcessManagerByTaskInstanceId(getViewSelected()).getTaskInstance(getViewSelected()).getTaskInstance()
-				.getName();
+			currentTaskInstanceName = getBpmFactory().getProcessManagerByTaskInstanceId(getViewSelected()).getTaskInstance(getViewSelected())
+					.getTaskInstance().getName();
 		}
 		return currentTaskInstanceName;
 	}

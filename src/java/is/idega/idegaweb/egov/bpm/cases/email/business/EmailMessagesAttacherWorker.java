@@ -128,9 +128,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 
 		final Collection<BPMEmailMessage> messagesToAttach = allParsedMessages;
-		getIdegaJbpmContext().execute(new JbpmCallback() {
+		getIdegaJbpmContext().execute(new JbpmCallback<Void>() {
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
+			public Void doInJbpm(JbpmContext context) throws JbpmException {
 				for (BPMEmailMessage message: messagesToAttach) {
 					if (!attachEmailMessage(context, message)) {
 						//	TODO: save message and try attach later?

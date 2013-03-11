@@ -35,12 +35,12 @@ import com.idega.jbpm.bundle.ProcessBundleManager;
 import com.idega.util.CoreConstants;
 
 /**
- * 
+ *
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.7 $
- * 
+ *
  *          Last modified: $Date: 2008/12/28 11:58:47 $ by $Author: civilis $
- * 
+ *
  */
 @Scope("request")
 @Service("CasesBPMProcessMgmt")
@@ -79,10 +79,10 @@ public class CasesBPMProcessMgmtBean {
 		}
 
 		try {
-			getIdegaJbpmContext().execute(new JbpmCallback() {
+			getIdegaJbpmContext().execute(new JbpmCallback<Void>() {
 
-				public Object doInJbpm(JbpmContext context)
-						throws JbpmException {
+				@Override
+				public Void doInJbpm(JbpmContext context) throws JbpmException {
 
 					Long caseCategoryId = new Long(getCaseCategory());
 					Long caseTypeId = new Long(getCaseType());
@@ -205,23 +205,16 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	public String getCaseCategory() {
-
 		if (caseCategory == null && getProcessDefinitionId() != null) {
+			getIdegaJbpmContext().execute(new JbpmCallback<Void>() {
 
-			getIdegaJbpmContext().execute(new JbpmCallback() {
-
-				public Object doInJbpm(JbpmContext context)
-						throws JbpmException {
-
-					ProcessDefinition pd = context.getGraphSession()
-							.getProcessDefinition(getProcessDefinitionId());
-					CaseTypesProcDefBind ctpd = getCasesBPMDAO()
-							.getCaseTypesProcDefBindByPDName(pd.getName());
+				@Override
+				public Void doInJbpm(JbpmContext context) throws JbpmException {
+					ProcessDefinition pd = context.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+					CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
 
 					if (ctpd != null) {
-
-						setCaseCategory(String.valueOf(ctpd
-								.getCasesCategoryId()));
+						setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
 						setCaseType(String.valueOf(ctpd.getCasesTypeId()));
 					}
 					return null;
@@ -236,23 +229,16 @@ public class CasesBPMProcessMgmtBean {
 	}
 
 	public String getCaseType() {
-
 		if (caseType == null && getProcessDefinitionId() != null) {
+			getIdegaJbpmContext().execute(new JbpmCallback<Void>() {
 
-			getIdegaJbpmContext().execute(new JbpmCallback() {
-
-				public Object doInJbpm(JbpmContext context)
-						throws JbpmException {
-
-					ProcessDefinition pd = context.getGraphSession()
-							.getProcessDefinition(getProcessDefinitionId());
-					CaseTypesProcDefBind ctpd = getCasesBPMDAO()
-							.getCaseTypesProcDefBindByPDName(pd.getName());
+				@Override
+				public Void doInJbpm(JbpmContext context) throws JbpmException {
+					ProcessDefinition pd = context.getGraphSession().getProcessDefinition(getProcessDefinitionId());
+					CaseTypesProcDefBind ctpd = getCasesBPMDAO().getCaseTypesProcDefBindByPDName(pd.getName());
 
 					if (ctpd != null) {
-
-						setCaseCategory(String.valueOf(ctpd
-								.getCasesCategoryId()));
+						setCaseCategory(String.valueOf(ctpd.getCasesCategoryId()));
 						setCaseType(String.valueOf(ctpd.getCasesTypeId()));
 					}
 					return null;
@@ -268,20 +254,17 @@ public class CasesBPMProcessMgmtBean {
 
 	// rename to getLatestProcessDefinitions
 	public List<SelectItem> getCasesProcessesDefinitions() {
-
 		processesDefinitions.clear();
 
 		try {
-			getIdegaJbpmContext().execute(new JbpmCallback() {
+			getIdegaJbpmContext().execute(new JbpmCallback<Void>() {
 
-				public Object doInJbpm(JbpmContext context)
-						throws JbpmException {
+				@Override
+				public Void doInJbpm(JbpmContext context) throws JbpmException {
 					@SuppressWarnings("unchecked")
-					List<ProcessDefinition> pds = context.getGraphSession()
-							.findLatestProcessDefinitions();
+					List<ProcessDefinition> pds = context.getGraphSession().findLatestProcessDefinitions();
 
 					for (ProcessDefinition processDefinition : pds) {
-
 						SelectItem item = new SelectItem();
 
 						item.setValue(processDefinition.getId());
@@ -291,7 +274,6 @@ public class CasesBPMProcessMgmtBean {
 					return null;
 				}
 			});
-
 		} catch (Exception e) {
 			setMessage("Exception occured");
 			e.printStackTrace();

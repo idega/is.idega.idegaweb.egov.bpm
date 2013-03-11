@@ -61,8 +61,8 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 				.getProcessInstance(pi.getId());
 
 		String processDescription = getDescription() == null ? piw.getProcessDescription() : getDescription();
-
-		setCaseSubject(pi.getId(), processDescription, piw.getProcessDefinitionW().getProcessDefinition().getName());
+		String procDefName = piw.getProcessDefinitionW(ctx.getJbpmContext()).getProcessDefinition().getName();
+		setCaseSubject(pi.getId(), processDescription, procDefName);
 	}
 
 	protected Case getCase(Long processInstanceId) throws Exception {
@@ -121,16 +121,10 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 	}
 
 	private IWApplicationContext getIWAC() {
-
 		final IWContext iwc = IWContext.getCurrentInstance();
 		final IWApplicationContext iwac;
-		// trying to get iwma from iwc, if available, downgrading to default
-		// iwma, if not
-
 		if (iwc != null) {
-
 			iwac = iwc;
-
 		} else {
 			iwac = IWMainApplication.getDefaultIWApplicationContext();
 		}

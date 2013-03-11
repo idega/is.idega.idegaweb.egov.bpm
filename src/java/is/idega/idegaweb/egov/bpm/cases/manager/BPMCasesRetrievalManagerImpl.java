@@ -102,7 +102,7 @@ import com.idega.webface.WFUtil;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
 @Transactional(readOnly = true)
-public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements CasesRetrievalManager, ApplicationListener {
+public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements CasesRetrievalManager, ApplicationListener<ApplicationEvent> {
 
 	private static final Logger LOGGER = Logger.getLogger(BPMCasesRetrievalManagerImpl.class.getName());
 
@@ -143,10 +143,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			return null;
 		}
 
-		return getBpmContext().execute(new JbpmCallback() {
+		return getBpmContext().execute(new JbpmCallback<String>() {
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				return context.getProcessInstance(piId).getContextInstance().getVariable(ProcessConstants.CASE_IDENTIFIER);
+			public String doInJbpm(JbpmContext context) throws JbpmException {
+				return (String) context.getProcessInstance(piId).getContextInstance().getVariable(ProcessConstants.CASE_IDENTIFIER);
 			}
 		});
 	}
@@ -172,28 +172,34 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public Long getProcessDefinitionId(Case theCase) {
-		ProcessDefinition processDefinition = getProcessDefinition(theCase);
-		return processDefinition == null ? null : processDefinition.getId();
+	public Long getProcessDefinitionId(final Case theCase) {
+		return getBpmContext().execute(new JbpmCallback<Long>() {
+			@Override
+			public Long doInJbpm(JbpmContext context) throws JbpmException {
+				ProcessDefinition processDefinition = getProcessDefinition(context, theCase);
+				return processDefinition == null ? null : processDefinition.getId();
+			}
+		});
 	}
 
 	@Override
-	public String getProcessDefinitionName(Case theCase) {
-		ProcessDefinition processDefinition = getProcessDefinition(theCase);
-		return processDefinition == null ? null : processDefinition.getName();
+	public String getProcessDefinitionName(final Case theCase) {
+		return getBpmContext().execute(new JbpmCallback<String>() {
+			@Override
+			public String doInJbpm(JbpmContext context) throws JbpmException {
+				ProcessDefinition processDefinition = getProcessDefinition(context, theCase);
+				return processDefinition == null ? null : processDefinition.getName();
+			}
+		});
 	}
 
-	private ProcessDefinition getProcessDefinition(Case theCase) {
+	@Transactional(readOnly = true)
+	private ProcessDefinition getProcessDefinition(JbpmContext context, Case theCase) {
 		final Long piId = getProcessInstanceId(theCase);
 		if (piId == null)
 			return null;
 
-		return getBpmContext().execute(new JbpmCallback() {
-			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				return context.getProcessInstance(piId).getProcessDefinition();
-			}
-		});
+		return context.getProcessInstance(piId).getProcessDefinition();
 	}
 
 	@Override
@@ -636,10 +642,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		if (ListUtil.isEmpty(casesProcesses))
 			return null;
 
-		return getBpmContext().execute(new JbpmCallback() {
+		return getBpmContext().execute(new JbpmCallback<List<ProcessDefinition>>() {
 
 			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
+			public List<ProcessDefinition> doInJbpm(JbpmContext context) throws JbpmException {
 
 				ProcessDefinition pd = null;
 				List<ProcessDefinition> caseProcessDefinitions = new ArrayList<ProcessDefinition>();
