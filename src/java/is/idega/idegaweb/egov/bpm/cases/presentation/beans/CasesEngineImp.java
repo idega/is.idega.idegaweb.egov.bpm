@@ -108,7 +108,7 @@ import com.idega.webface.WFUtil;
 
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service("casesEngineDWR")
-public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine, ApplicationListener {
+public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine, ApplicationListener<ApplicationEvent> {
 
 	@Autowired
 	private CasesBPMProcessView casesBPMProcessView;
@@ -1017,7 +1017,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return null;
 	}
 
-	@SuppressWarnings("unchecked")
 	private Collection<CasePresentation> getExternalSearchResults(CasesSearchResultsHolder resultsHolder, String id) {
 		Map<String, ? extends ExternalCasesDataExporter> externalExporters = null;
 		try {
