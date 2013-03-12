@@ -62,8 +62,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	private static final String assetsFacet = "assets", assetViewFacet = "assetView";
 
-	private boolean fullView = false, inCasesComponent = false, usePdfDownloadColumn = true, allowPDFSigning = true, hideEmptySection = true,
-			showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, showComments = true, showContacts = true;
+	private boolean fullView = false, inCasesComponent = false, 
+			usePdfDownloadColumn = true, allowPDFSigning = true, 
+			hideEmptySection = true, showAttachmentStatistics, 
+			showOnlyCreatorInContacts, showLogExportButton, showComments = true, 
+			showContacts = true, nameFromExternalEntity = false;
 
 	private String commentsPersistenceManagerIdentifier, specialBackPage;
 
@@ -400,6 +403,9 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			mainAction.append("null");
 		else
 			mainAction.append("'").append(specialBackPage).append("'");
+		
+		mainAction.append(CoreConstants.COMMA);
+		mainAction.append(isNameFromExternalEntity());
 		mainAction.append(");").toString();
 
 		if (!isSingle)
@@ -471,4 +477,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		this.specialBackPage = specialBackPage;
 	}
 
+	public boolean isNameFromExternalEntity() {
+		return nameFromExternalEntity;
+	}
+
+	public void setNameFromExternalEntity(boolean nameFromExternalEntity) {
+		this.nameFromExternalEntity = nameFromExternalEntity;
+	}
 }

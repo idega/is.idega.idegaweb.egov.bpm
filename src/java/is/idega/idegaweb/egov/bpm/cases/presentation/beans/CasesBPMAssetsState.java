@@ -80,7 +80,7 @@ public class CasesBPMAssetsState implements Serializable {
 	private Boolean isWatched, usePDFDownloadColumn = Boolean.TRUE, allowPDFSigning = Boolean.TRUE, standAloneComponent = Boolean.TRUE,
 			hideEmptySection = Boolean.FALSE, showAttachmentStatistics = Boolean.FALSE, showOnlyCreatorInContacts = Boolean.FALSE, showBackButton,
 			showLogExportButton = Boolean.FALSE, showComments = Boolean.TRUE, showContacts = Boolean.TRUE, showNextTask,
-			specialBackPageDecoded = Boolean.FALSE, autoShowComments = Boolean.FALSE;
+			specialBackPageDecoded = Boolean.FALSE, autoShowComments = Boolean.FALSE, nameFromExternalEntity = Boolean.FALSE;
 
 	public Long getViewSelected() {
 		if (viewSelected == null)
@@ -743,5 +743,12 @@ public class CasesBPMAssetsState implements Serializable {
 	public void setShowContacts(Boolean showContacts) {
 		this.showContacts = showContacts;
 	}
+	
+	public void setNameFromExternalEntity(boolean nameFromExternalEntity) {
+		this.nameFromExternalEntity = nameFromExternalEntity;
+	}
 
+	public boolean isNameFromExternalEntity() {
+		return nameFromExternalEntity;
+	}
 }

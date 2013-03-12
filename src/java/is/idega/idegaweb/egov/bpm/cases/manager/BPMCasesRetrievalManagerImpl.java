@@ -229,6 +229,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		casesAssets.setShowComments(stateBean.getShowComments() == null ? Boolean.TRUE : stateBean.getShowComments());
 		casesAssets.setShowContacts(stateBean.getShowContacts() == null ? Boolean.TRUE : stateBean.getShowContacts());
 		casesAssets.setSpecialBackPage(stateBean.getSpecialBackPage());
+		casesAssets.setNameFromExternalEntity(stateBean.isNameFromExternalEntity());
 
 		if (caseId != null)
 			casesAssets.setCaseId(caseId);
