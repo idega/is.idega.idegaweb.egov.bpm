@@ -66,7 +66,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			usePdfDownloadColumn = true, allowPDFSigning = true, 
 			hideEmptySection = true, showAttachmentStatistics, 
 			showOnlyCreatorInContacts, showLogExportButton, showComments = true, 
-			showContacts = true, nameFromExternalEntity = false;
+			showContacts = true, nameFromExternalEntity = false, showUserProfilePicture = Boolean.TRUE;
 
 	private String commentsPersistenceManagerIdentifier, specialBackPage;
 
@@ -405,8 +405,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			mainAction.append("'").append(specialBackPage).append("'");
 		
 		mainAction.append(CoreConstants.COMMA);
-		mainAction.append(isNameFromExternalEntity());
-		mainAction.append(");").toString();
+		mainAction.append(isNameFromExternalEntity()).append(CoreConstants.COMMA)
+		.append(isShowUserProfilePicture()).append(");").toString();
 
 		if (!isSingle)
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction.toString()).append("\n});");
@@ -483,5 +483,13 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setNameFromExternalEntity(boolean nameFromExternalEntity) {
 		this.nameFromExternalEntity = nameFromExternalEntity;
+	}
+
+	public boolean isShowUserProfilePicture() {
+		return showUserProfilePicture;
+	}
+
+	public void setShowUserProfilePicture(boolean showUserProfilePicture) {
+		this.showUserProfilePicture = showUserProfilePicture;
 	}
 }
