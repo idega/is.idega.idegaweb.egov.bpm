@@ -46,7 +46,7 @@ import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.presentation.IWContext;
-import com.idega.user.data.User;
+import com.idega.user.data.bean.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.RequestUtil;
 
@@ -701,21 +701,14 @@ public class IWContextMockUp extends IWContext {
 			RequestContextHolder.setRequestAttributes(new RequestAttributes() {
 				@Override
 				public void setAttribute(String name, Object value, int scope) {
-
-
 				}
 
 				@Override
 				public void removeAttribute(String name, int scope) {
-
-
 				}
 
 				@Override
-				public void registerDestructionCallback(String name, Runnable callback,
-						int scope) {
-
-
+				public void registerDestructionCallback(String name, Runnable callback, int scope) {
 				}
 
 				@Override
@@ -725,19 +718,21 @@ public class IWContextMockUp extends IWContext {
 
 				@Override
 				public String getSessionId() {
-
 					return null;
 				}
 
 				@Override
 				public String[] getAttributeNames(int scope) {
-
 					return null;
 				}
 
 				@Override
 				public Object getAttribute(String name, int scope) {
+					return null;
+				}
 
+				@Override
+				public Object resolveReference(String arg0) {
 					return null;
 				}
 			});
