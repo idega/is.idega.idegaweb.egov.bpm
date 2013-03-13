@@ -1,5 +1,9 @@
 package is.idega.idegaweb.egov.bpm.business;
 
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.cases.presentation.CaseViewer;
+import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -8,11 +12,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.cases.presentation.CaseViewer;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
-
 import com.idega.block.process.presentation.UserCases;
+import com.idega.builder.business.BuilderLogic;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.BPMFactory;
@@ -47,7 +48,14 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 			return null;
 		}
 		
-		URIUtil uriUtil = new URIUtil(basePage);
+		URIUtil uriUtil = null;
+		if (getBpmFactory().getProcessInstanceW(processInstanceId).hasEnded()) {
+			uriUtil = new URIUtil(BuilderLogic.getInstance().getFullPageUrlByPageType(iwc, "bpm_assets_view", true));
+			uriUtil.setParameter("piId", String.valueOf(processInstanceId));
+			return iwc.getIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri());
+		}
+		
+		uriUtil = new URIUtil(basePage);
 		uriUtil.setParameter(TASK_VIEWER_PAGE_REQUESTED_PARAMETER, Boolean.TRUE.toString());
 		uriUtil.setParameter(CASE_ID_PARAMETER, caseId);
 		uriUtil.setParameter(PROCESS_INSTANCE_ID_PARAMETER, String.valueOf(processInstanceId));

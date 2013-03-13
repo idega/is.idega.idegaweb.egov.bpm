@@ -234,6 +234,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		casesAssets.setShowComments(stateBean.getShowComments() == null ? Boolean.TRUE : stateBean.getShowComments());
 		casesAssets.setShowContacts(stateBean.getShowContacts() == null ? Boolean.TRUE : stateBean.getShowContacts());
 		casesAssets.setSpecialBackPage(stateBean.getSpecialBackPage());
+		casesAssets.setNameFromExternalEntity(stateBean.isNameFromExternalEntity());
 
 		if (caseId != null)
 			casesAssets.setCaseId(caseId);
@@ -968,7 +969,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 								String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " +
 										criteria.getKey() + " and user " + user;
 								LOGGER.log(Level.WARNING, message, e);
-								CoreUtil.sendExceptionNotification(message, e);
 								cache.clear();
 								return;
 							}

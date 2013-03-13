@@ -55,7 +55,7 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 		if (user == null || task == null)
 			return false;
 		
-		List<BPMDocument> tasksForUser = task.getProcessInstanceW().getTaskDocumentsForUser(user, getCurrentLocale());
+		List<BPMDocument> tasksForUser = task.getProcessInstanceW().getTaskDocumentsForUser(user, getCurrentLocale(), Boolean.FALSE);
 		if (ListUtil.isEmpty(tasksForUser)) {
 			getLogger().warning("There are no tasks available for the user " + user);
 			return false;

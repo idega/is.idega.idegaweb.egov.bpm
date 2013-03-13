@@ -129,12 +129,12 @@ back=Til baka
 loading=Hle\u00F0ur...
 bpm_variable.string_ownerKennitala=Kennitala
 
-bpm_variable.string_ownerFullName=Umsækjandi
+bpm_variable.string_ownerFullName=Ums\u00E6kjandi
 bpm_variable.string_companyResponsiblePersonName=\u00C1byrg\u00F0ara\u00F0ili
 bpm_variable.string_responsiblePersonGenderName=Kyn\ \u00E1byrg\u00F0ara\u00F0ila
-bpm_variable.string_ownerPostCode=Póstnúmer
+bpm_variable.string_ownerPostCode=P\u00F3stn\u00FAmer
 bpm_variable.string_expectedBeneficiariesName=Kyn haghafa
-bpm_variable.string_caseIdentifier=Málsnúmer
+bpm_variable.string_caseIdentifier=M\u00E1lsn\u00FAmer
 bpm_variable.string_caseDescription=Heiti verkefnis
 bpm_variable.string_projectNatureName=E\u00F0li\ verkefnis (s\u00F3tt\ \u00ED\ ums\u00F3knarey\u00F0ubla\u00F0i\u00F0)
 bpm_variable.string_ownerGrantAmount=Ums\u00F3tt\ upph\u00E6\u00F0

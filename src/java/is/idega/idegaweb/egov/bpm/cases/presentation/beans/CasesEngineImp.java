@@ -179,6 +179,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				stateBean.setShowComments(properties.isShowComments());
 				stateBean.setShowContacts(properties.isShowContacts());
 				stateBean.setSpecialBackPage(properties.getSpecialBackPage());
+				stateBean.setNameFromExternalEntity(properties.isNameFromExternalEntity());
 			}
 
 			Integer caseId = new Integer(caseIdStr);
