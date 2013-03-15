@@ -882,23 +882,24 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, ro
             }
         });
     };
+    
     subGridParams.callbackAfterInserted = function() {
     	LinksLinker.linkLinks(false, subgridTableId);
     	
-    	jQuery.each(jQuery('a.BPMCaseAttachmentStatisticsInfo', jQuery('#' + subgridTableId)), function() {
-                	var link = jQuery(this);
-                	
-                	if (!link.hasClass('BPMCaseAttachmentStatisticsInfoInitialized')) {
-                		link.addClass('BPMCaseAttachmentStatisticsInfoInitialized');
-                		link.fancybox({
-                			autoScale: false,
-							autoDimensions: false,
-                			width:	400,
-							height:	300,
-							hideOnContentClick: false
-                		});
-                	}
-                });
+    	jQuery('a.BPMCaseAttachmentStatisticsInfo', jQuery('#' + subgridTableId)).click(function (event) {
+    		if (event) {
+    			if (event.stopPropagation) {
+    				event.stopPropagation();
+    			}
+    			event.cancelBubble = true;
+    		}
+    		
+    		var link = jQuery(this).attr("attachment-link");
+    		jQuery.fancybox.open({
+    			type: 'ajax',
+    			href: link
+    		});
+    	});
     }
 
     var namesForColumns = new Array();
