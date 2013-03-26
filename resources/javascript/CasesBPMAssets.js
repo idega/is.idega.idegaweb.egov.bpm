@@ -94,7 +94,8 @@ CasesBPMAssets.initGridsContainer = function(container, piId, caseId,
 CasesBPMAssets.initGrid = function(container, piId, caseId, 
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
-		showComments, showContacts, specialBackPage, nameFromExternalEntity) {
+		showComments, showContacts, specialBackPage, nameFromExternalEntity,
+		showUserProfilePicture) {
 	
 	if (container == null) {
 		return false;
@@ -191,7 +192,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 						showOnlyCreatorInContacts, showContacts,
 						function() {
 							onGridInitedFunction('caseContactsPart', jQuery('div.caseContactsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
-						}, nameFromExternalEntity
+						}, nameFromExternalEntity, showUserProfilePicture
 				);
 				
 				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
@@ -600,7 +601,8 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
 
 CasesBPMAssets.initContactsGrid = function(piId, customerView, 
 		hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, 
-		showContacts, onContactsInited, nameFromExternalEntity) {
+		showContacts, onContactsInited, nameFromExternalEntity, 
+		showUserProfilePicture) {
 		
 	if (!showContacts) {
 		CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT--;
@@ -623,27 +625,29 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
                 CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
                 
                 var manageProfilePictures = function() {
-                	jQuery.each(jQuery('img.userProfilePictureInCasesList', jQuery(customerView)), function() {
-			    		var image = jQuery(this);
-			    		var imageSource = image.attr('src');
-			    		var tdCell = image.parent();
-			    		var pictureBoxId = 'personProfilePictureInCasesListContactPart';
-			    		tdCell.parent().mouseover(function(event) {
-			    			jQuery(document.body).append('<div id=\''+pictureBoxId+'\' class=\''+pictureBoxId+'Style\' style=\'display: none;\'>'+
-			    				'<img src=\''+imageSource+'\' /></div>');
-
-			    			jQuery('#' + pictureBoxId).css({
-								top: (jQuery(event.target).position().top + 2) + 'px',
-								left: (event.clientX + 10) + 'px'
-							});
-							jQuery('#' + pictureBoxId).fadeIn('fast');
-			    		});
-			    		tdCell.parent().mouseout(function(event) {
-			    			jQuery('#' + pictureBoxId).fadeOut('fast', function() {
-			    				jQuery(this).remove();
-			    			});
-			    		});
-					});
+                	if (showUserProfilePicture) {
+	                	jQuery.each(jQuery('img.userProfilePictureInCasesList', jQuery(customerView)), function() {
+				    		var image = jQuery(this);
+				    		var imageSource = image.attr('src');
+				    		var tdCell = image.parent();
+				    		var pictureBoxId = 'personProfilePictureInCasesListContactPart';
+				    		tdCell.parent().mouseover(function(event) {
+				    			jQuery(document.body).append('<div id=\''+pictureBoxId+'\' class=\''+pictureBoxId+'Style\' style=\'display: none;\'>'+
+				    				'<img src=\''+imageSource+'\' /></div>');
+	
+				    			jQuery('#' + pictureBoxId).css({
+									top: (jQuery(event.target).position().top + 2) + 'px',
+									left: (event.clientX + 10) + 'px'
+								});
+								jQuery('#' + pictureBoxId).fadeIn('fast');
+				    		});
+				    		tdCell.parent().mouseout(function(event) {
+				    			jQuery('#' + pictureBoxId).fadeOut('fast', function() {
+				    				jQuery(this).remove();
+				    			});
+				    		});
+						});
+                	}
                 }
                 manageProfilePictures();
                 
@@ -878,23 +882,24 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, ro
             }
         });
     };
+    
     subGridParams.callbackAfterInserted = function() {
     	LinksLinker.linkLinks(false, subgridTableId);
     	
-    	jQuery.each(jQuery('a.BPMCaseAttachmentStatisticsInfo', jQuery('#' + subgridTableId)), function() {
-                	var link = jQuery(this);
-                	
-                	if (!link.hasClass('BPMCaseAttachmentStatisticsInfoInitialized')) {
-                		link.addClass('BPMCaseAttachmentStatisticsInfoInitialized');
-                		link.fancybox({
-                			autoScale: false,
-							autoDimensions: false,
-                			width:	400,
-							height:	300,
-							hideOnContentClick: false
-                		});
-                	}
-                });
+    	jQuery('a.BPMCaseAttachmentStatisticsInfo', jQuery('#' + subgridTableId)).click(function (event) {
+    		if (event) {
+    			if (event.stopPropagation) {
+    				event.stopPropagation();
+    			}
+    			event.cancelBubble = true;
+    		}
+    		
+    		var link = jQuery(this).attr("attachment-link");
+    		jQuery.fancybox.open({
+    			type: 'ajax',
+    			href: link
+    		});
+    	});
     }
 
     var namesForColumns = new Array();

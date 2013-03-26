@@ -77,10 +77,17 @@ public class CasesBPMAssetsState implements Serializable {
 	private String displayPropertyForStyleAttribute = "block", specialBackPage, commentsPersistenceManagerIdentifier, currentTaskInstanceName,
 			systemEmailAddress;
 
-	private Boolean isWatched, usePDFDownloadColumn = Boolean.TRUE, allowPDFSigning = Boolean.TRUE, standAloneComponent = Boolean.TRUE,
-			hideEmptySection = Boolean.FALSE, showAttachmentStatistics = Boolean.FALSE, showOnlyCreatorInContacts = Boolean.FALSE, showBackButton,
-			showLogExportButton = Boolean.FALSE, showComments = Boolean.TRUE, showContacts = Boolean.TRUE, showNextTask,
-			specialBackPageDecoded = Boolean.FALSE, autoShowComments = Boolean.FALSE, nameFromExternalEntity = Boolean.FALSE;
+	private Boolean isWatched, usePDFDownloadColumn = Boolean.TRUE, 
+			allowPDFSigning = Boolean.TRUE, standAloneComponent = Boolean.TRUE,
+			hideEmptySection = Boolean.FALSE, 
+			showAttachmentStatistics = Boolean.FALSE, 
+			showOnlyCreatorInContacts = Boolean.FALSE, showBackButton,
+			showLogExportButton = Boolean.FALSE, showComments = Boolean.TRUE, 
+			showContacts = Boolean.TRUE, showNextTask,
+			specialBackPageDecoded = Boolean.FALSE, 
+			autoShowComments = Boolean.FALSE, 
+			nameFromExternalEntity = Boolean.FALSE, 
+			showUserProfilePicture = Boolean.TRUE;
 
 	public Long getViewSelected() {
 		if (viewSelected == null)
@@ -752,5 +759,13 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public boolean isNameFromExternalEntity() {
 		return nameFromExternalEntity;
+	}
+
+	public void setShowUserProfilePicture(Boolean showUserProfilePicture) {
+		this.showUserProfilePicture = showUserProfilePicture;
+	}
+
+	public boolean getShowUserProfilePicture() {
+		return showUserProfilePicture;
 	}
 }
