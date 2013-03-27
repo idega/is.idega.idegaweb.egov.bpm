@@ -147,3 +147,7 @@ bpm_variable.string_ownerGrantAmauntValue=Ni\u00F0ursta\u00F0a\ stj\u00F3rnar
 bpm_variable.string_ownerGrade=Ums\u00F6gn\ umsj\u00F3narmanns
 bpm_variable.string_ownerAnswer=Skilyrt til
 bpm_variable.handlerUserId=Umsj\u00F3nara\u00F0ili
+
+bpm_variable.long_municipalityId=Sveitarf\u00E9lag
+bpm_variable.string_issueCaption=L\u00FDsing
+bpm_variable.string_issueAddress=Heimilisfang
