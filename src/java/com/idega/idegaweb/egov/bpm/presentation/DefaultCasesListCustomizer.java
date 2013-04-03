@@ -203,8 +203,6 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			if (ListUtil.isEmpty(varNames))
 				continue;
 
-			getLogger().warning("Missing labels for case (" + caseId + "): " + varNames);
-
 			Map<String, String> caseLabels = labels.get(caseId);
 			for (String varName: varNames) {
 				if (!caseLabels.containsKey(varName))
