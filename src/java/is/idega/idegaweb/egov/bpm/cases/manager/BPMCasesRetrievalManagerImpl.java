@@ -257,6 +257,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			boolean showAllCases, List<Long> procInstIds, Set<String> roles) {
 
 		try {
+			if (ListUtil.isEmpty(roles) && user != null) {
+				roles = getApplication().getAccessController().getAllRolesForUser(user);
+			}
+
 			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases,
 					procInstIds, roles);
 
