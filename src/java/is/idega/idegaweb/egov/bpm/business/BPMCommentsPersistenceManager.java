@@ -234,6 +234,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 	private void updateAccessRights(String uri) {
 		AccessControlList acl = null;
 		try {
+			if (StringUtil.isEmpty(uri) || !getRepositoryService().getExistence(uri))
+				return;	//	Resource does not exist
+
 			acl = getRepositoryService().getAccessControlList(uri);
 			if (acl == null) {
 				return;
@@ -244,9 +247,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			acl.add(ace);
 
 			getRepositoryService().storeAccessControlList(acl);
-		} catch (Exception e) {
-			LOGGER.warning("Error while updating access rights for: " + uri);
-		}
+		} catch (Exception e) {}
 	}
 
 	@Override
@@ -281,7 +282,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 		String pathToFeed = null;
 		try {
-			pathToFeed = new StringBuilder(getRepositoryService().getWebdavServerURL()).append(uri).toString();
+			pathToFeed = new StringBuilder(getHost()).append(getRepositoryService().getWebdavServerURL()).append(uri).toString();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -607,7 +608,6 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		return piw.getAttachments();
 	}
 
-	@SuppressWarnings("unchecked")
 	private void fillWithReaders(CommentsViewerProperties properties, Comment comment, CommentEntry commentEntry) {
 		if (!properties.isFetchFully()) {
 			return;
