@@ -901,15 +901,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			@Override
 			public void run() {
 				try {
+					if (!isCacheUpdateTurnedOn())
+						return;
+
 					Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 					if (MapUtil.isEmpty(cache))
 						return;
-
-					boolean updateCache = isCacheUpdateTurnedOn();
-					if (!updateCache) {
-						cache.clear();
-						return;
-					}
 
 					if (theCase == null) {
 						getLogger().warning("Case is undefined, unable to manage cache");
@@ -951,7 +948,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 										criteria.isShowAllCases(),
 										caseId,
 										criteria.getProcInstIds()
-									);
+								);
 							} catch (Exception e) {
 								String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
 										theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
