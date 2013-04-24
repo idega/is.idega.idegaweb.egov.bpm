@@ -115,7 +115,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	private List<String> variables;
 
-	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, IWResourceBundle iwrb, String caseStatus, String processName, String uuid) {
+	@Override
+	public List<CaseBoardBean> getAllSortedCases(IWContext iwc, 
+			IWResourceBundle iwrb, Collection<String> caseStatus, 
+			String processName, String uuid) {
 		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
 		if (ListUtil.isEmpty(cases))
 			return null;
@@ -444,15 +447,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		Collections.sort(boardCases, new BoardCasesComparator(iwc.getLocale(), sortingPreferences));
 	}
 
-	@SuppressWarnings("unchecked")
-	private Collection<GeneralCase> getCases(IWApplicationContext iwac, String caseStatus, String processName) {
+	protected Collection<GeneralCase> getCases(IWApplicationContext iwac, Collection<String> caseStatus, String processName) {
 		Collection<Case> allCases = null;
 		if (!StringUtil.isEmpty(processName)) {
 			// Getting cases by application
 			allCases = getCasesByProcessAndCaseStatus(iwac, caseStatus, processName);
 		} else {
 			// Getting cases by case status
-			if (StringUtil.isEmpty(caseStatus)) {
+			if (ListUtil.isEmpty(caseStatus)) {
 				LOGGER.warning("Case status is unkown - terminating!");
 				return null;
 			}
@@ -462,7 +464,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				return null;
 			}
 			try {
-				allCases = casesBusiness.getCasesByCriteria(null, null, null, casesBusiness.getCaseStatus(caseStatus), false);
+				allCases = casesBusiness.getCasesByCriteria(
+						null, null, null, null, 
+						caseStatus.toArray(new String[caseStatus.size()]), 
+						null, null, null, null, false, false);
 			} catch (RemoteException e) {
 				LOGGER.log(Level.SEVERE, "Error getting cases by cases status: " + caseStatus, e);
 			}
@@ -481,14 +486,17 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return bpmCases;
 	}
 
-	private Collection<Case> getCasesByProcessAndCaseStatus(IWApplicationContext iwac, String caseStatus, String processName) {
+	protected Collection<Case> getCasesByProcessAndCaseStatus(
+			IWApplicationContext iwac, Collection<String> caseStatus, 
+			String processName) {
 		CasesRetrievalManager caseManager = getCaseManager();
 		if (caseManager == null) {
 			LOGGER.severe(CasesRetrievalManager.class + " bean was not initialized!");
 			return null;
 		}
 
-		Collection<Long> casesIdsByProcessDefinition = caseManager.getCasesIdsByProcessDefinitionName(processName);
+		Collection<Long> casesIdsByProcessDefinition = caseManager
+				.getCasesIdsByProcessDefinitionName(processName);
 		if (ListUtil.isEmpty(casesIdsByProcessDefinition))
 			return null;
 
@@ -501,13 +509,15 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		if (ListUtil.isEmpty(cases))
 			return null;
 
-		if (StringUtil.isEmpty(caseStatus))
+		if (ListUtil.isEmpty(caseStatus))
 			return cases;
 
 		Collection<Case> casesByProcessDefinitionAndStatus = new ArrayList<Case>();
 		for (Case theCase : cases) {
-			if (caseStatus.equals(theCase.getStatus())) {
-				casesByProcessDefinitionAndStatus.add(theCase);
+			for (String status : caseStatus) {
+				if (status.equals(theCase.getStatus())) {
+					casesByProcessDefinitionAndStatus.add(theCase);
+				}
 			}
 		}
 
@@ -611,7 +621,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
 	}
 	
-	public CaseBoardTableBean getTableData(IWContext iwc, String caseStatus, 
+	public CaseBoardTableBean getTableData(IWContext iwc, Collection<String> caseStatus, 
 			String processName, String uuid) {
 		if (iwc == null)
 			return null;

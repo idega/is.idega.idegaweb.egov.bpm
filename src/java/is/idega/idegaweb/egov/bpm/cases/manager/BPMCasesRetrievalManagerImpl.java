@@ -239,13 +239,16 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes,
-			List<String> caseStatusesToHide, List<String> caseStatusesToShow, int startIndex, int count, boolean onlySubscribedCases,
+	public PagedDataCollection<CasePresentation> getCases(User user, 
+			String type, Locale locale, List<String> caseCodes,
+			List<String> caseStatusesToHide, List<String> caseStatusesToShow, 
+			int startIndex, int count, boolean onlySubscribedCases,
 			boolean showAllCases) {
 
 		try {
-			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases,
-					null);
+			List<Integer> casesIds = getCaseIds(user, type, caseCodes, 
+					caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, 
+					showAllCases, null);
 
 			if (ListUtil.isEmpty(casesIds)) {
 				LOGGER.info("User '" + user + "' doesn't have any cases!");
