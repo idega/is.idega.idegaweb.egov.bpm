@@ -47,13 +47,11 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		CaseIdentifierBean scopedCI;
 
 		if (lastCaseIdentifierNumber == null || !currentTime.equals(lastCaseIdentifierNumber.time)) {
-
 			lastCaseIdentifierNumber = new CaseIdentifierBean();
 
 			CaseProcInstBind b = getCasesBPMDAO().getCaseProcInstBindLatestByDateQN(new Date());
 
 			if (b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
-
 				lastCaseIdentifierNumber.time = new IWTimestamp(b.getDateCreated());
 				lastCaseIdentifierNumber.time.setAsDate();
 				lastCaseIdentifierNumber.number = b.getCaseIdentierID();
@@ -68,9 +66,8 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 
 		//	Will try to use used identifier's number (increased by 1)
 		if (!StringUtil.isEmpty(usedIdentifier)) {
-			String[] parts = usedIdentifier.split(CoreConstants.MINUS);
-			String numberValue = parts[parts.length - 1];
-			Integer number = Integer.valueOf(numberValue);
+			Integer number = getCaseIdentifierNumber(usedIdentifier);
+
 			if (number > scopedCI.number) {
 				scopedCI.number = number;
 			}
@@ -81,7 +78,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 			generated = scopedCI.generate();
 		}
 
-		return new Object[] { scopedCI.number, generated };
+		return new Object[] {scopedCI.number, generated};
 	}
 
 	protected class CaseIdentifierBean {
@@ -90,11 +87,10 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		private Integer number;
 
 		String generate() {
-
 			String nr = String.valueOf(++number);
 
-			while(nr.length() < 4)
-				nr = "0"+nr;
+			while (nr.length() < 4)
+				nr = "0" + nr;
 
 			return new StringBuffer(IDENTIFIER_PREFIX)
 			.append(CoreConstants.MINUS)
@@ -115,6 +111,16 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		public Integer getNumber() {
 			return number;
 		}
+	}
+
+	public Integer getCaseIdentifierNumber(String caseIdentifier) {
+		if (StringUtil.isEmpty(caseIdentifier))
+			return null;
+
+		String[] parts = caseIdentifier.split(CoreConstants.MINUS);
+		String numberValue = parts[parts.length - 1];
+		Integer number = Integer.valueOf(numberValue);
+		return number;
 	}
 
 	protected CaseIdentifierBean getCaseIdentifierBean() {

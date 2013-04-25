@@ -333,8 +333,13 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 
 	@Override
-	@Transactional(readOnly = false)
 	public View loadInitView(final Integer initiatorId) {
+		return loadInitView(initiatorId, null);
+	}
+
+	@Override
+	@Transactional(readOnly = false)
+	public View loadInitView(final Integer initiatorId, final String externalIdentifier) {
 		try {
 			return getBpmContext().execute(new JbpmCallback<View>() {
 
@@ -356,9 +361,16 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					// will
 					// bind view with task instance
 
-					Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
-					Integer identifierNumber = (Integer) identifiers[0];
-					String identifier = (String) identifiers[1];
+					Integer identifierNumber = null;
+					String identifier = null;
+					if (StringUtil.isEmpty(externalIdentifier)) {
+						Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
+						identifierNumber = (Integer) identifiers[0];
+						identifier = (String) identifiers[1];
+					} else {
+						identifierNumber = getCaseIdentifier().getCaseIdentifierNumber(externalIdentifier);
+						identifier = externalIdentifier;
+					}
 
 					IWTimestamp realCreationDate = new IWTimestamp();
 					String realCreationDateString = realCreationDate.toString();
@@ -378,13 +390,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					view.populateParameters(parameters);
 
-					HashMap<String, Object> vars = new HashMap<String, Object>(1);
+					Map<String, Object> vars = new HashMap<String, Object>(1);
 					vars.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, identifier);
 
 					view.populateVariables(vars);
-
-					// --
-
 					return view;
 				}
 			});
