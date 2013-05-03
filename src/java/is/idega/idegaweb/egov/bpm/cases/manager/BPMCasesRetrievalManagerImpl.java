@@ -244,8 +244,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCases(User user, String type, Locale locale, List<String> caseCodes,
-			List<String> caseStatusesToHide, List<String> caseStatusesToShow, int startIndex, int count, boolean onlySubscribedCases,
+	public PagedDataCollection<CasePresentation> getCases(User user,
+			String type, Locale locale, List<String> caseCodes,
+			List<String> caseStatusesToHide, List<String> caseStatusesToShow,
+			int startIndex, int count, boolean onlySubscribedCases,
 			boolean showAllCases) {
 		return getCases(user, type, locale, caseCodes, caseStatusesToHide, caseStatusesToShow, startIndex, count, onlySubscribedCases, showAllCases,
 				null, null);
@@ -261,8 +263,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				roles = getApplication().getAccessController().getAllRolesForUser(user);
 			}
 
-			List<Integer> casesIds = getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases,
-					procInstIds, roles);
+			List<Integer> casesIds = getCaseIds(user, type, caseCodes,
+					caseStatusesToHide, caseStatusesToShow, onlySubscribedCases,
+					showAllCases, procInstIds, roles);
 
 			if (ListUtil.isEmpty(casesIds)) {
 				LOGGER.info("User '" + user + "' doesn't have any cases!");
@@ -349,6 +352,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			statusesToShow = showAllCases ? statusesToShow : ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
 			statusesToHide = showAllCases ? statusesToHide : ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
 			roles = params.getRoles();
+			if (ListUtil.isEmpty(roles) && user != null)
+				roles = accessController.getAllRolesForUser(user);
+
 			groups = params.getGroups();
 			casecodes = params.getCodes();
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
@@ -916,15 +922,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			@Override
 			public void run() {
 				try {
+					if (!isCacheUpdateTurnedOn())
+						return;
+
 					Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 					if (MapUtil.isEmpty(cache))
 						return;
-
-					boolean updateCache = isCacheUpdateTurnedOn();
-					if (!updateCache) {
-						cache.clear();
-						return;
-					}
 
 					if (theCase == null) {
 						getLogger().warning("Case is undefined, unable to manage cache");
@@ -967,7 +970,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 										caseId,
 										criteria.getProcInstIds(),
 										criteria.getRoles()
-									);
+								);
 							} catch (Exception e) {
 								String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
 										theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
