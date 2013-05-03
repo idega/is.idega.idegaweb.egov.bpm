@@ -481,12 +481,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				casesIds = filter.doFilter(casesIds);
 		} else {
 			//	Selecting cases IDs by provided process instance IDs
-			List<Integer> ids = casesBPMDAO.getCasesIdsByProcInstIds(criterias.getProcInstIds());
-			if (ListUtil.isEmpty(ids))
+			List<Integer> casesIdsByProcInstIds = casesBPMDAO.getCasesIdsByProcInstIds(criterias.getProcInstIds());
+			if (ListUtil.isEmpty(casesIdsByProcInstIds))
 				return null;
 
 			//	Making sure user will see cases that are available to her/him only
-			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, ids);
+			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, casesIdsByProcInstIds);
+			getLogger().info("Found cases IDs (" + casesIds.size() + ": " + casesIds + ") by search and after narrowed results");
 		}
 		start = System.currentTimeMillis();
 		LOGGER.info("Searh was executed in " + (start - end) + " ms");
