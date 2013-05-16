@@ -501,15 +501,15 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCases(User user, 
+	public PagedDataCollection<CasePresentation> getCases(User user,
 			String type, Locale locale, List<String> caseCodes,
-			List<String> caseStatusesToHide, List<String> caseStatusesToShow, 
+			List<String> caseStatusesToHide, List<String> caseStatusesToShow,
 			int startIndex, int count, boolean onlySubscribedCases,
 			boolean showAllCases) {
 
 		try {
-			List<Integer> casesIds = getCaseIds(user, type, caseCodes, 
-					caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, 
+			List<Integer> casesIds = getCaseIds(user, type, caseCodes,
+					caseStatusesToHide, caseStatusesToShow, onlySubscribedCases,
 					showAllCases, null);
 
 			if (ListUtil.isEmpty(casesIds)) {
@@ -596,6 +596,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			statusesToShow = showAllCases ? statusesToShow : ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
 			statusesToHide = showAllCases ? statusesToHide : ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
 			roles = params.getRoles();
+			if (ListUtil.isEmpty(roles) && user != null)
+				roles = accessController.getAllRolesForUser(user);
+
 			groups = params.getGroups();
 			casecodes = params.getCodes();
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
