@@ -35,6 +35,7 @@ import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.jbpm.db.GraphSession;
 import org.jbpm.graph.def.ProcessDefinition;
+import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEvent;
@@ -74,8 +75,11 @@ import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.event.ProcessInstanceCreatedEvent;
+import com.idega.jbpm.exe.BPMDocument;
+import com.idega.jbpm.exe.BPMEmailDocument;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.presentation.IWContext;
@@ -102,7 +106,8 @@ import com.idega.webface.WFUtil;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
 @Transactional(readOnly = true)
-public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements CasesRetrievalManager, ApplicationListener<ApplicationEvent> {
+public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements CasesRetrievalManager, ApplicationListener<ApplicationEvent>,
+	BPMCasesRetrievalManager {
 
 	private static final Logger LOGGER = Logger.getLogger(BPMCasesRetrievalManagerImpl.class.getName());
 
@@ -122,6 +127,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 	@Autowired
 	private BPMCasesEngine casesEngine;
+
+	private ApplicationBusiness applicationBusiness;
 
 	public static final String	beanIdentifier = "casesBPMCaseHandler",
 								caseHandlerType = "CasesBPM";
@@ -171,6 +178,190 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return cpi == null ? null : cpi.getProcInstId();
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getConnectedUsers(java.util.Collection)
+	 */
+	@Override
+	public List<User> getConnectedUsers(
+			Collection<ProcessInstanceW> processInstances) {
+		if (ListUtil.isEmpty(processInstances)) {
+			return Collections.emptyList();
+		}
+
+		ArrayList<User> users = new ArrayList<User>();
+		for (ProcessInstanceW instance: processInstances) {
+			List<User> entities = instance.getUsersConnectedToProcess();
+			if (ListUtil.isEmpty(entities)) {
+				continue;
+			}
+
+			users.addAll(entities);
+		}
+
+		return users;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getBPMEmailDocuments(java.util.Collection, com.idega.user.data.User)
+	 */
+	@Override
+	public List<BPMEmailDocument> getBPMEmailDocuments(
+			Collection<ProcessInstanceW> processInstances,
+			User owner) {
+		if (ListUtil.isEmpty(processInstances) || owner == null) {
+			return Collections.emptyList();
+		}
+
+		ArrayList<BPMEmailDocument> emails = new ArrayList<BPMEmailDocument>();
+		for (ProcessInstanceW instance: processInstances) {
+			List<BPMEmailDocument> entities = instance.getAttachedEmails(owner);
+			if (ListUtil.isEmpty(entities)) {
+				continue;
+			}
+
+			emails.addAll(entities);
+		}
+
+		return emails;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getTaskBPMDocuments(java.util.Collection, com.idega.user.data.User, java.util.Locale)
+	 */
+	@Override
+	public List<BPMDocument> getTaskBPMDocuments(
+			Collection<ProcessInstanceW> processInstances,
+			User owner, Locale locale) {
+		if (ListUtil.isEmpty(processInstances) || owner == null) {
+			return Collections.emptyList();
+		}
+
+		if (locale == null) {
+			locale = getCurrentLocale();
+		}
+
+		ArrayList<BPMDocument> taskDocuments = new ArrayList<BPMDocument>();
+		for (ProcessInstanceW instance: processInstances) {
+			List<BPMDocument> entities = instance.getTaskDocumentsForUser(owner, locale);
+			if (ListUtil.isEmpty(entities)) {
+				continue;
+			}
+
+			taskDocuments.addAll(entities);
+		}
+
+		return taskDocuments;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getSubmittedBPMDocuments(java.util.Collection, com.idega.user.data.User, java.util.Locale)
+	 */
+	@Override
+	public List<BPMDocument> getSubmittedBPMDocuments(
+			Collection<ProcessInstanceW> processInstances,
+			User owner, Locale locale) {
+		if (ListUtil.isEmpty(processInstances) || owner == null) {
+			return Collections.emptyList();
+		}
+
+		if (locale == null) {
+			locale = getCurrentLocale();
+		}
+
+		ArrayList<BPMDocument> submittedDocuments = new ArrayList<BPMDocument>();
+		for (ProcessInstanceW instance: processInstances) {
+			List<BPMDocument> entities = instance.getSubmittedDocumentsForUser(owner, locale);
+			if (ListUtil.isEmpty(entities)) {
+				continue;
+			}
+
+			submittedDocuments.addAll(entities);
+		}
+
+		return submittedDocuments;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessInstancesW(java.lang.Object)
+	 */
+	@Override
+	public List<ProcessInstanceW> getProcessInstancesW(Object applicationPrimaryKey) {
+		Application application = getApplication(applicationPrimaryKey);
+		if (application == null) {
+			return Collections.emptyList();
+		}
+
+		return getProcessInstancesW(application.getUrl());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessInstancesW(is.idega.idegaweb.egov.application.data.Application)
+	 */
+	@Override
+	public List<ProcessInstanceW> getProcessInstancesW(Application application) {
+		if (application == null) {
+			return Collections.emptyList();
+		}
+
+		return getProcessInstancesW(application.getUrl());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessInstancesW(java.lang.String)
+	 */
+	@Override
+	public List<ProcessInstanceW> getProcessInstancesW(String processDefinitionName) {
+		if (StringUtil.isEmpty(processDefinitionName)) {
+			return Collections.emptyList();
+		}
+
+		ProcessManager processManager = getBpmFactory().getProcessManager(
+				processDefinitionName);
+		if (processManager == null) {
+			return Collections.emptyList();
+		}
+
+		List<Long> porcessInstancesIds = getProcessInstancesIDs(processDefinitionName);
+		if (ListUtil.isEmpty(porcessInstancesIds)) {
+			return null;
+		}
+
+		ArrayList<ProcessInstanceW> instancesW = new ArrayList<ProcessInstanceW>();
+		for (Long porcessInstanceId: porcessInstancesIds) {
+			instancesW.add(processManager.getProcessInstance(porcessInstanceId));
+		}
+
+		return instancesW;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessInstances(java.lang.String)
+	 */
+	@Override
+	public List<ProcessInstance> getProcessInstances(String processDefinitionName) {
+		return getBpmFactory().getBPMDAO()
+				.getProcessInstances(Arrays.asList(processDefinitionName));
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessInstancesIDs(java.lang.String)
+	 */
+	@Override
+	public List<Long> getProcessInstancesIDs(String processDefinitionName) {
+		return getBpmFactory().getBPMDAO()
+				.getProcessInstanceIdsByProcessDefinitionNames(
+						Arrays.asList(processDefinitionName));
+	}
+
 	@Override
 	public Long getProcessDefinitionId(final Case theCase) {
 		return getBpmContext().execute(new JbpmCallback<Long>() {
@@ -180,6 +371,78 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				return processDefinition == null ? null : processDefinition.getId();
 			}
 		});
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitions(java.lang.String)
+	 */
+	@Override
+	public List<ProcessDefinition> getProcessDefinitions(String processDefinitionName) {
+		return getBpmFactory().getBPMDAO().getProcessDefinitions(processDefinitionName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitionsIDs(java.lang.String)
+	 */
+	@Override
+	public List<Long> getProcessDefinitionsIDs(String processDefinitionName) {
+		return getBpmFactory().getBPMDAO().getProcessDefinitionIdsByName(processDefinitionName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitions(is.idega.idegaweb.egov.application.data.Application)
+	 */
+	@Override
+	public List<ProcessDefinition> getProcessDefinitions(Application application) {
+		if (application == null) {
+			return Collections.emptyList();
+		}
+
+		return getProcessDefinitions(application.getUrl());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitionsIDs(is.idega.idegaweb.egov.application.data.Application)
+	 */
+	@Override
+	public List<Long> getProcessDefinitionsIDs(Application application) {
+		if (application == null) {
+			return Collections.emptyList();
+		}
+
+		return getProcessDefinitionsIDs(application.getUrl());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitions(java.lang.Object)
+	 */
+	@Override
+	public List<ProcessDefinition> getProcessDefinitions(Object applicationPrimaryKey) {
+		Application application = getApplication(applicationPrimaryKey);
+		if (application == null) {
+			return Collections.emptyList();
+		}
+
+		return getProcessDefinitions(application.getUrl());
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitionsIDs(java.lang.Object)
+	 */
+	@Override
+	public List<Long> getProcessDefinitionsIDs(Object applicationPrimaryKey) {
+		Application application = getApplication(applicationPrimaryKey);
+		if (application == null) {
+			return Collections.emptyList();
+		}
+
+		return getProcessDefinitionsIDs(application.getUrl());
 	}
 
 	@Override
@@ -723,7 +986,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return pd == null ? null : pd.getId();
 	}
 
-
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale) {
 		Collection<Case> cases = getCasesBusiness().getCasesByIds(ids);
@@ -1129,5 +1391,36 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		public void setCodes(List<String> codes) {
 			this.codes = codes;
 		}
+	}
+
+	protected Application getApplication(Object applicationID) {
+		try {
+			return getApplicationBusiness().getApplication(applicationID);
+		} catch (RemoteException e) {
+			getLogger().log(Level.WARNING,
+					"Unable to connect to data source: ", e);
+		} catch (FinderException e) {
+			getLogger().log(Level.WARNING,
+					"Unable to find " + Application.class + " by ID: " +
+							applicationID);
+		}
+
+		return null;
+	}
+
+	protected ApplicationBusiness getApplicationBusiness() {
+		if (this.applicationBusiness != null) {
+			return this.applicationBusiness;
+		}
+
+		try {
+			this.applicationBusiness = IBOLookup.getServiceInstance(
+					getApplication().getIWApplicationContext(), ApplicationBusiness.class);
+		} catch (IBOLookupException e) {
+			getLogger().log(Level.WARNING,
+					"Unable to get " + ApplicationBusiness.class + " cause of: ", e);
+		}
+
+		return this.applicationBusiness;
 	}
 }
