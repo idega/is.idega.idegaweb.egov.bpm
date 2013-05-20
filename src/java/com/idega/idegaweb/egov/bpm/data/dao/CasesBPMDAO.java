@@ -104,7 +104,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
 			List<String> procDefNames);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
-			List<String> procDefNames, Param metadata, int offset, int maxCount);
+			List<String> procDefNames, Param metadata, int offset, int maxCount, String endDate);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
 			List<Long> procInstIds);
 
@@ -129,10 +129,10 @@ public interface CasesBPMDAO extends GenericDao {
 	public Map<Long, List<VariableInstanceInfo>> getBPMValuesByCasesIdsAndVariablesNames(List<String> casesIds, List<String> names);
 
 	/**
-	 * 
-	 * <p>Searches cases in database, which is on administration 
+	 *
+	 * <p>Searches cases in database, which is on administration
 	 * by given handler.</p>
-	 * @param user - handler, which manages cases; 
+	 * @param user - handler, which manages cases;
 	 * @param caseStatusesToShow
 	 * @param caseStatusesToHide
 	 * @param caseCodes
@@ -147,4 +147,6 @@ public interface CasesBPMDAO extends GenericDao {
 			List<String> caseStatusesToShow, List<String> caseStatusesToHide,
 			List<String> caseCodes, Collection<String> roles,
 			boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
+
+	public Long getProcessInstanceIdByCaseIdAndMetaData(String caseId, Param metadata);
 }

@@ -267,18 +267,21 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		addSearchQueryToSession(iwc, criterias);
 
-		if (criterias.isNothingFound())
-			return null;
+		PagedDataCollection<CasePresentation> cases = null;
+		if (criterias.isNothingFound()) {
+			Collection<CasePresentation> emptyList = Collections.emptyList();
+			cases = new PagedDataCollection<CasePresentation>(emptyList);
+		} else {
+			cases = getCasesByQuery(iwc, criterias);
+			if (criterias.isClearResults()) {
+				if (cases == null) {
+					Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criterias.getId());
+					if (externalData != null)
+						setSearchResults(iwc, externalData, criterias);
 
-		PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, criterias);
-		if (criterias.isClearResults()) {
-			if (cases == null) {
-				Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criterias.getId());
-				if (externalData != null)
-					setSearchResults(iwc, externalData, criterias);
-
-			} else
-				setSearchResults(iwc, cases.getCollection(), criterias);
+				} else
+					setSearchResults(iwc, cases.getCollection(), criterias);
+			}
 		}
 
 		CaseListPropertiesBean properties = new CaseListPropertiesBean();

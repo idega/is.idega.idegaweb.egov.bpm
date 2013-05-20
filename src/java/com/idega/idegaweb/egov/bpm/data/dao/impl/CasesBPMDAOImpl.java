@@ -1111,16 +1111,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames))
 			return Collections.emptyMap();
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null, null, -1, -1);
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null, null, -1, -1, null);
 	}
 
 	@Override
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
-			List<String> procDefNames, Param metadata, int offset, int maxCount) {
+			List<String> procDefNames, Param metadata, int offset, int maxCount, String endDate) {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames))
 			return Collections.emptyMap();
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null, metadata, offset, maxCount);
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null, metadata, offset, maxCount, endDate);
 	}
 	@Override
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
@@ -1128,11 +1128,41 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procInstIds))
 			return Collections.emptyMap();
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, null, procInstIds, null, null, -1, -1);
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, null, procInstIds, null, null, -1, -1, null);
+	}
+
+	@Override
+	public Long getProcessInstanceIdByCaseIdAndMetaData(String caseId, Param metadata) {
+		String query =	"select bind." + CaseProcInstBind.procInstIdColumnName + " from " + CaseProcInstBind.TABLE_NAME + " bind, " +
+				CaseBMPBean.TABLE_NAME + " pc, " + MetaDataBMPBean.TABLE_NAME + CoreConstants.UNDER + CaseBMPBean.TABLE_NAME + " mb, " +
+				MetaDataBMPBean.TABLE_NAME + " m where bind." +	CaseProcInstBind.caseIdColumnName + " = " + caseId + " and bind." +
+				CaseProcInstBind.caseIdColumnName + " = pc.proc_case_id and pc.proc_case_id = mb.proc_case_id and m.IC_METADATA_ID = mb.IC_METADATA_ID";
+		query += " and m." + MetaDataBMPBean.COLUMN_META_KEY + " = '" + metadata.getParamName() + "' and m." + MetaDataBMPBean.COLUMN_META_VALUE +
+				" = '" + metadata.getParamValue() + "'";
+
+		List<Serializable[]> data = null;
+		try {
+			data = SimpleQuerier.executeQuery(query, 1);
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (ListUtil.isEmpty(data))
+			return null;
+
+		for (Serializable[] ids: data) {
+			if (ArrayUtil.isEmpty(ids))
+				continue;
+
+			Serializable piId = ids[0];
+			if (piId instanceof Number)
+				return ((Number) piId).longValue();
+		}
+
+		return null;
 	}
 
 	private Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(List<String> caseStatuses, List<String> procDefNames,
-			List<Long> procInstIds, Map<Long, Integer> results, Param metadata, int offset, int maxCount) {
+			List<Long> procInstIds, Map<Long, Integer> results, Param metadata, int offset, int maxCount, String endDate) {
 
 		if (results == null)
 			results = new HashMap<Long, Integer>();
@@ -1172,7 +1202,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 		}
 
-		String query =	"select bind." + CaseProcInstBind.procInstIdColumnName + ", bind." + CaseProcInstBind.caseIdColumnName + " from " +
+		String query = "select bind." + CaseProcInstBind.procInstIdColumnName + ", bind." + CaseProcInstBind.caseIdColumnName + " from " +
 						CaseProcInstBind.TABLE_NAME + " bind, " + CaseBMPBean.TABLE_NAME + " pc, JBPM_PROCESSINSTANCE pi";
 		if (useProcDefs)
 			query += ", JBPM_PROCESSDEFINITION pd";
@@ -1196,6 +1226,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			query += " and pc.proc_case_id = mb.proc_case_id and m.IC_METADATA_ID = mb.IC_METADATA_ID";
 			query += " and m." + MetaDataBMPBean.COLUMN_META_KEY + " = '" + metadata.getParamName() + "' and m." +
 					MetaDataBMPBean.COLUMN_META_VALUE + " = '" + metadata.getParamValue() + "'";
+		}
+		if (!StringUtil.isEmpty(endDate)) {
+			query += " and (pi.end_ is null or pi.end_ >= '" + endDate + "')";
 		}
 
 		query += " order by pc.created desc";
@@ -1223,7 +1256,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				results.put(((Number) piId).longValue(), ((Number) caseId).intValue());
 		}
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, procInstIds, results, metadata, offset, maxCount);
+		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(
+				caseStatuses,
+				procDefNames,
+				procInstIds,
+				results,
+				metadata,
+				offset,
+				maxCount,
+				endDate
+		);
 	}
 
 	@Override

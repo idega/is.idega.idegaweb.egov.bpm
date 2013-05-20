@@ -73,7 +73,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.data.ProcessManagerBind;
-import com.idega.jbpm.events.ProcessInstanceCreatedEvent;
+import com.idega.jbpm.event.ProcessInstanceCreatedEvent;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;

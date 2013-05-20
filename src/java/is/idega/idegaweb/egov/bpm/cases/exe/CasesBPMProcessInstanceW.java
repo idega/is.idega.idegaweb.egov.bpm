@@ -38,7 +38,7 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bean.VariableInstanceInfo;
-import com.idega.jbpm.events.VariableCreatedEvent;
+import com.idega.jbpm.event.VariableCreatedEvent;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;

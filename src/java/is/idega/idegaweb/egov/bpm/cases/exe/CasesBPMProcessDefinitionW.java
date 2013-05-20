@@ -248,8 +248,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					pi.setStart(new Date());
 
-					context.getSession().flush();
-
 					IWMainApplication iwma = iwac.getIWMainApplication();
 
 					UserBusiness userBusiness = getUserBusiness(iwac);
@@ -293,7 +291,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					piBind.setDateCreated(caseCreated);
 					piBind.setCaseIdentifier(caseIdentifier);
 					getCasesBPMDAO().persist(piBind);
-					context.getSession().flush();
 					getLogger().info("Bind was created: process instance ID=" + pi.getId() + ", case ID=" + genCase.getPrimaryKey());
 
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
@@ -325,10 +322,14 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		});
 
 		try {
-			getLogger().info("Process was created: " + piId);
+			if (piId == null)
+				getLogger().warning("Failed to start process for proc. def. ID: " + processDefinitionId);
+			else
+				getLogger().info("Process was created: " + piId);
 			return piId;
 		} finally {
-			notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(getProcessDefinitionId()), piId);
+			if (piId != null)
+				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(getProcessDefinitionId()), piId);
 		}
 	}
 
