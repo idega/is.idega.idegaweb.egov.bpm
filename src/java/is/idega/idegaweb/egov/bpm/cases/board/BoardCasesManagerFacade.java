@@ -99,7 +99,7 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 				String[] currentValues = null;
 				Object currentValue = variables.get(variableName);
 				if (currentValue instanceof String)
-					currentValues = currentValue.toString().split("#");
+					currentValues = currentValue.toString().split(CoreConstants.HASH);
 
 				StringBuffer newValue = new StringBuffer();
 				for (int i = 0; i < totalValues; i++) {
@@ -117,7 +117,7 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 					}
 
 					if (i < totalValues)
-						newValue.append("#");
+						newValue.append(CoreConstants.HASH);
 				}
 
 				value = newValue.toString();
