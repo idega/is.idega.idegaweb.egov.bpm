@@ -395,6 +395,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		if (StringUtil.isEmpty(getStringValue(value)))
 			return Long.valueOf(0);
 
+		String originalValue = value;
+
 		value = value.replaceAll(CoreConstants.SPACE, CoreConstants.EMPTY);
 		value = value.replace(CoreConstants.DOT, CoreConstants.EMPTY);
 		value = value.replace("þús", CoreConstants.EMPTY);
@@ -407,6 +409,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 		long total = 0;
 		String amounts[] = value.split(CoreConstants.HASH);
+		boolean logInfo = amounts.length > 2;
 		for (String amount: amounts) {
 			amount = StringHandler.replace(amount, CoreConstants.HASH, CoreConstants.EMPTY);
 
@@ -422,6 +425,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				LOGGER.log(Level.WARNING, "Error getting number value from: " + value);
 				return Long.valueOf(0);
 			}
+		}
+
+		if (logInfo) {
+			LOGGER.info("Computed total value " + total + " from '" + originalValue + "'");
 		}
 
 		return total;
