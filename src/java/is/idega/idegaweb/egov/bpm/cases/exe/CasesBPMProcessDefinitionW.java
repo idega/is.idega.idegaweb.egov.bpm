@@ -244,7 +244,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					// binding view to task instance
 					view.getViewToTask().bind(view, ti);
 
-					getLogger().info("New process instance created for the process " + procDefName);
+					getLogger().info("New process instance (ID=" + pi.getId() + ") created for the process " + procDefName);
 
 					pi.setStart(new Date());
 

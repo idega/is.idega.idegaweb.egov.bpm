@@ -181,7 +181,6 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			}
 		}
 		if (!MapUtil.isEmpty(missingLabels)) {
-			getLogger().info("There are missing labels: " + missingLabels + " will try to resolve them");
 			doResolveMissingLabels(labels, missingLabels);
 		}
 

@@ -58,6 +58,7 @@ import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
+import com.idega.bpm.TaskInstanceSubmitted;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -1265,20 +1266,53 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		cacheManager.start();
 	}
 
+	private void doUpdateBPMCase(Long piId) {
+		if (piId == null)
+			return;
+
+		CaseProcInstBind bind = null;
+		try {
+			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+		} catch (Exception e) {}
+		if (bind == null) {
+			getLogger().warning("Bind for process instance " + piId + " was not created yet!");
+			return;
+		}
+
+		Case theCase = null;
+		try {
+			theCase = getCaseBusiness().getCase(bind.getCaseId());
+		} catch (Exception e) {}
+		if (theCase == null) {
+			getLogger().warning("Case can not be found by ID " + bind.getCaseId() + " for process instance " + piId);
+			return;
+		}
+
+		doManageCasesCache(theCase, true);
+	}
+
 	@Override
 	public void onApplicationEvent(final ApplicationEvent event) {
 		if (event instanceof CaseModifiedEvent) {
-			Object source = event.getSource();
-			if (!(source instanceof Case))
-				return;
-
 			if (!isCacheUpdateTurnedOn()) {
 				getCache().clear();
 				return;
 			}
 
+			Object source = event.getSource();
+			if (!(source instanceof Case))
+				return;
+
 			Case theCase = (Case) source;
 			doManageCasesCache(theCase, theCase == null || StringUtil.isEmpty(theCase.getSubject()));
+		} else if (event instanceof TaskInstanceSubmitted) {
+			if (!isCacheUpdateTurnedOn()) {
+				getCache().clear();
+				return;
+			}
+
+			TaskInstanceSubmitted taskSubmitted = (TaskInstanceSubmitted) event;
+			doUpdateBPMCase(taskSubmitted.getProcessInstanceId());
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
 			if (!isCacheUpdateTurnedOn()) {
 				getCache().clear();
@@ -1288,28 +1322,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			ProcessInstanceCreatedEvent procCreatedEvent = (ProcessInstanceCreatedEvent) event;
 
 			Long piId = procCreatedEvent.getProcessInstanceId();
-			if (piId == null)
-				return;
-
-			CaseProcInstBind bind = null;
-			try {
-				bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
-			} catch (Exception e) {}
-			if (bind == null) {
-				getLogger().warning("Bind for process instance " + piId + " was not created yet!");
-				return;
-			}
-
-			Case theCase = null;
-			try {
-				theCase = getCaseBusiness().getCase(bind.getCaseId());
-			} catch (Exception e) {}
-			if (theCase == null) {
-				getLogger().warning("Case can not be found by ID " + bind.getCaseId() + " for process instance " + piId);
-				return;
-			}
-
-			doManageCasesCache(theCase, true);
+			doUpdateBPMCase(piId);
 		} else if (event instanceof CaseDeletedEvent) {
 			Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
 			if (cache == null)

@@ -101,7 +101,7 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 	protected User getLoggedInUser() {
 		try {
 			LoginSession loginSession = ELUtil.getInstance().getBean(LoginSession.class);
-			return getOldUser(loginSession.isLoggedIn() ? loginSession.getUser() : null);
+			return loginSession.isLoggedIn() ? loginSession.getUser() : null;
 		} catch(Exception e) {
 			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error getting logged in user", e);
 		}
