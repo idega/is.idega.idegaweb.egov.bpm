@@ -40,6 +40,7 @@ import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
@@ -197,7 +198,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 
 	@Override
 	public String getUrl(IWContext iwc, Application app) {
-		String url = "#";
+		String url = CoreConstants.HASH;
 		try {
 			String pdName = app.getUrl();
 			if (pdName == null)
