@@ -132,7 +132,7 @@ public interface CasesBPMDAO extends GenericDao {
 	 * 
 	 * <p>Searches cases in database, which is on administration 
 	 * by given handler.</p>
-	 * @param user - handler, which manages cases; 
+	 * @param user - handler, who manages cases; 
 	 * @param caseStatusesToShow
 	 * @param caseStatusesToHide
 	 * @param caseCodes
