@@ -319,7 +319,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					throw new RuntimeException(e);
 				}
 			}
-		});
+		}, true);
 
 		try {
 			if (piId == null)
