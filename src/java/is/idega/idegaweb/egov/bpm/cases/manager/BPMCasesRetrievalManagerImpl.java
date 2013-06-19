@@ -39,7 +39,6 @@ import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationEvent;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,8 +106,8 @@ import com.idega.webface.WFUtil;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
 @Transactional(readOnly = true)
-public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements CasesRetrievalManager, ApplicationListener, BPMCasesRetrievalManager {
-
+public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements BPMCasesRetrievalManager {
+	
 	private static final Logger LOGGER = Logger.getLogger(BPMCasesRetrievalManagerImpl.class.getName());
 
 	public static final String PARAMETER_PROCESS_INSTANCE_PK = "pr_inst_pk";
@@ -200,6 +199,24 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		}
 		
 		return users;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getConnectedUsers(com.idega.block.process.data.Case)
+	 */
+	@Override
+	public List<User> getConnectedUsers(Case theCase) {
+		if (theCase == null) {
+			return Collections.emptyList();
+		}
+		
+		ProcessInstanceW processInstanceW = getProcessInstancesW(theCase);
+		if (processInstanceW == null) {
+			return Collections.emptyList();
+		}
+		
+		return getConnectedUsers(Arrays.asList(processInstanceW));
 	}
 	
 	/*
@@ -339,6 +356,26 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		}
 		
 		return instancesW;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessInstancesW(com.idega.block.process.data.Case)
+	 */
+	@Override
+	public ProcessInstanceW getProcessInstancesW(Case theCase) {
+		Long processInstanceID = getProcessInstanceId(theCase);
+		if (processInstanceID == null) {
+			return null;
+		}
+
+		ProcessManager processManager = getBpmFactory()
+				.getProcessManagerByProcessInstanceId(processInstanceID);
+		if (processManager == null) {
+			return null;
+		}
+		
+		return processManager.getProcessInstance(processInstanceID);
 	}
 	
 	/*

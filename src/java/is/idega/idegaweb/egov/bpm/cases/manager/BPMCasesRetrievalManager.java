@@ -92,8 +92,10 @@ import java.util.Locale;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.def.Task;
+import org.springframework.context.ApplicationListener;
 
 import com.idega.block.process.business.CasesRetrievalManager;
+import com.idega.block.process.data.Case;
 import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMEmailDocument;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -107,7 +109,7 @@ import com.idega.user.data.User;
  * @version 1.0.0 May 16, 2013
  * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
  */
-public interface BPMCasesRetrievalManager {
+public interface BPMCasesRetrievalManager extends CasesRetrievalManager, ApplicationListener{
 	/**
 	 * 
 	 * @param processInstances where to search connected {@link User}s,
@@ -118,6 +120,15 @@ public interface BPMCasesRetrievalManager {
 	 */
 	public List<User> getConnectedUsers(
 			Collection<ProcessInstanceW> processInstances);
+	
+	/**
+	 * 
+	 * @param theCase where users should be found, not <code>null</code>;
+	 * @return list of {@link User}, who can see or modify {@link Case} or
+	 * {@link Collections#emptyList()} on failure;
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<User> getConnectedUsers(Case theCase);
 	
 	/**
 	 * 
@@ -193,6 +204,16 @@ public interface BPMCasesRetrievalManager {
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public List<ProcessInstanceW> getProcessInstancesW(String processDefinitionName);
+	
+	/**
+	 * 
+	 * @param theCase for which process instance should be found, 
+	 * not <code>null</code>;
+	 * @return {@link ProcessInstanceW} of {@link Case} or <code>null</code>
+	 * on failure;
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public ProcessInstanceW getProcessInstancesW(Case theCase);
 	
 	/**
 	 * 
