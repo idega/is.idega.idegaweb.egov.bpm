@@ -99,7 +99,7 @@ public abstract class CasesReportFilter extends CasesSearcher {
 			input.setName(input.getName().concat("@").concat(type));
 		}
 		if (flexibleSearh != null) {
-			input.setName(input.getName().concat("@").concat(String.valueOf(flexibleSearh)));
+			input.setName(input.getName().concat("@").concat(flexibleSearh.toString()));
 		}
 		input.setStyleClass(getFormItemStyleClass());
 
