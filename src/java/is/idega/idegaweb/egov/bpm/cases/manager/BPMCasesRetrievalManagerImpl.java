@@ -58,7 +58,6 @@ import com.idega.block.process.presentation.beans.CaseManagerState;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
-import com.idega.bpm.TaskInstanceSubmitted;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -76,6 +75,7 @@ import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.event.ProcessInstanceCreatedEvent;
+import com.idega.jbpm.event.TaskInstanceSubmitted;
 import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMEmailDocument;
 import com.idega.jbpm.exe.BPMFactory;
@@ -107,8 +107,8 @@ import com.idega.webface.WFUtil;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCasesRetrievalManagerImpl.beanIdentifier)
 @Transactional(readOnly = true)
-public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl implements CasesRetrievalManager, ApplicationListener<ApplicationEvent>,
-	BPMCasesRetrievalManager {
+public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
+											implements CasesRetrievalManager, BPMCasesRetrievalManager, ApplicationListener<ApplicationEvent> {
 
 	private static final Logger LOGGER = Logger.getLogger(BPMCasesRetrievalManagerImpl.class.getName());
 
@@ -201,6 +201,24 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		}
 
 		return users;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getConnectedUsers(com.idega.block.process.data.Case)
+	 */
+	@Override
+	public List<User> getConnectedUsers(Case theCase) {
+		if (theCase == null) {
+			return Collections.emptyList();
+		}
+
+		ProcessInstanceW processInstanceW = getProcessInstancesW(theCase);
+		if (processInstanceW == null) {
+			return Collections.emptyList();
+		}
+
+		return getConnectedUsers(Arrays.asList(processInstanceW));
 	}
 
 	/*
@@ -340,6 +358,26 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		}
 
 		return instancesW;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessInstancesW(com.idega.block.process.data.Case)
+	 */
+	@Override
+	public ProcessInstanceW getProcessInstancesW(Case theCase) {
+		Long processInstanceID = getProcessInstanceId(theCase);
+		if (processInstanceID == null) {
+			return null;
+		}
+
+		ProcessManager processManager = getBpmFactory()
+				.getProcessManagerByProcessInstanceId(processInstanceID);
+		if (processManager == null) {
+			return null;
+		}
+
+		return processManager.getProcessInstance(processInstanceID);
 	}
 
 	/*
@@ -1266,31 +1304,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		cacheManager.start();
 	}
 
-	private void doUpdateBPMCase(Long piId) {
-		if (piId == null)
-			return;
-
-		CaseProcInstBind bind = null;
-		try {
-			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
-		} catch (Exception e) {}
-		if (bind == null) {
-			getLogger().warning("Bind for process instance " + piId + " was not created yet!");
-			return;
-		}
-
-		Case theCase = null;
-		try {
-			theCase = getCaseBusiness().getCase(bind.getCaseId());
-		} catch (Exception e) {}
-		if (theCase == null) {
-			getLogger().warning("Case can not be found by ID " + bind.getCaseId() + " for process instance " + piId);
-			return;
-		}
-
-		doManageCasesCache(theCase, true);
-	}
-
 	@Override
 	public void onApplicationEvent(final ApplicationEvent event) {
 		if (event instanceof CaseModifiedEvent) {
@@ -1345,6 +1358,31 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 					ids.remove(id);
 			}
 		}
+	}
+
+	private void doUpdateBPMCase(Long piId) {
+		if (piId == null)
+			return;
+
+		CaseProcInstBind bind = null;
+		try {
+			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+		} catch (Exception e) {}
+		if (bind == null) {
+			getLogger().warning("Bind for process instance " + piId + " was not created yet!");
+			return;
+		}
+
+		Case theCase = null;
+		try {
+			theCase = getCaseBusiness().getCase(bind.getCaseId());
+		} catch (Exception e) {}
+		if (theCase == null) {
+			getLogger().warning("Case can not be found by ID " + bind.getCaseId() + " for process instance " + piId);
+			return;
+		}
+
+		doManageCasesCache(theCase, true);
 	}
 
 	private class CasesListParameters {

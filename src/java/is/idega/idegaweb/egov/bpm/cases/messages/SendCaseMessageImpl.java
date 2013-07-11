@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.messages;
 
+import is.idega.idegaweb.egov.bpm.events.BPMNewMessageEvent;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
@@ -37,6 +38,7 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.expression.ELUtil;
 
 
 /**
@@ -149,6 +151,12 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 					for (MessageValue messageValue: msgValsToSend) {
 						Message message = messageBusiness.createUserMessage(messageValue);
 						message.store();
+						
+						/* Will inform notifications system */
+						ELUtil.getInstance().publishEvent(
+								new BPMNewMessageEvent(
+										message, 
+										messageValue.getReceiver()));
 					}
 				} catch (Exception e) {
 					String message = "Exception while sending user messages (" + msgValsToSend + "), some messages might be not sent";
