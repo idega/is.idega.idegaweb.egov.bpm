@@ -16,10 +16,13 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
+import com.idega.block.process.data.CaseHome;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.business.DefaultSpringBean;
+import com.idega.data.IDOLookup;
+import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -50,6 +53,20 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 	@Autowired
 	private MessageValueHandler messageValueHandler;
 
+	private CaseHome caseHome = null;
+	
+	protected CaseHome getCaseHome() {
+		if (caseHome == null) {
+			try {
+				caseHome = (CaseHome) IDOLookup.getHome(Case.class);
+			} catch (IDOLookupException e) {
+				getLogger().log(Level.WARNING, "Unable to get " + CaseHome.class, e);
+			}
+		}
+		
+		return caseHome;
+	}
+	
 	/**
 	 * variable which contains string representation of case status to set
 	 */
