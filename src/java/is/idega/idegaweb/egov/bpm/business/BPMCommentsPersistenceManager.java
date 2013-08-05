@@ -148,7 +148,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return true;
 		}
 
-		User currentUser = getOldUser(getCurrentUser());
+		User currentUser = getLegacyUser(getCurrentUser());
 		if (currentUser != null) {
 			return hasRightToViewComments(processInstanceId, currentUser);
 		}
@@ -161,7 +161,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		if (identifier == null)
 			return false;
 
-		User currentUser = getOldUser(getCurrentUser());
+		User currentUser = getLegacyUser(getCurrentUser());
 		if (currentUser != null) {
 			return hasRightToWriteComments(identifier, currentUser);
 		}
@@ -274,7 +274,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			LOGGER.warning(RSSBusiness.class + " service is not available!");
 			return null;
 		}
-		User currentUser = getOldUser(getCurrentUser());
+		User currentUser = getLegacyUser(getCurrentUser());
 		if (currentUser == null) {
 			LOGGER.warning("User is not logged in!");
 			return null;
@@ -375,7 +375,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 
 		try {
-			return getOldUser(accessController.getAdministratorUser());
+			return getLegacyUser(accessController.getAdministratorUser());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -450,7 +450,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 		boolean hasFullRights = hasFullRightsForComments(properties.getIdentifier());
 
-		User currentUser = getOldUser(getCurrentUser());
+		User currentUser = getLegacyUser(getCurrentUser());
 		if (currentUser == null) {
 			return null;
 		}

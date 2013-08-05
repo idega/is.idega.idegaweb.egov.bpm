@@ -57,7 +57,7 @@ public class EndCaseProcessHandler extends DefaultSpringBean implements ActionHa
 
 	protected User getCurrentUser(IWContext iwc, ExecutionContext ctx) {
 		if (iwc == null)
-			return getOldUser(super.getCurrentUser());
+			return getLegacyUser(super.getCurrentUser());
 		return iwc.getCurrentUser();
 	}
 

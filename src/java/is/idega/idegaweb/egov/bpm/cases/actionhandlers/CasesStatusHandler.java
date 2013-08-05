@@ -126,7 +126,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 						if (iwc.isLoggedOn())
 							performer = iwc.getCurrentUser();
 						else
-							performer = getOldUser(iwc.getAccessController().getAdministratorUser());
+							performer = getLegacyUser(iwc.getAccessController().getAdministratorUser());
 					} else {
 						LOGGER.warning("Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
 						performer = null;
