@@ -78,9 +78,12 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	public static final String performerUserIdVarName = "performerUserId";
 	public static final String recipientUserIdVarName = "recipientUserId";
 	
+	protected ProcessInstance getProcessInstance(ExecutionContext ectx) {
+		return ectx.getProcessInstance();
+	}
+	
 	public void execute(ExecutionContext ectx) throws Exception {
-		
-		ProcessInstance pi = ectx.getProcessInstance();
+		ProcessInstance pi = getProcessInstance(ectx);
 		Long processInstanceId = pi.getId();
 		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class,
 		    processInstanceId);
@@ -136,7 +139,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		}
 	}
 	
-	private void unassign(GeneralCase genCase, Long processInstanceId,
+	protected void unassign(GeneralCase genCase, Long processInstanceId,
 	        CasesBusiness casesBusiness, ExecutionContext ectx,
 	        Role caseHandlerRole) throws Exception {
 		
@@ -155,7 +158,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		casesBusiness.untakeCase(genCase);
 	}
 	
-	private Integer getHandlerUserId(ExecutionContext ectx) {
+	protected Integer getHandlerUserId(ExecutionContext ectx) {
 		
 		if (handlerUserId == null)
 			handlerUserId = (Integer) ectx.getVariable(handlerUserIdVarName);
@@ -166,7 +169,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		return handlerUserId;
 	}
 	
-	private Integer getPerformerUserId(ExecutionContext ectx) {
+	protected Integer getPerformerUserId(ExecutionContext ectx) {
 		
 		if (performerUserId == null)
 			performerUserId = (Integer) ectx
@@ -179,7 +182,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		return performerUserId;
 	}
 	
-	private Integer getRecipientUserId(ExecutionContext ectx) {
+	protected Integer getRecipientUserId(ExecutionContext ectx) {
 		
 		if (recipientId == null)
 			recipientId = (Integer) ectx
@@ -188,12 +191,12 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		return recipientId;
 	}
 	
-	private User getCurrentUser() {
+	protected User getCurrentUser() {
 		
 		return IWContext.getCurrentInstance().getCurrentUser();
 	}
 	
-	private void assign(GeneralCase genCase, ProcessInstance pi,
+	protected void assign(GeneralCase genCase, ProcessInstance pi,
 	        CasesBusiness casesBusiness, ExecutionContext ectx,
 	        IWApplicationContext iwac, Role caseHandlerRole) throws Exception {
 		
@@ -232,7 +235,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		    pi.getId());
 	}
 	
-	private void sendMessages(ExecutionContext ectx) throws Exception {
+	protected void sendMessages(ExecutionContext ectx) throws Exception {
 		
 		SendCaseMessagesHandler msgHan = getSendCaseMessagesHandler();
 		msgHan.setMessageKey(getMessageKey());
@@ -328,7 +331,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		return processWatcher;
 	}
 	
-	private IWApplicationContext getIWAC() {
+	protected IWApplicationContext getIWAC() {
 		
 		final IWContext iwc = IWContext.getCurrentInstance();
 		final IWApplicationContext iwac;

@@ -6,6 +6,7 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -39,6 +40,7 @@ import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.ListUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -178,14 +180,28 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 		Boolean res = getBpmContext().execute(new JbpmCallback() {
 
+			@SuppressWarnings("unchecked")
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				@SuppressWarnings("unchecked")
 				Map<String, Event> events = getProcessInstance()
 						.getProcessDefinition().getEvents();
-
-				return events != null
-						&& events
-								.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
+				
+				boolean result = events != null
+						&& events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
+				if (result == Boolean.FALSE) {
+					 List<ProcessInstance> subprocesses = getBpmDAO().getSubprocessInstancesOneLevel(getProcessInstance().getId());
+					 if (ListUtil.isEmpty(subprocesses)) {
+						 return Boolean.FALSE;
+					 }
+					 
+					 for (ProcessInstance pi : subprocesses) {
+						 events = pi.getProcessDefinition().getEvents();
+						 if (events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType)) {
+							 return Boolean.TRUE;
+						 }
+					 }
+				}
+				
+				return result;
 			}
 		});
 
