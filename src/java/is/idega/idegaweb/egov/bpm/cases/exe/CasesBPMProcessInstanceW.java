@@ -97,8 +97,22 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(this, pi.getProcessDefinition().getName(), pi.getId(), createdVars);
 				ELUtil.getInstance().publishEvent(performerVarCreated);
 				
-				pi.getProcessDefinition().fireEvent(handlerUserId != null ?
-						CaseHandlerAssignmentHandler.assignHandlerEventType	: CaseHandlerAssignmentHandler.unassignHandlerEventType, ectx);
+				String event = null;
+				if(handlerUserId != null) {
+					event = CaseHandlerAssignmentHandler.assignHandlerEventType;
+				} else {
+					event = CaseHandlerAssignmentHandler.unassignHandlerEventType;
+				}
+				
+				// Firing event to process...
+				pi.getProcessDefinition().fireEvent(event, ectx);
+				
+				// And to it's subprocesses...
+				List<ProcessInstance> subProcesses = getBpmDAO().getSubprocessInstancesOneLevel(pi.getId());
+				for (ProcessInstance subProcessInstance : subProcesses) {
+					subProcessInstance.getProcessDefinition().fireEvent(event, ectx);
+				}
+				
 				return null;
 			}
 		});
