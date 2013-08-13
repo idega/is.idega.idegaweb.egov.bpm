@@ -1453,7 +1453,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		for (Case theCase: cases) {
 			try {
 				theCase.removeSubscriber(user);
-				theCase.store();
 			} catch (Exception e) {
 				e.printStackTrace();
 				return false;
