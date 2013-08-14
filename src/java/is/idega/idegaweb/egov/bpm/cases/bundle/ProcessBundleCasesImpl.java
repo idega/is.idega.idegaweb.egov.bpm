@@ -27,12 +27,12 @@ import com.idega.user.business.GroupBusiness;
 import com.idega.user.data.Group;
 
 /**
- * 
+ *
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.1 $
- * 
+ *
  *          Last modified: $Date: 2009/01/25 15:45:46 $ by $Author: civilis $
- * 
+ *
  */
 @Scope("prototype")
 @Service("casesBPMProcessBundle")
@@ -76,7 +76,6 @@ public class ProcessBundleCasesImpl extends ProcessBundleDefaultImpl {
 
 					GroupBusiness groupBusiness = getGroupBusiness();
 
-					@SuppressWarnings("unchecked")
 					Collection<Group> caseHandlersGroups = groupBusiness
 							.getGroupsByGroupName(caseHandlersGroupName);
 					Group caseHandlersGroup;
