@@ -25,7 +25,7 @@ import com.idega.util.StringUtil;
 @Qualifier(CaseIdentifier.QUALIFIER)
 public class CaseIdentifier extends DefaultIdentifierGenerator {
 	
-	static final String QUALIFIER = "defaultCaseIdentifier";
+	public static final String QUALIFIER = "defaultCaseIdentifier";
 	
 	public static final String IDENTIFIER_PREFIX = "P";
 	
