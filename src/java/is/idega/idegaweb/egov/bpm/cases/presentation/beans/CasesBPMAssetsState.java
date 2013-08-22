@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -181,9 +183,40 @@ public class CasesBPMAssetsState implements Serializable {
 		this.processInstanceId = processInstanceId;
 	}
 
+	@Autowired
+	private CasesBPMDAO casesBPMDAO;
+	private CasesBPMDAO getCasesBPMDAO() {
+		if (casesBPMDAO == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return casesBPMDAO;
+	}
+	
 	public CasesBPMProcessViewBean getProcessView() {
 		try {
-			return getCasesBPMProcessView().getProcessView(getProcessInstanceId(), getCaseId());
+			Long piId = getProcessInstanceId();
+			Integer caseId = getCaseId();
+			if (piId == null && caseId == null) {
+				LOGGER.warning("Proc. inst. ID and case ID are unknown, can not generate view!");
+				return null;
+			}
+			
+			CaseProcInstBind bind = piId == null ?	getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId) :
+													getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+			if (bind == null) {
+				LOGGER.warning("Error getting bind for case (ID: ) and proc. inst. (ID: ). Can not generate view!");
+				return null;
+			}
+			if (piId == null) {
+				piId = bind.getProcInstId();
+				setProcessInstanceId(piId);
+			}
+			if (caseId == null) {
+				caseId = bind.getCaseId();
+				setCaseId(caseId);
+			}
+			
+			return getCasesBPMProcessView().getProcessView(piId, caseId);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting " + CasesBPMProcessViewBean.class.getName() + " bean by process instance ID " +
 					getProcessInstanceId() + " and case ID " + getCaseId(), e);
