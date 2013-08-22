@@ -6,7 +6,6 @@ import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.logging.Level;
 
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
@@ -71,7 +70,7 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 		if (cpi == null) {
 			return null;
 		}
-		
+
 		Integer caseId = cpi.getCaseId();
 
 		CasesBusiness casesBusiness = getCasesBusiness(getIWAC());
@@ -84,12 +83,8 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 			setCaseCode(theCase, caseCode);
 			theCase.setSubject(caseSubject);
 			theCase.store();
-			getLogger().log(Level.INFO, Case.class + 
-					" by process instance id: " + processInstanceId + 
-					" is stored!");
 		} else {
-			getLogger().warning("Failed to store " + Case.class + 
-					" by process instance id: " + processInstanceId);
+			getLogger().warning("Failed to store case " + theCase + " by process instance id: " + processInstanceId);
 		}
 	}
 
