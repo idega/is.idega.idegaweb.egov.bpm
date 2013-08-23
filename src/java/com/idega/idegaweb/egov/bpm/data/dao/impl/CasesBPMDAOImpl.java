@@ -60,7 +60,7 @@ import com.idega.util.expression.ELUtil;
  * @version $Revision: 1.50 $ Last modified: $Date: 2009/07/07 12:14:10 $ by $Author: valdas $
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-@Repository("casesBPMDAO")
+@Repository(CasesBPMDAO.REPOSITORY_NAME)
 @Transactional(readOnly = true)
 public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 

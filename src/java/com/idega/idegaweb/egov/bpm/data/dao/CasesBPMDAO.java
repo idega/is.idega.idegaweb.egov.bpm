@@ -23,6 +23,8 @@ import com.idega.util.IWTimestamp;
  */
 public interface CasesBPMDAO extends GenericDao {
 
+	public static final String REPOSITORY_NAME = "casesBPMDAO";
+
 	public abstract List<CaseTypesProcDefBind> getAllCaseTypes();
 
 	public abstract CaseProcInstBind getCaseProcInstBindByCaseId(Integer caseId);
@@ -129,10 +131,10 @@ public interface CasesBPMDAO extends GenericDao {
 	public Map<Long, List<VariableInstanceInfo>> getBPMValuesByCasesIdsAndVariablesNames(List<String> casesIds, List<String> names);
 
 	/**
-	 * 
-	 * <p>Searches cases in database, which is on administration 
+	 *
+	 * <p>Searches cases in database, which is on administration
 	 * by given handler.</p>
-	 * @param user - handler, who manages cases; 
+	 * @param user - handler, who manages cases;
 	 * @param caseStatusesToShow
 	 * @param caseStatusesToHide
 	 * @param caseCodes
