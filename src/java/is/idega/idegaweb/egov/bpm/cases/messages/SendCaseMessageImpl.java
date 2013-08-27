@@ -38,6 +38,7 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 
@@ -82,7 +83,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			if (msgs.getRecipientUserId() != null) {
 				users = new ArrayList<User>();
 				users.add(getUserBusiness(iwc).getUser(msgs.getRecipientUserId()));
-			} else {
+			} else if (!StringUtil.isEmpty(msgs.getSendToRoles())) {
 				users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
 			}
 
@@ -151,11 +152,11 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 					for (MessageValue messageValue: msgValsToSend) {
 						Message message = messageBusiness.createUserMessage(messageValue);
 						message.store();
-						
+
 						/* Will inform notifications system */
 						ELUtil.getInstance().publishEvent(
 								new BPMNewMessageEvent(
-										message, 
+										message,
 										messageValue.getReceiver()));
 					}
 				} catch (Exception e) {
