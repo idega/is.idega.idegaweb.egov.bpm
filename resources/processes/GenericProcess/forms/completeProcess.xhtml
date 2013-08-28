@@ -134,21 +134,8 @@
 								<xf:output model="data_model" ref="instance('localized_strings')/fbc_7-paragraph-text[@lang=instance('localized_strings')/current_language]"/>
 							</div>
 							
-                            <xf:trigger>
-                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_7_label[@lang=instance('localized_strings')/current_language]"/>
-                                <xf:action>
-                                    <xf:insert at="last()" nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_7/entry" position="before"/>
-                                </xf:action>
-                            </xf:trigger>
                             <xf:repeat appearance="group" bind="fbc_7-entries" id="upload_entries_fbc_7">
                             <xf:group>
-                                    <xf:input ref="./description" id="fbc_description">
-                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_7_text[@lang=instance('localized_strings')/current_language]"/>
-                                           <idega:dispatch ev:event="xforms-value-changed" name="idega-validate" target="//*[@id='fbc_7']//xf:upload" stopOnError="true"/>
-                                    </xf:input>
-                                     <xf:group ref=".[. !='' and ./description ='']" appearance="minimal" class="error">
-                                    	<xf:output model="data_model" value="instance('localized_strings')/fbc_7_info[@lang=instance('localized_strings')/current_language]"/>
-                                    </xf:group>
                                   <xf:output ref="@filename">
                                     <xf:label model="data_model" ref="instance('localized_strings')/fbc_7-filename-label[@lang=instance('localized_strings')/current_language]"/>
                                     </xf:output>
@@ -160,6 +147,13 @@
                                       		 <idega:message errorType="custom" model="data_model" value="instance('localized_strings')/fbc_7_custom[@lang=instance('localized_strings')/current_language]"/>
                                 		</idega:validator>
                                     </xf:upload>
+                                     <xf:input ref="./description" id="fbc_description">
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_7_text[@lang=instance('localized_strings')/current_language]"/>
+                                           <idega:dispatch ev:event="xforms-value-changed" name="idega-validate" target="//*[@id='fbc_7']//xf:upload" stopOnError="true"/>
+                                    </xf:input>
+                                     <xf:group ref=".[. !='' and ./description ='']" appearance="minimal" class="error">
+                                    	<xf:output model="data_model" value="instance('localized_strings')/fbc_7_info[@lang=instance('localized_strings')/current_language]"/>
+                                    </xf:group>
                                     <xf:trigger>
                                     <xf:label model="data_model" ref="instance('localized_strings')/fbc_7_remove[@lang=instance('localized_strings')/current_language]"/>
                                     <xf:action>
@@ -168,6 +162,12 @@
                                     </xf:trigger>
                                    </xf:group> 
                             </xf:repeat>
+                            <xf:trigger>
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_7_label[@lang=instance('localized_strings')/current_language]"/>
+                                <xf:action>
+                                    <xf:insert at="last()" nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_7/entry" position="before"/>
+                                </xf:action>
+                            </xf:trigger>
                         </xf:group>
                   <div class="fbc_button_area" id="fbc_2" type="fbc_button_area">
 				   	  	          <xf:trigger class="fbc_button_submit" id="fbc_3" type="fbc_button_submit" bind="bind-submissionButton">
