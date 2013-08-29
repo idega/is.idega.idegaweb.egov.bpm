@@ -120,6 +120,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				new Timestamp(System.currentTimeMillis()) :
 				new IWTimestamp(realCaseCreationDate).getTimestamp();
 
+		final Map<String, Object> variables = new HashMap<String, Object>();
 		Long piId = getBpmContext().execute(new JbpmCallback() {
 			@Override
 			public Long doInJbpm(JbpmContext context) throws JbpmException {
@@ -214,7 +215,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					pi.getContextInstance().setVariables(caseData);
 					getLogger().info("Variables were set: " + caseData);
 
-					Map<String, Object> variables = viewSubmission.resolveVariables();
+					variables.putAll(viewSubmission.resolveVariables());
 					submitVariablesAndProceedProcess(ti, variables, true);
 
 					if (variables != null && variables.containsKey(BPMConstants.PUBLIC_PROCESS)) {
@@ -242,7 +243,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			getLogger().info("Process was created: " + piId);
 			return piId;
 		} finally {
-			notifyAboutNewProcess(procDefName, piId);
+			notifyAboutNewProcess(procDefName, piId, variables);
 		}
 	}
 
