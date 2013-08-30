@@ -780,6 +780,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 							new AdvancedProperty(CasesBoardViewer.WORK_ITEM, iwrb.getLocalizedString(CasesBoardViewer.WORK_ITEM, "Work item")),
 							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST,
 									"Estimated cost")),
+							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
+									"Proposal for grant")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION,
 									"Board suggestion")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION,
@@ -1093,6 +1095,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
 				cells.put(CasesBoardViewer.BOARD_DECISION, StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
 
+				String proposal = taskInfo.get(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT);
+				cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
+				
 				valuesToReplace.put(tasksIndex, cells);
 				tasksIndex++;
 			}
