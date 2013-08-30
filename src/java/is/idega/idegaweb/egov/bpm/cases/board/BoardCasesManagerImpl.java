@@ -845,7 +845,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		int indexOfTotal = getIndexOfColumn(ProcessConstants.FINANCING_OF_THE_TASKS, uuid);
 		if (indexOfTotal < 0)
 			indexOfTotal = getIndexOfColumn(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN, uuid);
-		indexOfTotal++;
+		indexOfTotal +=2;
 		int indexOfSuggestion = indexOfTotal + 1;
 		int indexOfDecision = indexOfSuggestion + 1;
 
