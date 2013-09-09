@@ -783,7 +783,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
 									"Proposal for grant")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION,
-									"Board suggestion")),
+									"Handler suggestion")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION,
 									"Board decision"))
 					));
