@@ -1279,6 +1279,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 										criteria.getKey() + " and user " + user;
 								LOGGER.log(Level.WARNING, message, e);
 								cache.clear();
+
+								CoreUtil.clearAllCaches();
 								return;
 							}
 						}
@@ -1298,6 +1300,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				} catch (Exception e) {
 					String message = "Error updating cases list after case was modified or created: " + theCase;
 					getLogger().log(Level.WARNING, message, e);
+
+					CoreUtil.clearAllCaches();
 				}
 			}
 		});
