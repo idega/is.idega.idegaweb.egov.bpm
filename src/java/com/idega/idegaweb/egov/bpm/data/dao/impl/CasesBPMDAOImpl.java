@@ -1568,6 +1568,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
 		}
 
-		return getVariableInstanceQuerier().getGroupedVariables(getVariableInstanceQuerier().getConverted(data, columns));
+		return getVariableInstanceQuerier().getGroupedVariables(getVariableInstanceQuerier().getConverted(data));
 	}
 }
