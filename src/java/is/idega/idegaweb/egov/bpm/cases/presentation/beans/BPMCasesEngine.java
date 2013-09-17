@@ -11,6 +11,7 @@ import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
 import com.idega.core.component.bean.RenderedComponent;
+import com.idega.presentation.IWContext;
 
 public interface BPMCasesEngine extends CasesEngine {
 
@@ -23,4 +24,7 @@ public interface BPMCasesEngine extends CasesEngine {
 	public abstract RenderedComponent getVariablesWindow(String processDefinitionId);
 
 	public abstract Collection<CasePresentation> getReLoadedCases(CasesSearchCriteriaBean criterias);
+
+	public void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias);
+
 }

@@ -326,7 +326,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 	}
 
-	private void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias) {
+	public void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias) {
 		List<AdvancedProperty> searchFields = new ArrayList<AdvancedProperty>();
 
 		Locale locale = iwc.getCurrentLocale();
