@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,7 @@ public class CaseProcessInstanceRelationImpl {
 	public Map<Integer, Long> getCasesProcessInstancesIds(Set<Integer> casesIds) {
 		List<CaseProcInstBind> binds = getCasesBPMDAO().getCasesProcInstBindsByCasesIds(new ArrayList<Integer>(casesIds));
 		if (ListUtil.isEmpty(binds))
-			return null;
+			return Collections.emptyMap();
 		
 		Map<Integer, Long> casesIdsMapping = new HashMap<Integer, Long>();
 		for (CaseProcInstBind bind: binds) {

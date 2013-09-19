@@ -10,6 +10,7 @@ import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.data.GeneralCaseBMPBean;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewCustomizer;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardBean;
@@ -31,6 +32,8 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.ejb.FinderException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -41,11 +44,15 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
+import com.idega.block.process.data.CaseBMPBean;
+import com.idega.block.process.data.CaseHome;
 import com.idega.bpm.xformsview.converters.ObjectCollectionConverter;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.core.contact.data.Email;
+import com.idega.data.IDOLookup;
+import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
@@ -115,11 +122,27 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	private List<String> variables;
 
+	private CaseHome caseHome = null;
+
+	protected CaseHome getCaseHome() {
+		if (this.caseHome == null) {
+			try {
+				this.caseHome = (CaseHome) IDOLookup.getHome(Case.class);
+			} catch (IDOLookupException e) {
+				java.util.logging.Logger.getLogger(getClass().getName()).log(
+						Level.WARNING, "Failed to get home for " + Case.class, e);
+			}
+		}
+		
+		return this.caseHome;
+	}
+
 	@Override
 	public List<CaseBoardBean> getAllSortedCases(IWContext iwc,
 			IWResourceBundle iwrb, Collection<String> caseStatus,
-			String processName, String uuid) {
-		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName);
+			String processName, String uuid, boolean isSubscribedOnly) {
+
+		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName, isSubscribedOnly);
 		if (ListUtil.isEmpty(cases))
 			return null;
 
@@ -127,9 +150,11 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		for (GeneralCase theCase : cases) {
 			if (isCaseAvailableForBoard(theCase)) {
 				try {
-					casesIdsAndHandlers.put(Integer.valueOf(theCase.getPrimaryKey().toString()), theCase.getHandledBy());
+					casesIdsAndHandlers.put(
+							Integer.valueOf(theCase.getPrimaryKey().toString()), 
+							theCase.getHandledBy());
 				} catch(NumberFormatException e) {
-					LOGGER.warning("Cann't convert to integer: " + theCase);
+					LOGGER.warning("Can't convert to integer: " + theCase);
 				}
 			}
 		}
@@ -434,11 +459,12 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return total;
 	}
 
-	private boolean isCaseAvailableForBoard(GeneralCase theCase) {
+	private boolean isCaseAvailableForBoard(Case theCase) {
 		String managerType = theCase.getCaseManagerType();
 		if (StringUtil.isEmpty(managerType) || !managerType.equals("CasesBPM")) {
 			return false;
 		}
+
 		return true;
 	}
 
@@ -455,7 +481,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		Collections.sort(boardCases, new BoardCasesComparator(iwc.getLocale(), sortingPreferences));
 	}
 
-	protected Collection<GeneralCase> getCases(IWApplicationContext iwac, Collection<String> caseStatus, String processName) {
+	protected Collection<GeneralCase> getCases(IWApplicationContext iwac, Collection<String> caseStatus, String processName, boolean subscribedOnly) {
 		Collection<Case> allCases = null;
 		if (!StringUtil.isEmpty(processName)) {
 			// Getting cases by application
@@ -484,16 +510,59 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		if (ListUtil.isEmpty(allCases))
 			return null;
 
+		/* Filtering by subscribed cases, if it is told to do so */
+		Collection<Case> subscribedCases = null;
+		if (subscribedOnly) {
+			try {
+				subscribedCases = getCaseHome().findCasesForSubscriber(
+						getIWContext().getCurrentUser());
+			} catch (FinderException e) {
+				java.util.logging.Logger.getLogger(getClass().getName()).log(
+						Level.WARNING, "No subscribed cases found!", e);
+			}
+		}
+		
 		Collection<GeneralCase> bpmCases = new ArrayList<GeneralCase>();
 		for (Case theCase : allCases) {
-			if (theCase instanceof GeneralCase) {
-				bpmCases.add((GeneralCase) theCase);
+			if (!(theCase instanceof GeneralCase)) {
+				continue;
 			}
+			
+			if ((!ListUtil.isEmpty(subscribedCases)) && (!contains(subscribedCases, theCase))) {
+				continue;
+			}
+			
+			bpmCases.add((GeneralCase) theCase);
 		}
 
 		return bpmCases;
 	}
 
+	/**
+	 * 
+	 * <p>Checks if {@link GeneralCaseBMPBean} and {@link CaseBMPBean}
+	 * has same primary keys, if so, then <code>true</code> is returned.</p>
+	 * @param cases where to search for specified {@link Case} in, 
+	 * not <code>null</code>;
+	 * @param theCase to search for, not <code>null</code>;
+	 * @return <code>true</code> if {@link Case} found, <code>false</code>
+	 * otherwise.
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	protected boolean contains(Collection<Case> cases, Case theCase) {
+		if (ListUtil.isEmpty(cases) || theCase == null) {
+			return Boolean.FALSE;
+		}
+
+		for (Case c : cases) {
+			if (theCase.getPrimaryKey().equals(c.getPrimaryKey())) {
+				return Boolean.TRUE;
+			}
+		}
+
+		return Boolean.FALSE;
+	}
+	
 	protected Collection<Case> getCasesByProcessAndCaseStatus(
 			IWApplicationContext iwac, Collection<String> caseStatus,
 			String processName) {
@@ -632,7 +701,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	@Override
 	public CaseBoardTableBean getTableData(IWContext iwc, Collection<String> caseStatus,
-			String processName, String uuid) {
+			String processName, String uuid, boolean isSubscribedOnly) {
 		if (iwc == null)
 			return null;
 
@@ -640,7 +709,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
 		CaseBoardTableBean data = new CaseBoardTableBean();
 
-		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatus, processName, uuid);
+		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatus, processName, uuid, isSubscribedOnly);
 		if (ListUtil.isEmpty(boardCases)) {
 			data.setErrorMessage(iwrb.getLocalizedString("cases_board_viewer.no_cases_found", "There are no cases!"));
 			return data;

@@ -119,6 +119,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds) {
+		if (ListUtil.isEmpty(casesIds)) {
+			return Collections.emptyList();
+		}
+		
 		List<CaseProcInstBind> binds = getResultList(
 		    CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME,
 		    CaseProcInstBind.class, new Param(CaseProcInstBind.casesIdsParam, casesIds));
