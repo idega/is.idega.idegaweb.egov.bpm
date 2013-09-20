@@ -850,10 +850,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST,
 									"Estimated cost")),
 							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
-									"Proposal for grant")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION,
-									"Handler suggestion")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION,
+									"Proposed funding")),
+							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(),
+									"Handler suggestions")),
+							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION.toLowerCase(),
 									"Board decision"))
 					));
 				} else {
