@@ -24,6 +24,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
+import javax.servlet.ServletContext;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
@@ -65,6 +66,7 @@ import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.datastructures.map.MapUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -271,7 +273,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					// will
 					// bind view with task instance
 
-					Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
+					String caseIdentifierQualifier = IWMainApplication.getDefaultIWMainApplication()
+							.getSettings().getProperty("case_identifier_qualifier", CaseIdentifier.QUALIFIER);
+					Object[] identifiers = getCaseIdentifier(caseIdentifierQualifier).generateNewCaseIdentifier();
 					Integer identifierNumber = (Integer) identifiers[0];
 					String identifier = (String) identifiers[1];
 
@@ -375,24 +379,26 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
-	@SuppressWarnings("unchecked")
-	public CaseIdentifier getCaseIdentifier() {
-		String qualifier = CaseIdentifier.QUALIFIER;
+	private CaseIdentifier getCaseIdentifier(String qualifier) {
+		ServletContext sc = getIWAC().getIWMainApplication().getServletContext();
+		@SuppressWarnings("unchecked")
+		Map<String, ? extends CaseIdentifier> identifierGenerators = WebApplicationContextUtils.getWebApplicationContext(sc)
+			.getBeansOfType(CaseIdentifier.class);
 
-		Map<String, ? extends CaseIdentifier> identifierGenerators = WebApplicationContextUtils.getWebApplicationContext(getIWAC().getIWMainApplication()
-				.getServletContext()).getBeansOfType(CaseIdentifier.class);
-
-		if (identifierGenerators == null || identifierGenerators.isEmpty()) {
+		if (MapUtil.isEmpty(identifierGenerators)) {
 			getLogger().warning("There are no beans (type of '"+CaseIdentifier.class+"') to generate case identifier!");
 			return caseIdentifier;
 		} else if (identifierGenerators.values().size() == 1) {
 			return caseIdentifier;
 		}
 
+		if (StringUtil.isEmpty(qualifier)) {
+			return identifierGenerators.values().iterator().next();
+		}
+
 		for (CaseIdentifier identifierGenerator: identifierGenerators.values()) {
-			//	TODO: provide name for custom qualifier
 			Qualifier qualifierAnnotation = identifierGenerator.getClass().getAnnotation(Qualifier.class);
-			if (qualifierAnnotation != null && !qualifier.equals(qualifierAnnotation.value())) {
+			if (qualifierAnnotation != null && qualifier.equals(qualifierAnnotation.value())) {
 				getLogger().info("Using identifier generator: " + identifierGenerator.getClass());
 				return identifierGenerator;
 			}
