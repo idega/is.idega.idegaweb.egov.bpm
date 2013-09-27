@@ -557,6 +557,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
                 	if (!link.hasClass('emailSenderLightboxinBPMCasesStyleInitialized')) {
                 		link.addClass('emailSenderLightboxinBPMCasesStyleInitialized');
                 		link.fancybox({
+                			type: 'ajax',
                 			autoScale: false,
 							autoDimensions: false,
                 			width:	750,
@@ -1158,6 +1159,7 @@ CasesBPMAssets.openDocumentSignerWindow = function(uri, lightBoxTitle, closeLigh
 	jQuery(document.body).append('<a class=\'iframe\' style=\'display: none;\' id=\'' + tmpFancyBoxLinkId + '\' href=\'' + uri + '\' title=\'' + lightBoxTitle + '\'>' +
 		lightBoxTitle + '</a>');
 	jQuery('#' + tmpFancyBoxLinkId).fancybox({
+		type: 'iframe',
 		autoScale: false,
 		autoDimensions: false,
 		width:	windowWidth,
