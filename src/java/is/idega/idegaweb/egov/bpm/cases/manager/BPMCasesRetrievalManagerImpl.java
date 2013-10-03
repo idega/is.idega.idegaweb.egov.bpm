@@ -19,6 +19,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +66,7 @@ import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
+import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -88,6 +90,7 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.Group;
 import com.idega.user.data.GroupBMPBean;
 import com.idega.user.data.User;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
@@ -355,6 +358,65 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		}
 
 		return instancesW;
+	}
+
+	@Override
+	public boolean hasManagerAccess(Collection<String> caseIdentifiers) {
+		String[] roles = getManagerRoleNames(caseIdentifiers);
+		if (ArrayUtil.isEmpty(roles)) {
+			return Boolean.FALSE;
+		}
+
+		AccessController accessController = getApplication().getAccessController();
+		if (accessController == null) {
+			return Boolean.FALSE;
+		}
+
+		if (accessController.hasRole(getCurrentUser(), Arrays.asList(roles))) {
+			return Boolean.TRUE;
+		}
+
+		return Boolean.FALSE;
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getManagerRoleName(java.lang.String)
+	 */
+	@Override
+	public String[] getManagerRoleNames(Collection<String> caseIdentifiers) {
+		if (ListUtil.isEmpty(caseIdentifiers)) {
+			return null;
+		}
+		
+		StringBuilder sb = new StringBuilder("SELECT jvi.stringvalue_ ");
+		sb.append("FROM jbpm_variableinstance jvi, bpm_cases_processinstances bcpi ");
+		sb.append("WHERE jvi.PROCESSINSTANCE_ = bcpi.process_instance_id ");
+		sb.append("AND jvi.NAME_='managerRoleName' ");
+		sb.append("AND bcpi.case_identifier IN (");
+
+		for (Iterator<String> iterator = caseIdentifiers.iterator(); iterator.hasNext();) {
+			sb.append(CoreConstants.QOUTE_SINGLE_MARK)
+			.append(iterator.next())
+			.append(CoreConstants.QOUTE_SINGLE_MARK);
+
+			if (iterator.hasNext()) {
+				sb.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+			}
+		}
+
+		sb.append(")");
+
+		String[] managerRoleNames = null;
+		try {
+			managerRoleNames = SimpleQuerier.executeStringQuery(sb.toString());
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Unable to get manager role names: ", e);
+		}
+
+		if (ArrayUtil.isEmpty(managerRoleNames)) {
+			return null;
+		}
+		return managerRoleNames;
 	}
 
 	/*

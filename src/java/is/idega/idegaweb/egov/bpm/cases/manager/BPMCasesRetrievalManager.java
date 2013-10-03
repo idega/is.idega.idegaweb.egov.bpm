@@ -96,6 +96,7 @@ import org.springframework.context.ApplicationListener;
 
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.data.Case;
+import com.idega.core.accesscontrol.data.ICRole;
 import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMEmailDocument;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -298,4 +299,28 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager, Applica
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public List<Long> getProcessDefinitionsIDs(Object applicationPrimaryKey);
+
+	/**
+	 * 
+	 * @param caseIdentifiers is {@link Collection} of 
+	 * {@link Case#getCaseIdentifier()}, to search role names for, 
+	 * not <code>null</code>;
+	 * @return {@link ICRole}s for {@link Case}s, which has managerRoleName
+	 * permissions or <code>null</code> on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public String[] getManagerRoleNames(Collection<String> caseIdentifiers);
+
+	/**
+	 * 
+	 * <p>Checks if current {@link User} has cases manager access for at least
+	 * one of give {@link Case#getCaseIdentifier()}.</p>
+	 * @param caseIdentifiers is {@link Case#getCaseIdentifier()} to check
+	 * form managing possibility, not <code>null</code>;
+	 * @return <code>true</code> if current {@link User} has cases manager
+	 * access to at least one of {@link Case}s or <code>false</code>
+	 * if all of them are not visible to {@link User};
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public boolean hasManagerAccess(Collection<String> caseIdentifiers);
 }
