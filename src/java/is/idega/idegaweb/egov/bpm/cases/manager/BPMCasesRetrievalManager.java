@@ -301,6 +301,115 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager, Applica
 	public List<Long> getProcessDefinitionsIDs(Object applicationPrimaryKey);
 
 	/**
+	 * <p>Only PROC_CASE</p>
+	 * @param processDefinitionNames is {@link Collection} of 
+	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
+	 * skipped, if <code>null</code>;
+	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or 
+	 * <code>null</code> on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public String[] getCasesPrimaryKeys(Collection<String> processDefinitionNames, Collection<String> caseStatuses);
+
+	/**
+	 * <p>Only PROC_CASE</p>
+	 * @param processDefinitionNames is {@link Collection} of 
+	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
+	 * skipped, if <code>null</code>;
+	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @param subscribers is {@link Collection} of {@link User}, who
+	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
+	 * then this option will be skipped;
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or 
+	 * <code>null</code> on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public String[] getCasesPrimaryKeys(
+			Collection<String> processDefinitionNames, 
+			Collection<String> caseStatuses, 
+			Collection<User> subscribers);
+
+	/**
+	 * <p>Only PROC_CASE</p>
+	 * @param processDefinitionNames is {@link Collection} of 
+	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
+	 * skipped, if <code>null</code>;
+	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @param subscribers is {@link Collection} of {@link User}, who
+	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
+	 * then this option will be skipped;
+	 * @param caseManagerTypes is {@link Collection} of 
+	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
+	 * will be skipped;
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or 
+	 * <code>null</code> on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public String[] getCasesPrimaryKeys(
+			Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses, 
+			Collection<User> subscribers,
+			Collection<String> caseManagerTypes);
+	
+	/**
+	 * <p>Only PROC_CASE</p>
+	 * @param processDefinitionNames is {@link Collection} of 
+	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
+	 * skipped, if <code>null</code>;
+	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @return {@link List} of {@link Case}s by criteria or 
+	 * {@link Collections#emptyList()} on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public List<Case> getCases(Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses);
+
+	/**
+	 * <p>Only PROC_CASE</p>
+	 * @param processDefinitionNames is {@link Collection} of 
+	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
+	 * skipped, if <code>null</code>;
+	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @param subscribers is {@link Collection} of {@link User}, who
+	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
+	 * then this option will be skipped;
+	 * @return {@link List} of {@link Case}s by criteria or 
+	 * {@link Collections#emptyList()} on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public List<Case> getCases(Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses, Collection<User> subscribers);
+
+	/**
+	 * <p>Only PROC_CASE</p>
+	 * @param processDefinitionNames is {@link Collection} of 
+	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
+	 * skipped, if <code>null</code>;
+	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @param subscribers is {@link Collection} of {@link User}, who
+	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
+	 * then this option will be skipped;
+	 * @param caseManagerTypes is {@link Collection} of 
+	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
+	 * will be skipped;
+	 * @return {@link List} of {@link Case}s by criteria or 
+	 * {@link Collections#emptyList()} on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public List<Case> getCases(
+			Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses, 
+			Collection<User> subscribers,
+			Collection<String> caseManagerTypes);
+
+	/**
 	 * 
 	 * @param caseIdentifiers is {@link Collection} of 
 	 * {@link Case#getCaseIdentifier()}, to search role names for, 

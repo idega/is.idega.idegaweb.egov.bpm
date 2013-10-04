@@ -4,11 +4,10 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.business.TaskViewerHelper;
 import is.idega.idegaweb.egov.bpm.cases.CaseProcessInstanceRelationImpl;
 import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
-import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
+import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariablesBean;
 import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.data.GeneralCaseBMPBean;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewCustomizer;
@@ -27,13 +26,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import javax.ejb.FinderException;
-
+import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -41,7 +38,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
@@ -49,17 +45,16 @@ import com.idega.block.process.data.CaseHome;
 import com.idega.bpm.xformsview.converters.ObjectCollectionConverter;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
 import com.idega.core.contact.data.Email;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
-import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.bean.VariableByteArrayInstance;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
+import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.NoEmailFoundException;
@@ -109,7 +104,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	public static final String BOARD_CASES_LIST_SORTING_PREFERENCES = "boardCasesListSortingPreferencesAttribute";
 
-	private CasesRetrievalManager caseManager;
+	@Autowired
+	private BPMCasesRetrievalManager caseManager;
 
 	@Autowired
 	private CaseProcessInstanceRelationImpl caseProcessInstanceRelation;
@@ -123,6 +119,17 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	private List<String> variables;
 
 	private CaseHome caseHome = null;
+
+	@Autowired
+	private BPMDAO bpmDAO;
+
+	protected BPMDAO getBPMDAO() {
+		if (this.bpmDAO == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.bpmDAO;
+	}
 
 	protected CaseHome getCaseHome() {
 		if (this.caseHome == null) {
@@ -138,28 +145,23 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	@Override
-	public List<CaseBoardBean> getAllSortedCases(IWContext iwc,
-			IWResourceBundle iwrb, Collection<String> caseStatus,
-			String processName, String uuid, boolean isSubscribedOnly) {
+	public List<CaseBoardBean> getAllSortedCases(
+			IWContext iwc,
+			IWResourceBundle iwrb, 
+			Collection<String> caseStatus,
+			String processName, 
+			String uuid, 
+			boolean isSubscribedOnly,
+			boolean backPage,
+			String taskName) {
 
-		Collection<GeneralCase> cases = getCases(iwc, caseStatus, processName, isSubscribedOnly);
+		Collection<GeneralCase> cases = getCases(caseStatus, processName, isSubscribedOnly, "CasesBPM");
 		if (ListUtil.isEmpty(cases))
 			return null;
 
-		Map<Integer, User> casesIdsAndHandlers = new HashMap<Integer, User>();
-		for (GeneralCase theCase : cases) {
-			if (isCaseAvailableForBoard(theCase)) {
-				try {
-					casesIdsAndHandlers.put(
-							Integer.valueOf(theCase.getPrimaryKey().toString()), 
-							theCase.getHandledBy());
-				} catch(NumberFormatException e) {
-					LOGGER.warning("Can't convert to integer: " + theCase);
-				}
-			}
-		}
-
-		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(casesIdsAndHandlers, uuid);
+		/* Do the old unknown stuff... */
+		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(
+				cases, uuid, backPage, taskName, iwc);
 		if (ListUtil.isEmpty(boardCases))
 			return null;
 
@@ -168,7 +170,12 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return boardCases;
 	}
 
-	protected List<CaseBoardBean> getFilledBoardCaseWithInfo(Map<Integer, User> casesIdsAndHandlers, String uuid) {
+	protected List<CaseBoardBean> getFilledBoardCaseWithInfo(
+			Collection<? extends GeneralCase> casesIdsAndHandlers, 
+			String uuid,
+			boolean backPage,
+			String taskName,
+			IWContext iwc) {
 		List<String> variablesToQuery = new ArrayList<String>(getVariables(uuid));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
@@ -191,10 +198,20 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				ProcessConstants.BOARD_FINANCING_DECISION
 		);
 
+		/* Formatting links */
+		Map<Long, ProcessInstance> relations = new HashMap<Long, ProcessInstance>();
+		for (CaseBoardView view: boardViews) {
+			relations.put(Long.valueOf(view.getCaseId()), view.getProcessInstance());
+		}
+
+		Map<Long, String> links = getTaskViewer().getLinksToTheTaskRedirector(
+				iwc, relations, backPage, taskName);
+		
+		/* Filling board cases */
 		List<CaseBoardBean> boardCases = new ArrayList<CaseBoardBean>();
 		for (CaseBoardView view: boardViews) {
 			CaseBoardBean boardCase = new CaseBoardBean(view.getCaseId(), view.getProcessInstanceId());
-
+			boardCase.setLinkToCase(links.get(Long.valueOf(view.getCaseId())));
 			boardCase.setApplicantName(view.getValue(CasesBoardViewer.CASE_FIELDS.get(0).getId()));
 			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()));
 
@@ -243,23 +260,20 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return null;
 	}
 
-	private Integer getMapedCaseId(Map<Integer, Long> processMap, Long processInstanceId) {
-		for (Entry<Integer, Long> processBind: processMap.entrySet()) {
-			if (processBind.getValue().longValue() == processInstanceId.longValue()) {
-				return processBind.getKey();
-			}
-		}
-		return null;
-	}
-
 	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
-	protected List<CaseBoardView> getVariablesValuesByNamesForCases(Map<Integer, User> casesIdsAndHandlers, List<String> variablesNames) {
-		Map<Integer, Long> processes = getCaseProcessInstanceRelation().getCasesProcessInstancesIds(casesIdsAndHandlers.keySet());
+	protected List<CaseBoardView> getVariablesValuesByNamesForCases(
+			Collection<? extends GeneralCase> cases, 
+			List<String> variablesNames) {
 
-		Collection<VariableInstanceInfo> variables = getVariablesQuerier()
-				.getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, processes.values(), true, false, false);
+		/* Getting relations between cases and process instances */
+		Map<ProcessInstance, Case> casesAndProcesses = getCaseProcessInstanceRelation()
+				.getCasesAndProcessInstances(cases);
+
+		/* Getting variables */
+		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariables(
+				variablesNames, casesAndProcesses.keySet(), Boolean.TRUE, Boolean.FALSE, Boolean.FALSE);
 		if (ListUtil.isEmpty(variables)) {
-			LOGGER.warning("Didn't find any variables values for processes " + processes.values() + " and variables names " + variablesNames);
+			LOGGER.warning("Didn't find any variables values for processes " + casesAndProcesses.values() + " and variables names " + variablesNames);
 			return null;
 		}
 
@@ -270,19 +284,20 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				Long processInstanceId = variable.getProcessInstanceId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
-					Integer caseId = getMapedCaseId(processes, processInstanceId);
-					if (caseId == null) {
-						LOGGER.warning("Case ID was not found in " + processes + " for process instance ID: " + processInstanceId);
-					} else {
-						view = new CaseBoardView(caseId.toString(), processInstanceId);
-						view.setHandler(casesIdsAndHandlers.get(caseId));
-						views.add(view);
+					GeneralCase theCase = getCaseProcessInstanceRelation()
+							.getCase(casesAndProcesses, processInstanceId);
+					if (theCase == null) {
+						LOGGER.warning("Case ID was not found in " + casesAndProcesses + " for process instance ID: " + processInstanceId);
+						LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + casesAndProcesses);
+						continue;
 					}
-				}
 
-				if (view == null) {
-					LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + processes);
-					continue;
+					view = new CaseBoardView(theCase.getPrimaryKey().toString(), processInstanceId);
+					view.setHandler(theCase.getHandledBy());
+					view.setProcessInstance(
+							getCaseProcessInstanceRelation().getProcessInstance(
+									casesAndProcesses, processInstanceId));
+					views.add(view);
 				}
 
 				if (variable instanceof VariableByteArrayInstance) {
@@ -459,15 +474,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return total;
 	}
 
-	private boolean isCaseAvailableForBoard(Case theCase) {
-		String managerType = theCase.getCaseManagerType();
-		if (StringUtil.isEmpty(managerType) || !managerType.equals("CasesBPM")) {
-			return false;
-		}
-
-		return true;
-	}
-
 	@SuppressWarnings("unchecked")
 	private void sortBoardCases(IWContext iwc, List<CaseBoardBean> boardCases) {
 		if (ListUtil.isEmpty(boardCases))
@@ -481,45 +487,18 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		Collections.sort(boardCases, new BoardCasesComparator(iwc.getLocale(), sortingPreferences));
 	}
 
-	protected Collection<GeneralCase> getCases(IWApplicationContext iwac, Collection<String> caseStatus, String processName, boolean subscribedOnly) {
-		Collection<Case> allCases = null;
-		if (!StringUtil.isEmpty(processName)) {
-			// Getting cases by application
-			allCases = getCasesByProcessAndCaseStatus(iwac, caseStatus, processName);
-		} else {
-			// Getting cases by case status
-			if (ListUtil.isEmpty(caseStatus)) {
-				LOGGER.warning("Case status is unkown - terminating!");
-				return null;
-			}
-			CasesBusiness casesBusiness = getCasesBusiness(iwac);
-			if (casesBusiness == null) {
-				LOGGER.warning(CasesBusiness.class + " is null!");
-				return null;
-			}
-			try {
-				allCases = casesBusiness.getCasesByCriteria(
-						null, null, null, null,
-						caseStatus.toArray(new String[caseStatus.size()]),
-						null, null, null, null, false, false);
-			} catch (RemoteException e) {
-				LOGGER.log(Level.SEVERE, "Error getting cases by cases status: " + caseStatus, e);
-			}
-		}
-
-		if (ListUtil.isEmpty(allCases))
+	protected Collection<GeneralCase> getCases(
+			Collection<String> caseStatus, 
+			String processName, 
+			boolean subscribedOnly, 
+			String caseManagerType) {
+		Collection<Case> allCases = getCaseManager().getCases(
+				Arrays.asList(processName), 
+				caseStatus, 
+				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null,
+				Arrays.asList(caseManagerType));
+		if (ListUtil.isEmpty(allCases)) {
 			return null;
-
-		/* Filtering by subscribed cases, if it is told to do so */
-		Collection<Case> subscribedCases = null;
-		if (subscribedOnly) {
-			try {
-				subscribedCases = getCaseHome().findCasesForSubscriber(
-						getIWContext().getCurrentUser());
-			} catch (FinderException e) {
-				java.util.logging.Logger.getLogger(getClass().getName()).log(
-						Level.WARNING, "No subscribed cases found!", e);
-			}
 		}
 		
 		Collection<GeneralCase> bpmCases = new ArrayList<GeneralCase>();
@@ -527,11 +506,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			if (!(theCase instanceof GeneralCase)) {
 				continue;
 			}
-			
-			if ((!ListUtil.isEmpty(subscribedCases)) && (!contains(subscribedCases, theCase))) {
-				continue;
-			}
-			
+
 			bpmCases.add((GeneralCase) theCase);
 		}
 
@@ -562,63 +537,12 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 		return Boolean.FALSE;
 	}
-	
-	protected Collection<Case> getCasesByProcessAndCaseStatus(
-			IWApplicationContext iwac, Collection<String> caseStatus,
-			String processName) {
-		CasesRetrievalManager caseManager = getCaseManager();
+
+	protected BPMCasesRetrievalManager getCaseManager() {
 		if (caseManager == null) {
-			LOGGER.severe(CasesRetrievalManager.class + " bean was not initialized!");
-			return null;
+			ELUtil.getInstance().autowire(this);
 		}
 
-		Collection<Long> casesIdsByProcessDefinition = caseManager
-				.getCasesIdsByProcessDefinitionName(processName);
-		if (ListUtil.isEmpty(casesIdsByProcessDefinition))
-			return null;
-
-		List<Integer> ids = new ArrayList<Integer>(casesIdsByProcessDefinition.size());
-		for (Long id : casesIdsByProcessDefinition) {
-			ids.add(id.intValue());
-		}
-
-		Collection<Case> cases = getCasesBusiness(iwac).getCasesByIds(ids);
-		if (ListUtil.isEmpty(cases))
-			return null;
-
-		if (ListUtil.isEmpty(caseStatus))
-			return cases;
-
-		Collection<Case> casesByProcessDefinitionAndStatus = new ArrayList<Case>();
-		for (Case theCase : cases) {
-			for (String status : caseStatus) {
-				if (status.equals(theCase.getStatus())) {
-					casesByProcessDefinitionAndStatus.add(theCase);
-				}
-			}
-		}
-
-		return casesByProcessDefinitionAndStatus;
-	}
-
-	private CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
-		try {
-			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
-		} catch (IBOLookupException e) {
-			LOGGER.log(Level.SEVERE, "Error getting " + CasesBusiness.class, e);
-		}
-
-		return null;
-	}
-
-	private CasesRetrievalManager getCaseManager() {
-		if (caseManager == null) {
-			try {
-				caseManager = ELUtil.getInstance().getBean(BPMCasesRetrievalManagerImpl.beanIdentifier);
-			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "Error getting Spring bean for: " + CasesRetrievalManager.class, e);
-			}
-		}
 		return caseManager;
 	}
 
@@ -698,10 +622,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	public boolean isColumnOfDomain(String currentColumn, String columnOfDomain) {
 		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
 	}
-
+	
 	@Override
 	public CaseBoardTableBean getTableData(IWContext iwc, Collection<String> caseStatus,
-			String processName, String uuid, boolean isSubscribedOnly) {
+			String processName, String uuid, boolean isSubscribedOnly, boolean backPage, String taskName) {
 		if (iwc == null)
 			return null;
 
@@ -709,7 +633,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
 		CaseBoardTableBean data = new CaseBoardTableBean();
 
-		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatus, processName, uuid, isSubscribedOnly);
+		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatus, processName, uuid, isSubscribedOnly, backPage, taskName);
 		if (ListUtil.isEmpty(boardCases)) {
 			data.setErrorMessage(iwrb.getLocalizedString("cases_board_viewer.no_cases_found", "There are no cases!"));
 			return data;
@@ -718,6 +642,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		// Header
 		data.setHeaderLabels(getTableHeaders(iwrb, uuid));
 
+//		getLinkToTheTask(iwc, rowBean)
 		// Body
 		Map<Integer, List<AdvancedProperty>> columns = getColumns(iwrb, uuid);
 
@@ -731,6 +656,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			rowBean.setId(new StringBuilder(uniqueCaseId).append(caseBoard.getCaseId()).toString());
 			rowBean.setCaseIdentifier(caseBoard.getCaseIdentifier());
 			rowBean.setHandler(caseBoard.getHandler());
+			rowBean.setLinkToCase(caseBoard.getLinkToCase());
 
 			//	Table of financing
 			updateTasksInfo(caseBoard);
@@ -950,7 +876,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return columns.indexOf(column);
 	}
 
-	CaseProcessInstanceRelationImpl getCaseProcessInstanceRelation() {
+	protected CaseProcessInstanceRelationImpl getCaseProcessInstanceRelation() {
 		return caseProcessInstanceRelation;
 	}
 
@@ -964,6 +890,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	protected class CaseBoardView {
 		private String caseId;
 		private Long processInstanceId;
+		private ProcessInstance processInstance;
 
 		private User handler;
 
@@ -974,6 +901,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		private CaseBoardView(String caseId, Long processInstanceId) {
 			this.caseId = caseId;
 			this.processInstanceId = processInstanceId;
+		}
+
+		public ProcessInstance getProcessInstance() {
+			return processInstance;
+		}
+
+		public void setProcessInstance(ProcessInstance processInstance) {
+			this.processInstance = processInstance;
 		}
 
 		public String getCaseId() {
@@ -1070,10 +1005,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	public void setTaskViewer(TaskViewerHelper taskViewer) {
 		this.taskViewer = taskViewer;
-	}
-
-	public void setCaseManager(CasesRetrievalManager caseManager) {
-		this.caseManager = caseManager;
 	}
 
 	public void setCaseProcessInstanceRelation(CaseProcessInstanceRelationImpl caseProcessInstanceRelation) {
