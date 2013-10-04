@@ -26,6 +26,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
 import com.idega.business.IBOLookup;
@@ -122,7 +123,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (ListUtil.isEmpty(casesIds)) {
 			return Collections.emptyList();
 		}
-		
+
 		List<CaseProcInstBind> binds = getResultList(
 		    CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME,
 		    CaseProcInstBind.class, new Param(CaseProcInstBind.casesIdsParam, casesIds));
@@ -408,8 +409,40 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			caseNumber = caseNumber + CoreConstants.PERCENT;
 		}
 
-		String query = VariableInstanceQuerierImpl.isDataMirrowed() ? CaseProcInstBind.getCaseIdsByCaseNumber : CaseProcInstBind.getCaseIdsByCaseNumberNoMirrow;
-		return getResultList(query, Long.class, new Param(CaseProcInstBind.caseNumberProp, caseNumber));
+		String query = "select " + CaseBMPBean.PK_COLUMN + " from " + CaseBMPBean.TABLE_NAME + " where " + CaseBMPBean.COLUMN_CASE_MANAGER_TYPE +
+				" = '" + ProcessConstants.BPM_CASE + "' and lower(" + CaseBMPBean.COLUMN_CASE_IDENTIFIER + ") LIKE '" + caseNumber + "'";
+		List<Serializable[]> data = null;
+		try {
+			data = SimpleQuerier.executeQuery(query, 1);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (ListUtil.isEmpty(data)) {
+			return new ArrayList<Long>(0);
+		}
+
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Serializable[] temp: data) {
+			if (ArrayUtil.isEmpty(temp)) {
+				continue;
+			}
+
+			Serializable id = temp[0];
+			if (id instanceof Number) {
+				ids.add(((Number) id).intValue());
+			}
+		}
+
+		List<CaseProcInstBind> binds = getCasesProcInstBindsByCasesIds(ids);
+		if (ListUtil.isEmpty(binds)) {
+			return new ArrayList<Long>(0);
+		}
+
+		List<Long> results = new ArrayList<Long>();
+		for (CaseProcInstBind bind: binds) {
+			results.add(Long.valueOf(bind.getCaseId()));
+		}
+		return results;
 	}
 
 	@Override

@@ -133,7 +133,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	private ApplicationBusiness applicationBusiness;
 
 	public static final String	beanIdentifier = "casesBPMCaseHandler",
-								caseHandlerType = "CasesBPM";
+								caseHandlerType = ProcessConstants.BPM_CASE;
 
 	@Override
 	public String getBeanIdentifier() {
@@ -868,7 +868,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	protected CaseBusiness getCaseBusiness() {
 		try {
-			return (CaseBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
+			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
 		}
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
