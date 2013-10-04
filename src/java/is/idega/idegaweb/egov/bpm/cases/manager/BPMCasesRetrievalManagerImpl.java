@@ -598,6 +598,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return casesAssets;
 	}
 
+	
+	
 	@Override
 	public PagedDataCollection<CasePresentation> getCases(User user,
 			String type, Locale locale, List<String> caseCodes,
@@ -1181,6 +1183,176 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public List<Long> getCasesIdsByProcessDefinitionName(String processDefinitionName) {
 		return getCasesBPMDAO().getCaseIdsByProcessDefinition(processDefinitionName);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCases(java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection)
+	 */
+	@Override
+	public List<Case> getCases(Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses, Collection<User> subscribers,
+			Collection<String> caseManagerTypes) {
+		String[] primaryKeys = getCasesPrimaryKeys(processDefinitionNames, 
+				caseStatuses, subscribers, caseManagerTypes);
+		if (ArrayUtil.isEmpty(primaryKeys)) {
+			return Collections.emptyList();
+		}
+
+		ArrayList<Integer> ids = new ArrayList<Integer>(primaryKeys.length);
+		for (String id : primaryKeys) {
+			ids.add(Integer.valueOf(id));
+		}
+
+		Collection<Case> casesCollection = getCasesBusiness().getCasesByIds(ids);
+		if (ListUtil.isEmpty(casesCollection)) {
+			return Collections.emptyList();
+		}
+
+		return new ArrayList<Case>(casesCollection);
+	}
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCases(java.util.Collection, java.util.Collection, java.util.Collection)
+	 */
+	@Override
+	public List<Case> getCases(Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses, Collection<User> subscribers) {
+		return getCases(processDefinitionNames, caseStatuses, subscribers, null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCases(java.util.Collection, java.util.Collection)
+	 */
+	@Override
+	public List<Case> getCases(
+			Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses) {
+		return getCases(processDefinitionNames, caseStatuses, null);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCasesPrimaryKeys(java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection)
+	 */
+	@Override
+	public String[] getCasesPrimaryKeys(
+			Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses, Collection<User> subscribers,
+			Collection<String> caseManagerTypes) {
+		StringBuilder query = new StringBuilder();
+		query.append("SELECT bcpi.case_id FROM bpm_cases_processinstances bcpi ");
+
+		/* When process definition names are given, adding them to search clause */
+		if (!ListUtil.isEmpty(processDefinitionNames)) {
+			query.append("JOIN jbpm_processinstance jpi ON bcpi.process_instance_id=jpi.ID_ ")
+			.append("JOIN jbpm_processdefinition jpd ON jpd.ID_=jpi.PROCESSDEFINITION_ ")
+			.append("AND jpd.NAME_ IN (");
+
+			for (Iterator<String> iterator = processDefinitionNames.iterator(); iterator.hasNext();) {
+				query.append(CoreConstants.QOUTE_SINGLE_MARK)
+				.append(iterator.next())
+				.append(CoreConstants.QOUTE_SINGLE_MARK);
+
+				if (iterator.hasNext()) {
+					query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
+			}
+
+			query.append(") ");
+		}
+
+		/* Searching by case statuses or case manage types */
+		if (!ListUtil.isEmpty(caseStatuses) || !ListUtil.isEmpty(caseManagerTypes)) {
+			query.append("JOIN proc_case pc ON bcpi.case_id=pc.PROC_CASE_ID ");
+
+			/* Searching by case statuses */
+			if (!ListUtil.isEmpty(caseStatuses)) {
+				query.append("AND pc.CASE_STATUS IN (");
+		
+				for (Iterator<String> iterator = caseStatuses.iterator(); iterator.hasNext();) {
+					query.append(CoreConstants.QOUTE_SINGLE_MARK)
+					.append(iterator.next())
+					.append(CoreConstants.QOUTE_SINGLE_MARK);
+		
+					if (iterator.hasNext()) {
+						query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+					}
+				}
+		
+				query.append(") ");
+			}
+
+			/* Searching by case manager types */
+			if (!ListUtil.isEmpty(caseManagerTypes)) {
+				query.append("AND pc.CASE_MANAGER_TYPE IN (");
+		
+				for (Iterator<String> iterator = caseManagerTypes.iterator(); iterator.hasNext();) {
+					query.append(CoreConstants.QOUTE_SINGLE_MARK)
+					.append(iterator.next())
+					.append(CoreConstants.QOUTE_SINGLE_MARK);
+		
+					if (iterator.hasNext()) {
+						query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+					}
+				}
+		
+				query.append(") ");
+			}
+		}
+
+		/* Searching by subscribers */
+		if (!ListUtil.isEmpty(subscribers)) {
+			query.append("JOIN proc_case_subscribers pcs ON pcs.PROC_CASE_ID=bcpi.case_id ")
+			.append("AND pcs.IC_USER_ID IN (");
+
+			for (Iterator<User> iterator = subscribers.iterator(); iterator.hasNext();) {
+				query.append(CoreConstants.QOUTE_SINGLE_MARK)
+				.append(iterator.next().getPrimaryKey().toString())
+				.append(CoreConstants.QOUTE_SINGLE_MARK);
+
+				if (iterator.hasNext()) {
+					query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
+			}
+
+			query.append(") ");
+		}
+		
+		try {
+			return SimpleQuerier.executeStringQuery(query.toString());
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, 
+					"Unable to find ids for " + Case.class + 
+					" by definition names: " + processDefinitionNames + 
+					" and by case statuses: " + caseStatuses +
+					" and subscribers: " + subscribers, e);
+		}
+
+		return null;
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCasesPrimaryKeys(java.util.Collection, java.util.Collection, java.util.Collection)
+	 */
+	@Override
+	public String[] getCasesPrimaryKeys(
+			Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses, Collection<User> subscribers) {
+		return getCasesPrimaryKeys(processDefinitionNames, caseStatuses, subscribers, null);
+	}
+	
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCasesPrimaryKeys(java.util.Collection, java.util.Collection)
+	 */
+	@Override
+	public String[] getCasesPrimaryKeys(
+			Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses) {
+		return getCasesPrimaryKeys(processDefinitionNames, caseStatuses, null);
 	}
 
 	public VariablesHandler getVariablesHandler() {
