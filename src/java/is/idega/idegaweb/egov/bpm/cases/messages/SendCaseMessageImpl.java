@@ -151,13 +151,18 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				try {
 					for (MessageValue messageValue: msgValsToSend) {
 						Message message = messageBusiness.createUserMessage(messageValue);
+						if (message == null) {
+							throw new RuntimeException("User message was not created: " + messageValue);
+						}
+
 						message.store();
 
 						/* Will inform notifications system */
 						ELUtil.getInstance().publishEvent(
 								new BPMNewMessageEvent(
 										message,
-										messageValue.getReceiver()));
+										messageValue.getReceiver())
+						);
 					}
 				} catch (Exception e) {
 					String message = "Exception while sending user messages (" + msgValsToSend + "), some messages might be not sent";
