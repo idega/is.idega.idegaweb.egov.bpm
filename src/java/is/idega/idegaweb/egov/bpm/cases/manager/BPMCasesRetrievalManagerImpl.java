@@ -608,9 +608,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			boolean showAllCases) {
 
 		try {
-			List<Integer> casesIds = getCaseIds(user, type, caseCodes,
+			List<Integer> casesIds = getCasePrimaryKeys(user, type, caseCodes,
 					caseStatusesToHide, caseStatusesToShow, onlySubscribedCases,
-					showAllCases, null);
+					showAllCases, null, null);
 
 			if (ListUtil.isEmpty(casesIds)) {
 				LOGGER.info("User '" + user + "' doesn't have any cases!");
@@ -658,17 +658,44 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> statusesToHide, List<String> statusesToShow,
 			boolean onlySubscribedCases, boolean showAllCases) throws Exception {
-		return getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null);
-	}
-	@Override
-	public List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String> caseStatusesToShow,
-			boolean onlySubscribedCases, boolean showAllCases, List<Long> procInstIds) throws Exception {
-		return getCaseIds(user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases, null, procInstIds);
+		return getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null);
 	}
 
 	@Override
-	protected List<Integer> getCaseIds(User user, String type, List<String> caseCodes, List<String> caseStatusesToHide, List<String>
-		caseStatusesToShow, boolean onlySubscribedCases, boolean showAllCases, Integer caseId, List<Long> procInstIds) throws Exception {
+	public List<Integer> getCasePrimaryKeys(
+			User user, 
+			String type, 
+			List<String> caseCodes, 
+			List<String> caseStatusesToHide, 
+			List<String> caseStatusesToShow,
+			boolean onlySubscribedCases, 
+			boolean showAllCases, 
+			List<Long> procInstIds, 
+			Collection<Long> handlerCategoryIDs) throws Exception {
+		return getCaseIds(
+				user, 
+				type, 
+				caseCodes, 
+				caseStatusesToHide, 
+				caseStatusesToShow, 
+				onlySubscribedCases, 
+				showAllCases, 
+				null, 
+				procInstIds, handlerCategoryIDs);
+	}
+
+	@Override
+	protected List<Integer> getCaseIds(
+			User user, 
+			String type, 
+			List<String> caseCodes, 
+			List<String> caseStatusesToHide, 
+			List<String> caseStatusesToShow, 
+			boolean onlySubscribedCases, 
+			boolean showAllCases, 
+			Integer caseId, 
+			List<Long> procInstIds, 
+			Collection<Long> handlerCategoryIDs) throws Exception {
 
 		List<Integer> caseIds = null;
 
@@ -680,45 +707,52 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		List<Integer> groups = null;
 		List<String> casecodes = null;
 
+		/* Checking for administrator or cases super administrator */
+		IWContext iwc = CoreUtil.getIWContext();
+		AccessController accessController = IWMainApplication.getDefaultIWMainApplication().getAccessController();
+		boolean isSuperAdmin = false;
+		if (iwc == null) {
+			isSuperAdmin = user == null ? false :
+					user.equals(accessController.getAdministratorUser()) || accessController.hasRole(user, CasesConstants.ROLE_CASES_SUPER_ADMIN);
+		} else
+			isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
+	
 		try {
-			IWContext iwc = CoreUtil.getIWContext();
-			AccessController accessController = IWMainApplication.getDefaultIWMainApplication().getAccessController();
-
-			boolean isSuperAdmin = false;
-			if (iwc == null) {
-				isSuperAdmin = user == null ? false :
-						user.equals(accessController.getAdministratorUser()) || accessController.hasRole(user, CasesConstants.ROLE_CASES_SUPER_ADMIN);
-			} else
-				isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
-
 			CasesListParameters params = new CasesListParameters(user, type, isSuperAdmin, statusesToHide, statusesToShow);
 			params = resolveParameters(params, showAllCases);
-			statusesToShow = showAllCases ? statusesToShow : ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
-			statusesToHide = showAllCases ? statusesToHide : ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
+			
+			/* Getting roles for given user */
 			roles = params.getRoles();
 			if (ListUtil.isEmpty(roles) && user != null)
 				roles = accessController.getAllRolesForUser(user);
-
+			
+			statusesToShow = showAllCases ? statusesToShow : ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
+			statusesToHide = showAllCases ? statusesToHide : ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
 			groups = params.getGroups();
 			casecodes = params.getCodes();
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
 
-			caseIds = caseId == null ?
-					getCachedIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, roles, groups, casecodes, showAllCases,
-							procInstIds) :
-					null;
-			if (!ListUtil.isEmpty(caseIds)) {
+			/* Querying cache */
+			if (caseId == null) {
+				caseIds = getCachedIds(user, type, caseCodes, statusesToHide, 
+						statusesToShow, onlySubscribedCases, roles, groups, 
+						casecodes, showAllCases, procInstIds, 
+						handlerCategoryIDs);
+				
 				if (caseIds.size() > 5)
 					return caseIds;
 				else {
-					CasesCacheCriteria key = getCacheKey(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, roles, groups,
-							casecodes, showAllCases, procInstIds);
+					CasesCacheCriteria key = getCacheKey(user, type, caseCodes, 
+							statusesToHide, statusesToShow, onlySubscribedCases, 
+							roles, groups, casecodes, showAllCases, procInstIds,
+							handlerCategoryIDs);
 					getLogger().warning("Resolved only few cases IDs (" + caseIds + ") from cache by key '" + key +
 							"', it is probably invalid cache entry, will delete it and will query DB");
 					getCache().remove(key);
 				}
 			}
 
+			/* Re-subscribing if not subscribed before */
 			if (onlySubscribedCases && user != null) {
 				try {
 					Map<?, ?> beans = WebApplicationContextUtils.getWebApplicationContext(getApplication().getServletContext())
@@ -737,32 +771,44 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			if (!ListUtil.isEmpty(procInstIds) && procInstIds.size() > 7500)
 				procInstIds = Collections.emptyList();
 
+			/* Querying data source */
 			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
 				caseIds = isSuperAdmin ?
-							getCasesBPMDAO().getOpenCasesIdsForAdmin(caseCodes, statusesToShow, statusesToHide, caseId, procInstIds) :
+							getCasesBPMDAO().getOpenCasesIdsForAdmin(caseCodes, statusesToShow, statusesToHide, caseId, procInstIds, handlerCategoryIDs) :
 							getCasesBPMDAO().getOpenCasesIds(user, caseCodes, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases,
-									caseId, procInstIds);
+									caseId, procInstIds, handlerCategoryIDs);
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
 				caseIds = isSuperAdmin ?
-							getCasesBPMDAO().getClosedCasesIdsForAdmin(statusesToShow, statusesToHide, caseId, procInstIds) :
-							getCasesBPMDAO().getClosedCasesIds(user, statusesToShow, statusesToHide, groups, roles, onlySubscribedCases, caseId,
-									procInstIds);
+							getCasesBPMDAO().getClosedCasesIdsForAdmin(
+									statusesToShow, statusesToHide, caseId, 
+									procInstIds, handlerCategoryIDs) :
+							getCasesBPMDAO().getClosedCasesIds(user, 
+									statusesToShow, statusesToHide, groups, 
+									roles, onlySubscribedCases, caseId,
+									procInstIds, handlerCategoryIDs);
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
-				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, statusesToHide, onlySubscribedCases, caseId, procInstIds);
+				caseIds = getCasesBPMDAO().getMyCasesIds(user, statusesToShow, 
+						statusesToHide, onlySubscribedCases, caseId, procInstIds, 
+						handlerCategoryIDs);
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
-				caseIds = getCasesBPMDAO().getUserCasesIds(user, statusesToShow, statusesToHide, casecodes, roles, onlySubscribedCases, caseId,
-						procInstIds);
+				caseIds = getCasesBPMDAO().getUserCasesIds(user, statusesToShow, 
+						statusesToHide, casecodes, roles, onlySubscribedCases, 
+						caseId,	procInstIds, handlerCategoryIDs);
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
-				caseIds = getCasesBPMDAO().getPublicCasesIds(statusesToShow, statusesToHide, caseCodes, caseId, procInstIds);
+				caseIds = getCasesBPMDAO().getPublicCasesIds(statusesToShow, 
+						statusesToHide, caseCodes, 
+						caseId != null ? Arrays.asList(caseId) : null, 
+						procInstIds, handlerCategoryIDs);
 
 			} else if (CasesRetrievalManager.CASE_LIST_TYPE_HANDLER.equals(type)) {
 				caseIds = getCasesBPMDAO().getHandlerCasesIds(user,
 						caseStatusesToShow, caseStatusesToHide, casecodes,
-						roles, onlySubscribedCases, caseId, procInstIds);
+						caseId != null ? Arrays.asList(caseId) : null, 
+						procInstIds, handlerCategoryIDs);
 
 			} else {
 				getLogger().warning("Unknown cases list type: '" + type + "'");
@@ -772,9 +818,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			throw new RuntimeException(e);
 		}
 
+		/* Putting to cache */
 		if (caseId == null)
-			putIdsToCache(caseIds, user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, roles, groups, casecodes, showAllCases,
-					procInstIds);
+			putIdsToCache(caseIds, user, type, caseCodes, statusesToHide, 
+					statusesToShow, onlySubscribedCases, roles, groups, 
+					casecodes, showAllCases, procInstIds, handlerCategoryIDs);
 		return caseIds;
 	}
 
@@ -1239,98 +1287,21 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
-			Collection<String> caseStatuses, Collection<User> subscribers,
+			Collection<String> caseStatuses, 
+			Collection<User> subscribers,
 			Collection<String> caseManagerTypes) {
-		StringBuilder query = new StringBuilder();
-		query.append("SELECT bcpi.case_id FROM bpm_cases_processinstances bcpi ");
-
-		/* When process definition names are given, adding them to search clause */
-		if (!ListUtil.isEmpty(processDefinitionNames)) {
-			query.append("JOIN jbpm_processinstance jpi ON bcpi.process_instance_id=jpi.ID_ ")
-			.append("JOIN jbpm_processdefinition jpd ON jpd.ID_=jpi.PROCESSDEFINITION_ ")
-			.append("AND jpd.NAME_ IN (");
-
-			for (Iterator<String> iterator = processDefinitionNames.iterator(); iterator.hasNext();) {
-				query.append(CoreConstants.QOUTE_SINGLE_MARK)
-				.append(iterator.next())
-				.append(CoreConstants.QOUTE_SINGLE_MARK);
-
-				if (iterator.hasNext()) {
-					query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
-				}
-			}
-
-			query.append(") ");
-		}
-
-		/* Searching by case statuses or case manage types */
-		if (!ListUtil.isEmpty(caseStatuses) || !ListUtil.isEmpty(caseManagerTypes)) {
-			query.append("JOIN proc_case pc ON bcpi.case_id=pc.PROC_CASE_ID ");
-
-			/* Searching by case statuses */
-			if (!ListUtil.isEmpty(caseStatuses)) {
-				query.append("AND pc.CASE_STATUS IN (");
 		
-				for (Iterator<String> iterator = caseStatuses.iterator(); iterator.hasNext();) {
-					query.append(CoreConstants.QOUTE_SINGLE_MARK)
-					.append(iterator.next())
-					.append(CoreConstants.QOUTE_SINGLE_MARK);
-		
-					if (iterator.hasNext()) {
-						query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
-					}
-				}
-		
-				query.append(") ");
-			}
-
-			/* Searching by case manager types */
-			if (!ListUtil.isEmpty(caseManagerTypes)) {
-				query.append("AND pc.CASE_MANAGER_TYPE IN (");
-		
-				for (Iterator<String> iterator = caseManagerTypes.iterator(); iterator.hasNext();) {
-					query.append(CoreConstants.QOUTE_SINGLE_MARK)
-					.append(iterator.next())
-					.append(CoreConstants.QOUTE_SINGLE_MARK);
-		
-					if (iterator.hasNext()) {
-						query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
-					}
-				}
-		
-				query.append(") ");
-			}
-		}
-
-		/* Searching by subscribers */
+		List<Long> subscribersIds = null;
 		if (!ListUtil.isEmpty(subscribers)) {
-			query.append("JOIN proc_case_subscribers pcs ON pcs.PROC_CASE_ID=bcpi.case_id ")
-			.append("AND pcs.IC_USER_ID IN (");
-
-			for (Iterator<User> iterator = subscribers.iterator(); iterator.hasNext();) {
-				query.append(CoreConstants.QOUTE_SINGLE_MARK)
-				.append(iterator.next().getPrimaryKey().toString())
-				.append(CoreConstants.QOUTE_SINGLE_MARK);
-
-				if (iterator.hasNext()) {
-					query.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
-				}
+			subscribersIds = new ArrayList<Long>(subscribers.size());
+			for (User subscriber : subscribers) {
+				subscribersIds.add(Long.valueOf(subscriber.getPrimaryKey().toString()));
 			}
-
-			query.append(") ");
-		}
-		
-		try {
-			return SimpleQuerier.executeStringQuery(query.toString());
-		} catch (Exception e) {
-			getLogger().log(Level.WARNING, 
-					"Unable to find ids for " + Case.class + 
-					" by definition names: " + processDefinitionNames + 
-					" and by case statuses: " + caseStatuses +
-					" and subscribers: " + subscribers, e);
 		}
 
-		return null;
+		return getCasesBPMDAO().getCasesPrimaryKeys(processDefinitionNames, null, 
+				caseStatuses, null, subscribersIds, null, null, null, 
+				caseManagerTypes, null, null, null, null, null, null, null, null);
 	}
 	
 	/*
@@ -1484,7 +1455,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 										criteria.isOnlySubscribedCases(),
 										criteria.isShowAllCases(),
 										caseId,
-										criteria.getProcInstIds()
+										criteria.getProcInstIds(), null
 								);
 							} catch (Exception e) {
 								String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +

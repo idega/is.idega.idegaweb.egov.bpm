@@ -354,7 +354,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager, Applica
 			Collection<String> caseStatuses, 
 			Collection<User> subscribers,
 			Collection<String> caseManagerTypes);
-	
+
 	/**
 	 * <p>Only PROC_CASE</p>
 	 * @param processDefinitionNames is {@link Collection} of 
