@@ -31,4 +31,9 @@ public class SendMessageMockupImpl implements SendMessage {
 		if(!"icelandic subject".equals(msgs.getLocalizedSubject(new Locale("is", "IS"))))
 			throw new AssertionFailedError();
 	}
+
+	@Override
+	public String getSubject() {
+		return null;
+	}
 }
