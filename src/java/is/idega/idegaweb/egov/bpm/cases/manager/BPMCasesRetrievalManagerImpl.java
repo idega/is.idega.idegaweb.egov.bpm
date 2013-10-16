@@ -20,7 +20,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -387,7 +386,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		if (ListUtil.isEmpty(caseIdentifiers)) {
 			return null;
 		}
-		
+
 		StringBuilder sb = new StringBuilder("SELECT jvi.stringvalue_ ");
 		sb.append("FROM jbpm_variableinstance jvi, bpm_cases_processinstances bcpi ");
 		sb.append("WHERE jvi.PROCESSINSTANCE_ = bcpi.process_instance_id ");
@@ -598,8 +597,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		return casesAssets;
 	}
 
-	
-	
+
+
 	@Override
 	public PagedDataCollection<CasePresentation> getCases(User user,
 			String type, Locale locale, List<String> caseCodes,
@@ -748,7 +747,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 							handlerCategoryIDs);
 					getLogger().warning("Resolved only few cases IDs (" + caseIds + ") from cache by key '" + key +
 							"', it is probably invalid cache entry, will delete it and will query DB");
-					getCache().remove(key);
+					removeFromCache(key);
 				}
 			}
 
@@ -1290,8 +1289,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			Collection<String> caseStatuses, 
 			Collection<User> subscribers,
 			Collection<String> caseManagerTypes) {
-		
+
 		List<Long> subscribersIds = null;
+
+		/* Searching by subscribers */
 		if (!ListUtil.isEmpty(subscribers)) {
 			subscribersIds = new ArrayList<Long>(subscribers.size());
 			for (User subscriber : subscribers) {
@@ -1303,7 +1304,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				caseStatuses, null, subscribersIds, null, null, null, 
 				caseManagerTypes, null, null, null, null, null, null, null, null);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCasesPrimaryKeys(java.util.Collection, java.util.Collection, java.util.Collection)
@@ -1314,7 +1315,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			Collection<String> caseStatuses, Collection<User> subscribers) {
 		return getCasesPrimaryKeys(processDefinitionNames, caseStatuses, subscribers, null);
 	}
-	
+
 	/*
 	 * (non-Javadoc)
 	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getCasesPrimaryKeys(java.util.Collection, java.util.Collection)
@@ -1412,10 +1413,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 					if (!isCacheUpdateTurnedOn())
 						return;
 
-					Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
-					if (MapUtil.isEmpty(cache))
-						return;
-
 					if (theCase == null) {
 						getLogger().warning("Case is undefined, unable to manage cache");
 						return;
@@ -1423,15 +1420,14 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 					String theCaseId = theCase.getId();
 					Integer caseId = Integer.valueOf(theCaseId);
-					for (CasesCacheCriteria criteria: cache.keySet()) {
+					for (CasesCacheCriteria criteria: getCacheKeySet()) {
 						if (criteria == null)
 							continue;
 
-						Map<Integer, Boolean> cachedIds = cache.get(criteria);
-
-						if (ommitClearing && (!MapUtil.isEmpty(cachedIds) && cachedIds.containsKey(caseId)))
+						if (ommitClearing && containsElement(criteria, caseId)) {
 							//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
 							continue;
+						}
 
 						User user = getUser(criteria.getUserId());
 						boolean superAdmin = false;
@@ -1463,21 +1459,16 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 								String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " +
 										criteria.getKey() + " and user " + user;
 								LOGGER.log(Level.WARNING, message, e);
-								cache.clear();
+								clearCache();
 								return;
 							}
 						}
 
 						boolean contains = superAdmin ? true : ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
 						if (contains) {
-							if (cachedIds == null) {
-								cachedIds = new LinkedHashMap<Integer, Boolean>();
-								cache.put(criteria, cachedIds);
-							}
-							cachedIds.put(caseId, Boolean.TRUE);
+							addElementToCache(criteria, caseId);
 						} else if (!ommitClearing) {
-							if (cachedIds != null)
-								cachedIds.remove(caseId);
+							removeElementFromCache(criteria, caseId);
 						}
 					}
 				} catch (Exception e) {
@@ -1497,7 +1488,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 				return;
 
 			if (!isCacheUpdateTurnedOn()) {
-				getCache().clear();
+				try {
+					clearCache();
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error clearing cases cache", e);
+				}
 				return;
 			}
 
@@ -1505,7 +1500,11 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			doManageCasesCache(theCase, theCase == null || StringUtil.isEmpty(theCase.getSubject()));
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
 			if (!isCacheUpdateTurnedOn()) {
-				getCache().clear();
+				try {
+					clearCache();
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error clearing cases cache", e);
+				}
 				return;
 			}
 
@@ -1535,12 +1534,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			doManageCasesCache(theCase, true);
 		} else if (event instanceof CaseDeletedEvent) {
-			Map<CasesCacheCriteria, Map<Integer, Boolean>> cache = getCache();
-			if (cache == null)
-				return;
-
 			if (!isCacheUpdateTurnedOn()) {
-				cache.clear();
+				try {
+					clearCache();
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error clearing cases cache", e);
+				}
 				return;
 			}
 
@@ -1550,10 +1549,20 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 
 			Case theCase = (Case) source;
 			Integer id = Integer.valueOf(theCase.getId());
-			for (CasesCacheCriteria key: cache.keySet()) {
-				Map<Integer, Boolean> ids = cache.get(key);
-				if (ids != null)
-					ids.remove(id);
+			Collection<CasesCacheCriteria> keys = null;
+			try {
+				keys = getCacheKeySet();
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error getting criterias of cases cache", e);
+			}
+			if (!ListUtil.isEmpty(keys)) {
+				for (CasesCacheCriteria key: keys) {
+					try {
+						removeElementFromCache(key, id);
+					} catch (Exception e) {
+						getLogger().log(Level.WARNING, "Error removing element '" + id + "' from cases cache by criteria " + key, e);
+					}
+				}
 			}
 		}
 	}
