@@ -436,7 +436,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return getExportedData(getCasesByProcessDefinition(id), id, getSearchCriteria(id).getExportColumns());
 	}
 
-	private MemoryFileBuffer getExportedData(Map<String, List<CasePresentation>> casesByProcessDefinition, String id, List<String> exportColumns) {
+	private MemoryFileBuffer getExportedData(
+			Map<String, List<CasePresentation>> casesByProcessDefinition,
+			String id,
+			List<String> exportColumns
+	) {
 		if (casesByProcessDefinition == null || ListUtil.isEmpty(casesByProcessDefinition.values()))
 			return null;
 
@@ -487,10 +491,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					fileCellsIndexes = new ArrayList<Integer>();
 					HSSFRow row = sheet.createRow(rowNumber++);
 					int cellIndex = 0;
-					
+
 					//	Default header values
 					row.createCell(cellIndex++).setCellValue(theCase.getCaseIdentifier());
-					
+
 					row.createCell(cellIndex++).setCellValue(theCase.getCaseStatusLocalized());
 					row.createCell(cellIndex++).setCellValue(getCaseCreator(theCase));
 					row.createCell(cellIndex++).setCellValue(getCaseCreatorPersonalId(theCase));
@@ -508,7 +512,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					//	Variable values
 					addVariables(variablesByProcessDefinition, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes,
 							fileNameLabel);
-					
+
 					lastCellNumber = row.getLastCellNum();
 				}
 			} else {
@@ -560,11 +564,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 						row.createCell(cellIndex++).setCellValue(value);
 					}
-					
+
 					lastCellNumber = row.getLastCellNum();
 				}
 			}
-			
+
 			if (lastCellNumber > 0)
 				for (int i = 0; i < lastCellNumber; i++)
 					sheet.autoSizeColumn(i);
@@ -752,15 +756,21 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	@Override
 	public MemoryFileBuffer getExportedCases(String id) {
-		if (StringUtil.isEmpty(id))
+		if (StringUtil.isEmpty(id)) {
+			LOGGER.warning("Key is not provided");
 			return null;
+		}
 
 		List<CasePresentation> cases = externalData.remove(id);
-		if (ListUtil.isEmpty(cases))
+		if (ListUtil.isEmpty(cases)) {
+			LOGGER.warning("No cases found by key: " + id);
 			return null;
+		}
 
 		Map<String, List<CasePresentation>> casesByProcDef = getCasesByProcessDefinition(cases);
-		return getExportedData(casesByProcDef, null, getSearchCriteria(id).getExportColumns());
+		CasesSearchCriteriaBean bean = getSearchCriteria(id);
+
+		return getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns());
 	}
 
 	private Map<String, List<CasePresentation>> getCasesByProcessDefinition(String id) {
