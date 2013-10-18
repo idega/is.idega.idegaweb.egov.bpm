@@ -1870,7 +1870,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, 
 					"Unable to find ids for " + Case.class + 
-					" by query: " + query.toString());
+					" by query: " + query.toString(), e);
 		}
 
 		return null;
