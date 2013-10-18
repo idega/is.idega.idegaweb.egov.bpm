@@ -1695,7 +1695,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Boolean hasEnded) {
 
 		StringBuilder query = new StringBuilder();
-		query.append("SELECT DISTINCT bcpi.case_id FROM bpm_cases_processinstances bcpi ");
+		query.append("SELECT bcpi.case_id FROM bpm_cases_processinstances bcpi ");
 		
 		if (
 				!ListUtil.isEmpty(processDefinitionNames) || 
