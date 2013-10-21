@@ -1862,11 +1862,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		/* Ordering by date created */
 		query = query + "ORDER BY bcpi.date_created DESC";
 
-		Long startTimeInMillis = System.currentTimeMillis();
+		boolean sqlMeasurementOn = CoreUtil.isSQLMeasurementOn();
+		Long startTimeInMillis = sqlMeasurementOn ? System.currentTimeMillis() : 0;
 		try {
 			String[] ids = SimpleQuerier.executeStringQuery(query);
-			getLogger().log(Level.INFO, "Query: " + query.toString() + " executed in " + (System.currentTimeMillis() - startTimeInMillis) +
+			if (sqlMeasurementOn) {
+				getLogger().log(Level.INFO, "Query: " + query.toString() + " executed in " + (System.currentTimeMillis() - startTimeInMillis) +
 					" ms. Results are: " + ids);
+			}
 			return ids;
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING,
