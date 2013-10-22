@@ -494,9 +494,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			String caseManagerType) {
 		Collection<Case> allCases = getCaseManager().getCases(
 				Arrays.asList(processName), 
-				caseStatus, 
-				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null,
-				Arrays.asList(caseManagerType));
+				null, 
+				caseStatus,
+				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null, Arrays.asList(caseManagerType));
 		if (ListUtil.isEmpty(allCases)) {
 			return null;
 		}

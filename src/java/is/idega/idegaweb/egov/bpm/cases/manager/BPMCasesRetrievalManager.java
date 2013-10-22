@@ -337,6 +337,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager, Applica
 	 * @param processDefinitionNames is {@link Collection} of 
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
+	 * @param processInstanceIds TODO
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
 	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
 	 * @param subscribers is {@link Collection} of {@link User}, who
@@ -351,9 +352,9 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager, Applica
 	 */
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
-			Collection<String> caseStatuses, 
-			Collection<User> subscribers,
-			Collection<String> caseManagerTypes);
+			Collection<? extends Number> processInstanceIds, 
+			Collection<String> caseStatuses,
+			Collection<User> subscribers, Collection<String> caseManagerTypes);
 
 	/**
 	 * <p>Only PROC_CASE</p>
@@ -391,6 +392,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager, Applica
 	 * @param processDefinitionNames is {@link Collection} of 
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
+	 * @param processInstanceIds TODO
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
 	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
 	 * @param subscribers is {@link Collection} of {@link User}, who
@@ -405,9 +407,19 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager, Applica
 	 */
 	public List<Case> getCases(
 			Collection<String> processDefinitionNames,
-			Collection<String> caseStatuses, 
-			Collection<User> subscribers,
+			Collection<Long> processInstanceIds, 
+			Collection<String> caseStatuses,
+			Collection<User> subscribers, 
 			Collection<String> caseManagerTypes);
+
+	/**
+	 * 
+	 * <p>TODO</p>
+	 * @param processInstances
+	 * @return
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	public List<Case> getCases(Collection<ProcessInstanceW> processInstances);
 
 	/**
 	 * 

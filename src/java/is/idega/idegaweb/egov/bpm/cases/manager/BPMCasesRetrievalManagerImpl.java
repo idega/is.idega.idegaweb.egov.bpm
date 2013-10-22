@@ -1238,10 +1238,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	 */
 	@Override
 	public List<Case> getCases(Collection<String> processDefinitionNames,
-			Collection<String> caseStatuses, Collection<User> subscribers,
-			Collection<String> caseManagerTypes) {
+			Collection<Long> processInstanceIds, Collection<String> caseStatuses,
+			Collection<User> subscribers, Collection<String> caseManagerTypes) {
 		String[] primaryKeys = getCasesPrimaryKeys(processDefinitionNames, 
-				caseStatuses, subscribers, caseManagerTypes);
+				null, caseStatuses, subscribers, caseManagerTypes);
 		if (ArrayUtil.isEmpty(primaryKeys)) {
 			return Collections.emptyList();
 		}
@@ -1265,7 +1265,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public List<Case> getCases(Collection<String> processDefinitionNames,
 			Collection<String> caseStatuses, Collection<User> subscribers) {
-		return getCases(processDefinitionNames, caseStatuses, subscribers, null);
+		return getCases(processDefinitionNames, null, caseStatuses, subscribers, null);
 	}
 
 	/*
@@ -1286,8 +1286,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
-			Collection<String> caseStatuses, 
-			Collection<User> subscribers,
+			Collection<? extends Number> processInstanceIds, 
+			Collection<String> caseStatuses,
+			Collection<User> subscribers, 
 			Collection<String> caseManagerTypes) {
 
 		List<Long> subscribersIds = null;
@@ -1300,7 +1301,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			}
 		}
 
-		return getCasesBPMDAO().getCasesPrimaryKeys(processDefinitionNames, null, 
+		return getCasesBPMDAO().getCasesPrimaryKeys(processDefinitionNames, processInstanceIds, 
 				caseStatuses, null, subscribersIds, null, null, null, 
 				caseManagerTypes, null, null, null, null, null, null, null, null);
 	}
@@ -1312,8 +1313,10 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
-			Collection<String> caseStatuses, Collection<User> subscribers) {
-		return getCasesPrimaryKeys(processDefinitionNames, caseStatuses, subscribers, null);
+			Collection<String> caseStatuses, 
+			Collection<User> subscribers) {
+		return getCasesPrimaryKeys(processDefinitionNames, null, caseStatuses, 
+				subscribers, null);
 	}
 
 	/*
@@ -1324,7 +1327,8 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
 			Collection<String> caseStatuses) {
-		return getCasesPrimaryKeys(processDefinitionNames, caseStatuses, null);
+		return getCasesPrimaryKeys(processDefinitionNames, null, 
+				caseStatuses, null, null);
 	}
 
 	public VariablesHandler getVariablesHandler() {
@@ -1655,5 +1659,19 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		}
 
 		return this.applicationBusiness;
+	}
+
+	@Override
+	public List<Case> getCases(Collection<ProcessInstanceW> processInstances) {
+		if (ListUtil.isEmpty(processInstances)) {
+			return Collections.emptyList();
+		}
+
+		ArrayList<Long> piids = new ArrayList<Long>();
+		for (ProcessInstanceW processInstance: processInstances) {
+			piids.add(processInstance.getProcessInstanceId());
+		}
+
+		return getCases(null, piids, null, null, null);
 	}
 }
