@@ -140,28 +140,28 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 						Level.WARNING, "Failed to get home for " + Case.class, e);
 			}
 		}
-		
+
 		return this.caseHome;
 	}
 
 	@Override
 	public List<CaseBoardBean> getAllSortedCases(
 			IWContext iwc,
-			IWResourceBundle iwrb, 
-			Collection<String> caseStatus,
-			String processName, 
-			String uuid, 
+			IWResourceBundle iwrb,
+			Collection<String> caseStatuses,
+			String processName,
+			String uuid,
 			boolean isSubscribedOnly,
 			boolean backPage,
-			String taskName) {
-
-		Collection<GeneralCase> cases = getCases(caseStatus, processName, isSubscribedOnly, "CasesBPM");
+			String taskName
+	) {
+		//	Getting cases by the configuration
+		Collection<GeneralCase> cases = getCases(caseStatuses, processName, isSubscribedOnly, ProcessConstants.BPM_CASE);
 		if (ListUtil.isEmpty(cases))
 			return null;
 
-		/* Do the old unknown stuff... */
-		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(
-				cases, uuid, backPage, taskName, iwc);
+		//	Filling beans with info
+		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(cases, uuid, backPage, taskName, iwc);
 		if (ListUtil.isEmpty(boardCases))
 			return null;
 
@@ -171,11 +171,12 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	protected List<CaseBoardBean> getFilledBoardCaseWithInfo(
-			Collection<? extends GeneralCase> casesIdsAndHandlers, 
+			Collection<? extends GeneralCase> casesIdsAndHandlers,
 			String uuid,
 			boolean backPage,
 			String taskName,
-			IWContext iwc) {
+			IWContext iwc
+	) {
 		List<String> variablesToQuery = new ArrayList<String>(getVariables(uuid));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
@@ -206,7 +207,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 		Map<Long, String> links = getTaskViewer().getLinksToTheTaskRedirector(
 				iwc, relations, backPage, taskName);
-		
+
 		/* Filling board cases */
 		List<CaseBoardBean> boardCases = new ArrayList<CaseBoardBean>();
 		for (CaseBoardView view: boardViews) {
@@ -262,9 +263,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
 	protected List<CaseBoardView> getVariablesValuesByNamesForCases(
-			Collection<? extends GeneralCase> cases, 
-			List<String> variablesNames) {
-
+			Collection<? extends GeneralCase> cases,
+			List<String> variablesNames
+	) {
 		/* Getting relations between cases and process instances */
 		Map<ProcessInstance, Case> casesAndProcesses = getCaseProcessInstanceRelation()
 				.getCasesAndProcessInstances(cases);
@@ -284,8 +285,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				Long processInstanceId = variable.getProcessInstanceId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
-					GeneralCase theCase = getCaseProcessInstanceRelation()
-							.getCase(casesAndProcesses, processInstanceId);
+					GeneralCase theCase = getCaseProcessInstanceRelation().getCase(casesAndProcesses, processInstanceId);
 					if (theCase == null) {
 						LOGGER.warning("Case ID was not found in " + casesAndProcesses + " for process instance ID: " + processInstanceId);
 						LOGGER.warning("Couldn't get view bean for process: " + processInstanceId + ": " + casesAndProcesses);
@@ -488,22 +488,24 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	protected Collection<GeneralCase> getCases(
-			Collection<String> caseStatus, 
-			String processName, 
-			boolean subscribedOnly, 
-			String caseManagerType) {
+			Collection<String> caseStatuses,
+			String processName,
+			boolean subscribedOnly,
+			String caseManagerType
+	) {
 		Collection<Case> allCases = getCaseManager().getCases(
 				Arrays.asList(processName), 
 				null, 
-				caseStatus,
-				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null, Arrays.asList(caseManagerType));
+				caseStatuses, 
+				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null, 
+				Arrays.asList(caseManagerType));
 		if (ListUtil.isEmpty(allCases)) {
 			return null;
 		}
-		
+
 		Collection<GeneralCase> bpmCases = new ArrayList<GeneralCase>();
-		for (Case theCase : allCases) {
-			if (!(theCase instanceof GeneralCase)) {
+		for (Case theCase: allCases) {
+			if (!(theCase instanceof GeneralCase) || theCase.isClosed()) {
 				continue;
 			}
 
@@ -514,10 +516,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	/**
-	 * 
+	 *
 	 * <p>Checks if {@link GeneralCaseBMPBean} and {@link CaseBMPBean}
 	 * has same primary keys, if so, then <code>true</code> is returned.</p>
-	 * @param cases where to search for specified {@link Case} in, 
+	 * @param cases where to search for specified {@link Case} in,
 	 * not <code>null</code>;
 	 * @param theCase to search for, not <code>null</code>;
 	 * @return <code>true</code> if {@link Case} found, <code>false</code>
@@ -622,9 +624,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	public boolean isColumnOfDomain(String currentColumn, String columnOfDomain) {
 		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
 	}
-	
+
 	@Override
-	public CaseBoardTableBean getTableData(IWContext iwc, Collection<String> caseStatus,
+	public CaseBoardTableBean getTableData(IWContext iwc, Collection<String> caseStatuses,
 			String processName, String uuid, boolean isSubscribedOnly, boolean backPage, String taskName) {
 		if (iwc == null)
 			return null;
@@ -633,7 +635,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
 		CaseBoardTableBean data = new CaseBoardTableBean();
 
-		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatus, processName, uuid, isSubscribedOnly, backPage, taskName);
+		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatuses, processName, uuid, isSubscribedOnly, backPage, taskName);
 		if (ListUtil.isEmpty(boardCases)) {
 			data.setErrorMessage(iwrb.getLocalizedString("cases_board_viewer.no_cases_found", "There are no cases!"));
 			return data;
@@ -642,7 +644,6 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		// Header
 		data.setHeaderLabels(getTableHeaders(iwrb, uuid));
 
-//		getLinkToTheTask(iwc, rowBean)
 		// Body
 		Map<Integer, List<AdvancedProperty>> columns = getColumns(iwrb, uuid);
 
@@ -772,15 +773,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			for (AdvancedProperty header: CasesBoardViewer.CASE_FIELDS) {
 				if (index == 14) {
 					columns.put(index, Arrays.asList(
-							new AdvancedProperty(CasesBoardViewer.WORK_ITEM, iwrb.getLocalizedString(CasesBoardViewer.WORK_ITEM, "Work item")),
-							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST,
-									"Estimated cost")),
-							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
-									"Proposed funding")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(),
-									"Handler suggestions")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION.toLowerCase(),
-									"Board decision"))
+							new AdvancedProperty(CasesBoardViewer.WORK_ITEM,
+									iwrb.getLocalizedString(CasesBoardViewer.WORK_ITEM, "Work item")),
+							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST,
+									iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
+							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST,
+									iwrb.getLocalizedString(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
+							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION,
+									iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
+							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION,
+									iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision"))
 					));
 				} else {
 					columns.put(index, Arrays.asList(new AdvancedProperty(header.getId(),
@@ -1097,7 +1099,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 				String proposal = taskInfo.get(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT);
 				cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
-				
+
 				valuesToReplace.put(tasksIndex, cells);
 				tasksIndex++;
 			}
