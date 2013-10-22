@@ -1813,14 +1813,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				(isGeneralCases != null && isGeneralCases)) {
 
 			/* Selecting only general cases */
-			query.append("JOIN comm_case cc ON bcpi.case_id = comm_case.COMM_CASE_ID ");
+			query.append("JOIN comm_case cc ON bcpi.case_id = cc.COMM_CASE_ID ");
 
 			/* Selecting by anonymous property of general case */
 			if (isAnonymous != null) {
 				if (isAnonymous) {
-					query.append("AND comm_case.is_anonymous = 'Y' ");
+					query.append("AND cc.IS_ANONYMOUS = 'Y' ");
 				} else {
-					query.append("AND comm_case.is_anonymous = 'N' ");
+					query.append("AND cc.IS_ANONYMOUS = 'N' ");
 				}
 			}
 
