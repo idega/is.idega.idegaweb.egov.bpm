@@ -685,8 +685,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
 					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.BOARD_SUGGESTION)) {
 					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.BOARD_DECISION)) {
+					}else if (isColumnOfDomain(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
 
-					//	Other value
+						//	Other value
 					} else
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(column.getId(), caseBoard.getValue(column.getId()))));
 
@@ -777,7 +778,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 									iwrb.getLocalizedString(CasesBoardViewer.WORK_ITEM, "Work item")),
 							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST,
 									iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
-							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST,
+							new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
 									iwrb.getLocalizedString(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION,
 									iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
@@ -791,8 +792,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				index++;
 			}
 			columns.put(index, Arrays.asList(new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName,
-					iwrb.getLocalizedString(new StringBuilder(LOCALIZATION_PREFIX)
-					.append(CaseHandlerAssignmentHandler.handlerUserIdVarName).toString(), "Case handler"))));
+					iwrb.getLocalizedString(LOCALIZATION_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName, "Case handler"))));
 		} else {
 			String localized = null;
 			IWContext iwc = CoreUtil.getIWContext();
@@ -809,7 +809,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 									"Board decision"))
 					));
 				} else if (CasesBoardViewer.ESTIMATED_COST.equals(column) || CasesBoardViewer.BOARD_SUGGESTION.equals(column) ||
-						CasesBoardViewer.BOARD_DECISION.equals(column))
+						CasesBoardViewer.BOARD_DECISION.equals(column) || CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT.equals(column))
 					continue;
 				else {
 					localized = iwrb.getLocalizedString(LOCALIZATION_PREFIX.concat(column), column);
@@ -842,8 +842,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		int indexOfTotal = getIndexOfColumn(ProcessConstants.FINANCING_OF_THE_TASKS, uuid);
 		if (indexOfTotal < 0)
 			indexOfTotal = getIndexOfColumn(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN, uuid);
-		indexOfTotal +=2;
-		int indexOfSuggestion = indexOfTotal + 1;
+		int indexOfSuggestion = indexOfTotal + 3;
 		int indexOfDecision = indexOfSuggestion + 1;
 
 		String total = iwrb.getLocalizedString("case_board_viewer.total_sum", "Total").concat(CoreConstants.COLON).toString();
