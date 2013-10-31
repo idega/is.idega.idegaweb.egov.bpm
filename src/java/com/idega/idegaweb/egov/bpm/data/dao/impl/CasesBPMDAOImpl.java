@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -48,6 +49,8 @@ import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.data.impl.VariableInstanceQuerierImpl;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -70,6 +73,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Autowired(required = false)
 	private VariableInstanceQuerier querier;
+	
+	@Autowired
+	private BPMFactory bpmFactory;
 
 	@Override
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
@@ -98,7 +104,27 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public CaseProcInstBind getCaseProcInstBindByProcessInstanceId(Long processInstanceId) {
-		return find(CaseProcInstBind.class, processInstanceId);
+		CaseProcInstBind caseProcInstBind = find(CaseProcInstBind.class, processInstanceId);
+		if(caseProcInstBind != null){
+			return caseProcInstBind;
+		}
+		ProcessInstanceW processInstanceW = bpmFactory.getProcessInstanceW(processInstanceId);
+		if(processInstanceW == null){
+			return null;
+		}
+		ProcessInstance currentProcess = processInstanceW.getProcessInstance();
+		Long mainProcessId = null;
+    	Token superToken = currentProcess.getSuperProcessToken();
+    	while(superToken != null){
+    		ProcessInstance processInstance = superToken.getProcessInstance();
+    		mainProcessId = processInstance.getId();
+    		superToken = processInstance.getSuperProcessToken();
+    	}
+    	if(mainProcessId == null){
+    		return null;
+    	}
+    	caseProcInstBind = find(CaseProcInstBind.class, mainProcessId);
+    	return caseProcInstBind;
 	}
 
 	@Override
