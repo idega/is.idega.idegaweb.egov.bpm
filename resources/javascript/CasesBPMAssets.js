@@ -879,7 +879,11 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, ro
 					subGridOpener.empty().html('&nbsp;');
                     subGridOpener.unbind('click');
                 }
-            }
+            }, errorHandler: function(o1, o2) {
+            	closeAllLoadingMessages();
+            	alert('Error loading attachments');
+            },
+            timeout: 30000
         });
     };
     
