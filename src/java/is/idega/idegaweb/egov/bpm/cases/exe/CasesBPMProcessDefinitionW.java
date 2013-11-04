@@ -349,53 +349,59 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					Long processDefinitionId = getProcessDefinitionId();
 					ProcessDefinition pd = getProcessDefinition(context);
 
-					Long startTaskId = pd.getTaskMgmtDefinition().getStartTask().getId();
+					try {
+						Long startTaskId = pd.getTaskMgmtDefinition().getStartTask().getId();
 
-					List<String> preferred = new ArrayList<String>(1);
-					preferred.add(XFormsView.VIEW_TYPE);
-					View view = getBpmFactory().getViewByTask(startTaskId, true, preferred);
-					view.takeView();
+						List<String> preferred = new ArrayList<String>(1);
+						preferred.add(XFormsView.VIEW_TYPE);
+						View view = getBpmFactory().getViewByTask(startTaskId, true, preferred);
+						view.takeView();
 
-					// we don't know yet the task instance id, so we store the
-					// view id
-					// and type, to resolve later in start process. Only then we
-					// will
-					// bind view with task instance
+						// we don't know yet the task instance id, so we store the
+						// view id
+						// and type, to resolve later in start process. Only then we
+						// will
+						// bind view with task instance
 
-					Integer identifierNumber = null;
-					String identifier = null;
-					if (StringUtil.isEmpty(externalIdentifier)) {
-						Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
-						identifierNumber = (Integer) identifiers[0];
-						identifier = (String) identifiers[1];
-					} else {
-						identifierNumber = getCaseIdentifier().getCaseIdentifierNumber(externalIdentifier);
-						identifier = externalIdentifier;
+						Integer identifierNumber = null;
+						String identifier = null;
+						if (StringUtil.isEmpty(externalIdentifier)) {
+							Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
+							identifierNumber = (Integer) identifiers[0];
+							identifier = (String) identifiers[1];
+						} else {
+							identifierNumber = getCaseIdentifier().getCaseIdentifierNumber(externalIdentifier);
+							identifier = externalIdentifier;
+						}
+
+						IWTimestamp realCreationDate = new IWTimestamp();
+						String realCreationDateString = realCreationDate.toString();
+						Map<String, String> parameters = new HashMap<String, String>(7);
+
+						parameters.put(ProcessConstants.START_PROCESS, ProcessConstants.START_PROCESS);
+						parameters.put(ProcessConstants.PROCESS_DEFINITION_ID, String.valueOf(processDefinitionId));
+						parameters.put(ProcessConstants.VIEW_ID, view.getViewId());
+						parameters.put(ProcessConstants.VIEW_TYPE, view.getViewType());
+
+						if (initiatorId != null)
+							parameters.put(CasesBPMProcessConstants.userIdActionVariableName, initiatorId.toString());
+
+						parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam, String.valueOf(identifierNumber));
+						parameters.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, String.valueOf(identifier));
+						parameters.put(CasesBPMProcessConstants.caseCreationDateParam, realCreationDateString);
+
+						view.populateParameters(parameters);
+
+						Map<String, Object> vars = new HashMap<String, Object>(1);
+						vars.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, identifier);
+
+						view.populateVariables(vars);
+						return view;
+					} catch (Exception e) {
+						String message = "Error loading view for proc. def. " + pd + ", ID: " + processDefinitionId;
+						getLogger().log(Level.WARNING, message, e);
+						throw new RuntimeException(message);
 					}
-
-					IWTimestamp realCreationDate = new IWTimestamp();
-					String realCreationDateString = realCreationDate.toString();
-					Map<String, String> parameters = new HashMap<String, String>(7);
-
-					parameters.put(ProcessConstants.START_PROCESS, ProcessConstants.START_PROCESS);
-					parameters.put(ProcessConstants.PROCESS_DEFINITION_ID, String.valueOf(processDefinitionId));
-					parameters.put(ProcessConstants.VIEW_ID, view.getViewId());
-					parameters.put(ProcessConstants.VIEW_TYPE, view.getViewType());
-
-					if (initiatorId != null)
-						parameters.put(CasesBPMProcessConstants.userIdActionVariableName, initiatorId.toString());
-
-					parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam, String.valueOf(identifierNumber));
-					parameters.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, String.valueOf(identifier));
-					parameters.put(CasesBPMProcessConstants.caseCreationDateParam, realCreationDateString);
-
-					view.populateParameters(parameters);
-
-					Map<String, Object> vars = new HashMap<String, Object>(1);
-					vars.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, identifier);
-
-					view.populateVariables(vars);
-					return view;
 				}
 			});
 		} catch (RuntimeException e) {
