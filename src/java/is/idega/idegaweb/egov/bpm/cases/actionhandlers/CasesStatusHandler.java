@@ -148,7 +148,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 
 				comment = getComment(ectx, getCurrentLocale(), performer);
 				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment, true);
-				getLogger().info("Successfully changed status (from '" + previousStatus + "' to '" + status + "') for case (ID: " + caseId +
+				getLogger().info("Successfully changed status (from '" + previousStatus + "' to '" + status + "') for case (" + theCase +
 						", proc. inst. ID: " + processInstanceId + ") by " + performer + ". Comment: " + comment);
 			} else {
 				getLogger().info("No need to change status to " + status + " for case (ID: " + caseId + ", proc. inst. ID: " + processInstanceId +

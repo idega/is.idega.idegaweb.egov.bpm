@@ -231,20 +231,22 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				try {
 					final ProcessDefinition pd = getProcessDefinition(context);
 					String procDefName = pd.getName();
-					getLogger().info("Starting process for process definition id = " + processDefinitionId + ", process definition name: " + procDefName);
+					getLogger().info("Starting process instance for process definition (ID: " + processDefinitionId + ", name: " + procDefName + ")");
 
 					ProcessInstance pi = new ProcessInstance(pd);
 					TaskInstance ti = pi.getTaskMgmtInstance().createStartTaskInstance();
-					if (ti == null || ti.getId() <= 0)
+					Long piId = pi.getId();
+					if (ti == null || ti.getId() <= 0) {
 						throw new JbpmException("Task instance for proc. def. (ID: " + processDefinitionId + ") and proc. inst. (ID: "
-								+ pi.getId() + ") was not created!");
+								+ piId + ") was not created!");
+					}
 
 					View view = getBpmFactory().getView(viewSubmission.getViewId(), viewSubmission.getViewType(), false);
 
 					// binding view to task instance
 					view.getViewToTask().bind(view, ti);
 
-					getLogger().info("New process instance (ID=" + pi.getId() + ") created for the process " + procDefName);
+					getLogger().info("New process instance (ID=" + piId + ") created for the process " + procDefName);
 
 					pi.setStart(new Date());
 
@@ -255,7 +257,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					GeneralCase genCase = getCase(caseId, procDefName, casesBusiness, user, iwma, caseStatusKey, realCaseCreationDate,
 							caseIdentifier);
-					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + pi.getId());
+					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + piId);
 
 					Timestamp caseCreated = genCase.getCreated();
 					pi.setStart(caseCreated);
@@ -285,17 +287,16 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					CaseProcInstBind piBind = new CaseProcInstBind();
 					piBind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
-					piBind.setProcInstId(pi.getId());
+					piBind.setProcInstId(piId);
 					piBind.setCaseIdentierID(caseIdentifierNumber);
 
 					piBind.setDateCreated(caseCreated);
 					piBind.setCaseIdentifier(caseIdentifier);
 					getCasesBPMDAO().persist(piBind);
-					getLogger().info("Bind was created: process instance ID=" + pi.getId() + ", case ID=" + genCase.getPrimaryKey());
+					getLogger().info("Bind was created: process instance ID=" + piId + ", case ID=" + genCase.getPrimaryKey());
 
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
-					getLogger().info("Variables were set: " + caseData);
 
 					Map<String, Object> variables = viewSubmission.resolveVariables();
 					submitVariablesAndProceedProcess(context, ti, variables, true);
@@ -308,9 +309,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						}
 					}
 
-					getLogger().info("Variables were submitted and a process proceeded");
+					getLogger().info("Variables were submitted and a process instance (ID: " + piId + ") proceeded");
 
-					return pi.getId();
+					return piId;
 				} catch (JbpmException e) {
 					throw e;
 				} catch (RuntimeException e) {
