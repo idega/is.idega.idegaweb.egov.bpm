@@ -99,14 +99,17 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 	public void execute(ExecutionContext ectx) throws Exception {
 		String status = null;
 		Integer caseId = null;
+		String previousStatus = null;
+		User performer = null;
+		String comment = null;
 		try {
 			caseId = getCaseId(ectx);
+			status = getCaseStatus();
 			if (caseId == null) {
-				LOGGER.warning("No caseId resolved, skipping case status change");
+				LOGGER.warning("Case ID was resolved for proc. inst. ID " + processInstanceId + ", skipping case status change (to " + status + ")");
 				return;
 			}
 
-			status = getCaseStatus();
 			Integer performerUserId = getPerformerUserId();
 			final String ifCaseStatus = getIfCaseStatus();
 
@@ -115,18 +118,20 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 			CasesBusiness casesBusiness = getCasesBusiness(iwac);
 			final Case theCase = casesBusiness.getCase(caseId);
 
-			if (status == null)
+			if (status == null) {
 				status = theCase.getStatus();
+			}
 
-			if (ifCaseStatus == null || ifCaseStatus.equals(theCase.getCaseStatus().getStatus())) {
+			previousStatus = theCase.getCaseStatus().getStatus();
+			if (ifCaseStatus == null || ifCaseStatus.equals(previousStatus)) {
 				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
-				User performer = null;
 				if (performerUserId == null) {
 					if (iwc != null) {
-						if (iwc.isLoggedOn())
+						if (iwc.isLoggedOn()) {
 							performer = iwc.getCurrentUser();
-						else
+						} else {
 							performer = getLegacyUser(iwc.getAccessController().getAdministratorUser());
+						}
 					} else {
 						LOGGER.warning("Cannot resolve current IWContext, so cannot resolve current user. Using no performer");
 						performer = null;
@@ -136,15 +141,22 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 				}
 
 				try {
-					if (performer == null)
+					if (performer == null) {
 						performer = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getUserToUse();
+					}
 				} catch(Exception e) {}
 
-				String comment = getComment(ectx, getCurrentLocale(), performer);
+				comment = getComment(ectx, getCurrentLocale(), performer);
 				casesBusiness.changeCaseStatusDoNotSendUpdates(theCase, status, performer, comment, true);
+				getLogger().info("Successfully changed status (from '" + previousStatus + "' to '" + status + "') for case (ID: " + caseId +
+						", proc. inst. ID: " + processInstanceId + ") by " + performer + ". Comment: " + comment);
+			} else {
+				getLogger().info("No need to change status to " + status + " for case (ID: " + caseId + ", proc. inst. ID: " + processInstanceId +
+						") because current status is the same");
 			}
 		} catch (Exception e) {
-			String message = "Exception while changing case status to '" + status + "' for the case: " + caseId;
+			String message = "Exception while changing case status (from '" + previousStatus + "' to '" + status + "') for case (ID: " + caseId +
+						", proc. inst. ID: " + processInstanceId + ") by " + performer + ". Comment: " + comment;
 			LOGGER.log(Level.SEVERE, message, e);
 			CoreUtil.sendExceptionNotification(message, e);
 		}
