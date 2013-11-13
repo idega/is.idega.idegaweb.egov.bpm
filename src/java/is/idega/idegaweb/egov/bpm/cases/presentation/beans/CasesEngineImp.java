@@ -193,6 +193,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				stateBean.setSpecialBackPage(properties.getSpecialBackPage());
 				stateBean.setNameFromExternalEntity(properties.isNameFromExternalEntity());
 				stateBean.setShowUserProfilePicture(properties.isShowUserProfilePicture());
+				stateBean.setAddExportContacts(properties.isAddExportContacts());
 			}
 
 			Integer caseId = new Integer(caseIdStr);
@@ -216,7 +217,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		CaseBusiness caseBusiness = null;
 		try {
-			caseBusiness = (CaseBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
+			caseBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
 		} catch (IBOLookupException e) {
 			LOGGER.log(Level.SEVERE, "Error getting CaseBusiness", e);
 		}
@@ -1160,7 +1161,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc) {
 		ApplicationBusiness appBusiness = null;
 		try {
-			appBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
+			appBusiness = IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
 		} catch (IBOLookupException e) {
 			e.printStackTrace();
 		}
