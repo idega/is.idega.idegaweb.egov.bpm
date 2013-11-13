@@ -36,7 +36,6 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.idega.block.process.data.CaseStatus;
 import com.idega.bpm.BPMConstants;
@@ -224,6 +223,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 														theCase.getCaseIdentifier();
 		final String realCaseCreationDate = theCase == null ?	parameters.get(CasesBPMProcessConstants.caseCreationDateParam) :
 																String.valueOf(theCase.getCreated());
+		final Map<String, Object> variables = new HashMap<String, Object>();
 
 		Long piId = getBpmContext().execute(new JbpmCallback<Long>() {
 			@Override
@@ -298,7 +298,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
 
-					Map<String, Object> variables = viewSubmission.resolveVariables();
+					variables.putAll(viewSubmission.resolveVariables());
 					submitVariablesAndProceedProcess(context, ti, variables, true);
 
 					if (variables != null && variables.containsKey(BPMConstants.PUBLIC_PROCESS)) {
@@ -329,8 +329,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				getLogger().info("Process was created: " + piId);
 			return piId;
 		} finally {
-			if (piId != null)
+			if (piId != null) {
 				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(getProcessDefinitionId()), piId);
+			}
 		}
 	}
 
@@ -449,7 +450,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -458,7 +459,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -480,20 +481,25 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	public CaseIdentifier getCaseIdentifier() {
 		String qualifier = CaseIdentifier.QUALIFIER;
 
-		Map<String, ? extends CaseIdentifier> identifierGenerators = WebApplicationContextUtils.getWebApplicationContext(getIWAC().getIWMainApplication()
-				.getServletContext()).getBeansOfType(CaseIdentifier.class);
+		return getCaseIdentifier(qualifier);
+	}
+	private CaseIdentifier getCaseIdentifier(String qualifier) {
+		Map<String, CaseIdentifier> identifierGenerators = getBeansOfType(CaseIdentifier.class);
 
-		if (identifierGenerators == null || identifierGenerators.isEmpty()) {
-			getLogger().warning("There are no beans (type of '"+CaseIdentifier.class+"') to generate case identifier!");
+		if (MapUtil.isEmpty(identifierGenerators)) {
+			getLogger().warning("There are no beans (type of '" + CaseIdentifier.class.getName() + "') to generate case identifier!");
 			return caseIdentifier;
 		} else if (identifierGenerators.values().size() == 1) {
 			return caseIdentifier;
 		}
 
+		if (StringUtil.isEmpty(qualifier)) {
+			return identifierGenerators.values().iterator().next();
+		}
+
 		for (CaseIdentifier identifierGenerator: identifierGenerators.values()) {
-			//	TODO: provide name for custom qualifier
 			Qualifier qualifierAnnotation = identifierGenerator.getClass().getAnnotation(Qualifier.class);
-			if (qualifierAnnotation != null && !qualifier.equals(qualifierAnnotation.value())) {
+			if (qualifierAnnotation != null && qualifier.equals(qualifierAnnotation.value())) {
 				getLogger().info("Using identifier generator: " + identifierGenerator.getClass());
 				return identifierGenerator;
 			}
@@ -550,7 +556,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		ApplicationBusiness applicationBusiness = null;
 		try {
-			applicationBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
+			applicationBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
 					ApplicationBusiness.class);
 		} catch (IBOLookupException e) {
 			e.printStackTrace();

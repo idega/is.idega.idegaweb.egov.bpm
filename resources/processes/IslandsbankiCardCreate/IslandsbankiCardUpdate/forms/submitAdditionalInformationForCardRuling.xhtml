@@ -149,21 +149,8 @@
 									<xf:output model="data_model" ref="instance('localized_strings')/fbc_8-paragraph-text[@lang=instance('localized_strings')/current_language]"/>
 								</div>
 	                            
-	                            <xf:trigger>
-	                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-label[@lang=instance('localized_strings')/current_language]"/>
-	                                <xf:action>
-	                                    <xf:insert at="last()" nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_8/entry" position="before"/>
-	                                </xf:action>
-	                            </xf:trigger>
 	                            <xf:repeat appearance="group" bind="fbc_8-entries" id="upload_entries_fbc_8">
 	                            <xf:group>
-	                                    <xf:input ref="./description" id="fbc_description">
-	                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-text[@lang=instance('localized_strings')/current_language]"/>
-	                                           <idega:dispatch ev:event="xforms-value-changed" name="idega-validate" target="//*[@id='fbc_8']//xf:upload" stopOnError="true"/>
-	                                    </xf:input>
-	                                     <xf:group ref=".[. !='' and ./description ='']" appearance="minimal" class="error">
-	                                    	<xf:output model="data_model" value="instance('localized_strings')/fbc_8-info[@lang=instance('localized_strings')/current_language]"/>
-	                                    </xf:group>
 	                                  <xf:output ref="@filename">
 	                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-filename-label[@lang=instance('localized_strings')/current_language]"/>
 	                                    </xf:output>
@@ -175,6 +162,13 @@
 	                                      		 <idega:message errorType="custom" model="data_model" value="instance('localized_strings')/fbc_8-custom[@lang=instance('localized_strings')/current_language]"/>
 	                                		</idega:validator>
 	                                    </xf:upload>
+	                                    <xf:input ref="./description" id="fbc_description">
+	                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-text[@lang=instance('localized_strings')/current_language]"/>
+	                                           <idega:dispatch ev:event="xforms-value-changed" name="idega-validate" target="//*[@id='fbc_8']//xf:upload" stopOnError="true"/>
+	                                    </xf:input>
+	                                     <xf:group ref=".[. !='' and ./description ='']" appearance="minimal" class="error">
+	                                    	<xf:output model="data_model" value="instance('localized_strings')/fbc_8-info[@lang=instance('localized_strings')/current_language]"/>
+	                                    </xf:group>
 	                                    <xf:trigger>
 	                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-remove[@lang=instance('localized_strings')/current_language]"/>
 	                                    <xf:action>
@@ -183,6 +177,12 @@
 	                                    </xf:trigger>
 	                                   </xf:group> 
 	                            </xf:repeat>
+	                            <xf:trigger>
+	                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_8-label[@lang=instance('localized_strings')/current_language]"/>
+	                                <xf:action>
+	                                    <xf:insert at="last()" nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_8/entry" position="before"/>
+	                                </xf:action>
+	                            </xf:trigger>
 	                        </xf:group>
 	                             
                               

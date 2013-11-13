@@ -67,6 +67,10 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 
 	protected Case getCase(Long processInstanceId) throws Exception {
 		CaseProcInstBind cpi = getBpmBindsDAO().find(CaseProcInstBind.class, processInstanceId);
+		if (cpi == null) {
+			return null;
+		}
+
 		Integer caseId = cpi.getCaseId();
 
 		CasesBusiness casesBusiness = getCasesBusiness(getIWAC());
@@ -75,10 +79,13 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 
 	protected void setCaseSubject(Long processInstanceId, String caseSubject, String caseCode) throws Exception {
 		final Case theCase = getCase(processInstanceId);
-
-		setCaseCode(theCase, caseCode);
-		theCase.setSubject(caseSubject);
-		theCase.store();
+		if (theCase != null) {
+			setCaseCode(theCase, caseCode);
+			theCase.setSubject(caseSubject);
+			theCase.store();
+		} else {
+			getLogger().warning("Failed to store case " + theCase + " by process instance id: " + processInstanceId);
+		}
 	}
 
 	private void setCaseCode(Case theCase, String processDefinitionName) {

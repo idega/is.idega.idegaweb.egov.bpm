@@ -61,7 +61,7 @@ public class EndCaseProcessHandler extends DefaultSpringBean implements ActionHa
 		return iwc.getCurrentUser();
 	}
 
-	private void changeCaseStatus(CasesBusiness casesBusiness, GeneralCase theCase, User user) throws Exception {
+	protected void changeCaseStatus(CasesBusiness casesBusiness, GeneralCase theCase, User user) throws Exception {
 		if (StringUtil.isEmpty(caseStatus)) {
 			caseStatus = casesBusiness.getCaseStatusReady().getStatus();
 		} else {
@@ -79,7 +79,7 @@ public class EndCaseProcessHandler extends DefaultSpringBean implements ActionHa
 		}
 	}
 
-	CasesBPMDAO getCasesBPMDAO() {
+	protected CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
 	}
 

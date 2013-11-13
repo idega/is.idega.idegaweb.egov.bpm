@@ -79,6 +79,7 @@ import com.idega.core.component.business.ICObjectBusiness;
 import com.idega.core.component.data.ICObjectInstance;
 import com.idega.core.component.data.ICObjectInstanceHome;
 import com.idega.data.IDOLookup;
+import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
@@ -119,6 +120,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	@Autowired
 	private GeneralCasesListBuilder casesListBuilder;
 
+	private CasesRetrievalManager casesRetrievalManager;
+
 	@Autowired
 	private CaseManagersProvider caseManagersProvider;
 
@@ -137,6 +140,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 								CASE_LOGS_PDF_DOWNLOAD_LINK_STYLE_CLASS = "caselogspdfdownload";
 
 	private static final Logger LOGGER = Logger.getLogger(CasesEngineImp.class.getName());
+
+	protected CasesRetrievalManager getCasesRetrievalManager() {
+		if (this.casesRetrievalManager == null) {
+			this.casesRetrievalManager = getCaseManagersProvider().getCaseManager();
+		}
+
+		return this.casesRetrievalManager;
+	}
 
 	@Override
 	public Long getProcessInstanceId(String caseId) {
@@ -203,7 +214,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		CaseBusiness caseBusiness = null;
 		try {
-			caseBusiness = (CaseBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
+			caseBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
 		} catch (IBOLookupException e) {
 			LOGGER.log(Level.SEVERE, "Error getting CaseBusiness", e);
 		}
@@ -305,6 +316,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setCasesListCustomizer(criterias.getCasesListCustomizer());
 		properties.setCustomColumns(criterias.getCustomColumns());
 		properties.setShowLoadingMessage(criterias.isShowLoadingMessage());
+		properties.setSubscribersGroupId(criterias.getSubscribersGroupId());
 
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criterias.getCaseListType())) {
@@ -326,6 +338,33 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 	}
 
+	protected String getSelectedGroup(Long id) {
+		if (id == null) {
+			return null;
+		}
+
+		try {
+			Group group = IDOLookup.findByPrimaryKey(
+					Group.class,
+					id.intValue());
+			if (group != null) {
+				return group.getName();
+			}
+		} catch (IDOLookupException e) {
+			getLogger().log(
+					Level.WARNING,
+					"Failed to get data access object, casue of: ", e);
+		} catch (FinderException e) {
+			getLogger().log(
+					Level.WARNING,
+					"Failed to find group by id: " + id,
+					e);
+		}
+
+		return null;
+	}
+
+	@Override
 	public void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias) {
 		List<AdvancedProperty> searchFields = new ArrayList<AdvancedProperty>();
 
@@ -347,6 +386,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (!StringUtil.isEmpty(criterias.getContact())) {
 			searchFields.add(new AdvancedProperty("contact", criterias.getContact()));
 		}
+
+		if (criterias.getSubscribersGroupId() != null) {
+			searchFields.add(new AdvancedProperty("handler_category_id", getSelectedGroup(criterias.getSubscribersGroupId())));
+		}
+
 		if (!StringUtil.isEmpty(criterias.getProcessId())) {
 			String processName = null;
 			try {
@@ -428,7 +472,21 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean(UICasesList.DYNAMIC_CASES_NAVIGATOR, Boolean.TRUE);
 	}
 
-	private PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesListSearchCriteriaBean criterias) {
+	protected List<Long> convertTo(Collection<String> collection) {
+		if (ListUtil.isEmpty(collection)) {
+			return Collections.emptyList();
+		}
+
+		List<Long> subscribedGroupsIds = new ArrayList<Long>();
+		for (String id : collection) {
+			subscribedGroupsIds.add(Long.valueOf(id));
+		}
+
+		return subscribedGroupsIds;
+	}
+
+	private PagedDataCollection<CasePresentation> getCasesByQuery(
+			IWContext iwc, CasesListSearchCriteriaBean criterias) {
 		User currentUser = null;
 		if (!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
@@ -459,9 +517,17 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				criterias.setStatusesToHide(null);
 			}
 
-			casesIds = getCaseManagersProvider().getCaseManager().getCaseIds(currentUser, casesProcessorType, criterias.getCaseCodesInList(),
-					criterias.getStatusesToHideInList(), criterias.getStatusesToShowInList(), criterias.isOnlySubscribedCases(),
-					criterias.isShowAllCases(), criterias.getProcInstIds(), criterias.getRoles());
+			casesIds = getCaseManagersProvider().getCaseManager().getCasePrimaryKeys(
+					currentUser,
+					casesProcessorType,
+					criterias.getCaseCodesInList(),
+					criterias.getStatusesToHideInList(),
+					criterias.getStatusesToShowInList(),
+					criterias.isOnlySubscribedCases(),
+					criterias.isShowAllCases(),
+					criterias.getProcInstIds(),
+					criterias.getRoles(),
+					criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId()));
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
 		}
@@ -530,7 +596,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 
 			//	Loading cases by IDs
-			cases = getCaseManagersProvider().getCaseManager().getCasesByIds(casesIds, locale);
+			cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
 		}
 
 		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
@@ -1096,7 +1162,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc) {
 		ApplicationBusiness appBusiness = null;
 		try {
-			appBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
+			appBusiness = IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
 		} catch (IBOLookupException e) {
 			e.printStackTrace();
 		}

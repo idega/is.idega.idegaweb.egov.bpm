@@ -49,7 +49,6 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 	private ProcessInstanceW getProcessInstance(Integer caseId) throws Exception {
 		CaseProcInstBind bind = casesBPMDAO.getCaseProcInstBindByCaseId(caseId);
 		if (bind == null) {
-			getLogger().warning("Unable to get case and process bind by case " + caseId);
 			return null;
 		}
 

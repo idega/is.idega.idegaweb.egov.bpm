@@ -23,6 +23,8 @@ import org.springframework.stereotype.Service;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -77,16 +79,16 @@ public class CasesBPMAssetsState implements Serializable {
 	private String displayPropertyForStyleAttribute = "block", specialBackPage, commentsPersistenceManagerIdentifier, currentTaskInstanceName,
 			systemEmailAddress;
 
-	private Boolean isWatched, usePDFDownloadColumn = Boolean.TRUE, 
+	private Boolean isWatched, usePDFDownloadColumn = Boolean.TRUE,
 			allowPDFSigning = Boolean.TRUE, standAloneComponent = Boolean.TRUE,
-			hideEmptySection = Boolean.FALSE, 
-			showAttachmentStatistics = Boolean.FALSE, 
+			hideEmptySection = Boolean.FALSE,
+			showAttachmentStatistics = Boolean.FALSE,
 			showOnlyCreatorInContacts = Boolean.FALSE, showBackButton,
-			showLogExportButton = Boolean.FALSE, showComments = Boolean.TRUE, 
+			showLogExportButton = Boolean.FALSE, showComments = Boolean.TRUE,
 			showContacts = Boolean.TRUE, showNextTask,
-			specialBackPageDecoded = Boolean.FALSE, 
-			autoShowComments = Boolean.FALSE, 
-			nameFromExternalEntity = Boolean.FALSE, 
+			specialBackPageDecoded = Boolean.FALSE,
+			autoShowComments = Boolean.FALSE,
+			nameFromExternalEntity = Boolean.FALSE,
 			showUserProfilePicture = Boolean.TRUE;
 
 	public Long getViewSelected() {
@@ -181,10 +183,34 @@ public class CasesBPMAssetsState implements Serializable {
 		this.processInstanceId = processInstanceId;
 	}
 
+	private CasesBPMDAO getCasesBPMDAO() {
+		return ELUtil.getInstance().getBean(CasesBPMDAO.REPOSITORY_NAME);
+	}
+
 	public CasesBPMProcessViewBean getProcessView() {
 		try {
 			Long piId = getProcessInstanceId();
 			Integer caseId = getCaseId();
+			if (piId == null && caseId == null) {
+				LOGGER.warning("Proc. inst. ID and case ID are unknown, can not generate view!");
+				return null;
+			}
+
+			CaseProcInstBind bind = piId == null ?	getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId) :
+													getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+			if (bind == null) {
+				LOGGER.warning("Error getting bind for case (ID: ) and proc. inst. (ID: ). Can not generate view!");
+				return null;
+			}
+			if (piId == null) {
+				piId = bind.getProcInstId();
+				setProcessInstanceId(piId);
+			}
+			if (caseId == null) {
+				caseId = bind.getCaseId();
+				setCaseId(caseId);
+			}
+
 			return getCasesBPMProcessView().getProcessView(piId, caseId);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting " + CasesBPMProcessViewBean.class.getName() + " bean by process instance ID " +
@@ -752,7 +778,7 @@ public class CasesBPMAssetsState implements Serializable {
 	public void setShowContacts(Boolean showContacts) {
 		this.showContacts = showContacts;
 	}
-	
+
 	public void setNameFromExternalEntity(boolean nameFromExternalEntity) {
 		this.nameFromExternalEntity = nameFromExternalEntity;
 	}

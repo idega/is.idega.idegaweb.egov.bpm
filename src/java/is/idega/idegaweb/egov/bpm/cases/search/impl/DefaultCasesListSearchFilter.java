@@ -67,6 +67,10 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return getCache(SEARCH_FILTER_CACHE_NAME, SEARCH_FILTER_CACHE_TTL);
 	}
 
+	protected CasesSearchCriteriaBean getCriterias() {
+		return criterias;
+	}
+
 	private String getSearchKey() {
 		if (criterias == null) {
 			return null;

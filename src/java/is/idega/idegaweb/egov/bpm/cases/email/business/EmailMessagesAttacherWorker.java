@@ -37,6 +37,7 @@ import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.parser.EmailParser;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
+import com.idega.bpm.BPMConstants;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.BPMContext;
@@ -181,7 +182,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String senderPersonalName = message.getSenderName();
 			String fromAddress = message.getFromAddress();
 
-			List<String> varsNames = Arrays.asList("string_subject", "string_text", "string_fromPersonal", "string_fromAddress");
+			List<String> varsNames = Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS);
 
 			Map<String, List<Serializable>> variablesWithValues = new HashMap<String, List<Serializable>>();
 			variablesWithValues.put(varsNames.get(0), Arrays.asList((Serializable) subject));

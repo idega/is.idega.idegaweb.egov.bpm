@@ -1369,27 +1369,9 @@
                             <div class="fbc_simple_text">
                                 <xf:output model="data_model" ref="instance('localized_strings')/fbc_60-paragraph-text[@lang=instance('localized_strings')/current_language]"/>
                             </div>
-                            <xf:trigger>
-                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_60-label[@lang=instance('localized_strings')/current_language]"/>
-                                <xf:action>
-                                    <xf:insert at="last()"
-                                    nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_60/entry" position="before"/>
-                                </xf:action>
-                            </xf:trigger>
                             <xf:repeat appearance="group"
                                 bind="fbc_60-entries" id="upload_entries_fbc_60">
                                 <xf:group>
-                                    <xf:input id="fbc_description" ref="./description">
-                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_60-text[@lang=instance('localized_strings')/current_language]"/>
-                                    <idega:dispatch
-                                    ev:event="xforms-value-changed"
-                                    name="idega-validate"
-                                    stopOnError="true" target="//*[@id='fbc_60']//xf:upload"/>
-                                    </xf:input>
-                                    <xf:group appearance="minimal"
-                                    class="error" ref=".[. !='' and ./description ='']">
-                                    <xf:output model="data_model" value="instance('localized_strings')/fbc_60-info[@lang=instance('localized_strings')/current_language]"/>
-                                    </xf:group>
                                     <xf:output ref="@filename">
                                     <xf:label model="data_model" ref="instance('localized_strings')/fbc_60-filename-label[@lang=instance('localized_strings')/current_language]"/>
                                     </xf:output>
@@ -1408,6 +1390,17 @@
                                     model="data_model" value="instance('localized_strings')/fbc_60-custom[@lang=instance('localized_strings')/current_language]"/>
                                     </idega:validator>
                                     </xf:upload>
+                                    <xf:input id="fbc_description" ref="./description">
+                                    <xf:label model="data_model" ref="instance('localized_strings')/fbc_60-text[@lang=instance('localized_strings')/current_language]"/>
+                                    <idega:dispatch
+                                    ev:event="xforms-value-changed"
+                                    name="idega-validate"
+                                    stopOnError="true" target="//*[@id='fbc_60']//xf:upload"/>
+                                    </xf:input>
+                                    <xf:group appearance="minimal"
+                                    class="error" ref=".[. !='' and ./description ='']">
+                                    <xf:output model="data_model" value="instance('localized_strings')/fbc_60-info[@lang=instance('localized_strings')/current_language]"/>
+                                    </xf:group>
                                     <xf:trigger>
                                     <xf:label model="data_model" ref="instance('localized_strings')/fbc_60-remove[@lang=instance('localized_strings')/current_language]"/>
                                     <xf:action>
@@ -1417,6 +1410,13 @@
                                     </xf:trigger>
                                 </xf:group>
                             </xf:repeat>
+                            <xf:trigger>
+                                <xf:label model="data_model" ref="instance('localized_strings')/fbc_60-label[@lang=instance('localized_strings')/current_language]"/>
+                                <xf:action>
+                                    <xf:insert at="last()"
+                                    nodeset="instance('data-instance')/Multi_file_upload_with_description_fbc_60/entry" position="before"/>
+                                </xf:action>
+                            </xf:trigger>
                         </xf:group>
                         <div class="fbc_header_text" id="fbc_103" type="fbc_header_text">
                             <xf:output model="data_model" ref="instance('localized_strings')/fbc_103-text[@lang=instance('localized_strings')/current_language]"/>

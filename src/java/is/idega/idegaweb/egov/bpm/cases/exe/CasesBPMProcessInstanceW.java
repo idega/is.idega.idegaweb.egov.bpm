@@ -9,6 +9,7 @@ import java.rmi.RemoteException;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Resource;
@@ -101,8 +102,22 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(this, pi.getProcessDefinition().getName(), pi.getId(), createdVars);
 				ELUtil.getInstance().publishEvent(performerVarCreated);
 
-				pi.getProcessDefinition().fireEvent(handlerUserId != null ?
-						CaseHandlerAssignmentHandler.assignHandlerEventType	: CaseHandlerAssignmentHandler.unassignHandlerEventType, ectx);
+				String event = null;
+				if (handlerUserId != null) {
+					event = CaseHandlerAssignmentHandler.assignHandlerEventType;
+				} else {
+					event = CaseHandlerAssignmentHandler.unassignHandlerEventType;
+				}
+
+				// Firing event to process...
+				pi.getProcessDefinition().fireEvent(event, ectx);
+
+				// And to it's subprocesses...
+				List<ProcessInstance> subProcesses = getBpmDAO().getSubprocessInstancesOneLevel(pi.getId());
+				for (ProcessInstance subProcessInstance: subProcesses) {
+					subProcessInstance.getProcessDefinition().fireEvent(event, ectx);
+				}
+
 				return null;
 			}
 		});
@@ -182,11 +197,28 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 		Boolean res = getBpmContext().execute(new JbpmCallback<Boolean>() {
 
 			@Override
+			@SuppressWarnings("unchecked")
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
-				@SuppressWarnings("unchecked")
-				Map<String, Event> events = getProcessInstance(context).getProcessDefinition().getEvents();
+				Map<String, Event> events = getProcessInstance()
+						.getProcessDefinition().getEvents();
 
-				return events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
+				boolean result = events != null
+						&& events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
+				if (result == Boolean.FALSE) {
+					 List<ProcessInstance> subprocesses = getBpmDAO().getSubprocessInstancesOneLevel(getProcessInstance().getId());
+					 if (ListUtil.isEmpty(subprocesses)) {
+						 return Boolean.FALSE;
+					 }
+
+					 for (ProcessInstance pi : subprocesses) {
+						 events = pi.getProcessDefinition().getEvents();
+						 if (events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType)) {
+							 return Boolean.TRUE;
+						 }
+					 }
+				}
+
+				return result;
 			}
 		});
 
