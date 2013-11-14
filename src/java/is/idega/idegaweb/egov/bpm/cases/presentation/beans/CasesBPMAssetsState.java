@@ -4,6 +4,7 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMProcessViewBean;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean;
+import is.idega.idegaweb.egov.bpm.media.ProcessUsersExporter;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
 import java.io.Serializable;
@@ -22,9 +23,11 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.io.MediaWritable;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -37,6 +40,7 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.URIUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -89,7 +93,9 @@ public class CasesBPMAssetsState implements Serializable {
 			specialBackPageDecoded = Boolean.FALSE,
 			autoShowComments = Boolean.FALSE,
 			nameFromExternalEntity = Boolean.FALSE,
-			showUserProfilePicture = Boolean.TRUE;
+			showUserProfilePicture = Boolean.TRUE,
+			addExportContacts = Boolean.FALSE;
+			
 
 	public Long getViewSelected() {
 		if (viewSelected == null)
@@ -793,5 +799,20 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public boolean getShowUserProfilePicture() {
 		return showUserProfilePicture;
+	}
+
+	public Boolean getAddExportContacts() {
+		return addExportContacts;
+	}
+
+	public void setAddExportContacts(Boolean addExportContacts) {
+		this.addExportContacts = addExportContacts;
+	}
+	
+	public String getExportUsersUrl(){
+		URIUtil uriUtil = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
+		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(ProcessUsersExporter.class));
+		uriUtil.setParameter(ProcessUsersExporter.PROCESS_INSTANCE_ID, String.valueOf(getProcessInstanceId()));
+		return uriUtil.getUri();
 	}
 }

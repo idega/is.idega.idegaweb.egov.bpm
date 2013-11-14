@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
@@ -165,7 +166,6 @@ public interface CasesBPMDAO extends GenericDao {
 	public Map<Long, List<VariableInstanceInfo>> getBPMValuesByCasesIdsAndVariablesNames(List<String> casesIds, List<String> names);
 
 	/**
-<<<<<<< HEAD
 	 *
 	 * <p>Searches cases in database, which is on administration
 	 * by given handler.</p>
@@ -180,10 +180,48 @@ public interface CasesBPMDAO extends GenericDao {
 	 * @return
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<Integer> getHandlerCasesIds(User user,
-			List<String> caseStatusesToShow, List<String> caseStatusesToHide,
-			List<String> caseCodes, Collection<String> roles,
-			boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds);
+	public List<Integer> getHandlerCasesIds(
+			User user,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			List<String> caseCodes,
+			Collection<String> roles,
+			boolean onlySubscribedCases,
+			Integer caseId,
+			List<Long> procInstIds
+	);
+
+	/**
+	 *
+	 * @param caseStatusesToShow is {@link Collection} of {@link Case#getCaseStatus()}
+	 * of {@link Case}s that show be shown, skipped if <code>null</code>;
+	 * @param caseStatusesToHide is {@link Collection} of {@link Case#getCaseStatus()}
+	 * of {@link Case}s that show be hidden, skipped if <code>null</code>;
+	 * @param processDefinitionNames is {@link Collection} of {@link ProcessDefinition}s,
+	 * skipped if <code>null</code>;
+	 * @param caseIDs is {@link Case#getPrimaryKey()}s of {@link Case}s, that
+	 * already are selected;
+	 * @param procInstIds is {@link Collection} of {@link ProcessInstance}s,
+	 * to filter cases by. Skipped if <code>null</code>;
+	 * @param handlerCategoryIDs is {@link Collection} of
+	 * {@link Group#getPrimaryKey()} where should be searched for
+	 * {@link com.idega.user.data.User}s who are in {@link Case#getSubscribers()}
+	 * list. Skipped if <code>null</code>;
+	 * @param handler to get {@link Case}s for, not <code>null</code>;
+	 * @return filtered {@link List} of {@link Case#getPrimaryKey()} or
+	 * {@link Collections#emptyList()} on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public List<Integer> getHandlerCasesIds(
+			User handler,
+			Collection<String> caseStatusesToShow,
+			Collection<String> caseStatusesToHide,
+			Collection<String> processDefinitionNames,
+			Collection<? extends Number> caseIDs,
+			Collection<? extends Number> procInstIds,
+			Set<String> roles,
+			Collection<? extends Number> handlerCategoryIDs
+	);
 
 	public Long getProcessInstanceIdByCaseIdAndMetaData(String caseId, Param metadata);
 
@@ -333,36 +371,6 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous, Boolean isGeneralCases,
 			Boolean hasEnded
-	);
-
-	/**
-	 *
-	 * @param caseStatusesToShow is {@link Collection} of {@link Case#getCaseStatus()}
-	 * of {@link Case}s that show be shown, skipped if <code>null</code>;
-	 * @param caseStatusesToHide is {@link Collection} of {@link Case#getCaseStatus()}
-	 * of {@link Case}s that show be hidden, skipped if <code>null</code>;
-	 * @param processDefinitionNames is {@link Collection} of {@link ProcessDefinition}s,
-	 * skipped if <code>null</code>;
-	 * @param caseIDs is {@link Case#getPrimaryKey()}s of {@link Case}s, that
-	 * already are selected;
-	 * @param procInstIds is {@link Collection} of {@link ProcessInstance}s,
-	 * to filter cases by. Skipped if <code>null</code>;
-	 * @param handlerCategoryIDs is {@link Collection} of
-	 * {@link Group#getPrimaryKey()} where should be searched for
-	 * {@link com.idega.user.data.User}s who are in {@link Case#getSubscribers()}
-	 * list. Skipped if <code>null</code>;
-	 * @param handler to get {@link Case}s for, not <code>null</code>;
-	 * @return filtered {@link List} of {@link Case#getPrimaryKey()} or
-	 * {@link Collections#emptyList()} on failure;
-	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
-	 */
-	public List<Integer> getHandlerCasesIds(User handler,
-			Collection<String> caseStatusesToShow,
-			Collection<String> caseStatusesToHide,
-			Collection<String> processDefinitionNames,
-			Collection<? extends Number> caseIDs,
-			Collection<? extends Number> procInstIds,
-			Collection<? extends Number> handlerCategoryIDs
 	);
 
 }

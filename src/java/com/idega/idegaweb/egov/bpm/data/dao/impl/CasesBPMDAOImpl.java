@@ -73,7 +73,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Autowired(required = false)
 	private VariableInstanceQuerier querier;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -1028,19 +1028,71 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<String> processDefinitionNames,
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
-			Collection<? extends Number> handlerCategoryIDs) {
-
+			Set<String> roles,
+			Collection<? extends Number> handlerCategoryIDs
+	) {
 		if (handler == null) {
 			return null;
 		}
 
-		return convertIDs(getCasesPrimaryKeys(
-				processDefinitionNames, procInstIds, caseStatusesToShow,
-				caseStatusesToHide, null, handlerCategoryIDs,
+		String[] casePrimaryKeys = getCasesPrimaryKeys(
+				processDefinitionNames,
+				procInstIds,
+				caseStatusesToShow,
+				caseStatusesToHide,
+				null,				//	subscribersIDs
+				handlerCategoryIDs,	//	subscribersGroupIDs
 				Arrays.asList(Long.valueOf(handler.getPrimaryKey().toString())),
-				null, null, null, null, null, null,
+				null,	//	handlerGroupIDs
+				null,	//	caseManagerTypes
+				null,	//	hasCaseManagerType
+				null,	//	caseCodes
+				roles,
+				null,	//	authorsIDs
 				caseIDs != null ? caseIDs : null,
-				null, null, null));
+				null,	//	isAnonymous
+				null,	//	generalCases
+				null	//	ended
+		);
+		return convertIDs(casePrimaryKeys);
+	}
+
+	@Override
+	public List<Integer> getHandlerCasesIds(
+			User handler,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			List<String> caseCodes,
+			Collection<String> roles,
+			boolean onlySubscribedCases,
+			Integer caseId,
+			List<Long> procInstIds
+	) {
+		if (handler == null) {
+			return null;
+		}
+
+		String[] casePrimaryKeys = getCasesPrimaryKeys(
+				null,
+				procInstIds,
+				caseStatusesToShow,
+				caseStatusesToHide,
+				onlySubscribedCases ? Arrays.asList(Integer.valueOf(handler.getPrimaryKey().toString())) : null,	//	subscribersIDs
+				null,				//	subscribersGroupIDs
+				Arrays.asList(Long.valueOf(handler.getPrimaryKey().toString())),
+				null,				//	handlerGroupIDs
+				null,				//	caseManagerTypes
+				null,				//	hasCaseManagerType
+				caseCodes,			//	caseCodes
+				roles,
+				null,				//	authorsIDs
+				null,				//	casesIDs
+				null,				//	isAnonymous
+				null,				//	generalCases
+				null				//	ended
+		);
+
+		return convertIDs(casePrimaryKeys);
 	}
 
 	@Override
@@ -1919,8 +1971,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous,
 			Boolean generalCases,
-			Boolean ended) {
-
+			Boolean ended
+	) {
 		String query = getCasesPrimaryKeysQuery(processDefinitionNames,
 				processInstanceIds, caseStatuses, caseStatusesToHide,
 				subscribersIDs, subscribersGroupIDs, handlersIDs, handlerGroupIDs,
@@ -1947,4 +1999,5 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		return null;
 	}
+
 }

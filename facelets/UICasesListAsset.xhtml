@@ -50,7 +50,12 @@
 			<table class="caseEmails" border="0" />
 		</t:div>
 		<t:div styleClass="caseContactsPart caseListTasksSectionVisibleStyleClass" style="display: none;">
-			<t:div styleClass="header"><t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['contacts']}"/></t:div>
+			<t:div styleClass="header">
+				<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['contacts']}"/>
+				<h:panelGroup rendered="#{casesBPMAssetsState.addExportContacts}" styleClass="case-header-actions">
+					<a href="#{casesBPMAssetsState.exportUsersUrl}" class="XLS">#{localizedStrings['is.idega.idegaweb.egov.bpm']['export']}</a>
+				</h:panelGroup>
+			</t:div>
 			<table class="caseContacts" border="0" />
 		</t:div>
 	</t:div>

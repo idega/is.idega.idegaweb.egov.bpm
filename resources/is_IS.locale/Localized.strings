@@ -151,3 +151,5 @@ bpm_variable.handlerUserId=Umsj\u00F3nara\u00F0ili
 bpm_variable.long_municipalityId=Sveitarf\u00E9lag
 bpm_variable.string_issueCaption=L\u00FDsing
 bpm_variable.string_issueAddress=Heimilisfang
+
+export=Flytja

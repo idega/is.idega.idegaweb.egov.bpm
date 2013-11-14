@@ -95,7 +95,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
 		showComments, showContacts, specialBackPage, nameFromExternalEntity,
-		showUserProfilePicture) {
+		showUserProfilePicture,addExportContacts) {
 	
 	if (container == null) {
 		return false;
@@ -604,7 +604,7 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
 		hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, 
 		showContacts, onContactsInited, nameFromExternalEntity, 
 		showUserProfilePicture) {
-		
+	
 	if (!showContacts) {
 		CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT--;
 		return;
@@ -680,6 +680,7 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
     							hasRightChangeRights, null);
+    
 };
 
 CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, populatingFunction, subGridForThisGrid, namesForColumns, modelForColumns,
