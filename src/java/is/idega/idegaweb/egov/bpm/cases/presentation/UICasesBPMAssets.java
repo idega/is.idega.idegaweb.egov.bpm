@@ -66,7 +66,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			usePdfDownloadColumn = true, allowPDFSigning = true, 
 			hideEmptySection = true, showAttachmentStatistics, 
 			showOnlyCreatorInContacts, showLogExportButton, showComments = true, 
-			showContacts = true, nameFromExternalEntity = false, showUserProfilePicture = Boolean.TRUE;
+			showContacts = true, nameFromExternalEntity = false, showUserProfilePicture = Boolean.TRUE,
+			showUserCompany = false;
 
 	private String commentsPersistenceManagerIdentifier, specialBackPage;
 
@@ -243,7 +244,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		}
 		catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -374,6 +375,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_GENERATING_PDF = '")			.append(iwrb.getLocalizedString("cases_bpm.generating_pdf", "Downloading PDF")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_LOADING = '")					.append(iwrb.getLocalizedString("cases_bpm.loading", "Loading...")).append("';\n")
 			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_ARE_YOU_SURE = '")				.append(iwrb.getLocalizedString("cases_bpm.are_you_sure", "Are you sure?")).append("';\n")
+			.append("CasesBPMAssets.Loc.CASE_GRID_STRING_COMPANY = '")					.append(iwrb.getLocalizedString("cases_bpm.company", "Company")).append("';\n")
 
 			.append("CasesBPMAssets.Loc.inited = true; }\n")
 
@@ -406,7 +408,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		mainAction.append(CoreConstants.COMMA);
 		mainAction.append(isNameFromExternalEntity()).append(CoreConstants.COMMA)
-		.append(isShowUserProfilePicture()).append(");").toString();
+		.append(isShowUserProfilePicture()).append(", ").append(isShowUserCompany()).append(");").toString();
 
 		if (!isSingle)
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction.toString()).append("\n});");
@@ -491,5 +493,13 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setShowUserProfilePicture(boolean showUserProfilePicture) {
 		this.showUserProfilePicture = showUserProfilePicture;
+	}
+
+	public boolean isShowUserCompany() {
+		return showUserCompany;
+	}
+
+	public void setShowUserCompany(boolean showUserCompany) {
+		this.showUserCompany = showUserCompany;
 	}
 }

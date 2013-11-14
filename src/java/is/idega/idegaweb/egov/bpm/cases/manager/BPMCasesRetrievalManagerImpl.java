@@ -591,6 +591,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 		casesAssets.setSpecialBackPage(stateBean.getSpecialBackPage());
 		casesAssets.setNameFromExternalEntity(stateBean.isNameFromExternalEntity());
 		casesAssets.setShowUserProfilePicture(stateBean.getShowUserProfilePicture());
+		casesAssets.setShowUserCompany(stateBean.getShowUserCompany());
 
 		if (caseId != null)
 			casesAssets.setCaseId(caseId);

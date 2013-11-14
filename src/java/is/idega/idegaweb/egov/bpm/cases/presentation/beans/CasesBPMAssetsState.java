@@ -94,7 +94,9 @@ public class CasesBPMAssetsState implements Serializable {
 			autoShowComments = Boolean.FALSE,
 			nameFromExternalEntity = Boolean.FALSE,
 			showUserProfilePicture = Boolean.TRUE,
-			addExportContacts = Boolean.FALSE;
+			addExportContacts = Boolean.FALSE,
+			showUserCompany = Boolean.FALSE;
+	
 			
 
 	public Long getViewSelected() {
@@ -813,6 +815,15 @@ public class CasesBPMAssetsState implements Serializable {
 		URIUtil uriUtil = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
 		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(ProcessUsersExporter.class));
 		uriUtil.setParameter(ProcessUsersExporter.PROCESS_INSTANCE_ID, String.valueOf(getProcessInstanceId()));
+		uriUtil.setParameter(ProcessUsersExporter.SHOW_USER_COMPANY, getShowUserCompany() ? "y" : "n");
 		return uriUtil.getUri();
+	}
+
+	public Boolean getShowUserCompany() {
+		return showUserCompany;
+	}
+
+	public void setShowUserCompany(Boolean showUserCompany) {
+		this.showUserCompany = showUserCompany;
 	}
 }

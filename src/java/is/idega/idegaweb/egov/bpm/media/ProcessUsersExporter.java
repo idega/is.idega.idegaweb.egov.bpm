@@ -18,28 +18,30 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import com.idega.business.IBOLookup;
 import com.idega.core.contact.data.Phone;
 import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
+import com.idega.jbpm.bean.JBPMCompany;
+import com.idega.jbpm.business.JBPMCompanyBusiness;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.presentation.IWContext;
 import com.idega.user.bean.UserDataBean;
 import com.idega.user.business.UserApplicationEngine;
-import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.IOUtil;
+import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 public class ProcessUsersExporter extends DownloadWriter implements MediaWritable {
 
 	public static final String PROCESS_INSTANCE_ID = "pr-inst-id";
+	public static final String SHOW_USER_COMPANY = "show-u-c";
 
 	private HSSFWorkbook workBook;
 	
@@ -51,6 +53,9 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 	
 	@Autowired
 	UserApplicationEngine userApplicationEngine;
+	
+	@Autowired
+	JBPMCompanyBusiness jbpmCompanyBusiness;
 
 	@Override
 	public String getMimeType() {
@@ -99,6 +104,14 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 		cell.setCellStyle(bigStyle);
 		cell.setCellValue(bpmIwrb.getLocalizedString("name", "Name"));
 		
+		boolean showUserCompany = "y".equals(iwc.getParameter(SHOW_USER_COMPANY));
+		if(showUserCompany){
+			sheet.setColumnWidth(column, columnWidth);
+			cell = row.createCell(column++);
+			cell.setCellStyle(bigStyle);
+			cell.setCellValue(bpmIwrb.getLocalizedString("cases_bpm.company", "Company"));
+		}
+		
 		sheet.setColumnWidth(column, columnWidth);
 		cell = row.createCell(column++);
 		cell.setCellStyle(bigStyle);
@@ -108,6 +121,7 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 		cell = row.createCell(column++);
 		cell.setCellStyle(bigStyle);
 		cell.setCellValue(bpmIwrb.getLocalizedString("phone_number", "Phone number"));
+		
 		
 		for(User user : users){
 			UserDataBean userDataBean = userApplicationEngine.getUserInfo(user);
@@ -119,26 +133,38 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 			cell.setCellStyle(normalStyle);
 			cell.setCellValue(userDataBean.getName());
 			
+			if(showUserCompany){
+				cell = row.createCell(column++);
+				cell.setCellStyle(normalStyle);
+				Collection<JBPMCompany> companies = jbpmCompanyBusiness.getJBPMCompaniesForUser(user);
+				String companyName;
+				if(!ListUtil.isEmpty(companies)){
+					JBPMCompany company = companies.iterator().next();
+					companyName = company.getName();
+				}else{
+					companyName = "-";
+				}
+				cell.setCellValue(companyName);
+			}
+			
+			
 			cell = row.createCell(column++);
 			cell.setCellStyle(normalStyle);
 			cell.setCellValue(userDataBean.getEmail());
 			
-			try{
-				UserBusiness userBusiness = IBOLookup.getServiceInstance(iwc, UserBusiness.class);
-				Phone[] phones = userBusiness.getUserPhones(user);
-				StringBuilder userPhones = new StringBuilder();
-				for(Phone phone : phones){
-					String number = phone.getNumber();
-					if(StringUtil.isEmpty(number)){
-						continue;
-					}
-					userPhones.append(number).append("; ");
+			@SuppressWarnings("unchecked")
+			Collection<Phone> phones = user.getPhones();
+			StringBuilder userPhones = new StringBuilder();
+			for(Phone phone : phones){
+				String number = phone.getNumber();
+				if(StringUtil.isEmpty(number)){
+					continue;
 				}
-				cell = row.createCell(column++);
-				cell.setCellStyle(normalStyle);
-				cell.setCellValue(userPhones.toString());
-			}catch (Exception e) {
+				userPhones.append(number).append("; ");
 			}
+			cell = row.createCell(column++);
+			cell.setCellStyle(normalStyle);
+			cell.setCellValue(userPhones.toString());
 			
 		}
 		// TODO: count content length

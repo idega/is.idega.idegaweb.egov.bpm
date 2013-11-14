@@ -11,6 +11,7 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
     CASE_GRID_STRING_TAKEN_BY: 'Taken by',
     CASE_GRID_STRING_EMAIL_ADDRESS: 'E-mail address',
     CASE_GRID_STRING_PHONE_NUMBER: 'Phone number',
+    CASE_GRID_STRING_COMPANY: 'Company',
     CASE_GRID_STRING_ADDRESS: 'Address',
     CASE_GRID_STRING_SUBJECT: 'Subject',
     CASE_GRID_STRING_FILE_DESCRIPTION: 'Descriptive name',
@@ -95,7 +96,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
 		showComments, showContacts, specialBackPage, nameFromExternalEntity,
-		showUserProfilePicture,addExportContacts) {
+		showUserProfilePicture,showUserCompany) {
 	
 	if (container == null) {
 		return false;
@@ -192,7 +193,22 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 						showOnlyCreatorInContacts, showContacts,
 						function() {
 							onGridInitedFunction('caseContactsPart', jQuery('div.caseContactsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
-						}, nameFromExternalEntity, showUserProfilePicture
+							var cells = jQuery(container).find(".caseContactsPart").find("td, th");
+							var lastCss = {
+									'width':'4%',
+									'text-align': 'center',
+									'padding': '2px 0'
+								};
+							
+							
+							if(showUserCompany){
+								cells.css('width','24%');
+								cells.filter('.casesGridBodyCell_4, .casesGridHeaderCell_4').css(lastCss);
+							}else{
+								cells.css('width','32%');
+								cells.filter('.casesGridBodyCell_3, .casesGridHeaderCell_3').css(lastCss);
+							}
+						}, nameFromExternalEntity, showUserProfilePicture,showUserCompany
 				);
 				
 				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
@@ -603,7 +619,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
 CasesBPMAssets.initContactsGrid = function(piId, customerView, 
 		hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, 
 		showContacts, onContactsInited, nameFromExternalEntity, 
-		showUserProfilePicture) {
+		showUserProfilePicture,showUserCompany) {
 	
 	if (!showContacts) {
 		CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT--;
@@ -616,6 +632,7 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
         params.piId = piId;
         params.showOnlyCreatorInContacts = showOnlyCreatorInContacts;
         params.nameFromExternalEntity = nameFromExternalEntity;
+        params.showUserCompany = showUserCompany;
         
         BPMProcessAssets.getProcessContactsList(params, {
             callback: function(result) {
@@ -661,6 +678,9 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
     
     var namesForColumns = new Array();
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_CONTACT_NAME);
+    if(showUserCompany){
+    		namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_COMPANY);
+    }
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_EMAIL_ADDRESS);
     namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_PHONE_NUMBER);
     if (hasRightChangeRights) {
@@ -669,6 +689,9 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
 	
     var modelForColumns = new Array();
     modelForColumns.push({name:'name',index:'name'});
+    if(showUserCompany){
+    		modelForColumns.push({name:'company',index:'company'});
+    }
     modelForColumns.push({name:'emailAddress',index:'emailAddress'});
     modelForColumns.push({name:'phoneNumber',index:'phoneNumber'});
    	if (hasRightChangeRights) {
@@ -993,6 +1016,7 @@ CasesBPMAssets.setStyleClassesForGridColumns = function(elements) {
 };
 
 CasesBPMAssets.setTableProperties = function(component) {
+	return;
 	if (component == null) {
 		return false;
 	}
