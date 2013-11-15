@@ -199,19 +199,19 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 			@Override
 			@SuppressWarnings("unchecked")
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
-				Map<String, Event> events = getProcessInstance()
-						.getProcessDefinition().getEvents();
+				ProcessInstance pi = getProcessInstance(context);
+				Map<String, Event> events = pi.getProcessDefinition().getEvents();
 
 				boolean result = events != null
 						&& events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
 				if (result == Boolean.FALSE) {
-					 List<ProcessInstance> subprocesses = getBpmDAO().getSubprocessInstancesOneLevel(getProcessInstance().getId());
+					 List<ProcessInstance> subprocesses = getBpmDAO().getSubprocessInstancesOneLevel(pi.getId());
 					 if (ListUtil.isEmpty(subprocesses)) {
 						 return Boolean.FALSE;
 					 }
 
-					 for (ProcessInstance pi : subprocesses) {
-						 events = pi.getProcessDefinition().getEvents();
+					 for (ProcessInstance subProcInst: subprocesses) {
+						 events = subProcInst.getProcessDefinition().getEvents();
 						 if (events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType)) {
 							 return Boolean.TRUE;
 						 }
