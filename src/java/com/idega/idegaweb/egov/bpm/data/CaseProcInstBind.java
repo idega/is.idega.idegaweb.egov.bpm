@@ -323,4 +323,9 @@ public class CaseProcInstBind implements Serializable {
 	public void setCaseIdentifier(String caseIdentifier) {
     	this.caseIdentifier = caseIdentifier;
     }
+
+	@Override
+	public String toString() {
+		return "Proc. inst. ID: " + getProcInstId() + ", case ID: " + getCaseId();
+	}
 }
