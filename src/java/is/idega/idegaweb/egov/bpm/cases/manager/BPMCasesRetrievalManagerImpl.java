@@ -715,6 +715,34 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	@Override
+	public List<Integer> getCasePrimaryKeys(
+			User user,
+			String type,
+			List<String> caseCodes,
+			List<String> caseStatusesToHide,
+			List<String> caseStatusesToShow,
+			boolean onlySubscribedCases,
+			boolean showAllCases,
+			List<Long> procInstIds,
+			Set<String> roles,
+			Collection<Long> handlerCategoryIDs
+	) throws Exception {
+		return getCaseIds(
+				user,
+				type,
+				caseCodes,
+				caseStatusesToHide,
+				caseStatusesToShow,
+				onlySubscribedCases,
+				showAllCases,
+				null,
+				procInstIds,
+				roles,
+				handlerCategoryIDs
+		);
+	}
+
+	@Override
 	public List<Integer> getCaseIds(
 			User user,
 			String type,
@@ -754,33 +782,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		);
 	}
 
-//	protected List<Integer> getCaseIds(
-//			User user,
-//			String type,
-//			List<String> caseCodes,
-//			List<String> caseStatusesToHide,
-//			List<String> caseStatusesToShow,
-//			boolean onlySubscribedCases,
-//			boolean showAllCases,
-//			List<Long> procInstIds,
-//			Set<String> roles,
-//			Collection<Long> handlerCategoryIDs
-//	) throws Exception {
-//		return getCaseIds(
-//				user,
-//				type,
-//				caseCodes,
-//				caseStatusesToHide,
-//				caseStatusesToShow,
-//				onlySubscribedCases,
-//				showAllCases,
-//				null,
-//				procInstIds,
-//				roles,
-//				handlerCategoryIDs
-//		);
-//	}
-
 	@Override
 	protected List<Integer> getCaseIds(
 			User user,
@@ -812,8 +813,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		if (iwc == null) {
 			isSuperAdmin = user == null ? false :
 					user.equals(accessController.getAdministratorUser()) || accessController.hasRole(user, CasesConstants.ROLE_CASES_SUPER_ADMIN);
-		} else
+		} else {
 			isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
+		}
 
 		try {
 			CasesListParameters params = new CasesListParameters(user, type, isSuperAdmin, statusesToHide, statusesToShow);
@@ -835,18 +837,37 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			/* Querying cache */
 			if (caseId == null) {
-				caseIds = getCachedIds(user, type, caseCodes, statusesToHide,
-						statusesToShow, onlySubscribedCases, roles, groups,
-						casecodes, showAllCases, procInstIds,
-						handlerCategoryIDs);
-
-				if (caseIds.size() > 5)
+				caseIds = getCachedIds(
+						user,
+						type,
+						caseCodes,
+						statusesToHide,
+						statusesToShow,
+						onlySubscribedCases,
+						roles,
+						groups,
+						casecodes,
+						showAllCases,
+						procInstIds,
+						handlerCategoryIDs
+				);
+				if (caseIds.size() > 5) {
 					return caseIds;
-				else {
-					CasesCacheCriteria key = getCacheKey(user, type, caseCodes,
-							statusesToHide, statusesToShow, onlySubscribedCases,
-							roles, groups, casecodes, showAllCases, procInstIds,
-							handlerCategoryIDs);
+				} else {
+					CasesCacheCriteria key = getCacheKey(
+							user,
+							type,
+							caseCodes,
+							statusesToHide,
+							statusesToShow,
+							onlySubscribedCases,
+							roles,
+							groups,
+							casecodes,
+							showAllCases,
+							procInstIds,
+							handlerCategoryIDs
+					);
 					getLogger().warning("Resolved only few cases IDs (" + caseIds + ") from cache by key '" + key +
 							"', it is probably invalid cache entry, will delete it and will query DB");
 					removeFromCache(key);
@@ -868,8 +889,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				}
 			}
 
-			if (!ListUtil.isEmpty(procInstIds) && procInstIds.size() > 7500)
+			if (!ListUtil.isEmpty(procInstIds) && procInstIds.size() > 7500) {
 				procInstIds = Collections.emptyList();
+			}
 
 			/* Querying data source */
 			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
@@ -965,10 +987,23 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 
 		/* Putting to cache */
-		if (caseId == null)
-			putIdsToCache(caseIds, user, type, caseCodes, statusesToHide,
-					statusesToShow, onlySubscribedCases, roles, groups,
-					casecodes, showAllCases, procInstIds, handlerCategoryIDs);
+		if (caseId == null) {
+			putIdsToCache(
+					caseIds,
+					user,
+					type,
+					caseCodes,
+					statusesToHide,
+					statusesToShow,
+					onlySubscribedCases,
+					roles,
+					groups,
+					casecodes,
+					showAllCases,
+					procInstIds,
+					handlerCategoryIDs
+			);
+		}
 		return caseIds;
 	}
 
@@ -1552,23 +1587,34 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
 	}
 
+	private Map<String, Boolean> casesBeingUpdated = new HashMap<String, Boolean>();
+
 	private void doManageCasesCache(final Case theCase, final boolean ommitClearing) {
+		if (theCase == null) {
+			getLogger().warning("Case is undefined, unable to manage cache");
+			return;
+		}
+
+		final String id = theCase.getId();
+		if (casesBeingUpdated.containsKey(id)) {
+			getLogger().info("Info case by ID " + id + " is already being handled");
+			return;
+		}
+
 		Thread cacheManager = new Thread(new Runnable() {
 
 			@Override
 			public void run() {
 				try {
-					if (!isCacheUpdateTurnedOn())
-						return;
+					casesBeingUpdated.put(id, Boolean.TRUE);
 
-					if (theCase == null) {
-						getLogger().warning("Case is undefined, unable to manage cache");
+					if (!isCacheUpdateTurnedOn()) {
 						return;
 					}
 
-					String theCaseId = theCase.getId();
-					Integer caseId = Integer.valueOf(theCaseId);
-					for (CasesCacheCriteria criteria: getCacheKeySet()) {
+					Integer caseId = Integer.valueOf(id);
+					Collection<CasesCacheCriteria> criterias = getCacheKeySet();
+					for (CasesCacheCriteria criteria: criterias) {
 						if (criteria == null)
 							continue;
 
@@ -1604,7 +1650,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 										criteria.getHandlercategoryIds()
 								);
 							} catch (Exception e) {
-								String caseInfo = "Case ID " + theCaseId + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
+								String caseInfo = "Case ID " + id + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +
 										theCase.getSubject() + "', status: " + theCase.getCaseStatus() + ", created: " + theCase.getCreated() + ")";
 								String message = "Error while verifying if modified case " + caseInfo + " belongs to the cache by key " +
 										criteria.getKey() + " and user " + user;
@@ -1626,6 +1672,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					getLogger().log(Level.WARNING, message, e);
 
 					CoreUtil.clearAllCaches();
+				} finally {
+					casesBeingUpdated.remove(id);
 				}
 			}
 		});
