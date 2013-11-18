@@ -905,6 +905,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	private Map<Integer, Date> getResults(String hqlQuery, List<Param> params) {
+		boolean sqlMeasurementOn = CoreUtil.isSQLMeasurementOn();
+		long start = sqlMeasurementOn ? System.currentTimeMillis() : 0;
 		try {
 			javax.persistence.Query query = getEntityManager().createNativeQuery(hqlQuery);
 			if (!ListUtil.isEmpty(params)) {
@@ -919,6 +921,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			String message = "Error executing query '" + hqlQuery + "', parameters: " + params;
 			getLogger().log(Level.WARNING, message, e);
 			CoreUtil.sendExceptionNotification(message, e);
+		} finally {
+			if (sqlMeasurementOn) {
+				getLogger().info("Results for query '" + hqlQuery + "' and params " + params + " where loaded in " +
+						(System.currentTimeMillis() - start) + " ms");
+			}
 		}
 		return Collections.emptyMap();
 	}
