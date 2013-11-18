@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -817,6 +818,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
 		}
 
+		CasesCacheCriteria key = null;
+		boolean casesListCacheTurnedOn = isCacheUpdateTurnedOn();
 		try {
 			CasesListParameters params = new CasesListParameters(user, type, isSuperAdmin, statusesToHide, statusesToShow);
 			params = resolveParameters(params, showAllCases);
@@ -836,7 +839,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
 
 			/* Querying cache */
-			if (caseId == null) {
+			if (casesListCacheTurnedOn && caseId == null) {
 				caseIds = getCachedIds(
 						user,
 						type,
@@ -854,7 +857,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				if (caseIds.size() > 5) {
 					return caseIds;
 				} else {
-					CasesCacheCriteria key = getCacheKey(
+					key = getCacheKey(
 							user,
 							type,
 							caseCodes,
@@ -868,8 +871,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							procInstIds,
 							handlerCategoryIDs
 					);
-					getLogger().warning("Resolved only few cases IDs (" + caseIds + ") from cache by key '" + key +
-							"', it is probably invalid cache entry, will delete it and will query DB");
+					getLogger().warning((ListUtil.isEmpty(caseIds) ? "Did not resolve any case ID" : "Resolved only few cases IDs (" + caseIds + ")") +
+							" from cache by key '" + key + "', it is probably invalid cache entry, will delete it and will query DB");
 					removeFromCache(key);
 				}
 			}
@@ -981,30 +984,54 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			} else {
 				getLogger().warning("Unknown cases list type: '" + type + "'");
 			}
+
+			return caseIds;
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting cases", e);
 			throw new RuntimeException(e);
+		} finally {
+			if (casesListCacheTurnedOn && caseId == null) {
+				if (key == null) {
+					key = getCacheKey(
+							user,
+							type,
+							caseCodes,
+							statusesToHide,
+							statusesToShow,
+							onlySubscribedCases,
+							roles,
+							groups,
+							casecodes,
+							showAllCases,
+							procInstIds,
+							handlerCategoryIDs
+					);
+				}
+				doPutToCache(caseIds, key);
+			}
+		}
+	}
+
+	private void doPutToCache(final List<Integer> casesIds, final CasesCacheCriteria key) {
+		if (ListUtil.isEmpty(casesIds) || key == null) {
+			return;
 		}
 
-		/* Putting to cache */
-		if (caseId == null) {
-			putIdsToCache(
-					caseIds,
-					user,
-					type,
-					caseCodes,
-					statusesToHide,
-					statusesToShow,
-					onlySubscribedCases,
-					roles,
-					groups,
-					casecodes,
-					showAllCases,
-					procInstIds,
-					handlerCategoryIDs
-			);
-		}
-		return caseIds;
+		Thread updater = new Thread(new Runnable() {
+
+			@Override
+			public void run() {
+				Collection<Case> cases = getCasesBusiness().getCasesByIds(casesIds);
+				if (!ListUtil.isEmpty(cases)) {
+					Map<Integer, Date> data = new HashMap<Integer, Date>();
+					for (Case theCase: cases) {
+						data.put(Integer.valueOf(theCase.getId()), theCase.getCreated());
+					}
+					putIdsToCache(data, key);
+				}
+			}
+		});
+		updater.start();
 	}
 
 	private CasesListParameters resolveParameters(CasesListParameters params, boolean showAllCases) throws Exception {
@@ -1662,7 +1689,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 						boolean contains = superAdmin ? true : ListUtil.isEmpty(ids) ? false : ids.contains(caseId);
 						if (contains) {
-							addElementToCache(criteria, caseId);
+							addElementToCache(criteria, caseId, theCase.getCreated());
 						} else if (!ommitClearing) {
 							removeElementFromCache(criteria, caseId);
 						}
