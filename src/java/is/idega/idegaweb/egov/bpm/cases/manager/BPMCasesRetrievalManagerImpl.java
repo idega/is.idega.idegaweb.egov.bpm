@@ -15,7 +15,6 @@ import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.io.Serializable;
 import java.rmi.RemoteException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1035,18 +1034,24 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 		}
 		query = query.concat(")");
+
+		long start = System.currentTimeMillis();
 		try {
 			data = SimpleQuerier.executeQuery(query, 2);
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
+		} finally {
+			if (CoreUtil.isSQLMeasurementOn()) {
+				getLogger().info("Query '" + query + "' was executed in " + (System.currentTimeMillis() - start) + " ms");
+			}
 		}
 		if (!ListUtil.isEmpty(data)) {
 			for (Serializable[] caseData: data) {
 				if (!ArrayUtil.isEmpty(caseData) && caseData.length == 2) {
 					Serializable id = caseData[0];
 					Serializable created = caseData[1];
-					if (id instanceof Number && created instanceof Timestamp) {
-						results.put(((Number) id).intValue(), (Timestamp) created);
+					if (id instanceof Number && created instanceof Date) {
+						results.put(((Number) id).intValue(), (Date) created);
 					}
 				}
 			}
@@ -1064,11 +1069,15 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			@Override
 			public void run() {
+				long start = System.currentTimeMillis();
+				getLogger().info("Will put to cache " + casesIds.size() + " elements for key " + key);
 				Map<Integer, Date> data = new HashMap<Integer, Date>();
 				doLoadDataToCache(casesIds, data);
 				if (!MapUtil.isEmpty(data)) {
 					putIdsToCache(data, key);
 				}
+				getLogger().info("It took " + (System.currentTimeMillis() - start) + " ms to put " + casesIds.size() + " elements for key " + key +
+						" into the cache");
 			}
 		});
 		updater.start();
