@@ -56,6 +56,7 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
@@ -617,9 +618,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Integer> getMyCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, boolean onlySubscribedCases,
-			Integer caseId, List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs) {
+	public Map<Integer, Date> getMyCasesIds(
+			User user,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			boolean onlySubscribedCases,
+			Integer caseId,
+			List<Long> procInstIds,
+			Collection<? extends Number> subscriberGroupIDs
+	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param("userStatus", ProcessUserBind.Status.PROCESS_WATCHED.toString()));
@@ -680,7 +687,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		String query = builder.toString();
 		try {
-			return getQueryNativeInline(query).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
+			return getResults(query, params);
 		} catch (HibernateException e) {
 			LOGGER.log(Level.WARNING, "Error executing query:\n" + query, e);
 			throw new RuntimeException(e);
@@ -730,10 +737,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Integer> getOpenCasesIds(User user, List<String> caseCodes, List<String> caseStatusesToShow, List<String> caseStatusesToHide,
-	        Collection<Integer> groups, Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds,
-	        Collection<? extends Number> subscriberGroupIDs) {
-
+	public Map<Integer, Date> getOpenCasesIds(
+			User user,
+			List<String> caseCodes,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+	        Collection<Integer> groups,
+	        Collection<String> roles,
+	        boolean onlySubscribedCases,
+	        Integer caseId,
+	        List<Long> procInstIds,
+	        Collection<? extends Number> subscriberGroupIDs
+	) {
 		boolean showClosedCases = false;
 		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
 				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY))
@@ -814,14 +829,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		builder.append(") order by Created desc");
 
-		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", ArrayUtil.convertListToArray(params));
+		return getResults(builder.toString(), params);
 	}
 
 	@Override
-	public List<Integer> getOpenCasesIdsForAdmin(List<String> caseCodes, List<String> caseStatusesToShow, List<String> caseStatusesToHide,
-			Integer caseId, List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs) {
-
+	public Map<Integer, Date> getOpenCasesIdsForAdmin(
+			List<String> caseCodes,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			Integer caseId,
+			List<Long> procInstIds,
+			Collection<? extends Number> subscriberGroupIDs
+	) {
 		boolean showClosedCases = false;
 		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
 				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY))
@@ -882,14 +901,60 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		builder.append(") order by Created desc");
 
-		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
+		return getResults(builder.toString(), params);
+	}
+
+	private Map<Integer, Date> getResults(String hqlQuery, List<Param> params) {
+		try {
+			javax.persistence.Query query = getEntityManager().createNativeQuery(hqlQuery);
+			if (!ListUtil.isEmpty(params)) {
+				for (Param param: params) {
+					query.setParameter(param.getParamName(), param.getParamValue());
+				}
+			}
+			@SuppressWarnings("unchecked")
+			List<Object[]> data = query.getResultList();
+			return getResults(data);
+		} catch (Exception e) {
+			String message = "Error executing query '" + hqlQuery + "', parameters: " + params;
+			getLogger().log(Level.WARNING, message, e);
+			CoreUtil.sendExceptionNotification(message, e);
+		}
+		return Collections.emptyMap();
+	}
+
+	private <T> Map<Integer, Date> getResults(List<T[]> data) {
+		if (ListUtil.isEmpty(data)) {
+			return Collections.emptyMap();
+		}
+
+		Map<Integer, Date> results = new HashMap<Integer, Date>();
+		for (Object[] caseData: data) {
+			if (ArrayUtil.isEmpty(caseData) || caseData.length != 2) {
+				continue;
+			}
+
+			Object id = caseData[0];
+			Object created = caseData[1];
+			if (id instanceof Number && created instanceof Date) {
+				results.put(((Number) id).intValue(), (Date) created);
+			}
+		}
+		return results;
 	}
 
 	@Override
-	public List<Integer> getClosedCasesIds(User user, List<String> caseStatusesToShow, List<String> caseStatusesToHide, Collection<Integer> groups,
-			Collection<String> roles, boolean onlySubscribedCases, Integer caseId, List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs) {
-
+	public Map<Integer, Date> getClosedCasesIds(
+			User user,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			Collection<Integer> groups,
+			Collection<String> roles,
+			boolean onlySubscribedCases,
+			Integer caseId,
+			List<Long> procInstIds,
+			Collection<? extends Number> subscriberGroupIDs
+	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
@@ -962,12 +1027,17 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		builder.append("and proc_case.case_manager_type is null) order by Created desc");
 
-		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
+		return getResults(builder.toString(), params);
 	}
 
 	@Override
-	public List<Integer> getClosedCasesIdsForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide, Integer caseId,
-			List<Long> procInstIds, Collection<? extends Number> subscriberGroupIDs) {
+	public Map<Integer, Date> getClosedCasesIdsForAdmin(
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			Integer caseId,
+			List<Long> procInstIds,
+			Collection<? extends Number> subscriberGroupIDs
+	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
 		if (!ListUtil.isEmpty(caseStatusesToHide))
@@ -1017,11 +1087,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("and proc_case.case_status not in (:statusesToHide) ");
 		builder.append("and proc_case.case_manager_type is null) order by Created desc");
 
-		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
+		return getResults(builder.toString(), params);
 	}
 
 	@Override
-	public List<Integer> getHandlerCasesIds(
+	public Map<Integer, Date> getHandlerCasesIds(
 			User handler,
 			Collection<String> caseStatusesToShow,
 			Collection<String> caseStatusesToHide,
@@ -1035,7 +1105,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		String[] casePrimaryKeys = getCasesPrimaryKeys(
+		return getCasesPrimaryKeys(
 				processDefinitionNames,
 				procInstIds,
 				caseStatusesToShow,
@@ -1054,11 +1124,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				null,	//	generalCases
 				null	//	ended
 		);
-		return convertIDs(casePrimaryKeys);
 	}
 
 	@Override
-	public List<Integer> getHandlerCasesIds(
+	public Map<Integer, Date> getHandlerCasesIds(
 			User handler,
 			List<String> caseStatusesToShow,
 			List<String> caseStatusesToHide,
@@ -1072,7 +1141,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		String[] casePrimaryKeys = getCasesPrimaryKeys(
+		return getCasesPrimaryKeys(
 				null,
 				procInstIds,
 				caseStatusesToShow,
@@ -1091,18 +1160,20 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				null,				//	generalCases
 				null				//	ended
 		);
-
-		return convertIDs(casePrimaryKeys);
 	}
 
 	@Override
-	public List<Integer> getUserCasesIds(
-			User user, List<String> caseStatusesToShow,
-			List<String> caseStatusesToHide, List<String> caseCodes,
-			Collection<String> roles, boolean onlySubscribedCases,
-			Integer caseId, List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs) {
-
+	public Map<Integer, Date> getUserCasesIds(
+			User user,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			List<String> caseCodes,
+			Collection<String> roles,
+			boolean onlySubscribedCases,
+			Integer caseId,
+			List<Long> procInstIds,
+			Collection<? extends Number> subscriberGroupIDs
+	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseCodes", caseCodes));
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
@@ -1164,23 +1235,23 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		builder.append(") order by Created desc");
 
-		return getQueryNativeInline(builder.toString()).getResultList(Integer.class, "caseId", params.toArray(new Param[params.size()]));
+		return getResults(builder.toString(), params);
 	}
 
 	@Override
-	public List<Integer> getPublicCasesIds(
+	public Map<Integer, Date> getPublicCasesIds(
 			Collection<String> caseStatusesToShow,
 			Collection<String> caseStatusesToHide,
 			Collection<String> caseCodes,
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
-			Collection<? extends Number> handlerCategoryIDs) {
+			Collection<? extends Number> handlerCategoryIDs
+	) {
 		boolean useCaseCodes = !ListUtil.isEmpty(caseCodes);
 		boolean useProcDef = false;
 		if (useCaseCodes) {
 			try {
-				CaseBusiness caseBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
-						CaseBusiness.class);
+				CaseBusiness caseBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CaseBusiness.class);
 				List<String> allStatuses = caseBusiness.getAllCasesStatuses();
 				useProcDef = !allStatuses.contains(caseCodes.iterator().next());
 			} catch (Exception e) {
@@ -1190,21 +1261,66 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		if (useCaseCodes) {
 			if (useProcDef) {
-				return convertIDs(getCasesPrimaryKeys(caseCodes, procInstIds,
-						caseStatusesToShow,	caseStatusesToHide, null,
-						handlerCategoryIDs, null, null, null, null, null, null,
-						null, caseIDs, Boolean.TRUE, Boolean.TRUE, null));
+				return getCasesPrimaryKeys(
+						caseCodes,
+						procInstIds,
+						caseStatusesToShow,
+						caseStatusesToHide,
+						null,
+						handlerCategoryIDs,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						null,
+						caseIDs,
+						Boolean.TRUE,
+						Boolean.TRUE,
+						null
+				);
 			} else {
-				return convertIDs(getCasesPrimaryKeys(null, procInstIds,
-						caseStatusesToShow,	caseStatusesToHide, null,
-						handlerCategoryIDs, null, null, null, null, caseCodes,
-						null, null, caseIDs, Boolean.TRUE, Boolean.TRUE, null));
+				return getCasesPrimaryKeys(
+						null,
+						procInstIds,
+						caseStatusesToShow,
+						caseStatusesToHide,
+						null,
+						handlerCategoryIDs,
+						null,
+						null,
+						null,
+						null,
+						caseCodes,
+						null,
+						null,
+						caseIDs,
+						Boolean.TRUE,
+						Boolean.TRUE,
+						null
+				);
 			}
 		} else {
-			return convertIDs(getCasesPrimaryKeys(null, procInstIds,
-					caseStatusesToShow,	caseStatusesToHide, null,
-					handlerCategoryIDs, null, null, null, null, null, null,
-					null, caseIDs, Boolean.TRUE, Boolean.TRUE, null));
+			return getCasesPrimaryKeys(
+					null,
+					procInstIds,
+					caseStatusesToShow,
+					caseStatusesToHide,
+					null,
+					handlerCategoryIDs,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					null,
+					caseIDs,
+					Boolean.TRUE,
+					Boolean.TRUE,
+					null
+			);
 		}
 	}
 
@@ -1703,26 +1819,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	/**
-	 *
-	 * @param casesIDs in {@link String} for to convert, not <code>null</code>;
-	 * @return converted {@link String}s or {@link Collections#emptyList()}
-	 * on failure;
-	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
-	 */
-	protected List<Integer> convertIDs(String[] casesIDs) {
-		if (ArrayUtil.isEmpty(casesIDs)) {
-			return Collections.emptyList();
-		}
-
-		Map<Integer, Boolean> ids = new HashMap<Integer, Boolean>();
-		for (String id: casesIDs) {
-			ids.put(Integer.valueOf(id), Boolean.TRUE);
-		}
-
-		return new ArrayList<Integer>(ids.keySet());
-	}
-
-	/**
 	 * @param collection to convert, not <code>null</code>;
 	 * @return comma separated string of values or <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
@@ -1794,8 +1890,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return sb.toString();
 	}
 
-	@Override
-	public String getCasesPrimaryKeysQuery(
+	private String getCasesPrimaryKeysQuery(
 			Collection<String> processDefinitionNames,
 			Collection<? extends Number> processInstanceIds,
 			Collection<String> caseStatuses,
@@ -1815,12 +1910,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Boolean hasEnded) {
 
 		StringBuilder query = new StringBuilder();
-		query.append("SELECT bcpi.case_id FROM bpm_cases_processinstances bcpi ");
+		query.append("SELECT bcpi.case_id, case_created created FROM bpm_cases_processinstances bcpi ");
 
-		if (
-				!ListUtil.isEmpty(processDefinitionNames) ||
-				hasEnded != null) {
-
+		if (!ListUtil.isEmpty(processDefinitionNames) || hasEnded != null) {
 			query.append("JOIN jbpm_processinstance jpi ON bcpi.process_instance_id=jpi.ID_ ");
 
 			/* Selected processes that are ended or not */
@@ -1839,6 +1931,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 		}
 
+		String caseCreatedColumn = null;
 		/* Searching by case statuses or case manage types */
 		if (
 				!ListUtil.isEmpty(caseStatuses) ||
@@ -1850,6 +1943,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				!ListUtil.isEmpty(handlerGroupIds)) {
 
 			query.append("JOIN proc_case pc ON bcpi.case_id=pc.PROC_CASE_ID ");
+			caseCreatedColumn = "pc." + CaseBMPBean.COLUMN_CREATED;
 
 			/* Searching by case statuses */
 			if (!ListUtil.isEmpty(caseStatuses)) {
@@ -1896,6 +1990,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			if (!ListUtil.isEmpty(handlerGroupIds)) {
 				query.append("AND pc.HANDLER_GROUP_ID IN (").append(toStringNumbers(handlerGroupIds)).append(") ");
 			}
+		} else {
+			caseCreatedColumn = "bcpi.DATE_CREATED";
 		}
 
 		/* Filter by handlers */
@@ -1928,10 +2024,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			.append("AND ba.role_name IN (").append(toString(roles)).append(") ");
 		}
 
-		if (
-				isAnonymous != null ||
-				(isGeneralCases != null && isGeneralCases)) {
-
+		if (isAnonymous != null || (isGeneralCases != null && isGeneralCases)) {
 			/* Selecting only general cases */
 			query.append("JOIN comm_case cc ON bcpi.case_id = cc.COMM_CASE_ID ");
 
@@ -1946,7 +2039,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		}
 
-		return query.toString();
+		String sql = query.toString();
+		sql = StringHandler.replace(sql, "case_created", caseCreatedColumn);
+		return sql;
 	}
 
 	/*
@@ -1954,7 +2049,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	 * @see com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO#getCasesPrimaryKeys(java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection)
 	 */
 	@Override
-	public String[] getCasesPrimaryKeys(
+	public Map<Integer, Date> getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
 			Collection<? extends Number> processInstanceIds,
 			Collection<String> caseStatuses,
@@ -1973,28 +2068,39 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Boolean generalCases,
 			Boolean ended
 	) {
-		String query = getCasesPrimaryKeysQuery(processDefinitionNames,
-				processInstanceIds, caseStatuses, caseStatusesToHide,
-				subscribersIDs, subscribersGroupIDs, handlersIDs, handlerGroupIDs,
-				caseManagerTypes, hasCaseManagerType, caseCodes, roles, authorsIDs,
-				casesIds, isAnonymous, generalCases, ended);
+		String query = getCasesPrimaryKeysQuery(
+				processDefinitionNames,
+				processInstanceIds,
+				caseStatuses,
+				caseStatusesToHide,
+				subscribersIDs,
+				subscribersGroupIDs,
+				handlersIDs,
+				handlerGroupIDs,
+				caseManagerTypes,
+				hasCaseManagerType,
+				caseCodes,
+				roles,
+				authorsIDs,
+				casesIds,
+				isAnonymous,
+				generalCases,
+				ended
+		);
 
 		/* Ordering by date created */
-		query = query + "ORDER BY bcpi.date_created DESC";
+		query = query + "ORDER BY created DESC";
 
 		boolean sqlMeasurementOn = CoreUtil.isSQLMeasurementOn();
 		Long startTimeInMillis = sqlMeasurementOn ? System.currentTimeMillis() : 0;
 		try {
-			String[] ids = SimpleQuerier.executeStringQuery(query);
+			List<Serializable[]> data = SimpleQuerier.executeQuery(query, 2);
 			if (sqlMeasurementOn) {
-				getLogger().log(Level.INFO, "Query: " + query.toString() + " executed in " + (System.currentTimeMillis() - startTimeInMillis) +
-					" ms. Results are: " + ids);
+				getLogger().info("Query: " + query.toString() + " executed in " + (System.currentTimeMillis() - startTimeInMillis) + " ms");
 			}
-			return ids;
+			return getResults(data);
 		} catch (Exception e) {
-			getLogger().log(Level.WARNING,
-					"Unable to find ids for " + Case.class.getName() +
-					" by query: '" + query.toString() + "'", e);
+			getLogger().log(Level.WARNING, "Unable to find ids for " + Case.class.getName() + " by query: '" + query.toString() + "'", e);
 		}
 
 		return null;
