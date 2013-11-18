@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -935,7 +936,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return Collections.emptyMap();
 		}
 
-		Map<Integer, Date> results = new HashMap<Integer, Date>();
+		Map<Integer, Date> results = new LinkedHashMap<Integer, Date>();
 		for (Object[] caseData: data) {
 			if (ArrayUtil.isEmpty(caseData) || caseData.length != 2) {
 				continue;
@@ -1420,7 +1421,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<Long> procInstIds, Map<Long, Integer> results, Param metadata, int offset, int maxCount, String endDate) {
 
 		if (results == null)
-			results = new HashMap<Long, Integer>();
+			results = new LinkedHashMap<Long, Integer>();
 
 		if (ListUtil.isEmpty(procDefNames) && ListUtil.isEmpty(procInstIds))
 			return results;
