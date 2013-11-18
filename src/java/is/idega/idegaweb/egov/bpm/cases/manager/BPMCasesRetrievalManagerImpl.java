@@ -1042,7 +1042,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 		if (!ListUtil.isEmpty(data)) {
 			for (Serializable[] caseData: data) {
-				if (ArrayUtil.isEmpty(caseData) || caseData.length != 2) {
+				if (!ArrayUtil.isEmpty(caseData) && caseData.length == 2) {
 					Serializable id = caseData[0];
 					Serializable created = caseData[1];
 					if (id instanceof Number && created instanceof Timestamp) {
