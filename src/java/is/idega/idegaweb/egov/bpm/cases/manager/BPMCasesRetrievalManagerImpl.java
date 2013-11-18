@@ -13,7 +13,9 @@ import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -871,8 +873,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							procInstIds,
 							handlerCategoryIDs
 					);
-					getLogger().warning((ListUtil.isEmpty(caseIds) ? "Did not resolve any case ID" : "Resolved only few cases IDs (" + caseIds + ")") +
-							" from cache by key '" + key + "', it is probably invalid cache entry, will delete it and will query DB");
 					removeFromCache(key);
 				}
 			}
@@ -1012,6 +1012,49 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 	}
 
+	private void doLoadDataToCache(List<Integer> casesIds, Map<Integer, Date> results) {
+		if (ListUtil.isEmpty(casesIds)) {
+			return;
+		}
+
+		List<Integer> usedIds = null;
+		if (casesIds.size() > 1000) {
+			usedIds = new ArrayList<Integer>(casesIds.subList(0, 1000));
+			casesIds = new ArrayList<Integer>(casesIds.subList(1000, casesIds.size()));
+		} else {
+			usedIds = new ArrayList<Integer>(casesIds);
+			casesIds = null;
+		}
+
+		List<Serializable[]> data = null;
+		String query = "select c.proc_case_id, c.CREATED from proc_case c where c.proc_case_id in (";
+		for (Iterator<Integer> idsIter = usedIds.iterator(); idsIter.hasNext();) {
+			query = query.concat(String.valueOf(idsIter.next()));
+			if (idsIter.hasNext()) {
+				query = query.concat(", ");
+			}
+		}
+		query = query.concat(")");
+		try {
+			data = SimpleQuerier.executeQuery(query, 2);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (!ListUtil.isEmpty(data)) {
+			for (Serializable[] caseData: data) {
+				if (ArrayUtil.isEmpty(caseData) || caseData.length != 2) {
+					Serializable id = caseData[0];
+					Serializable created = caseData[1];
+					if (id instanceof Number && created instanceof Timestamp) {
+						results.put(((Number) id).intValue(), (Timestamp) created);
+					}
+				}
+			}
+		}
+
+		doLoadDataToCache(casesIds, results);
+	}
+
 	private void doPutToCache(final List<Integer> casesIds, final CasesCacheCriteria key) {
 		if (ListUtil.isEmpty(casesIds) || key == null) {
 			return;
@@ -1021,12 +1064,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			@Override
 			public void run() {
-				Collection<Case> cases = getCasesBusiness().getCasesByIds(casesIds);
-				if (!ListUtil.isEmpty(cases)) {
-					Map<Integer, Date> data = new HashMap<Integer, Date>();
-					for (Case theCase: cases) {
-						data.put(Integer.valueOf(theCase.getId()), theCase.getCreated());
-					}
+				Map<Integer, Date> data = new HashMap<Integer, Date>();
+				doLoadDataToCache(casesIds, data);
+				if (!MapUtil.isEmpty(data)) {
 					putIdsToCache(data, key);
 				}
 			}
