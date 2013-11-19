@@ -671,7 +671,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					null
 			);
 			long duration = System.currentTimeMillis() - start;
-			if (duration > 0) {
+			if (duration > 1000) {
 				getLogger().info("It took " + duration + " ms to resolve cases IDs for " + user + ", type: " + type + ", locale: " + locale +
 						", case codes: " + caseCodes + ", statuses to hide: " + caseStatusesToHide + ", statuses to show: " + caseStatusesToShow +
 						", only subscribed cases: " + onlySubscribedCases + ", show all cases: " + showAllCases + ", proc. inst. IDs: " + procInstIds +
