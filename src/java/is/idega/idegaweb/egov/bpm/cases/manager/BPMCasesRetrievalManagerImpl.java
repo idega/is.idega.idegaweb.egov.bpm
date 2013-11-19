@@ -652,6 +652,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Set<String> roles
 	) {
 		try {
+			long start = System.currentTimeMillis();
+
 			if (ListUtil.isEmpty(roles) && user != null) {
 				roles = getApplication().getAccessController().getAllRolesForUser(user);
 			}
@@ -668,13 +670,20 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					roles,
 					null
 			);
+			long duration = System.currentTimeMillis() - start;
+			if (duration > 0) {
+				getLogger().info("It took " + duration + " ms to resolve cases IDs for " + user + ", type: " + type + ", locale: " + locale +
+						", case codes: " + caseCodes + ", statuses to hide: " + caseStatusesToHide + ", statuses to show: " + caseStatusesToShow +
+						", only subscribed cases: " + onlySubscribedCases + ", show all cases: " + showAllCases + ", proc. inst. IDs: " + procInstIds +
+						", roles: " + roles);
+			}
 
 			if (ListUtil.isEmpty(casesIds)) {
 				LOGGER.info("User '" + user + "' doesn't have any cases!");
 				return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
 			}
 
-			long start = System.currentTimeMillis();
+			start = System.currentTimeMillis();
 			int totalCount = casesIds.size();
 			Collection<? extends Case> cases = null;
 			if (startIndex < totalCount) {
@@ -700,7 +709,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE))
 				Collections.sort(casesPresentation, new CasePresentationComparator());
 
-			long duration = System.currentTimeMillis() - start;
+			duration = System.currentTimeMillis() - start;
 			if (duration > 1000) {
 				getLogger().info("Cases (total: " + cases.size() + ") converted into beans in " + duration + " ms");
 			}
