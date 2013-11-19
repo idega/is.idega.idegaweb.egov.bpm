@@ -18,14 +18,14 @@ import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.idega.core.business.GeneralCompanyBusiness;
+import com.idega.core.company.bean.GeneralCompany;
 import com.idega.core.contact.data.Phone;
 import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
-import com.idega.jbpm.bean.JBPMCompany;
-import com.idega.jbpm.business.JBPMCompanyBusiness;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
@@ -55,7 +55,7 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 	UserApplicationEngine userApplicationEngine;
 	
 	@Autowired
-	JBPMCompanyBusiness jbpmCompanyBusiness;
+	GeneralCompanyBusiness generalCompanyBusiness;
 
 	@Override
 	public String getMimeType() {
@@ -136,10 +136,10 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 			if(showUserCompany){
 				cell = row.createCell(column++);
 				cell.setCellStyle(normalStyle);
-				Collection<JBPMCompany> companies = jbpmCompanyBusiness.getJBPMCompaniesForUser(user);
+				Collection<GeneralCompany> companies = generalCompanyBusiness.getJBPMCompaniesForUser(user);
 				String companyName;
 				if(!ListUtil.isEmpty(companies)){
-					JBPMCompany company = companies.iterator().next();
+					GeneralCompany company = companies.iterator().next();
 					companyName = company.getName();
 				}else{
 					companyName = "-";

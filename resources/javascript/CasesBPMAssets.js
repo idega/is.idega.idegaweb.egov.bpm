@@ -54,7 +54,7 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container,
 		hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, 
 		hideEmptySection, showAttachmentStatistics, showOnlyCreatorInContacts, 
 		showLogExportButton, showComments, showContacts, specialBackPage, 
-		nameFromExternalEntity) {
+		nameFromExternalEntity,showUserCompany) {
 	
 	CasesBPMAssets.openedCase.caseId = caseId || null;
 	CasesBPMAssets.openedCase.piId = piId || null;
@@ -70,13 +70,14 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container,
 	CasesBPMAssets.openedCase.showComments = showComments || false;
 	CasesBPMAssets.openedCase.showContacts = showContacts || false;
 	CasesBPMAssets.openedCase.nameFromExternalEntity = nameFromExternalEntity || false;
+	CasesBPMAssets.openedCase.showUserCompany = showUserCompany || false;
 	CasesBPMAssets.specialBackPage = specialBackPage || null;
 }
 
 CasesBPMAssets.initGridsContainer = function(container, piId, caseId, 
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
-		showComments, showContacts, specialBackPage, nameFromExternalEntity) {
+		showComments, showContacts, specialBackPage, nameFromExternalEntity,showUserCompany) {
 	
 	CasesBPMAssets.openedCase.nameFromExternalEntity = nameFromExternalEntity;
 	jQuery(container).mouseover(function() {
@@ -88,7 +89,7 @@ CasesBPMAssets.initGridsContainer = function(container, piId, caseId,
 				usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 				showAttachmentStatistics, showOnlyCreatorInContacts, 
 				showLogExportButton, showComments, showContacts, 
-				specialBackPage, nameFromExternalEntity);
+				specialBackPage, nameFromExternalEntity,showUserCompany);
 	});
 }
 
@@ -131,7 +132,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 				usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 				showAttachmentStatistics, showOnlyCreatorInContacts,
 				showLogExportButton, showComments, showContacts, specialBackPage, 
-				nameFromExternalEntity);
+				nameFromExternalEntity,showUserCompany);
 		
 		jQuery('img.reloadCaseStyleClass', container).each(function() {
 			if (typeof CasesEngine == 'undefined' || typeof CasesListHelper == 'undefined') {
@@ -181,7 +182,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 					showAttachmentStatistics, specialBackPage,
 					function() {
 						onGridInitedFunction('caseFormsPart', jQuery('div.caseFormsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
-					}
+					},showUserCompany
 				);
 				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
 					function() {
@@ -397,7 +398,7 @@ CasesBPMAssets.isRowHasViewUI = function(processInstanceId, rowId) {
 };
 
 CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-										showAttachmentStatistics, specialBackPage, onFormsInited) {
+										showAttachmentStatistics, specialBackPage, onFormsInited,showUserCompany) {
     var identifier = 'caseForms';
     
     var populatingFunction = function(params, callback) {
@@ -431,7 +432,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     };
 
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany);
     };
     
     var namesForColumns = new Array();
@@ -528,13 +529,14 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 		var hideEmptySection = CasesBPMAssets.openedCase.hideEmptySection;
 		var showAttachmentStatistics = CasesBPMAssets.openedCase.showAttachmentStatistics;
 		var specialBackPage = CasesBPMAssets.openedCase.specialBackPage;
-	
+		var showUserCompany = CasesBPMAssets.openedCase.showUserCompany;
+		
 		CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRights, 
 				usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 				showAttachmentStatistics, specialBackPage,
 		function() {
 			CasesBPMAssets.setTableProperties(container);
-		});
+		},showUserCompany);
 	}
 	
 	var hasRightChangeRights = CasesBPMAssets.openedCase.hasRightChangeRights == null ? false : CasesBPMAssets.openedCase.hasRightChangeRights;
@@ -590,7 +592,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     };
     
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany);
     };
     
     var namesForColumns = new Array();
@@ -840,7 +842,7 @@ CasesBPMAssets.getProcessRersourceView = function(caseId, taskInstanceId, specia
 }
 
 CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning,
-	showAttachmentStatistics) {
+	showAttachmentStatistics,showUserCompany) {
     var subgridTableId = subgridId + '_t';
     var subGridContainer = jQuery('#' + subgridId);
 	subGridContainer.html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\' border=\'0\'></table>');
@@ -853,6 +855,7 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, ro
 	subGridParams.caseId = caseId;
     subGridParams.populateFromFunction = function(params, callback) {
         params.taskId = rowId;
+        params.showUserCompany = showUserCompany;
         BPMProcessAssets.getTaskAttachments(params, {
             callback: function(result) {
                 callback(result);
