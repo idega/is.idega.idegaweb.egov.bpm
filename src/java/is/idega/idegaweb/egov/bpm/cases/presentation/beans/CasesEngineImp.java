@@ -406,11 +406,18 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (!StringUtil.isEmpty(criterias.getStatusId())) {
 			String status = null;
 			try {
-				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(null, getCasesBusiness(iwc).getCaseStatus(criterias.getStatusId()), locale);
+				status = getCasesBusiness(iwc).getLocalizedCaseStatusDescription(
+						null,
+						getCasesBusiness(iwc).getCaseStatus(criterias.getStatusId()),
+						locale
+				);
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting status name by: " + criterias.getStatusId(), e);
 			}
-			searchFields.add(new AdvancedProperty("status", StringUtil.isEmpty(status) ? iwrb.getLocalizedString("unknown_status", "Unknown") : status));
+			searchFields.add(new AdvancedProperty("status", StringUtil.isEmpty(status) ?
+					iwrb.getLocalizedString("unknown_status", "Unknown") :
+					status)
+			);
 		}
 		if (!StringUtil.isEmpty(criterias.getDateRange())) {
 			searchFields.add(new AdvancedProperty("date_range", criterias.getDateRange()));
@@ -431,7 +438,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 						value = resolver.getPresentation(variable);
 				}
 
-				searchFields.add(new AdvancedProperty(iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(variable.getName()), variable.getName()), value));
+				searchFields.add(new AdvancedProperty(
+						iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(variable.getName()), variable.getName()), value)
+				);
 			}
 		}
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
@@ -784,8 +793,18 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		List<String> statusesToShow = getStatusesToShow(builder, pageKey, instanceId);
 		boolean onlySubscribedCases = isShowSubscribedOnly(builder, pageKey, instanceId);
 
-		PagedDataCollection<CasePresentation> cases = getCaseManagersProvider().getCaseManager().getCases(user, type, iwc.getCurrentLocale(),
-				caseCodes, statusesToHide, statusesToShow, Integer.MAX_VALUE, -1, onlySubscribedCases, true);
+		PagedDataCollection<CasePresentation> cases = getCaseManagersProvider().getCaseManager().getCases(
+				user,
+				type,
+				iwc.getCurrentLocale(),
+				caseCodes,
+				statusesToHide,
+				statusesToShow,
+				Integer.MAX_VALUE,
+				-1,
+				onlySubscribedCases,
+				true
+		);
 
 		AdvancedProperty result = new AdvancedProperty(Boolean.FALSE.toString());
 		String errorMessage = getResourceBundle(iwc).getLocalizedString("unable_to_export_all_cases", "Sorry, unable to export cases to Excel");
@@ -831,7 +850,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		try {
 			resultsHolder = getSearchResultsHolder();
 		} catch(NullPointerException e) {
-			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
+			result.setValue(getResourceBundle(iwc)
+					.getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
 
@@ -853,7 +873,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		getExternalSearchResults(resultsHolder, id);
 		if (!resultsHolder.doExport(id)) {
-			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
+			result.setValue(getResourceBundle(iwc)
+					.getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
 
@@ -1091,13 +1112,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private Collection<CasePresentation> getExternalSearchResults(CasesSearchResultsHolder resultsHolder, String id) {
-		Map<String, ? extends ExternalCasesDataExporter> externalExporters = null;
-		try {
-			externalExporters = WebApplicationContextUtils.getWebApplicationContext(getApplication().getServletContext()).getBeansOfType(ExternalCasesDataExporter.class);
-		} catch (Exception e) {
-			getLogger().log(Level.WARNING, "Error getting beans of type: " + ExternalCasesDataExporter.class, e);
-		}
-
+		Map<String, ? extends ExternalCasesDataExporter> externalExporters = getBeansOfType(ExternalCasesDataExporter.class);
 		if (externalExporters == null || externalExporters.isEmpty()) {
 			return null;
 		}
@@ -1126,7 +1141,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		try {
 			bind = casesBPMDAO.getCaseProcInstBindByProcessInstanceId(processInstanceId);
 		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Error while getting instance of " + CaseProcInstBind.class.getName() + " by process instance: " + processInstanceId, e);
+			LOGGER.log(Level.WARNING, "Error while getting instance of " + CaseProcInstBind.class.getName() + " by process instance: " +
+					processInstanceId, e);
 		}
 		if (bind == null) {
 			return null;
