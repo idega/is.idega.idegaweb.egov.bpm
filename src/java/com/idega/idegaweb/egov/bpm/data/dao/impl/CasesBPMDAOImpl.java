@@ -20,6 +20,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.jbpm.JbpmContext;
+import org.jbpm.JbpmException;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,11 +40,14 @@ import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
 import com.idega.data.MetaDataBMPBean;
 import com.idega.data.SimpleQuerier;
+import com.idega.hibernate.HibernateUtil;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.bean.VariableInstanceType;
@@ -50,8 +55,6 @@ import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.data.impl.VariableInstanceQuerierImpl;
-import com.idega.jbpm.exe.BPMFactory;
-import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -77,7 +80,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	private VariableInstanceQuerier querier;
 
 	@Autowired
-	private BPMFactory bpmFactory;
+	private BPMContext bpmContext;
 
 	@Override
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
@@ -105,28 +108,37 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public CaseProcInstBind getCaseProcInstBindByProcessInstanceId(Long processInstanceId) {
+	@Transactional(readOnly = true)
+	public CaseProcInstBind getCaseProcInstBindByProcessInstanceId(final Long processInstanceId) {
 		CaseProcInstBind caseProcInstBind = find(CaseProcInstBind.class, processInstanceId);
-		if(caseProcInstBind != null){
+		if (caseProcInstBind != null) {
 			return caseProcInstBind;
 		}
-		ProcessInstanceW processInstanceW = bpmFactory.getProcessInstanceW(processInstanceId);
-		if(processInstanceW == null){
-			return null;
-		}
-		ProcessInstance currentProcess = processInstanceW.getProcessInstance();
-		Long mainProcessId = null;
-    	Token superToken = currentProcess.getSuperProcessToken();
-    	while(superToken != null){
-    		ProcessInstance processInstance = superToken.getProcessInstance();
-    		mainProcessId = processInstance.getId();
-    		superToken = processInstance.getSuperProcessToken();
-    	}
-    	if(mainProcessId == null){
-    		return null;
-    	}
-    	caseProcInstBind = find(CaseProcInstBind.class, mainProcessId);
-    	return caseProcInstBind;
+
+		caseProcInstBind = bpmContext.execute(new JbpmCallback<CaseProcInstBind>() {
+			@Override
+			public CaseProcInstBind doInJbpm(JbpmContext context) throws JbpmException {
+				ProcessInstance currentProcess = context.getProcessInstance(processInstanceId);
+				if (currentProcess == null) {
+					return null;
+				}
+
+				Long mainProcessId = null;
+		    	Token superToken = currentProcess.getSuperProcessToken();
+		    	while (superToken != null) {
+		    		superToken = HibernateUtil.initializeAndUnproxy(superToken);
+		    		ProcessInstance processInstance = superToken.getProcessInstance();
+					mainProcessId = processInstance.getId();
+		    		superToken = processInstance.getSuperProcessToken();
+		    	}
+
+		    	if (mainProcessId == null) {
+					return null;
+				}
+				return find(CaseProcInstBind.class, mainProcessId);
+			}
+		});
+		return caseProcInstBind;
 	}
 
 	@Override
