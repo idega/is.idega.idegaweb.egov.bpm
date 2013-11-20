@@ -136,7 +136,7 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 			if(showUserCompany){
 				cell = row.createCell(column++);
 				cell.setCellStyle(normalStyle);
-				Collection<GeneralCompany> companies = generalCompanyBusiness.getJBPMCompaniesForUser(user);
+				Collection<GeneralCompany> companies = generalCompanyBusiness.getCompaniesForUser(user);
 				String companyName;
 				if(!ListUtil.isEmpty(companies)){
 					GeneralCompany company = companies.iterator().next();
