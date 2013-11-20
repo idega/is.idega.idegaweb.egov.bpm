@@ -285,15 +285,32 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT,
 							IWTimestamp.SHORT));
 
-					CaseProcInstBind piBind = new CaseProcInstBind();
-					piBind.setCaseId(new Integer(genCase.getPrimaryKey().toString()));
-					piBind.setProcInstId(piId);
-					piBind.setCaseIdentierID(caseIdentifierNumber);
-
-					piBind.setDateCreated(caseCreated);
-					piBind.setCaseIdentifier(caseIdentifier);
-					getCasesBPMDAO().persist(piBind);
-					getLogger().info("Bind was created: process instance ID=" + piId + ", case ID=" + genCase.getPrimaryKey());
+					Integer caseId = new Integer(genCase.getPrimaryKey().toString());
+					CaseProcInstBind piBind = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
+					if (piBind == null) {
+						piBind = new CaseProcInstBind();
+						piBind.setCaseId(caseId);
+						piBind.setProcInstId(piId);
+						piBind.setCaseIdentierID(caseIdentifierNumber);
+						piBind.setDateCreated(caseCreated);
+						piBind.setCaseIdentifier(caseIdentifier);
+						getCasesBPMDAO().persist(piBind);
+						getLogger().info("Bind was created: process instance ID=" + piId + ", case ID=" + caseId);
+					} else {
+						CaseProcInstBind newBind = new CaseProcInstBind();
+						newBind.setCaseId(caseId);
+						newBind.setProcInstId(piId);
+						newBind.setCaseIdentierID(caseIdentifierNumber);
+						newBind.setDateCreated(caseCreated);
+						newBind.setCaseIdentifier(caseIdentifier);
+						Long oldPiId = piBind.getProcInstId();
+						org.hibernate.Session session = context.getSession();
+						session.refresh(piBind);
+						session.delete(piBind);
+						getCasesBPMDAO().persist(newBind);
+						getLogger().info("Created new bind for existing one. Proc. inst. ID (" + piId + ") for existing bind: case ID: " + caseId +
+								", old proc. inst. ID: " + oldPiId);
+					}
 
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
