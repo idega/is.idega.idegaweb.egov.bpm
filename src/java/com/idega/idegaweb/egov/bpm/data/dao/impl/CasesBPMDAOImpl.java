@@ -274,7 +274,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(Collection<Date> dates, Collection<Integer> identifierIDs) {
+	public List<Object[]> getCaseProcInstBindProcessInstanceByDateCreatedAndCaseIdentifierId(
+			Collection<Date> dates,
+			Collection<Integer> identifierIDs
+	) {
 		List<Object[]> cps = null;
 
 		if (!ListUtil.isEmpty(dates) && !ListUtil.isEmpty(identifierIDs)) {
@@ -335,8 +338,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		if (ListUtil.isEmpty(variables))
-			return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName, Long.class, new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+		if (ListUtil.isEmpty(variables)) {
+			return getResultList(
+					CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndName,
+					Long.class,
+					new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName)
+			);
+		}
 
 		Locale locale = CoreUtil.getCurrentLocale();
 
@@ -371,15 +379,25 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			// Double
 			} else if (variable.isDoubleType()) {
 				if (value instanceof Double) {
-					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables, processDefinitionName, variable.getName(),
-							value, BPMProcessVariable.DOUBLE_TYPES);
+					variableResults = getCaseIdsByVariable(
+							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables,
+							processDefinitionName,
+							variable.getName(),
+							value,
+							BPMProcessVariable.DOUBLE_TYPES
+					);
 				}
 
 			// Long
 			} else if (variable.isLongType()) {
 				if (value instanceof Long) {
-					variableResults = getCaseIdsByVariable(CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables, processDefinitionName, variable.getName(),
-							value, BPMProcessVariable.LONG_TYPES);
+					variableResults = getCaseIdsByVariable(
+							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables,
+							processDefinitionName,
+							variable.getName(),
+							value,
+							BPMProcessVariable.LONG_TYPES
+					);
 				}
 
 			// String
@@ -506,7 +524,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			statusesInSet.add(statuses[i]);
 		}
 
-		String query = VariableInstanceQuerierImpl.isDataMirrowed() ? CaseProcInstBind.getCaseIdsByCaseStatus : CaseProcInstBind.getCaseIdsByCaseStatusNoMirrow;
+		String query = VariableInstanceQuerierImpl.isDataMirrowed() ?
+				CaseProcInstBind.getCaseIdsByCaseStatus : CaseProcInstBind.getCaseIdsByCaseStatusNoMirrow;
 		return getResultList(query, Long.class, new Param(CaseProcInstBind.caseStatusesProp, statusesInSet));
 	}
 
@@ -732,7 +751,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	private String getConditionForCaseStatuses(List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
 		return getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, false);
 	}
-	private String getConditionForCaseStatuses(String columnName, List<Param> params, List<String> caseStatusesToShow, List<String> caseStatusesToHide, boolean notIn) {
+	private String getConditionForCaseStatuses(
+			String columnName,
+			List<Param> params,
+			List<String> caseStatusesToShow,
+			List<String> caseStatusesToHide,
+			boolean notIn
+	) {
 		//	Using statuses to show by default
 		if (ListUtil.isEmpty(caseStatusesToShow)) {
 			if (!ListUtil.isEmpty(caseStatusesToHide)) {
@@ -1174,7 +1199,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				caseIDs != null ? caseIDs : null,
 				null,	//	isAnonymous
 				null,	//	generalCases
-				null	//	ended
+				null,	//	ended
+				from,
+				to
 		);
 	}
 
@@ -1212,7 +1239,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				null,				//	casesIDs
 				null,				//	isAnonymous
 				null,				//	generalCases
-				null				//	ended
+				null,				//	ended
+				from,
+				to
 		);
 	}
 
@@ -1338,7 +1367,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						caseIDs,
 						Boolean.TRUE,
 						Boolean.TRUE,
-						null
+						null,
+						from,
+						to
 				);
 			} else {
 				return getCasesPrimaryKeys(
@@ -1358,7 +1389,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						caseIDs,
 						Boolean.TRUE,
 						Boolean.TRUE,
-						null
+						null,
+						from,
+						to
 				);
 			}
 		} else {
@@ -1379,7 +1412,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					caseIDs,
 					Boolean.TRUE,
 					Boolean.TRUE,
-					null
+					null,
+					from,
+					to
 			);
 		}
 	}
@@ -1967,8 +2002,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous,
 			Boolean isGeneralCases,
-			Boolean hasEnded) {
-
+			Boolean hasEnded,
+			Timestamp from,
+			Timestamp to
+	) {
 		StringBuilder query = new StringBuilder();
 		query.append("SELECT bcpi.case_id, case_created created FROM bpm_cases_processinstances bcpi ");
 
@@ -2096,11 +2133,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 					query.append("AND cc.IS_ANONYMOUS = 'N' ");
 				}
 			}
-
 		}
 
 		String sql = query.toString();
 		sql = StringHandler.replace(sql, "case_created", caseCreatedColumn);
+		if (from != null && to != null) {
+			String pattern = "yyyy-MM-dd HH:mm:ss.S";
+			IWTimestamp iwFrom = new IWTimestamp(from);
+			IWTimestamp iwTo = new IWTimestamp(to);
+			sql = sql.concat(" and ").concat(caseCreatedColumn).concat(" >= '").concat(iwFrom.getDateString(pattern)).concat("' and ")
+					.concat(caseCreatedColumn).concat(" <= '").concat(iwTo.getDateString(pattern + "SS")).concat("'");
+		}
+
 		return sql;
 	}
 
@@ -2126,7 +2170,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous,
 			Boolean generalCases,
-			Boolean ended
+			Boolean ended,
+			Timestamp from,
+			Timestamp to
 	) {
 		String query = getCasesPrimaryKeysQuery(
 				processDefinitionNames,
@@ -2145,7 +2191,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				casesIds,
 				isAnonymous,
 				generalCases,
-				ended
+				ended,
+				from,
+				to
 		);
 
 		/* Ordering by date created */

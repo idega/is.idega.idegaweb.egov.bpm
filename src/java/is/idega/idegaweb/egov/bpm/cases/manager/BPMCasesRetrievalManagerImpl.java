@@ -1000,20 +1000,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				);
 
 				Map<Integer, Date> cachedData = getCachedIds(key);
-//				List<Integer> cachedIds = getCachedIds(
-//						user,
-//						type,
-//						caseCodes,
-//						statusesToHide,
-//						statusesToShow,
-//						onlySubscribedCases,
-//						roles,
-//						groups,
-//						casecodes,
-//						showAllCases,
-//						procInstIds,
-//						handlerCategoryIDs
-//				);
 				if (!MapUtil.isEmpty(cachedData) && cachedData.size() > 5) {
 					if (!searchQuery) {
 						IWTimestamp from = new IWTimestamp();
@@ -1398,7 +1384,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			e.printStackTrace();
 		}
 		if (ListUtil.isEmpty(apps)) {
-			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName() + ", returning standard name!");
+			Logger.getLogger(this.getClass().getName()).log(Level.WARNING, "Didn't find any application by URL: " + pd.getName() +
+					", returning standard name!");
 			return pd.getName();
 		}
 
@@ -1610,6 +1597,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				null,
 				null,
 				caseManagerTypes,
+				null,
+				null,
 				null,
 				null,
 				null,

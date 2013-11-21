@@ -361,7 +361,9 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> authorsIDs,
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous, Boolean generalCases,
-			Boolean hasEnded
+			Boolean hasEnded,
+			Timestamp from,
+			Timestamp to
 	);
 
 }
