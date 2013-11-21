@@ -297,19 +297,23 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						getCasesBPMDAO().persist(piBind);
 						getLogger().info("Bind was created: process instance ID=" + piId + ", case ID=" + caseId);
 					} else {
-						CaseProcInstBind newBind = new CaseProcInstBind();
-						newBind.setCaseId(caseId);
-						newBind.setProcInstId(piId);
-						newBind.setCaseIdentierID(caseIdentifierNumber);
-						newBind.setDateCreated(caseCreated);
-						newBind.setCaseIdentifier(caseIdentifier);
-						Long oldPiId = piBind.getProcInstId();
+//						CaseProcInstBind newBind = new CaseProcInstBind();
+//						newBind.setCaseId(caseId);
+//						newBind.setProcInstId(piId);
+//						newBind.setCaseIdentierID(caseIdentifierNumber);
+//						newBind.setDateCreated(caseCreated);
+//						newBind.setCaseIdentifier(caseIdentifier);
+//						Long oldPiId = piBind.getProcInstId();
+//						org.hibernate.Session session = context.getSession();
+//						session.refresh(piBind);
+//						session.delete(piBind);
+//						getCasesBPMDAO().persist(newBind);
 						org.hibernate.Session session = context.getSession();
 						session.refresh(piBind);
-						session.delete(piBind);
-						getCasesBPMDAO().persist(newBind);
-						getLogger().info("Created new bind for existing one. Proc. inst. ID (" + piId + ") for existing bind: case ID: " + caseId +
-								", old proc. inst. ID: " + oldPiId);
+						Long oldPiId = piBind.getProcInstId();
+						piBind.setProcInstId(piId);
+						context.getSession().save(piBind);
+						getLogger().info("Updated existing bind: proc. inst. ID: " + piId + ", case ID: " + caseId + ", old proc. inst. ID: " + oldPiId);
 					}
 
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
