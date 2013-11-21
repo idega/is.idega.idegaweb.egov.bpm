@@ -760,7 +760,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		params.add(new Param("from", from));
 		params.add(new Param("to", to));
-		return " and proc_case.created >= :from and proc_case.created <= :to ";
+		return " proc_case.created >= :from and proc_case.created <= :to and ";
 	}
 
 	@Override
