@@ -2,6 +2,7 @@ package com.idega.idegaweb.egov.bpm.data.dao;
 
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -90,7 +91,9 @@ public interface CasesBPMDAO extends GenericDao {
 	        boolean onlySubscribedCases,
 	        Integer caseId,
 	        List<Long> procInstIds,
-	        Collection<? extends Number> subscriberGroupIDs
+	        Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	public abstract Map<Integer, Date> getClosedCasesIds(
@@ -102,7 +105,9 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	/**
@@ -119,7 +124,9 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	public abstract Map<Integer, Date> getUserCasesIds(
@@ -131,7 +138,9 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	/**
@@ -161,7 +170,9 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<String> caseCodes,
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
-			Collection<? extends Number> handlerCategoryIDs
+			Collection<? extends Number> handlerCategoryIDs,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(List<String> caseStatuses, List<String> caseStatusesToHide);
@@ -172,7 +183,9 @@ public interface CasesBPMDAO extends GenericDao {
 			List<String> caseStatusesToHide,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+			Timestamp from,
+			Timestamp to
 	);
 
 	public Map<Integer, Date> getClosedCasesIdsForAdmin(
@@ -180,7 +193,9 @@ public interface CasesBPMDAO extends GenericDao {
 			List<String> caseStatusesToHide,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
@@ -234,7 +249,9 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<String> roles,
 			boolean onlySubscribedCases,
 			Integer caseId,
-			List<Long> procInstIds
+			List<Long> procInstIds,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	/**
@@ -266,7 +283,9 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
 			Set<String> roles,
-			Collection<? extends Number> handlerCategoryIDs
+			Collection<? extends Number> handlerCategoryIDs,
+	        Timestamp from,
+	        Timestamp to
 	);
 
 	public Long getProcessInstanceIdByCaseIdAndMetaData(String caseId, Param metadata);

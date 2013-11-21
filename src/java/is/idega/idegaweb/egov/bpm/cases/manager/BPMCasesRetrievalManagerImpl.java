@@ -14,6 +14,7 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.rmi.RemoteException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -94,6 +95,7 @@ import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
@@ -632,7 +634,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				onlySubscribedCases,
 				showAllCases,
 				null,
-				null
+				null,
+				false
 		);
 	}
 
@@ -649,7 +652,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean onlySubscribedCases,
 			boolean showAllCases,
 			List<Long> procInstIds,
-			Set<String> roles
+			Set<String> roles,
+			boolean searchQuery
 	) {
 		try {
 			long start = System.currentTimeMillis();
@@ -668,7 +672,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					showAllCases,
 					procInstIds,
 					roles,
-					null
+					null,
+					searchQuery
 			);
 			long duration = System.currentTimeMillis() - start;
 			if (duration > 1000) {
@@ -735,9 +740,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean showAllCases,
 			List<Long> procInstIds,
 			Set<String> roles,
-			Collection<Long> handlerCategoryIDs
+			Collection<Long> handlerCategoryIDs,
+			boolean searchQuery
 	) throws Exception {
-		return getCaseIds(
+		return getCasesIds(
 				user,
 				type,
 				caseCodes,
@@ -748,7 +754,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				null,
 				procInstIds,
 				roles,
-				handlerCategoryIDs
+				handlerCategoryIDs,
+				searchQuery
 		);
 	}
 
@@ -762,7 +769,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean onlySubscribedCases,
 			boolean showAllCases
 	) throws Exception {
-		return getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null);
+		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false);
 	}
 
 	@Override
@@ -777,7 +784,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<Long> procInstIds,
 			Set<String> roles
 	) throws Exception {
-		return getCaseIds(
+		return getCasesIds(
 				user,
 				type,
 				caseCodes,
@@ -788,12 +795,12 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				null,
 				procInstIds,
 				roles,
-				null
+				null,
+				false
 		);
 	}
 
-	@Override
-	protected List<Integer> getCaseIds(
+	private Map<Integer, Date> getCasesIds(
 			User user,
 			String type,
 			List<String> caseCodes,
@@ -804,7 +811,136 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Integer caseId,
 			List<Long> procInstIds,
 			Set<String> roles,
-			Collection<Long> handlerCategoryIDs
+			Collection<Long> handlerCategoryIDs,
+			Timestamp from,
+			Timestamp to,
+
+			List<String> statusesToShow,
+			List<String> statusesToHide,
+			List<Integer> groups,
+			List<String> casecodes,
+			boolean isSuperAdmin
+	) throws Exception {
+		if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
+			return isSuperAdmin ?
+						getCasesBPMDAO().getOpenCasesIdsForAdmin(
+								caseCodes,
+								statusesToShow,
+								statusesToHide,
+								caseId,
+								procInstIds,
+								handlerCategoryIDs,
+								from,
+								to
+						) :
+						getCasesBPMDAO().getOpenCasesIds(
+								user,
+								caseCodes,
+								statusesToShow,
+								statusesToHide,
+								groups,
+								roles,
+								onlySubscribedCases,
+								caseId,
+								procInstIds,
+								handlerCategoryIDs,
+								from,
+								to
+						);
+		} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
+			return isSuperAdmin ?
+						getCasesBPMDAO().getClosedCasesIdsForAdmin(
+								statusesToShow,
+								statusesToHide,
+								caseId,
+								procInstIds,
+								handlerCategoryIDs,
+								from,
+								to
+						) :
+						getCasesBPMDAO().getClosedCasesIds(
+								user,
+								statusesToShow,
+								statusesToHide,
+								groups,
+								roles,
+								onlySubscribedCases,
+								caseId,
+								procInstIds,
+								handlerCategoryIDs,
+								from,
+								to
+						);
+		} else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
+			return getCasesBPMDAO().getMyCasesIds(
+					user,
+					statusesToShow,
+					statusesToHide,
+					onlySubscribedCases,
+					caseId,
+					procInstIds,
+					handlerCategoryIDs,
+					from,
+					to
+			);
+		} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
+			return getCasesBPMDAO().getUserCasesIds(
+					user,
+					statusesToShow,
+					statusesToHide,
+					casecodes,
+					roles,
+					onlySubscribedCases,
+					caseId,
+					procInstIds,
+					handlerCategoryIDs,
+					from,
+					to
+			);
+		} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
+			return getCasesBPMDAO().getPublicCasesIds(
+					statusesToShow,
+					statusesToHide,
+					caseCodes,
+					caseId != null ? Arrays.asList(caseId) : null,
+					procInstIds,
+					handlerCategoryIDs,
+					from,
+					to
+			);
+		} else if (CasesRetrievalManager.CASE_LIST_TYPE_HANDLER.equals(type)) {
+			return getCasesBPMDAO().getHandlerCasesIds(
+					user,
+					caseStatusesToShow,
+					caseStatusesToHide,
+					casecodes,
+					caseId != null ? Arrays.asList(caseId) : null,
+					procInstIds,
+					roles,
+					handlerCategoryIDs,
+					from,
+					to
+			);
+		} else {
+			getLogger().warning("Unknown cases list type: '" + type + "'");
+		}
+		return null;
+	}
+
+	@Override
+	protected List<Integer> getCasesIds(
+			User user,
+			String type,
+			List<String> caseCodes,
+			List<String> caseStatusesToHide,
+			List<String> caseStatusesToShow,
+			boolean onlySubscribedCases,
+			boolean showAllCases,
+			Integer caseId,
+			List<Long> procInstIds,
+			Set<String> roles,
+			Collection<Long> handlerCategoryIDs,
+			boolean searchQuery
 	) throws Exception {
 		Map<Integer, Date> casesIds = null;
 
@@ -848,7 +984,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			/* Querying cache */
 			if (casesListCacheTurnedOn && caseId == null) {
-				List<Integer> cachedIds = getCachedIds(
+				key = getCacheKey(
 						user,
 						type,
 						caseCodes,
@@ -862,23 +998,63 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 						procInstIds,
 						handlerCategoryIDs
 				);
-				if (!ListUtil.isEmpty(cachedIds) && cachedIds.size() > 5) {
-					return cachedIds;
+
+				Map<Integer, Date> cachedData = getCachedIds(key);
+//				List<Integer> cachedIds = getCachedIds(
+//						user,
+//						type,
+//						caseCodes,
+//						statusesToHide,
+//						statusesToShow,
+//						onlySubscribedCases,
+//						roles,
+//						groups,
+//						casecodes,
+//						showAllCases,
+//						procInstIds,
+//						handlerCategoryIDs
+//				);
+				if (!MapUtil.isEmpty(cachedData) && cachedData.size() > 5) {
+					if (!searchQuery) {
+						IWTimestamp from = new IWTimestamp();
+						from.setHour(0);
+						from.setMinute(0);
+						from.setSecond(0);
+						from.setMilliSecond(0);
+						IWTimestamp to = new IWTimestamp();
+						to.setHour(23);
+						to.setMinute(59);
+						to.setSecond(59);
+						to.setMilliSecond(999);
+						casesIds = getCasesIds(
+								user,
+								type,
+								caseCodes,
+								caseStatusesToHide,
+								caseStatusesToShow,
+								onlySubscribedCases,
+								showAllCases,
+								caseId,
+								procInstIds,
+								roles,
+								handlerCategoryIDs,
+								from.getTimestamp(),
+								to.getTimestamp(),
+								statusesToShow,
+								statusesToHide,
+								groups,
+								casecodes,
+								isSuperAdmin
+						);
+						if (!MapUtil.isEmpty(casesIds)) {
+							for (Map.Entry<Integer, Date> caseEntry: casesIds.entrySet()) {
+								cachedData.put(caseEntry.getKey(), caseEntry.getValue());
+							}
+						}
+					}
+
+					return getSortedIds(cachedData);
 				} else {
-					key = getCacheKey(
-							user,
-							type,
-							caseCodes,
-							statusesToHide,
-							statusesToShow,
-							onlySubscribedCases,
-							roles,
-							groups,
-							casecodes,
-							showAllCases,
-							procInstIds,
-							handlerCategoryIDs
-					);
 					removeFromCache(key);
 				}
 			}
@@ -902,95 +1078,26 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				procInstIds = Collections.emptyList();
 			}
 
-			/* Querying data source */
-			if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
-				casesIds = isSuperAdmin ?
-							getCasesBPMDAO().getOpenCasesIdsForAdmin(
-									caseCodes,
-									statusesToShow,
-									statusesToHide,
-									caseId,
-									procInstIds,
-									handlerCategoryIDs
-							) :
-							getCasesBPMDAO().getOpenCasesIds(
-									user,
-									caseCodes,
-									statusesToShow,
-									statusesToHide,
-									groups,
-									roles,
-									onlySubscribedCases,
-									caseId,
-									procInstIds,
-									handlerCategoryIDs
-							);
-			} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
-				casesIds = isSuperAdmin ?
-							getCasesBPMDAO().getClosedCasesIdsForAdmin(
-									statusesToShow,
-									statusesToHide,
-									caseId,
-									procInstIds,
-									handlerCategoryIDs
-							) :
-							getCasesBPMDAO().getClosedCasesIds(
-									user,
-									statusesToShow,
-									statusesToHide,
-									groups,
-									roles,
-									onlySubscribedCases,
-									caseId,
-									procInstIds,
-									handlerCategoryIDs
-							);
-			} else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
-				casesIds = getCasesBPMDAO().getMyCasesIds(
-						user,
-						statusesToShow,
-						statusesToHide,
-						onlySubscribedCases,
-						caseId,
-						procInstIds,
-						handlerCategoryIDs
-				);
-			} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
-				casesIds = getCasesBPMDAO().getUserCasesIds(
-						user,
-						statusesToShow,
-						statusesToHide,
-						casecodes,
-						roles,
-						onlySubscribedCases,
-						caseId,
-						procInstIds,
-						handlerCategoryIDs
-				);
-			} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
-				casesIds = getCasesBPMDAO().getPublicCasesIds(
-						statusesToShow,
-						statusesToHide,
-						caseCodes,
-						caseId != null ? Arrays.asList(caseId) : null,
-						procInstIds,
-						handlerCategoryIDs
-				);
-			} else if (CasesRetrievalManager.CASE_LIST_TYPE_HANDLER.equals(type)) {
-				casesIds = getCasesBPMDAO().getHandlerCasesIds(
-						user,
-						caseStatusesToShow,
-						caseStatusesToHide,
-						casecodes,
-						caseId != null ? Arrays.asList(caseId) : null,
-						procInstIds,
-						roles,
-						handlerCategoryIDs
-				);
-			} else {
-				getLogger().warning("Unknown cases list type: '" + type + "'");
-			}
-
+			casesIds = getCasesIds(
+					user,
+					type,
+					caseCodes,
+					caseStatusesToHide,
+					caseStatusesToShow,
+					onlySubscribedCases,
+					showAllCases,
+					caseId,
+					procInstIds,
+					roles,
+					handlerCategoryIDs,
+					null,
+					null,
+					statusesToShow,
+					statusesToHide,
+					groups,
+					casecodes,
+					isSuperAdmin
+			);
 			if (casesIds == null) {
 				return Collections.emptyList();
 			}
@@ -1676,7 +1783,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 						List<Integer> ids = null;
 						if (!superAdmin) {
 							try {
-								ids = getCaseIds(
+								ids = getCasesIds(
 										user,
 										criteria.getType(),
 										criteria.getCaseCodes(),
@@ -1687,7 +1794,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 										caseId,
 										criteria.getProcInstIds(),
 										criteria.getRoles(),
-										criteria.getHandlercategoryIds()
+										criteria.getHandlercategoryIds(),
+										false
 								);
 							} catch (Exception e) {
 								String caseInfo = "Case ID " + id + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +

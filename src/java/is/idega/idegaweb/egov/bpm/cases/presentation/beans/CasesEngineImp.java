@@ -537,7 +537,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					criterias.isShowAllCases(),
 					criterias.getProcInstIds(),
 					criterias.getRoles(),
-					criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId()));
+					criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId()),
+					true
+			);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
 		}

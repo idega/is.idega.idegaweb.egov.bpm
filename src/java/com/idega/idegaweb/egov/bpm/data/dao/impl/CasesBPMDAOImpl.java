@@ -638,7 +638,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
@@ -663,6 +665,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		        .append(" pu on cp.").append(CaseProcInstBind.procInstIdColumnName).append(" = pu.process_instance_id ").append("where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append("pi.end_ is null and ");
@@ -692,6 +695,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(" where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" comm_case.handler = :").append(NativeIdentityBind.identityIdProperty);
@@ -749,6 +753,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getConditionForCaseStatuses("proc_case", params, caseStatusesToShow, caseStatusesToHide, notIn);
 	}
 
+	private String getConditionForFromAndTo(List<Param> params, Timestamp from, Timestamp to) {
+		if (from == null || to == null) {
+			return CoreConstants.EMPTY;
+		}
+
+		params.add(new Param("from", from));
+		params.add(new Param("to", to));
+		return " and proc_case.created >= :from and proc_case.created <= :to ";
+	}
+
 	@Override
 	public Map<Integer, Date> getOpenCasesIds(
 			User user,
@@ -760,7 +774,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	        boolean onlySubscribedCases,
 	        Integer caseId,
 	        List<Long> procInstIds,
-	        Collection<? extends Number> subscriberGroupIDs
+	        Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		boolean showClosedCases = false;
 		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
@@ -793,6 +809,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append("where");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" (");
@@ -830,6 +847,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(" where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" proc_case.case_manager_type is null");
@@ -852,7 +870,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<String> caseStatusesToHide,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+			Timestamp from,
+			Timestamp to
 	) {
 		boolean showClosedCases = false;
 		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
@@ -880,6 +900,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append("where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" act.process_instance_id is not null ");
@@ -904,6 +925,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(" where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" proc_case.case_manager_type is null ");
@@ -973,7 +995,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
@@ -1002,6 +1026,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append("where");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" (");
@@ -1035,6 +1060,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(" where");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" proc_case.case_status in (:statusesToShow) ");
@@ -1056,7 +1082,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<String> caseStatusesToHide,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
@@ -1080,6 +1108,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append("where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" act.process_instance_id is not null and (pi.end_ is not null or proc_case.case_status in (:statusesToShow))");
@@ -1100,6 +1129,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(" where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" proc_case.case_status in (:statusesToShow) ");
@@ -1119,7 +1149,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
 			Set<String> roles,
-			Collection<? extends Number> handlerCategoryIDs
+			Collection<? extends Number> handlerCategoryIDs,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		if (handler == null) {
 			return null;
@@ -1155,7 +1187,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<String> roles,
 			boolean onlySubscribedCases,
 			Integer caseId,
-			List<Long> procInstIds
+			List<Long> procInstIds,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		if (handler == null) {
 			return null;
@@ -1192,7 +1226,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
-			Collection<? extends Number> subscriberGroupIDs
+			Collection<? extends Number> subscriberGroupIDs,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseCodes", caseCodes));
@@ -1215,6 +1251,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append("left join bpm_native_identities ni on act.actor_id = ni.actor_fk where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" (");
@@ -1247,6 +1284,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(" where ");
 
 		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
+		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" proc_case.user_id=:identityId and proc_case.case_code not in (:caseCodes) ");
@@ -1265,7 +1303,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<String> caseCodes,
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
-			Collection<? extends Number> handlerCategoryIDs
+			Collection<? extends Number> handlerCategoryIDs,
+	        Timestamp from,
+	        Timestamp to
 	) {
 		boolean useCaseCodes = !ListUtil.isEmpty(caseCodes);
 		boolean useProcDef = false;
