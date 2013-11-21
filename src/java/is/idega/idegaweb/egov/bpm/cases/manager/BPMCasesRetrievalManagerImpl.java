@@ -1020,12 +1020,12 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 						from.setHour(0);
 						from.setMinute(0);
 						from.setSecond(0);
-						from.setMilliSecond(0);
+//						from.setMilliSecond(0);
 						IWTimestamp to = new IWTimestamp();
 						to.setHour(23);
 						to.setMinute(59);
 						to.setSecond(59);
-						to.setMilliSecond(999);
+//						to.setMilliSecond(999);
 						casesIds = getCasesIds(
 								user,
 								type,
