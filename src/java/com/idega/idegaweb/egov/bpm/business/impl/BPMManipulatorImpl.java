@@ -1,5 +1,9 @@
 package com.idega.idegaweb.egov.bpm.business.impl;
 
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -63,29 +67,29 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 
 	@Override
 	@RemoteMethod
-	public boolean doReSubmitProcess(Long piId) {
+	public boolean doReSubmitProcess(Long piId, boolean onlyStart, boolean submitRepeatedTasks) {
 		if (piId == null) {
 			getLogger().warning("Proc. inst. ID is not provided");
 			return false;
 		}
 
 		CaseProcInstBind bind = casesDAO.getCaseProcInstBindByProcessInstanceId(piId);
-		return doReSubmit(bind);
+		return doReSubmit(bind, onlyStart, submitRepeatedTasks);
 	}
 
 	@Override
 	@RemoteMethod
-	public boolean doReSubmitCase(Integer caseId) {
+	public boolean doReSubmitCase(Integer caseId, boolean onlyStart, boolean submitRepeatedTasks) {
 		if (caseId == null) {
 			getLogger().warning("Case ID is not provided");
 			return false;
 		}
 
 		CaseProcInstBind bind = casesDAO.getCaseProcInstBindByCaseId(caseId);
-		return doReSubmit(bind);
+		return doReSubmit(bind, onlyStart, submitRepeatedTasks);
 	}
 
-	private boolean doReSubmit(CaseProcInstBind bind) {
+	private boolean doReSubmit(CaseProcInstBind bind, boolean onlyStart, boolean submitRepeatedTasks) {
 		if (bind == null) {
 			getLogger().warning("Case and proc. inst. bind is not provided");
 			return false;
@@ -123,13 +127,31 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 				return false;
 			}
 
-			long startTaskInstId = startTiW.getTaskInstanceId().longValue();
-			List<TaskInstanceW> allSubmittedTasks = piW.getSubmittedTaskInstances();
+			List<TaskInstanceW> allSubmittedTasks = onlyStart ? null : piW.getSubmittedTaskInstances();
 			if (!ListUtil.isEmpty(allSubmittedTasks)) {
+				Collections.sort(allSubmittedTasks, new Comparator<TaskInstanceW>() {
+					@Override
+					public int compare(TaskInstanceW t1, TaskInstanceW t2) {
+						Date d1 = t1.getTaskInstance().getEnd();
+						Date d2 = t1.getTaskInstance().getEnd();
+						return d1.compareTo(d2);
+					}
+				});
+
+				long startTaskInstId = startTiW.getTaskInstanceId().longValue();
 				ProcessInstanceW newPiw = bpmFactory.getProcessInstanceW(newProcInstId);
+				Map<String, Boolean> submitted = new HashMap<String, Boolean>();
 				for (TaskInstanceW submittedTask: allSubmittedTasks) {
+					String name = submittedTask.getTaskInstance().getName();
+					if (!submitRepeatedTasks && submitted.containsKey(name)) {
+						getLogger().info("Task instance by name " + name + " was already submitted, not submitting repeating tasks");
+						continue;
+					}
+
 					if (submittedTask.getTaskInstanceId().longValue() != startTaskInstId) {
-						if (!doSubmitTask(piW, submittedTask, newPiw)) {
+						if (doSubmitTask(piW, submittedTask, newPiw)) {
+							submitted.put(name, Boolean.TRUE);
+						} else {
 							getLogger().warning("Unable to re-submit task instance " + submittedTask + " for proc. inst. " + piId);
 							return false;
 						}
@@ -158,11 +180,11 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 					Map<String, Object> variables = oldTiW.getVariables(token);
 					List<BinaryVariable> attachments = oldTiW.getAttachments();
 
-					Object mainProcessInstanceId = variables.get("mainProcessInstanceId");
-					if (mainProcessInstanceId instanceof Long) {
-						variables.put("mainProcessInstanceId", newPiW.getProcessInstanceId());
-					}
-					variables.remove("files_attachments");
+//					Object mainProcessInstanceId = variables.get("mainProcessInstanceId");
+//					if (mainProcessInstanceId instanceof Long) {
+//						variables.put("mainProcessInstanceId", newPiW.getProcessInstanceId());
+//					}
+//					variables.remove("files_attachments");
 
 					TaskInstanceW submittedTaskInstW = newPiW.getSubmittedTaskInstance(task.getName(), variables);
 					if (submittedTaskInstW == null) {
@@ -264,10 +286,10 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 					org.jbpm.taskmgmt.exe.TaskInstance ti = context.getTaskInstance(startTiW.getTaskInstanceId());
 					org.jbpm.graph.exe.Token token = ti.getToken();
 					Map<String, Object> variables = startTiW.getVariables(token);
-					if (variables.containsKey("mainProcessInstanceId")) {
-						variables.remove("mainProcessInstanceId");
-					}
-					variables.remove("files_attachments");	//	Will be re-added
+//					if (variables.containsKey("mainProcessInstanceId")) {
+//						variables.remove("mainProcessInstanceId");
+//					}
+//					variables.remove("files_attachments");	//	Will be re-added
 
 					viewSubmission.populateVariables(variables);
 					viewSubmission.populateParameters(parameters);
