@@ -44,13 +44,17 @@ import com.idega.bpm.xformsview.XFormsView;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.persistence.Param;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
+import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
+import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
+import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.data.dao.BPMDAO;
@@ -189,6 +193,54 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return genCase;
 	}
 
+	@SuppressWarnings("deprecation")
+	@Transactional(readOnly = false)
+	private CaseProcInstBind getNewCaseProcBind(org.hibernate.Session session, CaseProcInstBind oldBind, Long newPiId) throws Exception {
+		List<ProcessUserBind> usersBinds = getCasesBPMDAO().getResultListByInlineQuery(
+				"from " + ProcessUserBind.class.getName() + " ub where ub." + ProcessUserBind.caseProcessBindProp + " = :oldBind",
+				ProcessUserBind.class,
+				new Param("oldBind", oldBind)
+		);
+		Map<Integer, Status> data = null;
+		if (!ListUtil.isEmpty(usersBinds)) {
+			data = new HashMap<Integer, ProcessUserBind.Status>();
+			for (ProcessUserBind userBind: usersBinds) {
+				data.put(userBind.getUserId(), userBind.getStatus());
+				SimpleQuerier.execute("delete from " + ProcessUserBind.TABLE_NAME + " where id_ = " + userBind.getId());
+			}
+		}
+
+		CaseProcInstBind newBind = new CaseProcInstBind();
+		newBind.setCaseId(oldBind.getCaseId());
+		newBind.setProcInstId(newPiId);
+		newBind.setCaseIdentierID(oldBind.getCaseIdentierID());
+		newBind.setDateCreated(oldBind.getDateCreated());
+		newBind.setCaseIdentifier(oldBind.getCaseIdentifier());
+		session.persist(newBind);
+		getLogger().info("Created new bind (" + newBind + ") instead of existing one: " + oldBind);
+
+		String sql = "delete from " + CaseProcInstBind.TABLE_NAME + " where " + CaseProcInstBind.procInstIdColumnName + " = " +
+				oldBind.getProcInstId();
+		try {
+			SimpleQuerier.execute(sql);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error executing SQL: '" + sql + "'", e);
+			return null;
+		}
+
+		if (!MapUtil.isEmpty(data)) {
+			for (Map.Entry<Integer, Status> userData: data.entrySet()) {
+				ProcessUserBind userBind = new ProcessUserBind();
+				userBind.setCaseProcessBind(newBind);
+				userBind.setUserId(userData.getKey());
+				userBind.setStatus(userData.getValue());
+				session.persist(userBind);
+			}
+		}
+
+		return newBind;
+	}
+
 	@Transactional(readOnly = false)
 	@Override
 	public Long startProcess(final ViewSubmission viewSubmission) {
@@ -297,23 +349,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						getCasesBPMDAO().persist(piBind);
 						getLogger().info("Bind was created: process instance ID=" + piId + ", case ID=" + caseId);
 					} else {
-//						CaseProcInstBind newBind = new CaseProcInstBind();
-//						newBind.setCaseId(caseId);
-//						newBind.setProcInstId(piId);
-//						newBind.setCaseIdentierID(caseIdentifierNumber);
-//						newBind.setDateCreated(caseCreated);
-//						newBind.setCaseIdentifier(caseIdentifier);
-//						Long oldPiId = piBind.getProcInstId();
-//						org.hibernate.Session session = context.getSession();
-//						session.refresh(piBind);
-//						session.delete(piBind);
-//						getCasesBPMDAO().persist(newBind);
-						org.hibernate.Session session = context.getSession();
-						session.refresh(piBind);
-						Long oldPiId = piBind.getProcInstId();
-						piBind.setProcInstId(piId);
-						context.getSession().save(piBind);
-						getLogger().info("Updated existing bind: proc. inst. ID: " + piId + ", case ID: " + caseId + ", old proc. inst. ID: " + oldPiId);
+						getNewCaseProcBind(context.getSession(), piBind, piId);
 					}
 
 					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
