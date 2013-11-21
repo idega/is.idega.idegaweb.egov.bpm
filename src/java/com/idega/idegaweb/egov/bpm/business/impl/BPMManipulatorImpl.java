@@ -212,11 +212,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 			org.jbpm.taskmgmt.exe.TaskInstance newTi = context.getTaskInstance(newTaskInstW.getTaskInstanceId());
 			newTi.setCreate(oldTaskInst.getCreate());
 			newTi.setEnd(oldTaskInst.getEnd());
-
-			String actorId = oldTaskInst.getActorId();
-			if (!StringUtil.isEmpty(actorId)) {
-				newTi.setActorId(actorId);
-			}
+			newTi.setActorId(oldTaskInst.getActorId());
 
 			if (!ListUtil.isEmpty(attachments)) {
 				for (BinaryVariable attachment: attachments) {
