@@ -180,11 +180,11 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 					Map<String, Object> variables = oldTiW.getVariables(token);
 					List<BinaryVariable> attachments = oldTiW.getAttachments();
 
-//					Object mainProcessInstanceId = variables.get("mainProcessInstanceId");
-//					if (mainProcessInstanceId instanceof Long) {
-//						variables.put("mainProcessInstanceId", newPiW.getProcessInstanceId());
-//					}
-//					variables.remove("files_attachments");
+					Object mainProcessInstanceId = variables.get("mainProcessInstanceId");
+					if (mainProcessInstanceId instanceof Long) {
+						variables.put("mainProcessInstanceId", newPiW.getProcessInstanceId());
+					}
+					variables.remove("files_attachments");
 
 					TaskInstanceW submittedTaskInstW = newPiW.getSubmittedTaskInstance(task.getName(), variables);
 					if (submittedTaskInstW == null) {
@@ -282,10 +282,10 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 					org.jbpm.taskmgmt.exe.TaskInstance ti = context.getTaskInstance(startTiW.getTaskInstanceId());
 					org.jbpm.graph.exe.Token token = ti.getToken();
 					Map<String, Object> variables = startTiW.getVariables(token);
-//					if (variables.containsKey("mainProcessInstanceId")) {
-//						variables.remove("mainProcessInstanceId");
-//					}
-//					variables.remove("files_attachments");	//	Will be re-added
+					if (variables.containsKey("mainProcessInstanceId")) {
+						variables.remove("mainProcessInstanceId");
+					}
+					variables.remove("files_attachments");	//	Will be re-added
 
 					viewSubmission.populateVariables(variables);
 					viewSubmission.populateParameters(parameters);
