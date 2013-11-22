@@ -182,8 +182,10 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 				}
 			}
 
-			theCase.setStatus(CaseBMPBean.CASE_STATUS_OPEN_KEY);
-			theCase.store();
+			if (onlyStart) {
+				theCase.setStatus(CaseBMPBean.CASE_STATUS_OPEN_KEY);
+				theCase.store();
+			}
 
 			return true;
 		} catch (Exception e) {
