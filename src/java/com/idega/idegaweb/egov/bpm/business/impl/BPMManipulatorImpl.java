@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
+import com.idega.block.process.data.CaseBMPBean;
 import com.idega.core.accesscontrol.business.LoginBusinessBean;
 import com.idega.core.accesscontrol.dao.UserLoginDAO;
 import com.idega.core.accesscontrol.data.bean.UserLogin;
@@ -180,6 +181,9 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 					}
 				}
 			}
+
+			theCase.setStatus(CaseBMPBean.CASE_STATUS_OPEN_KEY);
+			theCase.store();
 
 			return true;
 		} catch (Exception e) {
