@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
+import com.idega.core.accesscontrol.business.LoginBusinessBean;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.egov.bpm.business.BPMManipulator;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -106,12 +107,26 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 			return false;
 		}
 
+		boolean loggedInAsAuthor = false;
+		LoginBusinessBean loginBusiness = LoginBusinessBean.getLoginBusinessBean(iwc);
 		try {
 			Long piId = bind == null ? null : bind.getProcInstId();
 			Integer caseId = bind == null ? null : bind.getCaseId();
 			if (bind == null || caseId == null) {
 				getLogger().warning("Unable to find case and proc. inst. bind for proc. inst. ID " + piId);
 				return false;
+			}
+
+			CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
+			Case theCase = caseBusiness.getCase(caseId);
+			com.idega.user.data.User owner = theCase.getOwner();
+			if (owner == null) {
+				owner = theCase.getCreator();
+			}
+			if (owner != null) {
+				User author = getActor(owner.getPersonalID());
+				loginBusiness.logInAsAnotherUser(iwc, author);
+				loggedInAsAuthor = true;
 			}
 
 			ProcessInstanceW piW = bpmFactory.getProcessInstanceW(piId);
@@ -162,6 +177,14 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 			return true;
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Failed to re-submit case/process for bind " + bind, e);
+		} finally {
+			if (loggedInAsAuthor) {
+				try {
+					loginBusiness.logInAsAnotherUser(iwc, iwc.getAccessController().getAdministratorUser());
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error logging in as super admin", e);
+				}
+			}
 		}
 
 		return false;
@@ -316,7 +339,11 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 		try {
 			UserDAO userDAO = ELUtil.getInstance().getBean(UserDAO.class);
 			if (StringHandler.isNumeric(id)) {
-				return userDAO.getUser(Integer.valueOf(id));
+				if (id.length() == 10) {
+					return userDAO.getUser(id);
+				} else {
+					return userDAO.getUser(Integer.valueOf(id));
+				}
 			}
 
 			return userDAO.getUser(id);
