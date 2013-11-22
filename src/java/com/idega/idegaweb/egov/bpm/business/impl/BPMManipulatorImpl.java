@@ -23,6 +23,8 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
 import com.idega.core.accesscontrol.business.LoginBusinessBean;
+import com.idega.core.accesscontrol.dao.UserLoginDAO;
+import com.idega.core.accesscontrol.data.bean.UserLogin;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.egov.bpm.business.BPMManipulator;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -107,7 +109,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 			return false;
 		}
 
-		boolean loggedInAsAuthor = false;
+		boolean reLoginSuperAdmin = false;
 		LoginBusinessBean loginBusiness = LoginBusinessBean.getLoginBusinessBean(iwc);
 		try {
 			Long piId = bind == null ? null : bind.getProcInstId();
@@ -125,8 +127,13 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 			}
 			if (owner != null) {
 				User author = getActor(owner.getPersonalID());
-				loginBusiness.logInAsAnotherUser(iwc, author);
-				loggedInAsAuthor = true;
+				if (hasLogin(author)) {
+					loginBusiness.logInAsAnotherUser(iwc, author);
+					reLoginSuperAdmin = true;
+				} else {
+					loginBusiness.logOutUser(iwc);
+					reLoginSuperAdmin = true;
+				}
 			}
 
 			ProcessInstanceW piW = bpmFactory.getProcessInstanceW(piId);
@@ -178,7 +185,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Failed to re-submit case/process for bind " + bind, e);
 		} finally {
-			if (loggedInAsAuthor) {
+			if (reLoginSuperAdmin) {
 				try {
 					loginBusiness.logInAsAnotherUser(iwc, iwc.getAccessController().getAdministratorUser());
 				} catch (Exception e) {
@@ -329,6 +336,17 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 				return null;
 			}
 		});
+	}
+
+	private boolean hasLogin(User user) {
+		try {
+			UserLoginDAO loginDAO = ELUtil.getInstance().getBean(UserLoginDAO.class);
+			UserLogin login = loginDAO.findLoginForUser(user);
+			return login != null;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error while checking if " + user + " has login", e);
+		}
+		return false;
 	}
 
 	private User getActor(String id) {
