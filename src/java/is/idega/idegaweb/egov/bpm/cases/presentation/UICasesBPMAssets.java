@@ -67,7 +67,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			hideEmptySection = true, showAttachmentStatistics, 
 			showOnlyCreatorInContacts, showLogExportButton, showComments = true, 
 			showContacts = true, nameFromExternalEntity = false, showUserProfilePicture = Boolean.TRUE,
-			showUserCompany = false;
+			showUserCompany = false, showLastLoginDate = false;;
 
 	private String commentsPersistenceManagerIdentifier, specialBackPage;
 
@@ -408,7 +408,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		
 		mainAction.append(CoreConstants.COMMA);
 		mainAction.append(isNameFromExternalEntity()).append(CoreConstants.COMMA)
-		.append(isShowUserProfilePicture()).append(", ").append(isShowUserCompany()).append(");").toString();
+		.append(isShowUserProfilePicture()).append(", ").append(isShowUserCompany())
+		.append(", ").append(isShowLastLoginDate()).append(");").toString();
 
 		if (!isSingle)
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction.toString()).append("\n});");
@@ -501,5 +502,13 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setShowUserCompany(boolean showUserCompany) {
 		this.showUserCompany = showUserCompany;
+	}
+
+	public boolean isShowLastLoginDate() {
+		return showLastLoginDate;
+	}
+
+	public void setShowLastLoginDate(boolean showLastLoginDate) {
+		this.showLastLoginDate = showLastLoginDate;
 	}
 }
