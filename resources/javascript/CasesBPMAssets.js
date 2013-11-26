@@ -54,7 +54,7 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container,
 		hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, 
 		hideEmptySection, showAttachmentStatistics, showOnlyCreatorInContacts, 
 		showLogExportButton, showComments, showContacts, specialBackPage, 
-		nameFromExternalEntity,showUserCompany) {
+		nameFromExternalEntity,showUserCompany,showLastLoginDate) {
 	
 	CasesBPMAssets.openedCase.caseId = caseId || null;
 	CasesBPMAssets.openedCase.piId = piId || null;
@@ -71,13 +71,14 @@ CasesBPMAssets.setOpenedCase = function(caseId, piId, container,
 	CasesBPMAssets.openedCase.showContacts = showContacts || false;
 	CasesBPMAssets.openedCase.nameFromExternalEntity = nameFromExternalEntity || false;
 	CasesBPMAssets.openedCase.showUserCompany = showUserCompany || false;
+	CasesBPMAssets.openedCase.showLastLoginDate = showLastLoginDate || false;
 	CasesBPMAssets.specialBackPage = specialBackPage || null;
 }
 
 CasesBPMAssets.initGridsContainer = function(container, piId, caseId, 
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
-		showComments, showContacts, specialBackPage, nameFromExternalEntity,showUserCompany) {
+		showComments, showContacts, specialBackPage, nameFromExternalEntity,showUserCompany,showLastLoginDate) {
 	
 	CasesBPMAssets.openedCase.nameFromExternalEntity = nameFromExternalEntity;
 	jQuery(container).mouseover(function() {
@@ -89,7 +90,7 @@ CasesBPMAssets.initGridsContainer = function(container, piId, caseId,
 				usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 				showAttachmentStatistics, showOnlyCreatorInContacts, 
 				showLogExportButton, showComments, showContacts, 
-				specialBackPage, nameFromExternalEntity,showUserCompany);
+				specialBackPage, nameFromExternalEntity,showUserCompany,showLastLoginDate);
 	});
 }
 
@@ -97,7 +98,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
 		showComments, showContacts, specialBackPage, nameFromExternalEntity,
-		showUserProfilePicture,showUserCompany) {
+		showUserProfilePicture,showUserCompany,showLastLoginDate) {
 	
 	if (container == null) {
 		return false;
@@ -132,7 +133,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 				usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 				showAttachmentStatistics, showOnlyCreatorInContacts,
 				showLogExportButton, showComments, showContacts, specialBackPage, 
-				nameFromExternalEntity,showUserCompany);
+				nameFromExternalEntity,showUserCompany,showLastLoginDate);
 		
 		jQuery('img.reloadCaseStyleClass', container).each(function() {
 			if (typeof CasesEngine == 'undefined' || typeof CasesListHelper == 'undefined') {
@@ -182,7 +183,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 					showAttachmentStatistics, specialBackPage,
 					function() {
 						onGridInitedFunction('caseFormsPart', jQuery('div.caseFormsPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
-					},showUserCompany
+					},showUserCompany,showLastLoginDate
 				);
 				CasesBPMAssets.initEmailsGrid(caseId, piId, container, hasRightChangeRights, allowPDFSigning, hideEmptySection, showAttachmentStatistics,
 					function() {
@@ -209,7 +210,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 								cells.css('width','32%');
 								cells.filter('.casesGridBodyCell_3, .casesGridHeaderCell_3').css(lastCss);
 							}
-						}, nameFromExternalEntity, showUserProfilePicture,showUserCompany
+						}, nameFromExternalEntity, showUserProfilePicture,showUserCompany,showLastLoginDate
 				);
 				
 				CasesBPMAssets.setOpenedCase(caseId, piId, container, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
@@ -398,7 +399,7 @@ CasesBPMAssets.isRowHasViewUI = function(processInstanceId, rowId) {
 };
 
 CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-										showAttachmentStatistics, specialBackPage, onFormsInited,showUserCompany) {
+										showAttachmentStatistics, specialBackPage, onFormsInited,showUserCompany,showLastLoginDate) {
     var identifier = 'caseForms';
     
     var populatingFunction = function(params, callback) {
@@ -432,7 +433,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     };
 
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany,showLastLoginDate);
     };
     
     var namesForColumns = new Array();
@@ -530,13 +531,14 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 		var showAttachmentStatistics = CasesBPMAssets.openedCase.showAttachmentStatistics;
 		var specialBackPage = CasesBPMAssets.openedCase.specialBackPage;
 		var showUserCompany = CasesBPMAssets.openedCase.showUserCompany;
+		var showLastLoginDate = CasesBPMAssets.openedCase.showLastLoginDate;
 		
 		CasesBPMAssets.initFormsGrid(caseId, piId, container, hasRights, 
 				usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 				showAttachmentStatistics, specialBackPage,
 		function() {
 			CasesBPMAssets.setTableProperties(container);
-		},showUserCompany);
+		},showUserCompany,showLastLoginDate);
 	}
 	
 	var hasRightChangeRights = CasesBPMAssets.openedCase.hasRightChangeRights == null ? false : CasesBPMAssets.openedCase.hasRightChangeRights;
@@ -592,7 +594,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     };
     
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany,showLastLoginDate);
     };
     
     var namesForColumns = new Array();
@@ -621,7 +623,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
 CasesBPMAssets.initContactsGrid = function(piId, customerView, 
 		hasRightChangeRights, hideEmptySection, showOnlyCreatorInContacts, 
 		showContacts, onContactsInited, nameFromExternalEntity, 
-		showUserProfilePicture,showUserCompany) {
+		showUserProfilePicture,showUserCompany,showLastLoginDate) {
 	
 	if (!showContacts) {
 		CasesBPMAssets.CASE_VIEW_PARTS_TO_INIT--;
@@ -635,6 +637,7 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
         params.showOnlyCreatorInContacts = showOnlyCreatorInContacts;
         params.nameFromExternalEntity = nameFromExternalEntity;
         params.showUserCompany = showUserCompany;
+        params.showLastLoginDate = showLastLoginDate;
         
         BPMProcessAssets.getProcessContactsList(params, {
             callback: function(result) {
@@ -842,7 +845,7 @@ CasesBPMAssets.getProcessRersourceView = function(caseId, taskInstanceId, specia
 }
 
 CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning,
-	showAttachmentStatistics,showUserCompany) {
+	showAttachmentStatistics,showUserCompany,showLastLoginDate) {
     var subgridTableId = subgridId + '_t';
     var subGridContainer = jQuery('#' + subgridId);
 	subGridContainer.html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\' border=\'0\'></table>');
@@ -856,6 +859,7 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, ro
     subGridParams.populateFromFunction = function(params, callback) {
         params.taskId = rowId;
         params.showUserCompany = showUserCompany;
+        params.showLastLoginDate = showLastLoginDate;
         BPMProcessAssets.getTaskAttachments(params, {
             callback: function(result) {
                 callback(result);

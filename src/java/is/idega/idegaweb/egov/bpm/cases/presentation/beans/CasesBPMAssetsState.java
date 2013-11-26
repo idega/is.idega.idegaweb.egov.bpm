@@ -95,7 +95,8 @@ public class CasesBPMAssetsState implements Serializable {
 			nameFromExternalEntity = Boolean.FALSE,
 			showUserProfilePicture = Boolean.TRUE,
 			addExportContacts = Boolean.FALSE,
-			showUserCompany = Boolean.FALSE;
+			showUserCompany = Boolean.FALSE,
+			showLastLoginDate = Boolean.FALSE;
 	
 			
 
@@ -825,5 +826,13 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setShowUserCompany(Boolean showUserCompany) {
 		this.showUserCompany = showUserCompany;
+	}
+
+	public Boolean getShowLastLoginDate() {
+		return showLastLoginDate;
+	}
+
+	public void setShowLastLoginDate(Boolean showLastLoginDate) {
+		this.showLastLoginDate = showLastLoginDate;
 	}
 }
