@@ -24,6 +24,7 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
 import com.idega.core.accesscontrol.business.LoginBusinessBean;
+import com.idega.core.accesscontrol.business.LoginDBHandler;
 import com.idega.core.accesscontrol.dao.UserLoginDAO;
 import com.idega.core.accesscontrol.data.bean.UserLogin;
 import com.idega.core.business.DefaultSpringBean;
@@ -110,7 +111,8 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 			return false;
 		}
 
-		boolean reLoginSuperAdmin = false;
+		UserLogin login = null;
+		boolean hasLogin = false;
 		LoginBusinessBean loginBusiness = LoginBusinessBean.getLoginBusinessBean(iwc);
 		try {
 			Long piId = bind == null ? null : bind.getProcInstId();
@@ -128,13 +130,15 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 			}
 			if (owner != null) {
 				User author = getActor(owner.getPersonalID());
-				if (hasLogin(author)) {
-					loginBusiness.logInAsAnotherUser(iwc, author);
-					reLoginSuperAdmin = true;
-				} else {
-					loginBusiness.logOutUser(iwc);
-					reLoginSuperAdmin = true;
+				hasLogin = hasLogin(author);
+				if (!hasLogin) {
+					login = doCreateUserLogin(author);
+					if (login == null || login.getId() == null) {
+						getLogger().warning("Failed to create temp. login for " + author);
+						return false;
+					}
 				}
+				loginBusiness.logInAsAnotherUser(iwc, author);
 			}
 
 			ProcessInstanceW piW = bpmFactory.getProcessInstanceW(piId);
@@ -191,13 +195,12 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Failed to re-submit case/process for bind " + bind, e);
 		} finally {
-			if (reLoginSuperAdmin) {
-				try {
-					loginBusiness.logInAsAnotherUser(iwc, iwc.getAccessController().getAdministratorUser());
-				} catch (Exception e) {
-					getLogger().log(Level.WARNING, "Error logging in as super admin", e);
-				}
+			try {
+				loginBusiness.logInAsAnotherUser(iwc, iwc.getAccessController().getAdministratorUser());
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error logging in as super admin", e);
 			}
+			doDeleteLogin(login);
 		}
 
 		return false;
@@ -342,6 +345,39 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 				return null;
 			}
 		});
+	}
+
+	private void doDeleteLogin(UserLogin login) {
+		if (login == null) {
+			return;
+		}
+
+		try {
+			UserLoginDAO loginDAO = ELUtil.getInstance().getBean(UserLoginDAO.class);
+			loginDAO.remove(login);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error deleting login " + login, e);
+		}
+	}
+
+	private UserLogin doCreateUserLogin(User user) {
+		try {
+			UserLoginDAO loginDAO = ELUtil.getInstance().getBean(UserLoginDAO.class);
+			com.idega.user.data.User legacyUser = getLegacyUser(user);
+			List<String> logins = LoginDBHandler.getPossibleGeneratedUserLogins(legacyUser);
+			if (ListUtil.isEmpty(logins)) {
+				return null;
+			}
+
+			String password = LoginDBHandler.getGeneratedPasswordForUser(legacyUser);
+			if (StringUtil.isEmpty(password)) {
+				return null;
+			}
+			return loginDAO.createLogin(user, logins.get(0), password, true, true, true, 1, true);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error creating login for " + user, e);
+		}
+		return null;
 	}
 
 	private boolean hasLogin(User user) {
