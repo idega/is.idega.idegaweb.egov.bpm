@@ -22,7 +22,9 @@ import com.idega.util.expression.ELUtil;
 public class CasesSearchResultsExporter extends DownloadWriter implements MediaWritable {
 
 	public static final String ID_PARAMETER = "casesSearchResultsExportId",
-								ALL_CASES_DATA = "allCasesExportedId";
+								ALL_CASES_DATA = "allCasesExportedId",
+								EXPORT_CONTACTS = "is-export-contacts",
+								SHOW_USER_COMPANY = "show-company";
 
 	private MemoryFileBuffer memory;
 
@@ -37,13 +39,16 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 
 		CasesSearchResultsHolder searchResultHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
+		boolean exportContacts = "y".equals(iwc.getParameter(EXPORT_CONTACTS));
+		boolean showCompany = "y".equals(iwc.getParameter(SHOW_USER_COMPANY));
+		
 		if (iwc.isParameterSet(ID_PARAMETER)) {
 			String id = iwc.getParameter(ID_PARAMETER);
-			memory = searchResultHolder.getExportedSearchResults(id);
+			memory = searchResultHolder.getExportedSearchResults(id,exportContacts,showCompany);
 			fileName = iwrb.getLocalizedString("exported_search_results_in_excel_file_name", "Exported search results");
 		} else if (iwc.isParameterSet(ALL_CASES_DATA)) {
 			String instanceId = iwc.getParameter(ALL_CASES_DATA);
-			memory = searchResultHolder.getExportedCases(instanceId);
+			memory = searchResultHolder.getExportedCases(instanceId,exportContacts,showCompany);
 			fileName = iwrb.getLocalizedString("exported_all_cases_data", "Exported cases");
 		} else
 			return;

@@ -763,7 +763,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public AdvancedProperty getExportedCases(String instanceId, String uri) {
+	public AdvancedProperty getExportedCases(String instanceId, String uri,Boolean exportContacts, Boolean showCompany) {
 		if (StringUtil.isEmpty(instanceId))
 			return null;
 
@@ -811,6 +811,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		URIUtil uriUtil = new URIUtil(iwc.getIWMainApplication().getMediaServletURI());
 		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class));
 		uriUtil.setParameter(CasesSearchResultsExporter.ALL_CASES_DATA, instanceId);
+		uriUtil.setParameter(CasesSearchResultsExporter.EXPORT_CONTACTS, (exportContacts != null) && (exportContacts.equals(Boolean.TRUE)) ? "y" : "n");
+		uriUtil.setParameter(CasesSearchResultsExporter.SHOW_USER_COMPANY, (showCompany != null) && (showCompany.equals(Boolean.TRUE)) ? "y" : "n");
 		result.setValue(uriUtil.getUri());
 
 		return result;
@@ -818,6 +820,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public AdvancedProperty getExportedSearchResults(String id) {
+		return getExportedSearchResults(id, false, false);
+	}
+	
+	public AdvancedProperty getExportedSearchResults(String id,boolean exportContacts, boolean showCompany) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -850,7 +856,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 
 		getExternalSearchResults(resultsHolder, id);
-		if (!resultsHolder.doExport(id)) {
+		if (!resultsHolder.doExport(id,exportContacts,showCompany)) {
 			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
