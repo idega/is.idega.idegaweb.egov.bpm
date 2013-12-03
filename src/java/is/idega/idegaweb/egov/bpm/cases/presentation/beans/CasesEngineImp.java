@@ -121,7 +121,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	private GeneralCasesListBuilder casesListBuilder;
 
 	private CasesRetrievalManager casesRetrievalManager;
-	
+
 	@Autowired
 	private CaseManagersProvider caseManagersProvider;
 
@@ -148,7 +148,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		return this.casesRetrievalManager;
 	}
-	
+
 	@Override
 	public Long getProcessInstanceId(String caseId) {
 		if (caseId == null) {
@@ -348,22 +348,22 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (id == null) {
 			return null;
 		}
-		
+
 		try {
 			Group group = IDOLookup.findByPrimaryKey(
-					Group.class, 
+					Group.class,
 					id.intValue());
 			if (group != null) {
 				return group.getName();
 			}
 		} catch (IDOLookupException e) {
 			getLogger().log(
-					Level.WARNING, 
+					Level.WARNING,
 					"Failed to get data access object, casue of: ", e);
 		} catch (FinderException e) {
 			getLogger().log(
-					Level.WARNING, 
-					"Failed to find group by id: " + id, 
+					Level.WARNING,
+					"Failed to find group by id: " + id,
 					e);
 		}
 
@@ -489,7 +489,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		return subscribedGroupsIds;
 	}
-	
+
 	private PagedDataCollection<CasePresentation> getCasesByQuery(
 			IWContext iwc, CasesListSearchCriteriaBean criterias) {
 		User currentUser = null;
@@ -524,13 +524,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 
 			casesIds = getCaseManagersProvider().getCaseManager().getCasePrimaryKeys(
-					currentUser, casesProcessorType, 
+					currentUser, casesProcessorType,
 					criterias.getCaseCodesInList(),
-					criterias.getStatusesToHideInList(), 
-					criterias.getStatusesToShowInList(), 
+					criterias.getStatusesToHideInList(),
+					criterias.getStatusesToShowInList(),
 					criterias.isOnlySubscribedCases(),
-					criterias.isShowAllCases(), 
-					criterias.getProcInstIds(), 
+					criterias.isShowAllCases(),
+					criterias.getProcInstIds(),
 					criterias.getSubscribersGroupId() != null ? Arrays.asList(criterias.getSubscribersGroupId()) : null);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
@@ -826,7 +826,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	public AdvancedProperty getExportedSearchResults(String id) {
 		return getExportedSearchResults(id, false, false);
 	}
-	
+
 	public AdvancedProperty getExportedSearchResults(String id,boolean exportContacts, boolean showCompany) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
@@ -934,7 +934,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			doLoadCases(app, group);
 
 			if (app.getSettings().getBoolean("load_cases_for_group_children", Boolean.FALSE)) {
-				@SuppressWarnings("unchecked")
 				Collection<Group> children = group.getChildren();
 				if (ListUtil.isEmpty(children)) {
 					LOGGER.warning("There are no children groups for group " + group + ", ID: " + group.getId());
