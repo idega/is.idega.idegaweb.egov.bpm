@@ -56,7 +56,7 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 		Collection<User> users = processArtifacts.getUsersConnectedToProces(piw);
 		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 
-		String fileName = iwrb.getLocalizedString("exported_all_cases_data", "Exported cases");
+		String fileName = iwrb.getLocalizedString("exported_contacts", "Exported contacts");
 		
 		CasesSearchResultsHolder searchResultHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
 		boolean showCompany = "y".equals(iwc.getParameter(SHOW_USER_COMPANY));
