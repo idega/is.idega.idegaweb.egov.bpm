@@ -399,7 +399,7 @@ CasesBPMAssets.isRowHasViewUI = function(processInstanceId, rowId) {
 };
 
 CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChangeRights, usePdfDownloadColumn, allowPDFSigning, hideEmptySection,
-										showAttachmentStatistics, specialBackPage, onFormsInited,showUserCompany,showLastLoginDate) {
+										showAttachmentStatistics, specialBackPage, onFormsInited) {
     var identifier = 'caseForms';
     
     var populatingFunction = function(params, callback) {
@@ -433,7 +433,7 @@ CasesBPMAssets.initFormsGrid = function(caseId, piId, customerView, hasRightChan
     };
 
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany,showLastLoginDate);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics);
     };
     
     var namesForColumns = new Array();
@@ -538,7 +538,7 @@ CasesBPMAssets.reloadDocumentsGrid = function() {
 				showAttachmentStatistics, specialBackPage,
 		function() {
 			CasesBPMAssets.setTableProperties(container);
-		},showUserCompany,showLastLoginDate);
+		});
 	}
 	
 	var hasRightChangeRights = CasesBPMAssets.openedCase.hasRightChangeRights == null ? false : CasesBPMAssets.openedCase.hasRightChangeRights;
@@ -594,7 +594,7 @@ CasesBPMAssets.initEmailsGrid = function(caseId, piId, customerView, hasRightCha
     };
     
     var subGridFunction = function(subgridId, rowId) {
-        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics,showUserCompany,showLastLoginDate);
+        CasesBPMAssets.initFilesSubGridForCasesListGrid(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning, showAttachmentStatistics);
     };
     
     var namesForColumns = new Array();
@@ -845,7 +845,7 @@ CasesBPMAssets.getProcessRersourceView = function(caseId, taskInstanceId, specia
 }
 
 CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, rowId, hasRightChangeRights, identifier, allowPDFSigning,
-	showAttachmentStatistics,showUserCompany,showLastLoginDate) {
+	showAttachmentStatistics) {
     var subgridTableId = subgridId + '_t';
     var subGridContainer = jQuery('#' + subgridId);
 	subGridContainer.html('<table id=\''+subgridTableId+'\' class=\'scroll subGrid\' cellpadding=\'0\' cellspacing=\'0\' border=\'0\'></table>');
@@ -858,8 +858,6 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(caseId, subgridId, ro
 	subGridParams.caseId = caseId;
     subGridParams.populateFromFunction = function(params, callback) {
         params.taskId = rowId;
-        params.showUserCompany = showUserCompany;
-        params.showLastLoginDate = showLastLoginDate;
         BPMProcessAssets.getTaskAttachments(params, {
             callback: function(result) {
                 callback(result);
