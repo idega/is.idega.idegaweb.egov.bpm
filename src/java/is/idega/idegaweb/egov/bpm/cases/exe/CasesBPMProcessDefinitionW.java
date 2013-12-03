@@ -213,7 +213,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					getCasesBPMDAO().persist(piBind);
 					getLogger().info("Bind was created: process instance ID=" + pi.getId() + ", case ID=" + genCase.getPrimaryKey());
 
-					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
 					getLogger().info("Variables were set: " + caseData);
 
@@ -326,9 +325,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 
 	/**
-	 * <p>
-	 * TODO: this is probably totally incorrect implementation, review and fix!
-	 * </p>
 	 * sets roles, whose users can start process (and see application).
 	 *
 	 * @param rolesKeys
@@ -351,7 +347,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -360,7 +356,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac, UserBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -456,7 +452,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		ApplicationBusiness applicationBusiness = null;
 		try {
-			applicationBusiness = (ApplicationBusiness) IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
+			applicationBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(),
 					ApplicationBusiness.class);
 		} catch (IBOLookupException e) {
 			e.printStackTrace();
