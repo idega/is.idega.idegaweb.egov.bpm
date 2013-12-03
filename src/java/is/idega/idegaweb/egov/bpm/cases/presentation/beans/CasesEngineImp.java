@@ -319,6 +319,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setCustomColumns(criterias.getCustomColumns());
 		properties.setShowLoadingMessage(criterias.isShowLoadingMessage());
 		properties.setSubscribersGroupId(criterias.getSubscribersGroupId());
+		properties.setShowUserProfilePicture(criterias.isShowUserProfilePicture());
+		properties.setShowAttachmentStatistics(criterias.isShowAttachmentStatistics());
+		properties.setShowUserCompany(criterias.isShowUserCompany());
+		properties.setAddExportContacts(criterias.isAddExportContacts());
 
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criterias.getCaseListType())) {
