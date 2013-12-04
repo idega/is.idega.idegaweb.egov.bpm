@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -208,5 +209,10 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 					caseLabels.put(varName, CoreConstants.MINUS);
 			}
 		}
+	}
+
+	@Override
+	public Map<String, String> getLocalizedStatuses(List<String> casesIds, Locale locale) {
+		return null;
 	}
 }

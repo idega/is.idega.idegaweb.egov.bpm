@@ -75,3 +75,4 @@ bpm_variable.string_ownerKennitala=Personnummer
 bpm_variable.long_municipalityId=Kommun
 bpm_variable.string_issueCaption=Beskrivning
 bpm_variable.string_issueAddress=Adress
+bpm_variable.long_issueStatusId=Status
