@@ -51,6 +51,7 @@ import com.idega.jbpm.view.ViewSubmission;
 import com.idega.util.CoreConstants;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -155,10 +156,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 	@Transactional
 	private boolean attachEmailMessage(JbpmContext ctx, BPMEmailMessage message) {
-		if (message.isParsed()) {
+		if (message == null || message.isParsed()) {
 			return true;
 		}
-		if (ctx == null || message == null) {
+		if (ctx == null) {
 			return false;
 		}
 
@@ -169,7 +170,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return false;
 		}
 
-		for (Token tkn : tkns) {
+		for (Token tkn: tkns) {
 			ProcessInstance subPI = tkn.getSubProcessInstance();
 			if (subPI == null || !EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
 				continue;
@@ -177,24 +178,35 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 			String subject = message.getSubject();
 			String text = message.getBody();
-			if (text == null)
+			if (text == null) {
 				text = CoreConstants.EMPTY;
+			}
 			String senderPersonalName = message.getSenderName();
 			String fromAddress = message.getFromAddress();
 
-			List<String> varsNames = Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS);
+			List<String> varsNames = Arrays.asList(
+					BPMConstants.VAR_SUBJECT,
+					BPMConstants.VAR_TEXT,
+					BPMConstants.VAR_FROM,
+					BPMConstants.VAR_FROM_ADDRESS
+			);
 
 			Map<String, List<Serializable>> variablesWithValues = new HashMap<String, List<Serializable>>();
 			variablesWithValues.put(varsNames.get(0), Arrays.asList((Serializable) subject));
 			variablesWithValues.put(varsNames.get(2), Arrays.asList((Serializable) senderPersonalName));
 			variablesWithValues.put(varsNames.get(3), Arrays.asList((Serializable) fromAddress));
-			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesByProcesses(variablesWithValues, Arrays.asList(varsNames.get(1)), null,
-					Arrays.asList(subPI.getId()), null);
-			if (vars != null && !vars.isEmpty()) {
+			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesByProcesses(
+					variablesWithValues,
+					Arrays.asList(varsNames.get(1)),
+					null,
+					Arrays.asList(subPI.getId()),
+					null
+			);
+			if (!MapUtil.isEmpty(vars)) {
 				for (Map<String, VariableInstanceInfo> existingValues: vars.values()) {
 					VariableInstanceInfo existingVar = existingValues.get(varsNames.get(1));
 					if (existingVar != null && text.equals(existingVar.getValue().toString())) {
-						LOGGER.warning("BPM message is duplicated, dropping it: " + message);
+						LOGGER.warning("BPM message is duplicated, dropping it: " + message.getSubject());
 						message.setParsed(true);
 						return true;
 					}
@@ -265,8 +277,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				message.setParsed(true);
 				return true;
 			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "Exception while attaching email msg (subject: " + message.getSubject() + ", body: " + message.getBody() + "). Token: " +
-						tkn.getName() + " (" + tkn.getId() + "), sub-process: " + subPI.getId(), e);
+				LOGGER.log(Level.SEVERE, "Exception while attaching email msg (subject: " + message.getSubject() + ", body: " +
+						message.getBody() + "). Token: " + tkn.getName() + " (" + tkn.getId() + "), sub-process: " + subPI.getId(), e);
 			}
 		}
 		return false;
