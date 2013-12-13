@@ -37,6 +37,8 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 	private SendMessage sendMessage;
 
+	private SendMessage emailSender;
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -124,7 +126,20 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 		msgs.setSendToRoles(sendToRoles);
 		msgs.setRecipientUserId(recipientUserId);
-		getSendMessage().send(null, new Integer(caseIdStr), pi, msgs, tkn);
+		getSendMessage().send(null, Integer.valueOf(caseIdStr), pi, msgs, tkn);
+
+		if (isSendViaEmail()) {
+			getEmailSender().send(null, ectx, pi, msgs, tkn);
+		}
+	}
+
+	public SendMessage getEmailSender() {
+		return emailSender;
+	}
+
+	@Autowired
+	public void setEmailSender(@SendMessageType("email") SendMessage emailSender) {
+		this.emailSender = emailSender;
 	}
 
 	@Override
