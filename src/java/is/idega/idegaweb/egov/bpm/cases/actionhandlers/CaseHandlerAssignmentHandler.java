@@ -128,27 +128,27 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		}
 	}
 
-	protected void unassign(GeneralCase genCase, Long processInstanceId,
-	        CasesBusiness casesBusiness, ExecutionContext ectx,
-	        Role caseHandlerRole) throws Exception {
-
+	protected void unassign(
+			GeneralCase genCase,
+			Long processInstanceId,
+	        CasesBusiness casesBusiness,
+	        ExecutionContext ectx,
+	        Role caseHandlerRole
+	) throws Exception {
 		User currentHandler = genCase.getHandledBy();
-
 		if (currentHandler != null) {
-
-			getProcessWatcher().removeWatch(processInstanceId,
-			    new Integer(currentHandler.getPrimaryKey().toString()));
+			getProcessWatcher().removeWatch(processInstanceId, new Integer(currentHandler.getPrimaryKey().toString()));
 			getBpmFactory().getRolesManager().removeIdentitiesForRoles(
 			    Arrays.asList(new Role[] { caseHandlerRole }),
-			    new Identity(currentHandler.getPrimaryKey().toString(),
-			            IdentityType.USER), processInstanceId);
+			    new Identity(currentHandler.getPrimaryKey().toString(), IdentityType.USER),
+			    processInstanceId
+			);
 		}
 
 		casesBusiness.untakeCase(genCase);
 	}
 
 	protected Integer getHandlerUserId(ExecutionContext ectx) {
-
 		if (handlerUserId == null)
 			handlerUserId = (Integer) ectx.getVariable(handlerUserIdVarName);
 
@@ -159,46 +159,41 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	}
 
 	protected Integer getPerformerUserId(ExecutionContext ectx) {
+		if (performerUserId == null)
+			performerUserId = (Integer) ectx.getVariable(performerUserIdVarName);
 
 		if (performerUserId == null)
-			performerUserId = (Integer) ectx
-			        .getVariable(performerUserIdVarName);
-
-		if (performerUserId == null)
-			performerUserId = new Integer(getCurrentUser().getPrimaryKey()
-			        .toString());
+			performerUserId = new Integer(getCurrentUser().getPrimaryKey().toString());
 
 		return performerUserId;
 	}
 
 	protected Integer getRecipientUserId(ExecutionContext ectx) {
-
 		if (recipientId == null)
-			recipientId = (Integer) ectx
-			        .getVariable(recipientUserIdVarName);
+			recipientId = (Integer) ectx.getVariable(recipientUserIdVarName);
 
 		return recipientId;
 	}
 
 	protected User getCurrentUser() {
-
 		return IWContext.getCurrentInstance().getCurrentUser();
 	}
 
-	protected void assign(GeneralCase genCase, ProcessInstance pi,
-	        CasesBusiness casesBusiness, ExecutionContext ectx,
-	        IWApplicationContext iwac, Role caseHandlerRole) throws Exception {
-
+	protected void assign(
+			GeneralCase genCase,
+			ProcessInstance pi,
+	        CasesBusiness casesBusiness,
+	        ExecutionContext ectx,
+	        IWApplicationContext iwac,
+	        Role caseHandlerRole
+	) throws Exception {
 		final Integer handlerUserId = getHandlerUserId(ectx);
 		final Integer performerUserId = getPerformerUserId(ectx);
 
 		// assigning handler
 		final User currentHandler = genCase.getHandledBy();
 
-		if (currentHandler == null
-		        || !String.valueOf(handlerUserId).equals(
-		            String.valueOf(currentHandler.getPrimaryKey()))) {
-
+		if (currentHandler == null || !String.valueOf(handlerUserId).equals(String.valueOf(currentHandler.getPrimaryKey()))) {
 			final UserBusiness userBusiness = getUserBusiness(iwac);
 
 			final IWContext iwc = IWContext.getCurrentInstance();
@@ -207,8 +202,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 			final User performer = userBusiness.getUser(performerUserId);
 
 			// statistics and status change. also keeping handlerId there
-			casesBusiness.takeCase(genCase, handler, iwc, performer, true,
-			    false);
+			casesBusiness.takeCase(genCase, handler, iwc, performer, true, false);
 
 			// the case now appears in handler's mycases list
 			getProcessWatcher().assignWatch(pi.getId(), handlerUserId);
@@ -219,9 +213,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 		// permission to see caseHandler contacts)
 		final List<Role> roles = Arrays.asList(new Role[] { caseHandlerRole });
 		getBpmFactory().getRolesManager().createProcessActors(roles, pi);
-		getBpmFactory().getRolesManager().createIdentitiesForRoles(roles,
-		    new Identity(handlerUserId.toString(), IdentityType.USER),
-		    pi.getId());
+		getBpmFactory().getRolesManager().createIdentitiesForRoles(roles, new Identity(handlerUserId.toString(), IdentityType.USER), pi.getId());
 	}
 
 	protected void sendMessages(ExecutionContext ectx) throws Exception {
@@ -246,8 +238,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
-			    CasesBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -255,8 +246,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac,
-			    UserBusiness.class);
+			return IBOLookup.getServiceInstance(iwac, UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
 		}
@@ -319,20 +309,13 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	}
 
 	protected IWApplicationContext getIWAC() {
-
 		final IWContext iwc = IWContext.getCurrentInstance();
 		final IWApplicationContext iwac;
-		// trying to get iwma from iwc, if available, downgrading to default
-		// iwma, if not
-
 		if (iwc != null) {
-
 			iwac = iwc;
-
 		} else {
 			iwac = IWMainApplication.getDefaultIWApplicationContext();
 		}
-
 		return iwac;
 	}
 
