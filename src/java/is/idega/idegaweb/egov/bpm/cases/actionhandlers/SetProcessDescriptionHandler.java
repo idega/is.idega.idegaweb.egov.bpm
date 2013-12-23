@@ -58,7 +58,8 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 
 		ProcessInstanceW piw = getBpmFactory()
 				.getProcessManagerByProcessInstanceId(pi.getId())
-				.getProcessInstance(pi.getId());
+				.getProcessInstance(pi.getId()
+		);
 
 		String processDescription = getDescription() == null ? piw.getProcessDescription() : getDescription();
 
@@ -120,7 +121,7 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 					CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -128,16 +129,11 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 	}
 
 	private IWApplicationContext getIWAC() {
-
 		final IWContext iwc = IWContext.getCurrentInstance();
 		final IWApplicationContext iwac;
-		// trying to get iwma from iwc, if available, downgrading to default
-		// iwma, if not
 
 		if (iwc != null) {
-
 			iwac = iwc;
-
 		} else {
 			iwac = IWMainApplication.getDefaultIWApplicationContext();
 		}
