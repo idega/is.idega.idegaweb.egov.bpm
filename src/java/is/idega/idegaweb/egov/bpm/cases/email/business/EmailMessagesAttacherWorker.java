@@ -134,8 +134,12 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			@Override
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				for (BPMEmailMessage message: messagesToAttach) {
-					if (!attachEmailMessage(context, message)) {
-						//	TODO: save message and try attach later?
+					try {
+						if (!attachEmailMessage(context, message)) {
+							//	TODO: save message and try attach later?
+						}
+					} catch (Exception e) {
+						LOGGER.log(Level.WARNING, "Error attaching message " + message, e);
 					}
 				}
 				return null;
