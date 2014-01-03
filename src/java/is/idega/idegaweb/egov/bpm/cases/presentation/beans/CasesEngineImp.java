@@ -19,11 +19,15 @@ import is.idega.idegaweb.egov.cases.presentation.OpenCases;
 import is.idega.idegaweb.egov.cases.presentation.PublicCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -49,6 +53,9 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.ProcessConstants;
+import com.idega.block.process.business.file.CaseAttachment;
+import com.idega.block.process.business.pdf.CaseConverterToPDF;
+import com.idega.block.process.business.pdf.CasePDF;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.block.process.event.CaseModifiedEvent;
@@ -101,6 +108,7 @@ import com.idega.user.data.Group;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.FileUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
@@ -133,6 +141,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+
+	@Autowired
+	private CaseConverterToPDF caseConverter;
 
 	public static final String	FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader",
 								PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader",
@@ -507,7 +518,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		try {
 			if (criterias.isShowAllCases()) {
 				CasesBusiness casesBusiness = getCasesBusiness(iwc);
-				@SuppressWarnings("unchecked")
 				Collection<CaseStatus> statuses = casesBusiness.getCaseStatuses();
 				StringBuffer allStatuses = null;
 				if (!ListUtil.isEmpty(statuses)) {
@@ -1285,5 +1295,110 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			getLogger().log(Level.WARNING, "Error while setting instruction to show assets", e);
 		}
 		return false;
+	}
+
+	@Override
+	public AdvancedProperty getExportedCasesToPDF(Long processDefinitionId, String id) {
+		exportStatuses.remove(id);
+
+		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
+		AdvancedProperty result = new AdvancedProperty(
+				Boolean.FALSE.toString(),
+				iwrb.getLocalizedString("failed_to_export_cases", "Failed to export cases")
+		);
+
+		if (processDefinitionId == null) {
+			return result;
+		}
+
+		List<Integer> casesIds = casesBPMDAO.getCaseIdsByProcessDefinitionId(processDefinitionId);
+		if (ListUtil.isEmpty(casesIds)) {
+			result.setValue(iwrb.getLocalizedString("there_are_no_cases_to_export", "There are no cases to export"));
+			return result;
+		}
+
+		String baseDirectory = null;
+		try {
+			File baseDir = new File("exported_cases");
+			if (!baseDir.exists()) {
+				baseDir.mkdir();
+			}
+			baseDirectory = baseDir.getAbsolutePath();
+
+			int i = 0;
+			for (Iterator<Integer> casesIdsIter = casesIds.iterator(); casesIdsIter.hasNext();) {
+				Integer caseId = casesIdsIter.next();
+				i++;
+
+				exportStatuses.put(id, iwrb.getLocalizedString("exporting", "Exporting") + CoreConstants.SPACE + i+ CoreConstants.SPACE +
+						iwrb.getLocalizedString("of", "of") + CoreConstants.SPACE + casesIds.size());
+
+				List<CasePDF> casePDFs = null;
+				try {
+					casePDFs = caseConverter.getPDFsAndAttachmentsForCase(caseId);
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error exporting case (ID: " + caseId + ") to PDFs", e);
+				}
+				if (ListUtil.isEmpty(casePDFs)) {
+					continue;
+				}
+
+				File caseFolder = new File(baseDir.getAbsolutePath() + File.separator + casePDFs.get(0).getIdentifier());
+				if (!caseFolder.exists()) {
+					caseFolder.mkdir();
+				}
+				for (CasePDF casePDF: casePDFs) {
+					File pdf = new File(caseFolder.getAbsoluteFile() + File.separator + casePDF.getName());
+					if (!pdf.exists()) {
+						pdf.createNewFile();
+					}
+
+					FileUtil.streamToFile(new ByteArrayInputStream(casePDF.getBytes()), pdf);
+
+					List<CaseAttachment> attachments = casePDF.getAttachments();
+					if (!ListUtil.isEmpty(attachments)) {
+						File attachmentsFolder = new File(caseFolder.getAbsoluteFile() + File.separator + "attachments");
+						if (!attachmentsFolder.exists()) {
+							attachmentsFolder.mkdir();
+						}
+
+						for (CaseAttachment attachment: attachments) {
+							File attachmentFile = new File(attachmentsFolder.getAbsoluteFile() + File.separator + attachment.getName());
+							if (!attachmentFile.exists()) {
+								attachmentFile.createNewFile();
+							}
+
+							FileUtil.streamToFile(new ByteArrayInputStream(attachment.getBytes()), attachmentFile);
+						}
+					}
+				}
+			}
+		} catch (IOException e) {
+			getLogger().log(Level.WARNING, "Error exporting cases to PDFs", e);
+			return result;
+		}
+
+		result.setId(Boolean.TRUE.toString());
+		result.setValue(iwrb.getLocalizedString("cases_were_successfully_exported", "Cases were successfully exported"));
+		result.setName(iwrb.getLocalizedString("cases_were_exported_to", "Cases were exported to") +
+				CoreConstants.COLON + CoreConstants.SPACE + baseDirectory);
+		exportStatuses.remove(id);
+		return result;
+	}
+
+	private Map<String, String> exportStatuses = new HashMap<String, String>();
+
+	@Override
+	public AdvancedProperty getStatusOfExport(String id) {
+		if (StringUtil.isEmpty(id)) {
+			return new AdvancedProperty(Boolean.FALSE.toString());
+		}
+
+		String status = exportStatuses.remove(id);
+		if (StringUtil.isEmpty(status)) {
+			return null;
+		}
+
+		return new AdvancedProperty(Boolean.TRUE.toString(), status);
 	}
 }

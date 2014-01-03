@@ -19,6 +19,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.hibernate.HibernateException;
+import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Autowired(required = false)
 	private VariableInstanceQuerier querier;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -1904,5 +1905,29 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		return null;
+	}
+
+	@Override
+	public List<Integer> getCaseIdsByProcessDefinitionId(Long processDefinitionId) {
+		if (processDefinitionId == null) {
+			return null;
+		}
+
+		String procDefName = getSingleResultByInlineQuery(
+				"select d.name from " + ProcessDefinition.class.getName() + " d where d.id = :id",
+				String.class,
+				new Param("id", processDefinitionId)
+		);
+
+		List<Long> ids = getCaseIdsByProcessDefinition(procDefName);
+		if (ListUtil.isEmpty(ids)) {
+			return null;
+		}
+
+		List<Integer> casesIds = new ArrayList<Integer>(ids.size());
+		for (Long id: ids) {
+			casesIds.add(id.intValue());
+		}
+		return casesIds;
 	}
 }
