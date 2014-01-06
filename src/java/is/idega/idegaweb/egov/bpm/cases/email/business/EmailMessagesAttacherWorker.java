@@ -129,22 +129,24 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return;
 		}
 
-		final Collection<BPMEmailMessage> messagesToAttach = allParsedMessages;
-		getIdegaJbpmContext().execute(new JbpmCallback() {
-			@Override
-			public Object doInJbpm(JbpmContext context) throws JbpmException {
-				for (BPMEmailMessage message: messagesToAttach) {
+		for (final BPMEmailMessage message: allParsedMessages) {
+			getIdegaJbpmContext().execute(new JbpmCallback() {
+
+				@Override
+				public Boolean doInJbpm(JbpmContext context) throws JbpmException {
 					try {
-						if (!attachEmailMessage(context, message)) {
+						if (attachEmailMessage(context, message)) {
+							return Boolean.TRUE;
+						} else {
 							//	TODO: save message and try attach later?
 						}
 					} catch (Exception e) {
 						LOGGER.log(Level.WARNING, "Error attaching message " + message, e);
 					}
+					return Boolean.FALSE;
 				}
-				return null;
-			}
-		});
+			});
+		}
 	}
 
 	private void addParsedMessages(Collection<BPMEmailMessage> allParsedMessages, Collection<? extends EmailMessage> parsedMessages) {
