@@ -111,5 +111,12 @@ div.protestRullingDecisionReason select {
 }
 
 select.availableVariablesChooserForProcess {
-	width: auto !important;
+	width: 300px !important;
+}
+div.cases-exporter-container .shortFormItem {
+	width: 650px !important;
+}
+div.cases-exporter-container .shortFormItem label {
+	width: 50px !important;
+	float: left;
 }
