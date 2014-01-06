@@ -16,8 +16,6 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jbpm.JbpmContext;
-import org.jbpm.JbpmException;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.taskmgmt.exe.TaskInstance;
@@ -41,7 +39,6 @@ import com.idega.bpm.BPMConstants;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
@@ -130,22 +127,13 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 
 		for (final BPMEmailMessage message: allParsedMessages) {
-			getIdegaJbpmContext().execute(new JbpmCallback() {
-
-				@Override
-				public Boolean doInJbpm(JbpmContext context) throws JbpmException {
-					try {
-						if (attachEmailMessage(context, message)) {
-							return Boolean.TRUE;
-						} else {
-							//	TODO: save message and try attach later?
-						}
-					} catch (Exception e) {
-						LOGGER.log(Level.WARNING, "Error attaching message " + message, e);
-					}
-					return Boolean.FALSE;
+			try {
+				if (!attachEmailMessage(message)) {
+					//	TODO: save message and try attach later?
 				}
-			});
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error attaching message " + message, e);
+			}
 		}
 	}
 
@@ -160,18 +148,13 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
-	@Transactional
-	private boolean attachEmailMessage(JbpmContext ctx, BPMEmailMessage message) {
+	@Transactional(readOnly = false)
+	private boolean attachEmailMessage(BPMEmailMessage message) {
 		if (message == null || message.isParsed()) {
 			return true;
 		}
-		if (ctx == null) {
-			return false;
-		}
 
-		ProcessInstance pi = ctx.getProcessInstance(message.getProcessInstanceId());
-		@SuppressWarnings("unchecked")
-		List<Token> tkns = pi.findAllTokens();
+		List<Token> tkns = getBpmFactory().getBPMDAO().getProcessTokens(message.getProcessInstanceId());
 		if (ListUtil.isEmpty(tkns)) {
 			return false;
 		}
@@ -190,29 +173,23 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String senderPersonalName = message.getSenderName();
 			String fromAddress = message.getFromAddress();
 
-			List<String> varsNames = Arrays.asList(
-					BPMConstants.VAR_SUBJECT,
-					BPMConstants.VAR_TEXT,
-					BPMConstants.VAR_FROM,
-					BPMConstants.VAR_FROM_ADDRESS
-			);
-
 			Map<String, List<Serializable>> variablesWithValues = new HashMap<String, List<Serializable>>();
-			variablesWithValues.put(varsNames.get(0), Arrays.asList((Serializable) subject));
-			variablesWithValues.put(varsNames.get(2), Arrays.asList((Serializable) senderPersonalName));
-			variablesWithValues.put(varsNames.get(3), Arrays.asList((Serializable) fromAddress));
+			variablesWithValues.put(BPMConstants.VAR_SUBJECT, Arrays.asList((Serializable) subject));
+			variablesWithValues.put(BPMConstants.VAR_FROM, Arrays.asList((Serializable) senderPersonalName));
+			variablesWithValues.put(BPMConstants.VAR_FROM_ADDRESS, Arrays.asList((Serializable) fromAddress));
 			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesByProcesses(
 					variablesWithValues,
-					Arrays.asList(varsNames.get(1)),
+					Arrays.asList(BPMConstants.VAR_TEXT),
 					null,
 					Arrays.asList(subPI.getId()),
 					null
 			);
 			if (!MapUtil.isEmpty(vars)) {
 				for (Map<String, VariableInstanceInfo> existingValues: vars.values()) {
-					VariableInstanceInfo existingVar = existingValues.get(varsNames.get(1));
-					if (existingVar != null && text.equals(existingVar.getValue().toString())) {
-						LOGGER.warning("BPM message is duplicated, dropping it: " + message.getSubject());
+					VariableInstanceInfo existingVar = existingValues.get(BPMConstants.VAR_TEXT);
+					if (existingVar != null && text.startsWith(existingVar.getValue().toString())) {
+						LOGGER.warning("BPM message (subject: '" + subject + "', text: '" + text + "', from: '" + senderPersonalName +
+								"', address: '" + fromAddress+ "') is duplicated, dropping it");
 						message.setParsed(true);
 						return true;
 					}
@@ -224,12 +201,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				ti.setName(subject);
 
 				Map<String, Object> newVars = new HashMap<String, Object>(2);
-				newVars.put(varsNames.get(0), subject);
-				newVars.put(varsNames.get(1), text);
-				newVars.put(varsNames.get(2), senderPersonalName);
-				newVars.put(varsNames.get(3), fromAddress);
-
-				BPMFactory bpmFactory = getBpmFactory();
+				newVars.put(BPMConstants.VAR_SUBJECT, subject);
+				newVars.put(BPMConstants.VAR_TEXT, text);
+				newVars.put(BPMConstants.VAR_FROM, senderPersonalName);
+				newVars.put(BPMConstants.VAR_FROM_ADDRESS, fromAddress);
 
 				// taking here view for new task instance
 				long tiId = ti.getId();
@@ -259,11 +234,11 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					}
 				}
 
-				if (attachments != null && !attachments.isEmpty()) {
+				if (!MapUtil.isEmpty(attachments)) {
 					Variable variable = new Variable("attachments", VariableDataType.FILES);
 
 					InputStream fileStream = null;
-					for (String fileName : attachments.keySet()) {
+					for (String fileName: attachments.keySet()) {
 						fileStream = attachments.get(fileName);
 						try {
 							taskInstance.addAttachment(variable, fileName, fileName, fileStream);
