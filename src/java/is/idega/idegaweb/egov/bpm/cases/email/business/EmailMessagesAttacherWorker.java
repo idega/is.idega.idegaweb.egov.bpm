@@ -219,7 +219,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	}
 
 	@Transactional
-	private boolean doAttachEmailToProcess(
+	private Boolean doAttachEmailToProcess(
 			final Long subProcInstId,
 			final String subject,
 			final String text,
@@ -228,7 +228,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			final Map<String, InputStream> attachments,
 			final Collection<File> attachedFiles
 	) {
-		return getIdegaJbpmContext().execute(new JbpmCallback() {
+		Boolean result = getIdegaJbpmContext().execute(new JbpmCallback() {
 
 			@Override
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
@@ -294,6 +294,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				return false;
 			}
 		});
+		return result;
 	}
 
 	public BPMContext getIdegaJbpmContext() {
