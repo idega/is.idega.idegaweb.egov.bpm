@@ -16,7 +16,12 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
+
 import org.hibernate.Hibernate;
+import org.hibernate.Session;
+import org.hibernate.Transaction;
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
@@ -26,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.support.WebApplicationContextUtils;
 
 import com.idega.block.email.bean.FoundMessagesInfo;
@@ -150,7 +154,16 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
-	@Transactional(readOnly = false)
+	private EntityManager entityManager;
+	protected EntityManager getEntityManager() {
+		return entityManager;
+	}
+
+	@PersistenceContext
+	public void setEntityManager(EntityManager entityManager) {
+		this.entityManager = entityManager;
+	}
+
 	private boolean attachEmailMessage(BPMEmailMessage message) {
 		if (message == null || message.isParsed()) {
 			return true;
@@ -168,12 +181,22 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			}
 
 			ProcessDefinition pd = null;
+			Session session = null;
 			try {
-				Hibernate.initialize(subPI);
+				session = (Session) getEntityManager().getDelegate();
+				Transaction tx = session.beginTransaction();
+
+				subPI = (ProcessInstance) session.load(ProcessInstance.class, subPI.getId());
 				pd = subPI.getProcessDefinition();
 				Hibernate.initialize(pd);
+
+				tx.commit();
 			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "Error initializing sub-process instance, ID: " + subPI.getId(), e);
+				LOGGER.log(Level.WARNING, "Error initializing sub-process instance for token with ID: " + tkn.getId(), e);
+			} finally {
+				if (session != null && session.isOpen()) {
+					session.close();
+				}
 			}
 			if (pd == null || !EmailMessagesAttacher.email_fetch_process_name.equals(pd.getName())) {
 				continue;
