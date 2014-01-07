@@ -169,6 +169,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 			ProcessDefinition pd = null;
 			try {
+				Hibernate.initialize(subPI);
 				pd = subPI.getProcessDefinition();
 				Hibernate.initialize(pd);
 			} catch (Exception e) {
