@@ -16,6 +16,8 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.hibernate.Hibernate;
+import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.jbpm.taskmgmt.exe.TaskInstance;
@@ -161,7 +163,18 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		for (Token tkn: tkns) {
 			ProcessInstance subPI = tkn.getSubProcessInstance();
-			if (subPI == null || !EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
+			if (subPI == null) {
+				continue;
+			}
+
+			ProcessDefinition pd = null;
+			try {
+				pd = subPI.getProcessDefinition();
+				Hibernate.initialize(pd);
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error initializing sub-process instance, ID: " + subPI.getId(), e);
+			}
+			if (pd == null || !EmailMessagesAttacher.email_fetch_process_name.equals(pd.getName())) {
 				continue;
 			}
 
