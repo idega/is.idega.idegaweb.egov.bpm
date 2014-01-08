@@ -96,12 +96,23 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private RolesManager rolesManager;
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
-	
+
 	@Autowired
 	private ProcessArtifacts processArtifacts;
-	
-	@Autowired
+
+	@Autowired(required = false)
 	private GeneralCompanyBusiness generalCompanyBusiness;
+
+	private GeneralCompanyBusiness getGeneralCompanyBusiness() {
+		if (generalCompanyBusiness == null) {
+			try {
+				generalCompanyBusiness = ELUtil.getInstance().getBean(GeneralCompanyBusiness.BEAN_NAME);
+			} catch (Exception e) {
+				LOGGER.warning("There is no implementation for " + GeneralCompanyBusiness.class.getName());
+			}
+		}
+		return generalCompanyBusiness;
+	}
 
 	@Override
 	public void setSearchResults(String id, CasesSearchResults results) {
@@ -349,7 +360,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			sheet.setColumnWidth(cellIndexTmp++, DEFAULT_CELL_WIDTH);
 
 	}
-	
+
 	private Integer getNumber(String value) {
 		if (StringUtil.isEmpty(value))
 			return null;
@@ -471,7 +482,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		bigFont.setFontHeightInPoints((short) 16);
 		HSSFCellStyle bigStyle = workBook.createCellStyle();
 		bigStyle.setFont(bigFont);
-		
+
 		HSSFFont normalFont = workBook.createFont();
 		normalFont.setFontHeightInPoints((short) 16);
 		HSSFCellStyle normalStyle = workBook.createCellStyle();
@@ -494,7 +505,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		List<String> createdSheets = new ArrayList<String>();
 
 		IWResourceBundle iwrb = IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(locale);
-		
+
 		for (String processName: casesByProcessDefinition.keySet()) {
 			if (processName == null)
 				continue;
@@ -530,19 +541,19 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					cell = row.createCell(cellIndex++);
 					cell.setCellStyle(normalStyle);
 					cell.setCellValue(theCase.getCaseStatusLocalized());
-					
+
 					cell = row.createCell(cellIndex++);
 					cell.setCellStyle(normalStyle);
 					cell.setCellValue(getCaseCreator(theCase));
-					
+
 					cell = row.createCell(cellIndex++);
 					cell.setCellStyle(normalStyle);
 					cell.setCellValue(getCaseCreatorPersonalId(theCase));
-					
+
 					cell = row.createCell(cellIndex++);
 					cell.setCellStyle(normalStyle);
 					cell.setCellValue(getCaseCreatorEmail(theCase));
-					
+
 
 					if (!ListUtil.isEmpty(standardFieldsLabels)) {
 						List<String> standardFieldsValues = getStandardFieldsValues(id, theCase);
@@ -568,7 +579,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						addUsersToSheet(workBook, sheet, users, iwrb, showCompany);
 						rowNumber = (short) (sheet.getLastRowNum()+2);
 					}
-					
+
 					lastCellNumber = row.getLastCellNum();
 				}
 			} else {
@@ -636,7 +647,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						}
 					}
 
-					
+
 					lastCellNumber = row.getLastCellNum();
 				}
 			}
@@ -644,10 +655,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			if (lastCellNumber > 0)
 				for (int i = 0; i < lastCellNumber; i++)
 					sheet.autoSizeColumn(i);
-			
+
 		}
 
-		
+
 		try {
 			workBook.write(streamOut);
 		} catch (Exception e) {
@@ -659,7 +670,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		return memory;
 	}
-	
+
 	private void addUsersToSheet(HSSFWorkbook workBook ,HSSFSheet sheet,Collection<User> users,IWResourceBundle iwrb,
 			boolean showUserCompany){
 		HSSFFont bigFont = workBook.createFont();
@@ -667,64 +678,67 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		bigFont.setFontHeightInPoints((short) 16);
 		HSSFCellStyle bigStyle = workBook.createCellStyle();
 		bigStyle.setFont(bigFont);
-		
+
 		HSSFFont normalFont = workBook.createFont();
 		normalFont.setFontHeightInPoints((short) 16);
 		HSSFCellStyle normalStyle = workBook.createCellStyle();
 		normalStyle.setFont(normalFont);
-		
+
 		int columnWidth = DEFAULT_CELL_WIDTH;
 		int rowNum = sheet.getLastRowNum()+1;
 		HSSFRow row = sheet.createRow(rowNum++);
-		
+
 		int column = 0;
-		
+
 		sheet.setColumnWidth(column, columnWidth);
 		HSSFCell cell = row.createCell(column++);
 		cell.setCellStyle(bigStyle);
 		cell.setCellValue(iwrb.getLocalizedString("name", "Name"));
-		
+
 		if(showUserCompany){
 			sheet.setColumnWidth(column, columnWidth);
 			cell = row.createCell(column++);
 			cell.setCellStyle(bigStyle);
 			cell.setCellValue(iwrb.getLocalizedString("cases_bpm.company", "Company"));
 		}
-		
+
 		sheet.setColumnWidth(column, columnWidth);
 		cell = row.createCell(column++);
 		cell.setCellStyle(bigStyle);
 		cell.setCellValue(iwrb.getLocalizedString("email_address", "E-mail address"));
-		
+
 		sheet.setColumnWidth(column, columnWidth);
 		cell = row.createCell(column++);
 		cell.setCellStyle(bigStyle);
 		cell.setCellValue(iwrb.getLocalizedString("phone_number", "Phone number"));
-		
+
 		for(User user : users){
 			row = sheet.createRow(rowNum++);
-			
+
 			column = 0;
-			
+
 			cell = row.createCell(column++);
 			cell.setCellStyle(normalStyle);
 			cell.setCellValue(user.getName());
-			
-			if(showUserCompany){
-				cell = row.createCell(column++);
-				cell.setCellStyle(normalStyle);
-				Collection<GeneralCompany> companies = generalCompanyBusiness.getCompaniesForUser(user);
-				String companyName;
-				if(!ListUtil.isEmpty(companies)){
-					GeneralCompany company = companies.iterator().next();
-					companyName = company.getName();
-				}else{
-					companyName = "-";
+
+			if (showUserCompany) {
+				GeneralCompanyBusiness generalCompanyBusiness = getGeneralCompanyBusiness();
+				if (generalCompanyBusiness != null) {
+					cell = row.createCell(column++);
+					cell.setCellStyle(normalStyle);
+					Collection<GeneralCompany> companies = generalCompanyBusiness.getCompaniesForUser(user);
+					String companyName;
+					if(!ListUtil.isEmpty(companies)){
+						GeneralCompany company = companies.iterator().next();
+						companyName = company.getName();
+					}else{
+						companyName = CoreConstants.MINUS;
+					}
+					cell.setCellValue(companyName);
 				}
-				cell.setCellValue(companyName);
 			}
-			
-			
+
+
 			cell = row.createCell(column++);
 			cell.setCellStyle(normalStyle);
 			Collection<Email> emails =  user.getEmails();
@@ -745,7 +759,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				}
 				cell.setCellValue(builder.toString());
 			}
-			
+
 			Collection<Phone> phones = user.getPhones();
 			StringBuilder userPhones = new StringBuilder();
 			for(Phone phone : phones){
@@ -758,7 +772,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			cell = row.createCell(column++);
 			cell.setCellStyle(normalStyle);
 			cell.setCellValue(userPhones.toString());
-			
+
 		}
 	}
 	@Override
@@ -778,7 +792,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		} finally {
 			IOUtil.closeOutputStream(streamOut);
 		}
-		
+
 		return memory;
 	}
 
