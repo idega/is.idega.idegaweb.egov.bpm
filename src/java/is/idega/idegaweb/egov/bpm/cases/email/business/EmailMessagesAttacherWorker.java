@@ -5,7 +5,6 @@ import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -175,23 +174,25 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String senderPersonalName = message.getSenderName();
 			String fromAddress = message.getFromAddress();
 
-			Map<String, List<Serializable>> variablesWithValues = new HashMap<String, List<Serializable>>();
-			variablesWithValues.put(BPMConstants.VAR_SUBJECT, Arrays.asList((Serializable) subject));
-			variablesWithValues.put(BPMConstants.VAR_FROM, Arrays.asList((Serializable) senderPersonalName));
-			variablesWithValues.put(BPMConstants.VAR_FROM_ADDRESS, Arrays.asList((Serializable) fromAddress));
-			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesByProcesses(
-					variablesWithValues,
-					Arrays.asList(BPMConstants.VAR_TEXT),
+			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesAndExpressionsByProcesses(
+					null,
+					Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS),
 					null,
 					Arrays.asList(subProcInstId),
 					null
 			);
 			if (!MapUtil.isEmpty(vars)) {
 				for (Map<String, VariableInstanceInfo> existingValues: vars.values()) {
-					VariableInstanceInfo existingVar = existingValues.get(BPMConstants.VAR_TEXT);
-					if (existingVar != null && text.startsWith(existingVar.getValue().toString())) {
-						LOGGER.warning("BPM message (subject: '" + subject + "', text: '" + text + "', from: '" + senderPersonalName +
-								"', address: '" + fromAddress+ "') is duplicated, dropping it");
+					VariableInstanceInfo subjectVar = existingValues.get(BPMConstants.VAR_SUBJECT);
+					VariableInstanceInfo textVar = existingValues.get(BPMConstants.VAR_TEXT);
+					VariableInstanceInfo fromVar = existingValues.get(BPMConstants.VAR_FROM);
+					VariableInstanceInfo fromAddressVar = existingValues.get(BPMConstants.VAR_FROM_ADDRESS);
+					if (
+						(subjectVar != null && subject.startsWith(subjectVar.getValue().toString())) &&
+						(textVar != null && text.startsWith(textVar.getValue().toString())) &&
+						(fromVar != null && senderPersonalName.startsWith(fromVar.getValue().toString())) &&
+						(fromAddressVar != null && fromAddress.startsWith(fromAddressVar.getValue().toString()))
+					) {
 						message.setParsed(true);
 						return true;
 					}
