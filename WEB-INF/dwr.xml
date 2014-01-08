@@ -19,6 +19,7 @@
 	    	<include method="showCaseAssets"/>
 	    	<include method="getExportedCasesToPDF"/>
 	    	<include method="getStatusOfExport"/>
+	    	<include method="getLinkForZippedCases"/>
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">

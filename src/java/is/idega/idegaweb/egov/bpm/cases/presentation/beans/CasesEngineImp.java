@@ -93,6 +93,8 @@ import com.idega.idegaweb.IWMainSlideStartedEvent;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.idegaweb.egov.bpm.presentation.CasesExporter;
+import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceType;
@@ -106,6 +108,7 @@ import com.idega.user.business.GroupBusiness;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.Group;
 import com.idega.user.data.User;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.FileUtil;
@@ -1317,21 +1320,19 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return result;
 		}
 
-		String baseDirectory = null;
 		try {
-			File baseDir = new File("exported_cases");
-			if (!baseDir.exists()) {
-				baseDir.mkdir();
-			}
-			baseDirectory = baseDir.getAbsolutePath();
+			File baseDir = CasesExporter.getDirectory(id);
 
 			int i = 0;
 			for (Iterator<Integer> casesIdsIter = casesIds.iterator(); casesIdsIter.hasNext();) {
 				Integer caseId = casesIdsIter.next();
-				i++;
 
-				exportStatuses.put(id, iwrb.getLocalizedString("exporting", "Exporting") + CoreConstants.SPACE + i+ CoreConstants.SPACE +
-						iwrb.getLocalizedString("of", "of") + CoreConstants.SPACE + casesIds.size());
+				i++;
+				exportStatuses.put(
+						id,
+						iwrb.getLocalizedString("exporting", "Exporting") + CoreConstants.SPACE + i+ CoreConstants.SPACE +
+								iwrb.getLocalizedString("of", "of") + CoreConstants.SPACE + casesIds.size()
+					);
 
 				List<CasePDF> casePDFs = null;
 				try {
@@ -1380,8 +1381,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		result.setId(Boolean.TRUE.toString());
 		result.setValue(iwrb.getLocalizedString("cases_were_successfully_exported", "Cases were successfully exported"));
-		result.setName(iwrb.getLocalizedString("cases_were_exported_to", "Cases were exported to") +
-				CoreConstants.COLON + CoreConstants.SPACE + baseDirectory);
+		result.setName(id);
 		exportStatuses.remove(id);
 		return result;
 	}
@@ -1401,4 +1401,68 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		return new AdvancedProperty(Boolean.TRUE.toString(), status);
 	}
+
+	@Override
+	public AdvancedProperty getLinkForZippedCases(String id, List<String> casesIdentifiers) {
+		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
+		AdvancedProperty result = new AdvancedProperty(
+				Boolean.FALSE.toString(),
+				iwrb.getLocalizedString("unable_to_download_zipped_cases", "Unable to download exported case(s)")
+		);
+
+		if (StringUtil.isEmpty(id)) {
+			return result;
+		}
+
+		File baseDir = CasesExporter.getDirectory(id);
+		if (baseDir == null || !baseDir.exists() || !baseDir.canRead() || !baseDir.isDirectory()) {
+			return result;
+		}
+
+		Collection<File> toZip = null;
+		String name = "Exported_cases.zip";
+		if (ListUtil.isEmpty(casesIdentifiers)) {
+			File[] casesFolders = baseDir.listFiles();
+			if (ArrayUtil.isEmpty(casesFolders)) {
+				return result;
+			}
+			toZip = Arrays.asList(casesFolders);
+		} else {
+			toZip = new ArrayList<File>();
+			for (String identifier: casesIdentifiers) {
+				File caseFolderToZip = new File(baseDir.getAbsoluteFile() + File.separator + identifier);
+				if (!caseFolderToZip.exists() || !caseFolderToZip.canRead() || !caseFolderToZip.isDirectory()) {
+					continue;
+				}
+				toZip.add(caseFolderToZip);
+			}
+			if (casesIdentifiers.size() == 1) {
+				name = "Exported_case_" + casesIdentifiers.get(0) + ".zip";
+			}
+		}
+
+		if (ListUtil.isEmpty(toZip)) {
+			return result;
+		}
+
+		File zippedFile = null;
+		try {
+			zippedFile = FileUtil.getZippedFiles(toZip, name, false);
+		} catch (IOException e) {
+			getLogger().log(Level.WARNING, "Error zipping content at " + baseDir.getAbsolutePath(), e);
+		}
+
+		if (zippedFile == null || !zippedFile.exists() || !zippedFile.canRead()) {
+			return result;
+		}
+
+		result.setId(Boolean.TRUE.toString());
+		URIUtil uri = new URIUtil(getApplication().getMediaServletURI());
+		uri.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(DownloadWriter.class));
+		uri.setParameter(DownloadWriter.PRM_ABSOLUTE_FILE_PATH, zippedFile.getAbsolutePath());
+		result.setValue(uri.getUri());
+		result.setName(iwrb.getLocalizedString("downloading_exported_data", "Downloading exported data"));
+		return result;
+	}
+
 }

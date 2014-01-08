@@ -5,8 +5,9 @@ CasesExporter.FINSHED_EXPORT = false;
 CasesExporter.doExportCases = function(params) {
 	var procDefId = jQuery('#' + params.dropdownId).val();
 	CasesExporter.FINSHED_EXPORT = false;
+	jQuery('#' + params.resultsId).html('');
 	
-	showLoadingMessage(params.loading);
+	showLoadingMessage(params.exporting);
 	CasesEngine.getExportedCasesToPDF(procDefId, params.id, {
 		callback: function(result) {
 			CasesExporter.FINSHED_EXPORT = true;
@@ -19,8 +20,18 @@ CasesExporter.doExportCases = function(params) {
 			humanMsg.displayMsg(result.value, {timeout: 3000});
 			
 			if (result.id == 'true') {
-				jQuery('#' + params.resultsId).text(result.name);
-				jQuery('#' + params.resultsId).removeAttr('style');
+				showLoadingMessage(params.loading);
+				IWCORE.getRenderedComponentByClassName({
+					className: params.resultsUI,
+					properties: [
+						{id: 'setExportId', value: params.id}	
+					],
+					container: params.resultsId,
+					rewrite: true,
+					callback: function() {
+						closeAllLoadingMessages();
+					}
+				});
 			}
 		}, errorHandler: function(o1, o2) {
 			closeAllLoadingMessages();
@@ -49,3 +60,25 @@ CasesExporter.doFetchStatus = function(id) {
 		}
 	});
 }
+
+CasesExporter.doDownload = function(id, caseIdentifier) {
+	var identifiers = null;
+	if (caseIdentifier != null && caseIdentifier != '') {
+		identifiers = [];
+		identifiers.push(caseIdentifier);
+	}
+	CasesEngine.getLinkForZippedCases(id, identifiers, {
+		callback: function(result) {
+			if (result == null) {
+				return false;
+			} else if (result.id == 'false') {
+				humanMsg.displayMsg(result.value, {timeout: 3000});
+			} else if (result.id == 'true') {
+				window.location.href = result.value;
+				humanMsg.displayMsg(result.name, {timeout: 3000});
+			}
+		}
+	});
+}
+
+

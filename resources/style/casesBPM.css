@@ -112,6 +112,11 @@ div.protestRullingDecisionReason select {
 
 select.availableVariablesChooserForProcess {
 	width: 300px !important;
+	margin-left: 5px !important;
+	margin-right: 15px !important;
+}
+input.cases-exporter-action-button {
+	width: auto !important;
 }
 div.cases-exporter-container .shortFormItem {
 	width: 650px !important;
@@ -119,4 +124,9 @@ div.cases-exporter-container .shortFormItem {
 div.cases-exporter-container .shortFormItem label {
 	width: 50px !important;
 	float: left;
+}
+div.exported-cases-results-table th, td {
+	font-size: 12px !important;
+}
+input.exported-cases-results-download-all-button {
 }

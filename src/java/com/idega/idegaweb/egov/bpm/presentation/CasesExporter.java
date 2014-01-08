@@ -4,6 +4,7 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.cases.business.CasesEngine;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
+import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -23,7 +24,6 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.Layer;
-import com.idega.presentation.text.Heading4;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.GenericButton;
 import com.idega.presentation.ui.InterfaceObject;
@@ -47,6 +47,17 @@ public class CasesExporter extends Block {
 
 	@Autowired
 	private JQuery jQuery;
+
+	public static final File getDirectory(String id) {
+		File baseDir = new File(System.getProperty("java.io.tmpdir") + File.separator + "exported_cases" + File.separator + id);
+		if (!baseDir.exists()) {
+			if (baseDir.mkdirs()) {
+				return baseDir;
+			}
+			return null;
+		}
+		return baseDir;
+	}
 
 	@Override
 	public void main(IWContext iwc) throws Exception {
@@ -74,41 +85,37 @@ public class CasesExporter extends Block {
 
 		IWResourceBundle iwrb = casesBundle.getResourceBundle(iwc);
 		Layer processesContainer = new Layer();
+		processesContainer.setStyleClass("formItem shortFormItem");
 		container.add(processesContainer);
 		DropdownMenu processes = getDropdownForProcess(iwc);
 		addFormItem(processesContainer, "process", iwrb.getLocalizedString("cases_search_select_process", "Process"), processes);
 
 		Layer resultsContainer = new Layer();
 		container.add(resultsContainer);
-		Heading4 result = new Heading4();
-		result.setStyleAttribute("display: none;");
-		resultsContainer.add(result);
 
-		Layer buttonsLayer = new Layer();
-		buttonsLayer.setStyleClass("buttonLayer");
-		container.add(buttonsLayer);
 		GenericButton export = new GenericButton(iwrb.getLocalizedString("export_search_results", "Export"));
-		buttonsLayer.add(export);
-		export.setOnClick("CasesExporter.doExportCases({loading: '" + iwrb.getLocalizedString("exporting", "Exporting...") +
-				"', dropdownId: '" + processes.getId() + "', id: '" + UUID.randomUUID().toString() + "', resultsId: '" + result.getId() + "'});");
+		export.setStyleClass("cases-exporter-action-button");
+		processesContainer.add(export);
+		export.setOnClick(
+				"CasesExporter.doExportCases({exporting: '" + iwrb.getLocalizedString("exporting", "Exporting...") +
+				"', loading: '" + iwrb.getLocalizedString("loading", "Loading...") + "', dropdownId: '" + processes.getId() +
+				"', id: '" + UUID.randomUUID().toString() + "', resultsId: '" + resultsContainer.getId() + "', resultsUI: '" +
+				CasesExporterResults.class.getName() + "'});"
+		);
 	}
 
 	private Layer addFormItem(Layer layer, String styleClass, String localizedLabelText, InterfaceObject input, UIComponent... additionalComponents) {
-		Layer element = new Layer(Layer.DIV);
-		layer.add(element);
-		element.setStyleClass("formItem shortFormItem");
-
 		Label label = null;
-		label = new Label(localizedLabelText == null ? CoreConstants.MINUS : localizedLabelText, input);
-		element.add(label);
-		element.add(input);
+		label = new Label(localizedLabelText == null ? CoreConstants.MINUS : localizedLabelText + CoreConstants.COLON, input);
+		layer.add(label);
+		layer.add(input);
 
 		if (!ArrayUtil.isEmpty(additionalComponents)) {
 			for (UIComponent component: additionalComponents) {
-				element.add(component);
+				layer.add(component);
 			}
 		}
-		return element;
+		return layer;
 	}
 
 	@Override
@@ -119,7 +126,7 @@ public class CasesExporter extends Block {
 	private DropdownMenu getDropdownForProcess(IWContext iwc) {
 		DropdownMenu menu = new DropdownMenu(PARAMETER_PROCESS_ID);
 		menu.setStyleClass("availableVariablesChooserForProcess");
-		String selectedProcess = iwc.isParameterSet(PARAMETER_PROCESS_ID) ? iwc.getParameter(PARAMETER_PROCESS_ID) : null;
+		String selectedProcess = iwc.isParameterSet(PARAMETER_PROCESS_ID)  ? iwc.getParameter(PARAMETER_PROCESS_ID) : null;
 
 		List<AdvancedProperty> allProcesses = casesEngine.getAvailableProcesses(iwc);
 
@@ -133,9 +140,6 @@ public class CasesExporter extends Block {
 
 		fillDropdown(iwc.getCurrentLocale(), menu, allProcesses, new AdvancedProperty(String.valueOf(-1),
 				iwrb.getLocalizedString("cases_search_select_process", "Select process")), selectedProcess);
-
-		menu.setOnChange(new StringBuilder("CasesListHelper.getProcessDefinitionVariablesByIwID('").append(iwrb
-				.getLocalizedString("loading", "Loading...")).append("', '").append(menu.getId()).append("');").toString());
 
 		return menu;
 	}
