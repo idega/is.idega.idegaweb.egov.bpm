@@ -101,6 +101,7 @@ public class CasesExporterResults extends Block {
 
 		row = bodyRow.createRow();
 		row.createCell();
+		row.createCell();
 
 		GenericButton downloadAllButton = new GenericButton(iwrb.getLocalizedString("download_all", "Download all"));
 		downloadAllButton.setOnClick("CasesExporter.doDownload('" + exportId + "', null);");
