@@ -84,7 +84,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			return null;
 		}
 
-		return getPDFsAndAttachmentsForCase(null, caseId, false);
+		return getPDFsAndAttachmentsForCase(null, caseId, false, true);
 	}
 
 	@Override
@@ -94,7 +94,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			return null;
 		}
 
-		return getPDFsAndAttachmentsForCase(theCase, null, false);
+		return getPDFsAndAttachmentsForCase(theCase, null, false, true);
 	}
 
 	@Override
@@ -104,10 +104,10 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			return null;
 		}
 
-		return getPDFsAndAttachmentsForCase(null, caseId, true);
+		return getPDFsAndAttachmentsForCase(null, caseId, true, false);
 	}
 
-	private List<CasePDF> getPDFsAndAttachmentsForCase(Case theCase, Integer caseId, boolean loadAttachments) throws Exception {
+	private List<CasePDF> getPDFsAndAttachmentsForCase(Case theCase, Integer caseId, boolean loadAttachments, boolean switchUser) throws Exception {
 		if (theCase == null && caseId == null) {
 			return null;
 		}
@@ -127,7 +127,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 		User currentUser = iwc == null ? null : getCurrentUser();
 		Locale locale = iwc == null ? getCurrentLocale() : iwc.getCurrentLocale();
 		try {
-			if (iwc != null) {
+			if (switchUser && iwc != null) {
 				login = LoginBusinessBean.getLoginBusinessBean(iwc);
 
 				User admin = iwc.getAccessController().getAdministratorUser();
@@ -208,7 +208,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			}
 			return pdfs;
 		} finally {
-			if (login != null) {
+			if (switchUser && login != null) {
 				login.logOutUser(iwc);
 				iwc.getRequest().removeAttribute(BPMUserImpl.bpmUsrParam);
 

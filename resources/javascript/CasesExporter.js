@@ -20,27 +20,33 @@ CasesExporter.doExportCases = function(params) {
 			humanMsg.displayMsg(result.value, {timeout: 3000});
 			
 			if (result.id == 'true') {
-				showLoadingMessage(params.loading);
-				IWCORE.getRenderedComponentByClassName({
-					className: params.resultsUI,
-					properties: [
-						{id: 'setExportId', value: params.id}	
-					],
-					container: params.resultsId,
-					rewrite: true,
-					callback: function() {
-						closeAllLoadingMessages();
-					}
-				});
+				CasesExporter.doShowExportedCases(params);
 			}
 		}, errorHandler: function(o1, o2) {
 			closeAllLoadingMessages();
-			humanMsg.displayMsg('Error', {timeout: 3000});
+			CasesExporter.doShowExportedCases(params);
 			return;
-		}
+		},
+		timeout: 86400000
 	});
 	
 	CasesExporter.doFetchStatus(params.id);
+}
+
+CasesExporter.doShowExportedCases = function(params) {
+	CasesExporter.FINSHED_EXPORT = true;
+	showLoadingMessage(params.loading);
+	IWCORE.getRenderedComponentByClassName({
+		className: params.resultsUI,
+		properties: [
+			{id: 'setExportId', value: params.id}	
+		],
+		container: params.resultsId,
+		rewrite: true,
+		callback: function() {
+			closeAllLoadingMessages();
+		}
+	});
 }
 
 CasesExporter.doFetchStatus = function(id) {
