@@ -52,10 +52,10 @@ CasesExporter.doFetchStatus = function(id) {
 	CasesEngine.getStatusOfExport(id, {
 		callback: function(result) {
 			if (result == null) {
-				window.setTimeout(function() {CasesExporter.doFetchStatus(id);}, 1000);
+				window.setTimeout(function() {CasesExporter.doFetchStatus(id);}, 5000);
 			} else {
 				jQuery('#loadingtext').html(result.value);
-				window.setTimeout(function() {CasesExporter.doFetchStatus(id);}, 1000);
+				window.setTimeout(function() {CasesExporter.doFetchStatus(id);}, 5000);
 			}
 		}
 	});

@@ -1930,4 +1930,25 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		return casesIds;
 	}
+
+	@Override
+	public int getNumberOfApplications(Long procDefId) {
+		if (procDefId == null) {
+			return 0;
+		}
+
+		String procDefName = bpmFactory.getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(procDefId);
+		if (StringUtil.isEmpty(procDefName)) {
+			return 0;
+		}
+
+		Number count = getSingleResultByInlineQuery(
+				"select count(distinct b.procInstId) from " + CaseProcInstBind.class.getName() + " b, " + ProcessInstance.class.getName() + " pi, " +
+				ProcessDefinition.class.getName() +	" pd where pd.name = :procDefName and pi.processDefinition.name = pd.name and b.procInstId = pi.id",
+				Number.class,
+				new Param("procDefName", procDefName)
+		);
+		return count == null ? 0 : count.intValue();
+	}
+
 }

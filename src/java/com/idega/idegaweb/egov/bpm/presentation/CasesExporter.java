@@ -21,6 +21,7 @@ import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.Layer;
@@ -41,6 +42,9 @@ public class CasesExporter extends Block {
 
 	@Autowired
 	private CasesEngine casesEngine;
+
+	@Autowired
+	private CasesBPMDAO casesBPMDAO;
 
 	@Autowired
 	private Web2Business web2;
@@ -132,6 +136,14 @@ public class CasesExporter extends Block {
 
 		if (ListUtil.isEmpty(allProcesses)) {
 			return menu;
+		}
+
+		for (AdvancedProperty process: allProcesses) {
+			Integer numberOfApplications = casesBPMDAO.getNumberOfApplications(Long.valueOf(process.getId()));
+			if (numberOfApplications == null) {
+				numberOfApplications = 0;
+			}
+			process.setValue(process.getValue() + CoreConstants.SPACE + CoreConstants.BRACKET_LEFT + numberOfApplications + CoreConstants.BRACKET_RIGHT);
 		}
 
 		IWResourceBundle iwrb = getResourceBundle(iwc);

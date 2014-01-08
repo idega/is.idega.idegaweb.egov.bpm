@@ -1329,10 +1329,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 				i++;
 				exportStatuses.put(
-						id,
-						iwrb.getLocalizedString("exporting", "Exporting") + CoreConstants.SPACE + i+ CoreConstants.SPACE +
-								iwrb.getLocalizedString("of", "of") + CoreConstants.SPACE + casesIds.size()
-					);
+					id,
+					iwrb.getLocalizedString("exporting", "Exporting") + CoreConstants.SPACE + i+ CoreConstants.SPACE +
+							iwrb.getLocalizedString("of", "of") + CoreConstants.SPACE + casesIds.size()
+				);
 
 				List<CasePDF> casePDFs = null;
 				try {
@@ -1349,12 +1349,20 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					caseFolder.mkdir();
 				}
 				for (CasePDF casePDF: casePDFs) {
+					if (casePDF == null) {
+						continue;
+					}
+					byte[] pdfData = casePDF.getBytes();
+					if (pdfData == null || pdfData.length <= 0) {
+						continue;
+					}
+
 					File pdf = new File(caseFolder.getAbsoluteFile() + File.separator + casePDF.getName());
 					if (!pdf.exists()) {
 						pdf.createNewFile();
 					}
 
-					FileUtil.streamToFile(new ByteArrayInputStream(casePDF.getBytes()), pdf);
+					FileUtil.streamToFile(new ByteArrayInputStream(pdfData), pdf);
 
 					List<CaseAttachment> attachments = casePDF.getAttachments();
 					if (!ListUtil.isEmpty(attachments)) {
@@ -1364,18 +1372,27 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 						}
 
 						for (CaseAttachment attachment: attachments) {
+							if (attachment == null) {
+								continue;
+							}
+							byte[] attachmentData = attachment.getBytes();
+							if (attachmentData == null || attachmentData.length <= 0) {
+								continue;
+							}
+
 							File attachmentFile = new File(attachmentsFolder.getAbsoluteFile() + File.separator + attachment.getName());
 							if (!attachmentFile.exists()) {
 								attachmentFile.createNewFile();
 							}
 
-							FileUtil.streamToFile(new ByteArrayInputStream(attachment.getBytes()), attachmentFile);
+							FileUtil.streamToFile(new ByteArrayInputStream(attachmentData), attachmentFile);
 						}
 					}
 				}
 			}
-		} catch (IOException e) {
+		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error exporting cases to PDFs", e);
+			exportStatuses.remove(id);
 			return result;
 		}
 

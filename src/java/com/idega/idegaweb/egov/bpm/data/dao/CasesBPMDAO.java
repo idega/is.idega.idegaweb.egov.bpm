@@ -336,4 +336,6 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
 			Collection<? extends Number> handlerCategoryIDs);
+
+	public int getNumberOfApplications(Long procDefId);
 }

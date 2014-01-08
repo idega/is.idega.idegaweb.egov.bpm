@@ -71,17 +71,25 @@ public class CasesExporterResults extends Block {
 		TableHeaderRowGroup headerRow = table.createHeaderRowGroup();
 		TableRow row = headerRow.createRow();
 		TableHeaderCell headerCell = row.createHeaderCell();
+		headerCell.add(new Text(iwrb.getLocalizedString("nr", "Nr")));
+
+		headerCell = row.createHeaderCell();
 		headerCell.add(new Text(iwrb.getLocalizedString("case_nr", "Case nr.")));
+
 		headerCell = row.createHeaderCell();
 		String download = iwrb.getLocalizedString("download", "Download");
 		headerCell.add(new Text(CoreConstants.EMPTY));
 		TableBodyRowGroup bodyRow = table.createBodyRowGroup();
+		int index = 0;
 		for (File caseFolder: casesFolders) {
+			index++;
 			if (caseFolder == null || !caseFolder.exists() || !caseFolder.canRead() || !caseFolder.isDirectory()) {
 				continue;
 			}
 
 			row = bodyRow.createRow();
+
+			row.createCell().add(new Text(String.valueOf(index)));
 
 			String identifier = caseFolder.getName();
 			row.createCell().add(new Text(identifier));
