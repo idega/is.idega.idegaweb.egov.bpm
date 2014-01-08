@@ -99,14 +99,16 @@ public class CasesExporterResults extends Block {
 			row.createCell().add(downloadButton);
 		}
 
-		row = bodyRow.createRow();
-		row.createCell();
-		row.createCell();
+		if (iwc.getApplicationSettings().getBoolean("cases_export_download_all", Boolean.FALSE)) {
+			row = bodyRow.createRow();
+			row.createCell();
+			row.createCell();
 
-		GenericButton downloadAllButton = new GenericButton(iwrb.getLocalizedString("download_all", "Download all"));
-		downloadAllButton.setOnClick("CasesExporter.doDownload('" + exportId + "', null);");
-		downloadAllButton.setStyleClass("exported-cases-results-download-all-button");
-		row.createCell().add(downloadAllButton);
+			GenericButton downloadAllButton = new GenericButton(iwrb.getLocalizedString("download_all", "Download all"));
+			downloadAllButton.setOnClick("CasesExporter.doDownload('" + exportId + "', null);");
+			downloadAllButton.setStyleClass("exported-cases-results-download-all-button");
+			row.createCell().add(downloadAllButton);
+		}
 	}
 
 	@Override
