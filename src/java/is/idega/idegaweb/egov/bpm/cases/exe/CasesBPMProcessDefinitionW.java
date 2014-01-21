@@ -90,7 +90,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Autowired
 	private AppSupportsManagerFactory appSupportsManagerFactory;
 
-	@SuppressWarnings("unchecked")
 	@Transactional(readOnly = false)
 	@Override
 	public Long startProcess(final ViewSubmission viewSubmission) {
