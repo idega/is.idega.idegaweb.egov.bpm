@@ -1093,9 +1093,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		builder.append(") union (select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ");
-		if (!ListUtil.isEmpty(procInstIds))
-			builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
-
+		builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
 			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
 			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
