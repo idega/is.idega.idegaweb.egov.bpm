@@ -110,24 +110,17 @@ div.protestRullingDecisionReason select {
 	color: #101010 !important;
 }
 
-/*
-select.availableVariablesChooserForProcess {
-	width: 300px !important;
-	margin-left: 5px !important;
-	margin-right: 15px !important;
+div.shortFormItem {
+    width: 100% !important;
 }
-input.cases-exporter-action-button {
-	width: auto !important;
+div.shortFormItem label {
+    display: block !important;
+    float: left !important;
+    width: 100px !important;
 }
-div.cases-exporter-container .shortFormItem {
-	width: 650px !important;
+div.formItem select {
+    width: 300px !important;
 }
-div.cases-exporter-container .shortFormItem label {
-	width: 50px !important;
-	float: left;
+input.hasDatepicker {
+    width: 300px !important;
 }
-div.exported-cases-results-table th, td {
-	font-size: 12px !important;
-}
-input.exported-cases-results-download-all-button {
-}*/
