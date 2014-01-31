@@ -110,6 +110,7 @@ div.protestRullingDecisionReason select {
 	color: #101010 !important;
 }
 
+/*
 select.availableVariablesChooserForProcess {
 	width: 300px !important;
 	margin-left: 5px !important;
@@ -129,4 +130,4 @@ div.exported-cases-results-table th, td {
 	font-size: 12px !important;
 }
 input.exported-cases-results-download-all-button {
-}
+}*/

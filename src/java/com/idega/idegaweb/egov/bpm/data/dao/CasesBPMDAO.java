@@ -63,6 +63,12 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Long> getCaseIdsByProcessDefinition(String processDefinitionName);
 	public abstract List<Long> getCaseIdsByProcessDefinitionNameAndVariables(String processDefinitionName, List<BPMProcessVariable> variables);
 	public abstract List<Integer> getCaseIdsByProcessDefinitionId(Long processDefinitionId);
+	public abstract List<Integer> getCaseIdsByProcessDefinitionIdAndStatusAndDateRange(
+			Long processDefinitionId,
+			String status,
+			IWTimestamp from,
+			IWTimestamp to
+	);
 
 	public abstract List<Long> getCaseIdsByCaseNumber(String caseNumber);
 

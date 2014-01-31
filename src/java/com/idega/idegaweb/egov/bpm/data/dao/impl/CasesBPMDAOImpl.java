@@ -1929,6 +1929,66 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
+	public List<Integer> getCaseIdsByProcessDefinitionIdAndStatusAndDateRange(
+			Long processDefinitionId,
+			String status,
+			IWTimestamp from,
+			IWTimestamp to
+	) {
+		if (processDefinitionId == null && StringUtil.isEmpty(status) && from == null && to == null) {
+			getLogger().warning("Criterias are not provided");
+			return null;
+		}
+
+		String procDefName = getSingleResultByInlineQuery(
+				"select d.name from " + ProcessDefinition.class.getName() + " d where d.id = :id",
+				String.class,
+				new Param("id", processDefinitionId)
+		);
+		if (StringUtil.isEmpty(procDefName)) {
+			return null;
+		}
+
+		String query = "select distinct c.proc_case_id from BPM_CASES_PROCESSINSTANCES b, PROC_CASE c, JBPM_PROCESSINSTANCE pi," +
+				" JBPM_PROCESSDEFINITION pd where pd.name_ = '" + procDefName + "' and pd.id_ = pi.processdefinition_ and" +
+				" pi.id_ = b.process_instance_id";
+		if (!StringUtil.isEmpty(status) && !String.valueOf(-1).equals(status)) {
+			query += " and c.CASE_STATUS = '" + status + "' ";
+		}
+		if (from != null) {
+			query += " and c.CREATED >= '" + from.getDateString("yyyy-MM-dd") + "'";
+		}
+		if (to != null) {
+			query += " and c.CREATED <= '" + to.getDateString("yyyy-MM-dd") + "'";
+		}
+
+		query += " and c.proc_case_id = b.case_id";
+
+		List<Serializable[]> results = null;
+		try {
+			results = SimpleQuerier.executeQuery(query, 1);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (ListUtil.isEmpty(results)) {
+			return null;
+		}
+
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Serializable[] result: results) {
+			if (ArrayUtil.isEmpty(result)) {
+				continue;
+			}
+
+			Serializable id = result[0];
+			if (id instanceof Number) {
+				ids.add(((Number) id).intValue());
+			}
+		}
+		return ids;
+	}
+
+	@Override
 	public int getNumberOfApplications(Long procDefId) {
 		if (procDefId == null) {
 			return 0;

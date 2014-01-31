@@ -12,6 +12,7 @@ import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
+import is.idega.idegaweb.egov.cases.bean.CasesExportParams;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
@@ -27,6 +28,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -104,6 +106,7 @@ import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ListNavigator;
 import com.idega.presentation.paging.PagedDataCollection;
+import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.user.business.GroupBusiness;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.Group;
@@ -112,6 +115,7 @@ import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.FileUtil;
+import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
@@ -505,7 +509,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private PagedDataCollection<CasePresentation> getCasesByQuery(
-			IWContext iwc, CasesListSearchCriteriaBean criterias) {
+			IWContext iwc,
+			CasesListSearchCriteriaBean criterias
+	) {
 		User currentUser = null;
 		if (!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
@@ -1301,26 +1307,91 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public AdvancedProperty getExportedCasesToPDF(Long processDefinitionId, String id) {
-		exportStatuses.remove(id);
+	public AdvancedProperty getExportedCasesToPDF(CasesExportParams params) {
+		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
+		AdvancedProperty result = new AdvancedProperty(
+				Boolean.FALSE.toString(),
+				iwrb.getLocalizedString("failed_to_export_cases", "Failed to export cases"),
+				String.valueOf(0)
+		);
 
+		if (params == null) {
+			return result;
+		}
+
+		String id = params.getId();
+		Map<String, List<Integer>> idsCache = getCache("cases_to_export_to_pdf_cache", 86400, 100);
+
+		Map<String, Map<String, String>> statusesCache = getCache("cases_to_export_to_pdf_statuses_cache", 86400, 100);
+		Map<String, String> exportStatuses = statusesCache.get(id);
+		if (exportStatuses != null) {
+			exportStatuses.remove(id);
+		}
+
+		Long processDefinitionId = params.getProcessDefinitionId();
+		if (processDefinitionId == null) {
+			return result;
+		}
+
+		IWTimestamp from = null, to = null;
+		Date tmp = IWDatePickerHandler.getParsedDate(params.getDateFrom());
+		if (tmp != null) {
+			from = new IWTimestamp(tmp);
+		}
+		tmp = null;
+		tmp = IWDatePickerHandler.getParsedDate(params.getDateTo());
+		if (tmp != null) {
+			to = new IWTimestamp(tmp);
+		}
+
+		List<Integer> casesIds = casesBPMDAO.getCaseIdsByProcessDefinitionIdAndStatusAndDateRange(processDefinitionId, params.getStatus(), from, to);
+		if (ListUtil.isEmpty(casesIds)) {
+			result.setValue(iwrb.getLocalizedString("there_are_no_cases_to_export", "There are no cases to export"));
+			return result;
+		}
+
+		idsCache.put(id, casesIds);
+
+		result.setId(id);
+		int seconds = casesIds.size() * 10;
+		int minutes = ((seconds / 60) % 60);
+		int hours   = ((seconds / (60*60)) % 24);
+		String label = iwrb.getLocalizedString("found_cases_to_export", "Found applications to export") + ": " + casesIds.size() + ". " +
+			iwrb.getLocalizedString("export_process_may_take_time", "Approximately it may take") + CoreConstants.SPACE +
+			(hours > 0 ? hours + CoreConstants.SPACE + iwrb.getLocalizedString("hours", "hour(s)") + CoreConstants.SPACE : CoreConstants.EMPTY) +
+			(minutes > 0 ? minutes + CoreConstants.SPACE + iwrb.getLocalizedString("minutes", "minute(s)") + CoreConstants.SPACE : CoreConstants.EMPTY) +
+			(seconds % 60 > 0 ? (seconds % 60) + CoreConstants.SPACE + iwrb.getLocalizedString("seconds", "second(s)") + CoreConstants.SPACE : CoreConstants.EMPTY) +
+			iwrb.getLocalizedString("to_export_do_you_want_to_continue", "to export. Do you want to continue?");
+		result.setValue(label);
+		result.setName(String.valueOf(casesIds.size()));
+		return result;
+	}
+
+	@Override
+	public AdvancedProperty doActualExport(String id) {
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
 		AdvancedProperty result = new AdvancedProperty(
 				Boolean.FALSE.toString(),
 				iwrb.getLocalizedString("failed_to_export_cases", "Failed to export cases")
 		);
 
-		if (processDefinitionId == null) {
-			return result;
-		}
-
-		List<Integer> casesIds = casesBPMDAO.getCaseIdsByProcessDefinitionId(processDefinitionId);
-		if (ListUtil.isEmpty(casesIds)) {
-			result.setValue(iwrb.getLocalizedString("there_are_no_cases_to_export", "There are no cases to export"));
-			return result;
-		}
-
+		Map<String, String> exportStatuses = null;
 		try {
+
+			if (StringUtil.isEmpty(id)) {
+				return result;
+			}
+
+			Map<String, List<Integer>> idsCache = getCache("cases_to_export_to_pdf_cache", 86400, 100);
+			List<Integer> casesIds = idsCache.get(id);
+
+			Map<String, Map<String, String>> statusesCache = getCache("cases_to_export_to_pdf_statuses_cache", 86400, 100);
+			exportStatuses = statusesCache.get(id);
+			if (exportStatuses == null) {
+				exportStatuses = new HashMap<String, String>();
+				statusesCache.put(id, exportStatuses);
+			}
+
 			File baseDir = CasesExporter.getDirectory(id);
 
 			int i = 0;
@@ -1392,18 +1463,20 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error exporting cases to PDFs", e);
-			exportStatuses.remove(id);
+			if (exportStatuses != null) {
+				exportStatuses.remove(id);
+			}
 			return result;
 		}
 
 		result.setId(Boolean.TRUE.toString());
 		result.setValue(iwrb.getLocalizedString("cases_were_successfully_exported", "Cases were successfully exported"));
 		result.setName(id);
-		exportStatuses.remove(id);
+		if (exportStatuses != null) {
+			exportStatuses.remove(id);
+		}
 		return result;
 	}
-
-	private Map<String, String> exportStatuses = new HashMap<String, String>();
 
 	@Override
 	public AdvancedProperty getStatusOfExport(String id) {
@@ -1411,12 +1484,28 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return new AdvancedProperty(Boolean.FALSE.toString());
 		}
 
+		Map<String, Map<String, String>> statusesCache = getCache("cases_to_export_to_pdf_statuses_cache", 86400, 100);
+		Map<String, String> exportStatuses = statusesCache.get(id);
+		if (exportStatuses == null) {
+			return null;
+		}
 		String status = exportStatuses.remove(id);
 		if (StringUtil.isEmpty(status)) {
 			return null;
 		}
 
 		return new AdvancedProperty(Boolean.TRUE.toString(), status);
+	}
+
+	@Override
+	public Boolean doRemoveFromMemory(String id) {
+		if (StringUtil.isEmpty(id)) {
+			return false;
+		}
+
+		Map<String, List<Integer>> idsCache = getCache("cases_to_export_to_pdf_cache", 86400, 100);
+		idsCache.remove(id);
+		return true;
 	}
 
 	@Override

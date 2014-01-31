@@ -20,6 +20,8 @@
 	    	<include method="getExportedCasesToPDF"/>
 	    	<include method="getStatusOfExport"/>
 	    	<include method="getLinkForZippedCases"/>
+	    	<include method="doActualExport"/>
+	    	<include method="doRemoveFromMemory"/>
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">

@@ -2,16 +2,14 @@ package com.idega.idegaweb.egov.bpm.presentation;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.cases.business.CasesEngine;
+import is.idega.idegaweb.egov.cases.presentation.CasesSearcher;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.UUID;
-
-import javax.faces.component.UIComponent;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -22,21 +20,17 @@ import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.presentation.Block;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.Layer;
 import com.idega.presentation.ui.DropdownMenu;
 import com.idega.presentation.ui.GenericButton;
-import com.idega.presentation.ui.InterfaceObject;
-import com.idega.presentation.ui.Label;
-import com.idega.presentation.ui.SelectOption;
-import com.idega.util.ArrayUtil;
+import com.idega.presentation.ui.IWDatePicker;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.PresentationUtil;
 import com.idega.util.expression.ELUtil;
 
-public class CasesExporter extends Block {
+public class CasesExporter extends CasesSearcher {
 
 	private static final String PARAMETER_PROCESS_ID = "ce_prm_process_id";
 
@@ -88,38 +82,32 @@ public class CasesExporter extends Block {
 		container.setStyleClass("cases-exporter-container");
 
 		IWResourceBundle iwrb = casesBundle.getResourceBundle(iwc);
-		Layer processesContainer = new Layer();
-		processesContainer.setStyleClass("formItem shortFormItem");
-		container.add(processesContainer);
+		Layer inputsContainer = new Layer();
+		container.add(inputsContainer);
 		DropdownMenu processes = getDropdownForProcess(iwc);
-		addFormItem(processesContainer, "process", iwrb.getLocalizedString("cases_search_select_process", "Process"), processes);
+		addFormItem(inputsContainer, "process", iwrb.getLocalizedString("cases_search_select_process", "Process"), processes);
+
+		//	Status
+		DropdownMenu statuses = getDropdownForStatus(iwc);
+		addFormItem(inputsContainer, "status", iwrb.getLocalizedString("status", "Status"), statuses);
+
+		//	Dates from and to
+		IWDatePicker dateRange = getDateRange(iwc, "dateRange", null, null);
+		addFormItem(inputsContainer, "dateRange", iwrb.getLocalizedString("date_range", "Date range"), dateRange);
 
 		Layer resultsContainer = new Layer();
 		container.add(resultsContainer);
 
 		GenericButton export = new GenericButton(iwrb.getLocalizedString("export_search_results", "Export"));
 		export.setStyleClass("cases-exporter-action-button");
-		processesContainer.add(export);
+		inputsContainer.add(export);
 		export.setOnClick(
 				"CasesExporter.doExportCases({exporting: '" + iwrb.getLocalizedString("exporting", "Exporting...") +
 				"', loading: '" + iwrb.getLocalizedString("loading", "Loading...") + "', dropdownId: '" + processes.getId() +
 				"', id: '" + UUID.randomUUID().toString() + "', resultsId: '" + resultsContainer.getId() + "', resultsUI: '" +
-				CasesExporterResults.class.getName() + "'});"
+				CasesExporterResults.class.getName() + "', selectCriterias: '" +
+				iwrb.getLocalizedString("select_status_or_and_date_range", "You have to select status and/or date range") + "'});"
 		);
-	}
-
-	private Layer addFormItem(Layer layer, String styleClass, String localizedLabelText, InterfaceObject input, UIComponent... additionalComponents) {
-		Label label = null;
-		label = new Label(localizedLabelText == null ? CoreConstants.MINUS : localizedLabelText + CoreConstants.COLON, input);
-		layer.add(label);
-		layer.add(input);
-
-		if (!ArrayUtil.isEmpty(additionalComponents)) {
-			for (UIComponent component: additionalComponents) {
-				layer.add(component);
-			}
-		}
-		return layer;
 	}
 
 	@Override
@@ -138,15 +126,17 @@ public class CasesExporter extends Block {
 			return menu;
 		}
 
+		IWResourceBundle iwrb = getResourceBundle(iwc);
+
+		String total = iwrb.getLocalizedString("total", "total");
 		for (AdvancedProperty process: allProcesses) {
 			Integer numberOfApplications = casesBPMDAO.getNumberOfApplications(Long.valueOf(process.getId()));
 			if (numberOfApplications == null) {
 				numberOfApplications = 0;
 			}
-			process.setValue(process.getValue() + CoreConstants.SPACE + CoreConstants.BRACKET_LEFT + numberOfApplications + CoreConstants.BRACKET_RIGHT);
+			process.setValue(process.getValue() + CoreConstants.SPACE + CoreConstants.BRACKET_LEFT + total + CoreConstants.COLON + CoreConstants.SPACE +
+					numberOfApplications + CoreConstants.BRACKET_RIGHT);
 		}
-
-		IWResourceBundle iwrb = getResourceBundle(iwc);
 
 		Collections.sort(allProcesses, new AdvancedPropertyComparator(iwc.getCurrentLocale()));
 
@@ -154,29 +144,6 @@ public class CasesExporter extends Block {
 				iwrb.getLocalizedString("cases_search_select_process", "Select process")), selectedProcess);
 
 		return menu;
-	}
-
-	private void fillDropdown(Locale locale, DropdownMenu menu, List<AdvancedProperty> options, AdvancedProperty firstElement,
-			String selectedElement) {
-		if (locale == null) {
-			locale = Locale.ENGLISH;
-		}
-		Collections.sort(options, new AdvancedPropertyComparator(locale));
-
-		for (AdvancedProperty option: options) {
-			menu.addOption(new SelectOption(option.getValue(), option.getId()));
-		}
-		if (firstElement != null) {
-			menu.addFirstOption(new SelectOption(firstElement.getValue(), firstElement.getId()));
-		}
-
-		if (selectedElement != null) {
-			menu.setSelectedElement(selectedElement);
-		}
-
-		if (ListUtil.isEmpty(options)) {
-			menu.setDisabled(true);
-		}
 	}
 
 }
