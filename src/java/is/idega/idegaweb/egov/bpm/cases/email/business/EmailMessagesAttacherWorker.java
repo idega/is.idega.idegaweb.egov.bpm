@@ -5,6 +5,7 @@ import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -49,6 +50,7 @@ import com.idega.jbpm.view.ViewSubmission;
 import com.idega.util.CoreConstants;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -149,6 +151,17 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
+	private String getValue(VariableInstanceInfo var) {
+		if (var == null) {
+			return null;
+		}
+		Serializable value = var.getValue();
+		if (value == null) {
+			return null;
+		}
+		return value.toString().trim();
+	}
+
 	private boolean doAttachMessageIfNeeded(BPMEmailMessage message) {
 		if (message == null || message.isParsed()) {
 			return true;
@@ -161,6 +174,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		if (ListUtil.isEmpty(subProcInstIds)) {
 			return false;
 		}
+
 		for (Long subProcInstId: subProcInstIds) {
 			if (subProcInstId == null) {
 				continue;
@@ -174,25 +188,55 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String senderPersonalName = message.getSenderName();
 			String fromAddress = message.getFromAddress();
 
-			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesAndExpressionsByProcesses(
-					null,
-					Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS),
-					null,
+			Collection<VariableInstanceInfo> vars = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(
 					Arrays.asList(subProcInstId),
-					null
+					Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS)
 			);
-			if (!MapUtil.isEmpty(vars)) {
-				for (Map<String, VariableInstanceInfo> existingValues: vars.values()) {
-					VariableInstanceInfo subjectVar = existingValues.get(BPMConstants.VAR_SUBJECT);
-					VariableInstanceInfo textVar = existingValues.get(BPMConstants.VAR_TEXT);
-					VariableInstanceInfo fromVar = existingValues.get(BPMConstants.VAR_FROM);
-					VariableInstanceInfo fromAddressVar = existingValues.get(BPMConstants.VAR_FROM_ADDRESS);
-					if (
-						(subjectVar != null && subject.startsWith(subjectVar.getValue().toString())) &&
-						(textVar != null && text.startsWith(textVar.getValue().toString())) &&
-						(fromVar != null && senderPersonalName.startsWith(fromVar.getValue().toString())) &&
-						(fromAddressVar != null && fromAddress.startsWith(fromAddressVar.getValue().toString()))
-					) {
+			Map<Long, Map<String, VariableInstanceInfo>> groupedVars = new HashMap<Long, Map<String,VariableInstanceInfo>>();
+			if (!ListUtil.isEmpty(vars)) {
+				for (VariableInstanceInfo var: vars) {
+					if (var == null) {
+						continue;
+					}
+					String name = var.getName();
+					if (StringUtil.isEmpty(name)) {
+						continue;
+					}
+					Long tiId = var.getTaskInstanceId();
+					if (tiId == null) {
+						continue;
+					}
+
+					Map<String, VariableInstanceInfo> taskVars = groupedVars.get(tiId);
+					if (taskVars == null) {
+						taskVars = new HashMap<String, VariableInstanceInfo>();
+						groupedVars.put(tiId, taskVars);
+					}
+
+					taskVars.put(name, var);
+				}
+			}
+			if (!MapUtil.isEmpty(groupedVars)) {
+				String	tmpSubject = subject.trim(),
+						tmpText = text.trim(),
+						tmpSenderPersonalName = senderPersonalName.trim(),
+						tmpFromAddress = fromAddress.trim();
+
+				for (Map<String, VariableInstanceInfo> existingValues: groupedVars.values()) {
+					String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
+					String textVarValue = getValue(existingValues.get(BPMConstants.VAR_TEXT));
+					String fromVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM));
+					String fromAddressVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM_ADDRESS));
+
+					boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) &&
+							(tmpSubject.equals(subjectVarValue) || tmpSubject.startsWith(subjectVarValue));
+					boolean textsMatch = !StringUtil.isEmpty(textVarValue) &&
+							(tmpText.equals(textVarValue) || tmpText.startsWith(textVarValue));
+					boolean fromMatch = !StringUtil.isEmpty(fromVarValue) &&
+							(tmpSenderPersonalName.equals(fromVarValue) || tmpSenderPersonalName.startsWith(fromVarValue));
+					boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) &&
+							(tmpFromAddress.equals(fromAddressVarValue) || tmpFromAddress.startsWith(fromAddressVarValue));
+					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
 						message.setParsed(true);
 						return true;
 					}
@@ -205,7 +249,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			}
 			if (doAttachEmailToProcess(
 					subProcInstId,
-					subject, text,
+					subject,
+					text,
 					senderPersonalName,
 					fromAddress,
 					attachments,
