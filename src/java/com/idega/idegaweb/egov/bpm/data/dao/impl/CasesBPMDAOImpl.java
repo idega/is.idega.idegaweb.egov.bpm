@@ -1591,20 +1591,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				tmpNames.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 		}
 
-		int columns = 10;
 		String query = "select v.id_, v.name_, v.class_, v.stringvalue_, v.LONGVALUE_, v.DOUBLEVALUE_, v.DATEVALUE_, v.BYTEARRAYVALUE_, " +
-				"v.processinstance_, b." + CaseProcInstBind.caseIdColumnName + " from jbpm_variableinstance v, " + CaseProcInstBind.TABLE_NAME +
-				" b where b." +	CaseProcInstBind.caseIdColumnName + " in (" + tmpCases.toString() + ") and v.processinstance_ = b." +
-				CaseProcInstBind.procInstIdColumnName + " and v.name_ in (" + tmpNames.toString() + ") and v.CLASS_ <> '" +
-				VariableInstanceType.NULL.getTypeKeys().get(0) + "'";
+				"v.TASKINSTANCE_, v.processinstance_, b." + CaseProcInstBind.caseIdColumnName + " from jbpm_variableinstance v, " +
+				CaseProcInstBind.TABLE_NAME + " b where b." +	CaseProcInstBind.caseIdColumnName + " in (" + tmpCases.toString() +
+				") and v.processinstance_ = b." + CaseProcInstBind.procInstIdColumnName + " and v.name_ in (" + tmpNames.toString() +
+				") and v.CLASS_ <> '" + VariableInstanceType.NULL.getTypeKeys().get(0) + "'";
 		List<Serializable[]> data = null;
 		try {
-			data = SimpleQuerier.executeQuery(query, columns);
+			data = SimpleQuerier.executeQuery(query, 11);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
 		}
 
-		return getVariableInstanceQuerier().getGroupedVariables(getVariableInstanceQuerier().getConverted(data, columns));
+		return getVariableInstanceQuerier().getGroupedVariables(getVariableInstanceQuerier().getConverted(data));
 	}
 
 	/**

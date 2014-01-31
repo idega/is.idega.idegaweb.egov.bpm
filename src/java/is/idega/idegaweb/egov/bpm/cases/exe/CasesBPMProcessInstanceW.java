@@ -46,7 +46,7 @@ import com.idega.util.expression.ELUtil;
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.23 $
- * 
+ *
  *          Last modified: $Date: 2009/02/06 19:00:40 $ by $Author: civilis $
  */
 @Scope("prototype")
@@ -73,6 +73,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 		getBpmContext().execute(new JbpmCallback() {
 
+			@Override
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				ProcessInstance pi = getProcessInstance();
 
@@ -88,31 +89,37 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 				ectx.setVariable(CaseHandlerAssignmentHandler.performerUserIdVarName, performerId);
 				Map<String, Object> createdVars = new HashMap<String, Object>();
 				createdVars.put(CaseHandlerAssignmentHandler.performerUserIdVarName, performerId);
-				
+
 				if (handlerUserId != null) {
 					ectx.setVariable(CaseHandlerAssignmentHandler.handlerUserIdVarName,	handlerUserId);
 					createdVars.put(CaseHandlerAssignmentHandler.handlerUserIdVarName, handlerUserId);
 				}
 
-				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(this, pi.getProcessDefinition().getName(), pi.getId(), createdVars);
+				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(
+						this,
+						pi.getProcessDefinition().getName(),
+						pi.getId(),
+						null,
+						createdVars
+				);
 				ELUtil.getInstance().publishEvent(performerVarCreated);
-				
+
 				String event = null;
-				if(handlerUserId != null) {
+				if (handlerUserId != null) {
 					event = CaseHandlerAssignmentHandler.assignHandlerEventType;
 				} else {
 					event = CaseHandlerAssignmentHandler.unassignHandlerEventType;
 				}
-				
+
 				// Firing event to process...
 				pi.getProcessDefinition().fireEvent(event, ectx);
-				
+
 				// And to it's subprocesses...
 				List<ProcessInstance> subProcesses = getBpmDAO().getSubprocessInstancesOneLevel(pi.getId());
-				for (ProcessInstance subProcessInstance : subProcesses) {
+				for (ProcessInstance subProcessInstance: subProcesses) {
 					subProcessInstance.getProcessDefinition().fireEvent(event, ectx);
 				}
-				
+
 				return null;
 			}
 		});
@@ -138,7 +145,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 					CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -194,11 +201,12 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 
 		Boolean res = getBpmContext().execute(new JbpmCallback() {
 
+			@Override
 			@SuppressWarnings("unchecked")
 			public Object doInJbpm(JbpmContext context) throws JbpmException {
 				Map<String, Event> events = getProcessInstance()
 						.getProcessDefinition().getEvents();
-				
+
 				boolean result = events != null
 						&& events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType);
 				if (result == Boolean.FALSE) {
@@ -206,7 +214,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 					 if (ListUtil.isEmpty(subprocesses)) {
 						 return Boolean.FALSE;
 					 }
-					 
+
 					 for (ProcessInstance pi : subprocesses) {
 						 events = pi.getProcessDefinition().getEvents();
 						 if (events != null && events.containsKey(CaseHandlerAssignmentHandler.assignHandlerEventType)) {
@@ -214,7 +222,7 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 						 }
 					 }
 				}
-				
+
 				return result;
 			}
 		});
