@@ -253,13 +253,17 @@ public class EmailMessagesAttacherWorker implements Runnable {
 								", will write it to file: " + writeEmailToFile);
 						if (writeEmailToFile) {
 							try {
-								File toAttach = new File("to_attach_" + tmpSubject + "_" + tiId + ".txt");
+								String toAttachName = "to_attach_" + tmpSubject + "_" + tiId + ".txt";
+								toAttachName = StringHandler.removeWhiteSpace(toAttachName);
+								File toAttach = new File(toAttachName);
 								if (!toAttach.exists()) {
 									toAttach.createNewFile();
 								}
 								FileUtil.streamToFile(StringHandler.getStreamFromString(text), toAttach);
 
-								File toCompare = new File("to_compare_" + subjectVarValue + "_" + tiId + ".txt");
+								String toCompareName = "to_compare_" + subjectVarValue + "_" + tiId + ".txt";
+								toAttachName = StringHandler.removeWhiteSpace(toCompareName);
+								File toCompare = new File(toCompareName);
 								if (!toCompare.exists()) {
 									toCompare.createNewFile();
 								}
