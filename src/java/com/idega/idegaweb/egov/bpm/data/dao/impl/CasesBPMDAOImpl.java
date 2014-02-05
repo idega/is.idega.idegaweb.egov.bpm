@@ -1953,7 +1953,20 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				" JBPM_PROCESSDEFINITION pd where pd.name_ = '" + procDefName + "' and pd.id_ = pi.processdefinition_ and" +
 				" pi.id_ = b.process_instance_id";
 		if (!StringUtil.isEmpty(status) && !String.valueOf(-1).equals(status)) {
-			query += " and c.CASE_STATUS = '" + status + "' ";
+			query += " and c.CASE_STATUS ";
+			if (status.indexOf(CoreConstants.COMMA) == -1) {
+				query += "= '" + status + "' ";
+			} else {
+				List<String> statuses = Arrays.asList(status.split(CoreConstants.COMMA));
+				query += " in (";
+				for (Iterator<String> statusesIter = statuses.iterator(); statusesIter.hasNext();) {
+					query += "'" + statusesIter.next() + "'";
+					if (statusesIter.hasNext()) {
+						query += ", ";
+					}
+				}
+				query += ") ";
+			}
 		}
 		if (from != null) {
 			query += " and c.CREATED >= '" + from.getDateString("yyyy-MM-dd") + "'";
