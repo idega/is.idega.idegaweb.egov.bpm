@@ -39,6 +39,7 @@ import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bean.VariableInstanceInfo;
@@ -48,8 +49,10 @@ import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.util.CoreConstants;
+import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
@@ -216,13 +219,18 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					taskVars.put(name, var);
 				}
 			}
+
+			IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+
 			if (!MapUtil.isEmpty(groupedVars)) {
 				String	tmpSubject = subject.trim(),
 						tmpText = text.trim(),
 						tmpSenderPersonalName = senderPersonalName.trim(),
 						tmpFromAddress = fromAddress.trim();
 
-				for (Map<String, VariableInstanceInfo> existingValues: groupedVars.values()) {
+				for (Long tiId: groupedVars.keySet()) {
+					Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
+
 					String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
 					String textVarValue = getValue(existingValues.get(BPMConstants.VAR_TEXT));
 					String fromVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM));
@@ -239,8 +247,30 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
 						message.setParsed(true);
 						return true;
+					} else {
+						if (settings.getBoolean("bpm.emails_write_to_files", Boolean.FALSE)) {
+							try {
+								File toAttach = new File("to_attach_" + tmpSubject + "_" + tiId + ".txt");
+								if (!toAttach.exists()) {
+									toAttach.createNewFile();
+								}
+								FileUtil.streamToFile(StringHandler.getStreamFromString(text), toAttach);
+
+								File toCompare = new File("to_compare_" + subjectVarValue + "_" + tiId + ".txt");
+								if (!toCompare.exists()) {
+									toCompare.createNewFile();
+								}
+								FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
 					}
 				}
+			}
+
+			if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
+				return true;
 			}
 
 			Map<String, InputStream> attachments = message.getAttachments();
