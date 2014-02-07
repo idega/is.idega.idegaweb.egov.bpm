@@ -249,8 +249,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						return true;
 					} else {
 						boolean writeEmailToFile = settings.getBoolean("bpm.emails_write_to_files", Boolean.FALSE);
-						LOGGER.info("Email (subject: '" + subject + "') is not attached to sub-proc. inst.: " + subProcInstId +
-								", will write it to file: " + writeEmailToFile);
 						if (writeEmailToFile) {
 							try {
 								String toAttachName = "to_attach_" + tmpSubject + "_" + tiId + ".txt";
