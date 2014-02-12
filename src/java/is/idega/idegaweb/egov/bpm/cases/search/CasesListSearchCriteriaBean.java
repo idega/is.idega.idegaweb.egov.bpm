@@ -31,7 +31,11 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					showCreationTimeInDateColumn = true,
 					onlySubscribedCases,
 					clearResults = true,
-					nothingFound;
+					nothingFound,
+					showAttachmentStatistics = false,
+					showUserProfilePicture = true,
+					addExportContacts = false,
+					showUserCompany = false;
 
 	public String getProcessId() {
 		return processId;
@@ -205,5 +209,37 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Criterias ID: " + criteriasId).append("\n")
 			.append("Clear results: " + clearResults)
 		.toString();
+	}
+
+	public boolean isShowAttachmentStatistics() {
+		return showAttachmentStatistics;
+	}
+
+	public void setShowAttachmentStatistics(boolean showAttachmentStatistics) {
+		this.showAttachmentStatistics = showAttachmentStatistics;
+	}
+
+	public boolean isShowUserProfilePicture() {
+		return showUserProfilePicture;
+	}
+
+	public void setShowUserProfilePicture(boolean showUserProfilePicture) {
+		this.showUserProfilePicture = showUserProfilePicture;
+	}
+
+	public boolean isAddExportContacts() {
+		return addExportContacts;
+	}
+
+	public void setAddExportContacts(boolean addExportContacts) {
+		this.addExportContacts = addExportContacts;
+	}
+
+	public boolean isShowUserCompany() {
+		return showUserCompany;
+	}
+
+	public void setShowUserCompany(boolean showUserCompany) {
+		this.showUserCompany = showUserCompany;
 	}
 }

@@ -22,6 +22,7 @@ import java.util.logging.Logger;
 import org.hibernate.HibernateException;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
+import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1301,9 +1302,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		builder.append(") union (select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ");
-		if (!ListUtil.isEmpty(procInstIds))
-			builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
-
+		builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
 			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
 			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
@@ -1897,20 +1896,39 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				tmpNames.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 		}
 
-		int columns = 10;
 		String query = "select v.id_, v.name_, v.class_, v.stringvalue_, v.LONGVALUE_, v.DOUBLEVALUE_, v.DATEVALUE_, v.BYTEARRAYVALUE_, " +
-				"v.processinstance_, b." + CaseProcInstBind.caseIdColumnName + " from jbpm_variableinstance v, " + CaseProcInstBind.TABLE_NAME +
-				" b where b." +	CaseProcInstBind.caseIdColumnName + " in (" + tmpCases.toString() + ") and v.processinstance_ = b." +
-				CaseProcInstBind.procInstIdColumnName + " and v.name_ in (" + tmpNames.toString() + ") and v.CLASS_ <> '" +
-				VariableInstanceType.NULL.getTypeKeys().get(0) + "'";
+				"v.TASKINSTANCE_, v.processinstance_, b." + CaseProcInstBind.caseIdColumnName + " from jbpm_variableinstance v, " +
+				CaseProcInstBind.TABLE_NAME + " b where b." +	CaseProcInstBind.caseIdColumnName + " in (" + tmpCases.toString() +
+				") and v.processinstance_ = b." + CaseProcInstBind.procInstIdColumnName + " and v.name_ in (" + tmpNames.toString() +
+				") and v.CLASS_ <> '" + VariableInstanceType.NULL.getTypeKeys().get(0) + "'";
 		List<Serializable[]> data = null;
 		try {
-			data = SimpleQuerier.executeQuery(query, columns);
+			data = SimpleQuerier.executeQuery(query, 11);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error executing query: " + query, e);
 		}
 
 		return getVariableInstanceQuerier().getGroupedVariables(getVariableInstanceQuerier().getConverted(data));
+	}
+
+	/**
+	 *
+	 * @param casesIDs in {@link String} for to convert, not <code>null</code>;
+	 * @return converted {@link String}s or {@link Collections#emptyList()}
+	 * on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	protected List<Integer> convertIDs(String[] casesIDs) {
+		if (ArrayUtil.isEmpty(casesIDs)) {
+			return Collections.emptyList();
+		}
+
+		Map<Integer, Boolean> ids = new HashMap<Integer, Boolean>();
+		for (String id: casesIDs) {
+			ids.put(Integer.valueOf(id), Boolean.TRUE);
+		}
+
+		return new ArrayList<Integer>(ids.keySet());
 	}
 
 	/**
@@ -2212,6 +2230,123 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		return null;
+	}
+
+	@Override
+	public List<Integer> getCaseIdsByProcessDefinitionId(Long processDefinitionId) {
+		if (processDefinitionId == null) {
+			return null;
+		}
+
+		String procDefName = getSingleResultByInlineQuery(
+				"select d.name from " + ProcessDefinition.class.getName() + " d where d.id = :id",
+				String.class,
+				new Param("id", processDefinitionId)
+		);
+
+		List<Long> ids = getCaseIdsByProcessDefinition(procDefName);
+		if (ListUtil.isEmpty(ids)) {
+			return null;
+		}
+
+		List<Integer> casesIds = new ArrayList<Integer>(ids.size());
+		for (Long id: ids) {
+			casesIds.add(id.intValue());
+		}
+		return casesIds;
+	}
+
+	@Override
+	public List<Integer> getCaseIdsByProcessDefinitionIdAndStatusAndDateRange(
+			Long processDefinitionId,
+			String status,
+			IWTimestamp from,
+			IWTimestamp to
+	) {
+		if (processDefinitionId == null && StringUtil.isEmpty(status) && from == null && to == null) {
+			getLogger().warning("Criterias are not provided");
+			return null;
+		}
+
+		String procDefName = getSingleResultByInlineQuery(
+				"select d.name from " + ProcessDefinition.class.getName() + " d where d.id = :id",
+				String.class,
+				new Param("id", processDefinitionId)
+		);
+		if (StringUtil.isEmpty(procDefName)) {
+			return null;
+		}
+
+		String query = "select distinct c.proc_case_id from BPM_CASES_PROCESSINSTANCES b, PROC_CASE c, JBPM_PROCESSINSTANCE pi," +
+				" JBPM_PROCESSDEFINITION pd where pd.name_ = '" + procDefName + "' and pd.id_ = pi.processdefinition_ and" +
+				" pi.id_ = b.process_instance_id";
+		if (!StringUtil.isEmpty(status) && !String.valueOf(-1).equals(status)) {
+			query += " and c.CASE_STATUS ";
+			if (status.indexOf(CoreConstants.COMMA) == -1) {
+				query += "= '" + status + "' ";
+			} else {
+				List<String> statuses = Arrays.asList(status.split(CoreConstants.COMMA));
+				query += " in (";
+				for (Iterator<String> statusesIter = statuses.iterator(); statusesIter.hasNext();) {
+					query += "'" + statusesIter.next() + "'";
+					if (statusesIter.hasNext()) {
+						query += ", ";
+					}
+				}
+				query += ") ";
+			}
+		}
+		if (from != null) {
+			query += " and c.CREATED >= '" + from.getDateString("yyyy-MM-dd") + "'";
+		}
+		if (to != null) {
+			query += " and c.CREATED <= '" + to.getDateString("yyyy-MM-dd") + "'";
+		}
+
+		query += " and c.proc_case_id = b.case_id";
+
+		List<Serializable[]> results = null;
+		try {
+			results = SimpleQuerier.executeQuery(query, 1);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
+		}
+		if (ListUtil.isEmpty(results)) {
+			return null;
+		}
+
+		List<Integer> ids = new ArrayList<Integer>();
+		for (Serializable[] result: results) {
+			if (ArrayUtil.isEmpty(result)) {
+				continue;
+			}
+
+			Serializable id = result[0];
+			if (id instanceof Number) {
+				ids.add(((Number) id).intValue());
+			}
+		}
+		return ids;
+	}
+
+	@Override
+	public int getNumberOfApplications(Long procDefId) {
+		if (procDefId == null) {
+			return 0;
+		}
+
+		String procDefName = bpmFactory.getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(procDefId);
+		if (StringUtil.isEmpty(procDefName)) {
+			return 0;
+		}
+
+		Number count = getSingleResultByInlineQuery(
+				"select count(distinct b.procInstId) from " + CaseProcInstBind.class.getName() + " b, " + ProcessInstance.class.getName() + " pi, " +
+				ProcessDefinition.class.getName() +	" pd where pd.name = :procDefName and pi.processDefinition.name = pd.name and b.procInstId = pi.id",
+				Number.class,
+				new Param("procDefName", procDefName)
+		);
+		return count == null ? 0 : count.intValue();
 	}
 
 }

@@ -19,7 +19,6 @@ import java.util.logging.Logger;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.jbpm.graph.exe.ProcessInstance;
-import org.jbpm.graph.exe.Token;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +39,7 @@ import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bean.VariableInstanceInfo;
@@ -49,8 +49,12 @@ import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.util.CoreConstants;
+import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
+import com.idega.util.StringUtil;
+import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -128,18 +132,15 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return;
 		}
 
-		final Collection<BPMEmailMessage> messagesToAttach = allParsedMessages;
-		getIdegaJbpmContext().execute(new JbpmCallback<Void>() {
-			@Override
-			public Void doInJbpm(JbpmContext context) throws JbpmException {
-				for (BPMEmailMessage message: messagesToAttach) {
-					if (!attachEmailMessage(context, message)) {
-						//	TODO: save message and try attach later?
-					}
+		for (final BPMEmailMessage message: allParsedMessages) {
+			try {
+				if (!doAttachMessageIfNeeded(message)) {
+					//	TODO: save message and try attach later?
 				}
-				return null;
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Error attaching message " + message, e);
 			}
-		});
+		}
 	}
 
 	private void addParsedMessages(Collection<BPMEmailMessage> allParsedMessages, Collection<? extends EmailMessage> parsedMessages) {
@@ -153,123 +154,228 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
-	@Transactional
-	private boolean attachEmailMessage(JbpmContext ctx, BPMEmailMessage message) {
-		if (message.isParsed()) {
+	private String getValue(VariableInstanceInfo var) {
+		if (var == null) {
+			return null;
+		}
+		Serializable value = var.getValue();
+		if (value == null) {
+			return null;
+		}
+		return value.toString().trim();
+	}
+
+	private boolean doAttachMessageIfNeeded(BPMEmailMessage message) {
+		if (message == null || message.isParsed()) {
 			return true;
 		}
-		if (ctx == null || message == null) {
+
+		List<Long> subProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
+				message.getProcessInstanceId(),
+				EmailMessagesAttacher.email_fetch_process_name
+		);
+		if (ListUtil.isEmpty(subProcInstIds)) {
 			return false;
 		}
 
-		ProcessInstance pi = ctx.getProcessInstance(message.getProcessInstanceId());
-		@SuppressWarnings("unchecked")
-		List<Token> tkns = pi.findAllTokens();
-		if (ListUtil.isEmpty(tkns)) {
-			return false;
-		}
-
-		for (Token tkn : tkns) {
-			ProcessInstance subPI = tkn.getSubProcessInstance();
-			if (subPI == null || !EmailMessagesAttacher.email_fetch_process_name.equals(subPI.getProcessDefinition().getName())) {
+		for (Long subProcInstId: subProcInstIds) {
+			if (subProcInstId == null) {
 				continue;
 			}
 
 			String subject = message.getSubject();
 			String text = message.getBody();
-			if (text == null)
+			if (text == null) {
 				text = CoreConstants.EMPTY;
+			}
 			String senderPersonalName = message.getSenderName();
 			String fromAddress = message.getFromAddress();
 
-			List<String> varsNames = Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS);
+			Collection<VariableInstanceInfo> vars = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(
+					Arrays.asList(subProcInstId),
+					Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS)
+			);
+			Map<Long, Map<String, VariableInstanceInfo>> groupedVars = new HashMap<Long, Map<String,VariableInstanceInfo>>();
+			if (!ListUtil.isEmpty(vars)) {
+				for (VariableInstanceInfo var: vars) {
+					if (var == null) {
+						continue;
+					}
+					String name = var.getName();
+					if (StringUtil.isEmpty(name)) {
+						continue;
+					}
+					Long tiId = var.getTaskInstanceId();
+					if (tiId == null) {
+						continue;
+					}
 
-			Map<String, List<Serializable>> variablesWithValues = new HashMap<String, List<Serializable>>();
-			variablesWithValues.put(varsNames.get(0), Arrays.asList((Serializable) subject));
-			variablesWithValues.put(varsNames.get(2), Arrays.asList((Serializable) senderPersonalName));
-			variablesWithValues.put(varsNames.get(3), Arrays.asList((Serializable) fromAddress));
-			Map<Long, Map<String, VariableInstanceInfo>> vars = variablesQuerier.getVariablesByNamesAndValuesByProcesses(variablesWithValues, Arrays.asList(varsNames.get(1)), null,
-					Arrays.asList(subPI.getId()), null);
-			if (vars != null && !vars.isEmpty()) {
-				for (Map<String, VariableInstanceInfo> existingValues: vars.values()) {
-					VariableInstanceInfo existingVar = existingValues.get(varsNames.get(1));
-					if (existingVar != null && text.equals(existingVar.getValue().toString())) {
-						LOGGER.warning("BPM message is duplicated, dropping it: " + message);
+					Map<String, VariableInstanceInfo> taskVars = groupedVars.get(tiId);
+					if (taskVars == null) {
+						taskVars = new HashMap<String, VariableInstanceInfo>();
+						groupedVars.put(tiId, taskVars);
+					}
+
+					taskVars.put(name, var);
+				}
+			}
+
+			IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+
+			if (!MapUtil.isEmpty(groupedVars)) {
+				String	tmpSubject = subject.trim(),
+						tmpText = text.trim(),
+						tmpSenderPersonalName = senderPersonalName.trim(),
+						tmpFromAddress = fromAddress.trim();
+
+				for (Long tiId: groupedVars.keySet()) {
+					Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
+
+					String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
+					String textVarValue = getValue(existingValues.get(BPMConstants.VAR_TEXT));
+					String fromVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM));
+					String fromAddressVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM_ADDRESS));
+
+					boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) &&
+							(tmpSubject.equals(subjectVarValue) || tmpSubject.startsWith(subjectVarValue));
+					boolean textsMatch = !StringUtil.isEmpty(textVarValue) &&
+							(tmpText.equals(textVarValue) || tmpText.startsWith(textVarValue));
+					boolean fromMatch = !StringUtil.isEmpty(fromVarValue) &&
+							(tmpSenderPersonalName.equals(fromVarValue) || tmpSenderPersonalName.startsWith(fromVarValue));
+					boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) &&
+							(tmpFromAddress.equals(fromAddressVarValue) || tmpFromAddress.startsWith(fromAddressVarValue));
+					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
 						message.setParsed(true);
 						return true;
+					} else {
+						boolean writeEmailToFile = settings.getBoolean("bpm.emails_write_to_files", Boolean.FALSE);
+						if (writeEmailToFile) {
+							try {
+								String toAttachName = "to_attach_" + tmpSubject + "_" + tiId + ".txt";
+								toAttachName = StringHandler.removeWhiteSpace(toAttachName);
+								File toAttach = new File(toAttachName);
+								if (!toAttach.exists()) {
+									toAttach.createNewFile();
+								}
+								FileUtil.streamToFile(StringHandler.getStreamFromString(text), toAttach);
+
+								String toCompareName = "to_compare_" + subjectVarValue + "_" + tiId + ".txt";
+								toAttachName = StringHandler.removeWhiteSpace(toCompareName);
+								File toCompare = new File(toCompareName);
+								if (!toCompare.exists()) {
+									toCompare.createNewFile();
+								}
+								FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
+							} catch (Exception e) {
+								e.printStackTrace();
+							}
+						}
 					}
 				}
 			}
 
-			try {
-				TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
-				ti.setName(subject);
+			if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
+				return true;
+			}
 
-				Map<String, Object> newVars = new HashMap<String, Object>(2);
-				newVars.put(varsNames.get(0), subject);
-				newVars.put(varsNames.get(1), text);
-				newVars.put(varsNames.get(2), senderPersonalName);
-				newVars.put(varsNames.get(3), fromAddress);
+			Map<String, InputStream> attachments = message.getAttachments();
+			if (attachments == null) {
+				attachments = new HashMap<String, InputStream>(1);
+			}
+			if (doAttachEmailToProcess(
+					subProcInstId,
+					subject,
+					text,
+					senderPersonalName,
+					fromAddress,
+					attachments,
+					message.getAttachedFiles()
+			)) {
+				message.setParsed(true);
+			} else {
+				return false;
+			}
+		}
+		return true;
+	}
 
-				BPMFactory bpmFactory = getBpmFactory();
+	@Transactional
+	private Boolean doAttachEmailToProcess(
+			final Long subProcInstId,
+			final String subject,
+			final String text,
+			final String senderPersonalName,
+			final String fromAddress,
+			final Map<String, InputStream> attachments,
+			final Collection<File> attachedFiles
+	) {
+		Boolean result = getIdegaJbpmContext().execute(new JbpmCallback() {
 
-				// taking here view for new task instance
-				long tiId = ti.getId();
-				View view = getBpmFactory().takeView(tiId, false, null);
-				LOGGER.info("Task instance ID for email message to attach: " + tiId + ". View: " + view);
+			@Override
+			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
+				try {
+					ProcessInstance subPI = context.getProcessInstance(subProcInstId);
+					TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
+					ti.setName(subject);
 
-				long pdId = ti.getProcessInstance().getProcessDefinition().getId();
+					Map<String, Object> newVars = new HashMap<String, Object>(2);
+					newVars.put(BPMConstants.VAR_SUBJECT, subject);
+					newVars.put(BPMConstants.VAR_TEXT, text);
+					newVars.put(BPMConstants.VAR_FROM, senderPersonalName);
+					newVars.put(BPMConstants.VAR_FROM_ADDRESS, fromAddress);
 
-				ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
-				emailViewSubmission.populateVariables(newVars);
+					// taking here view for new task instance
+					long tiId = ti.getId();
+					View view = getBpmFactory().takeView(tiId, false, null);
+					LOGGER.info("Task instance ID for email message to attach: " + tiId + ". View: " + view);
 
-				TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
-				taskInstance.submit(emailViewSubmission, false);
-				LOGGER.info("Submitted task instance " + taskInstance.getTaskInstanceId() + " with data from email message (sender: " + fromAddress +
-						", subject: " + subject + ") for process instance: " + taskInstance.getProcessInstanceW().getProcessInstanceId());
+					long pdId = ti.getProcessInstance().getProcessDefinition().getId();
 
-				Map<String, InputStream> attachments = message.getAttachments();
-				Collection<File> attachedFiles = message.getAttachedFiles();
-				if (!ListUtil.isEmpty(attachedFiles)) {
-					for (File attachedFile: attachedFiles) {
-						if (attachedFile != null) {
-							if (attachments == null) {
-								attachments = new HashMap<String, InputStream>(1);
+					ViewSubmission emailViewSubmission = getBpmFactory().getViewSubmission();
+					emailViewSubmission.populateVariables(newVars);
+
+					TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
+					taskInstance.submit(emailViewSubmission, false);
+					LOGGER.info("Submitted task instance " + taskInstance.getTaskInstanceId() + " with data from email message (sender: " + fromAddress +
+							", subject: " + subject + ") for process instance: " + taskInstance.getProcessInstanceW().getProcessInstanceId());
+
+					if (!ListUtil.isEmpty(attachedFiles)) {
+						for (File attachedFile: attachedFiles) {
+							if (attachedFile != null) {
+								attachments.put(attachedFile.getName(), new FileInputStream(attachedFile));
 							}
-							attachments.put(attachedFile.getName(), new FileInputStream(attachedFile));
 						}
 					}
-				}
+					if (!MapUtil.isEmpty(attachments)) {
+						Variable variable = new Variable("attachments", VariableDataType.FILES);
 
-				if (attachments != null && !attachments.isEmpty()) {
-					Variable variable = new Variable("attachments", VariableDataType.FILES);
-
-					InputStream fileStream = null;
-					for (String fileName : attachments.keySet()) {
-						fileStream = attachments.get(fileName);
-						try {
-							taskInstance.addAttachment(variable, fileName, fileName, fileStream);
-						} catch (Exception e) {
-							LOGGER.log(Level.SEVERE, "Unable to set binary variable for task instance: " + ti.getId(), e);
-						} finally {
-							IOUtil.closeInputStream(fileStream);
-							if (!ListUtil.isEmpty(attachedFiles)) {
-								for (File attachedFile: attachedFiles) {
-									attachedFile.delete();
+						InputStream fileStream = null;
+						for (String fileName: attachments.keySet()) {
+							fileStream = attachments.get(fileName);
+							try {
+								taskInstance.addAttachment(variable, fileName, fileName, fileStream);
+							} catch (Exception e) {
+								LOGGER.log(Level.SEVERE, "Unable to set binary variable for task instance: " + ti.getId(), e);
+							} finally {
+								IOUtil.closeInputStream(fileStream);
+								if (!ListUtil.isEmpty(attachedFiles)) {
+									for (File attachedFile: attachedFiles) {
+										attachedFile.delete();
+									}
 								}
 							}
 						}
 					}
-				}
 
-				message.setParsed(true);
-				return true;
-			} catch (Exception e) {
-				LOGGER.log(Level.SEVERE, "Exception while attaching email msg (subject: " + message.getSubject() + ", body: " + message.getBody() + "). Token: " +
-						tkn.getName() + " (" + tkn.getId() + "), sub-process: " + subPI.getId(), e);
+					return true;
+				} catch (Exception e) {
+					LOGGER.log(Level.SEVERE, "Exception while attaching email msg (subject: " + subject + ", text: " +
+							text + "). Sub-process ID: " + subProcInstId, e);
+				}
+				return false;
 			}
-		}
-		return false;
+		});
+		return result;
 	}
 
 	public BPMContext getIdegaJbpmContext() {

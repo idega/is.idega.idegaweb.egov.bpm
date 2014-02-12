@@ -39,17 +39,23 @@ import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.core.business.GeneralCompanyBusiness;
+import com.idega.core.company.bean.GeneralCompany;
 import com.idega.core.contact.data.Email;
 import com.idega.core.contact.data.Phone;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
+import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MemoryFileBuffer;
 import com.idega.io.MemoryOutputStream;
+import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
@@ -91,6 +97,23 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
 
+	@Autowired
+	private ProcessArtifacts processArtifacts;
+
+	@Autowired(required = false)
+	private GeneralCompanyBusiness generalCompanyBusiness;
+
+	private GeneralCompanyBusiness getGeneralCompanyBusiness() {
+		if (generalCompanyBusiness == null) {
+			try {
+				generalCompanyBusiness = ELUtil.getInstance().getBean(GeneralCompanyBusiness.BEAN_NAME);
+			} catch (Exception e) {
+				LOGGER.warning("There is no implementation for " + GeneralCompanyBusiness.class.getName());
+			}
+		}
+		return generalCompanyBusiness;
+	}
+
 	@Override
 	public void setSearchResults(String id, CasesSearchResults results) {
 		allResults.put(id, results);
@@ -122,12 +145,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public boolean doExport(String id) {
+	public boolean doExport(String id,boolean exportContacts, boolean showCompany) {
 		Collection<CasePresentation> cases = getCases(id, true);
 		if (ListUtil.isEmpty(cases))
 			return false;
 
-		memory = getExportedData(id);
+		memory = getExportedData(id,exportContacts,showCompany);
 
 		return memory == null ? false : true;
 	}
@@ -258,7 +281,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		for (int i = 0; i < columns.size(); i++)
 			sheet.setColumnWidth(cellIndexInRow++, DEFAULT_CELL_WIDTH);
 
-		short cellRow = 0;
+		int cellRow = sheet.getLastRowNum()+2;
+		if(cellRow == 2){// First row is 0
+			cellRow = 0;
+		}
 		int cellIndex = 0;
 		HSSFRow row = sheet.createRow(cellRow++);
 		for (String column: columns) {
@@ -282,11 +308,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 	}
 
-	private List<AdvancedProperty> createHeaders(HSSFSheet sheet, HSSFCellStyle bigStyle, Locale locale, String processName, boolean isAdmin,
-			List<String> standardFieldsInfo) {
+	private void createHeaders(HSSFSheet sheet, HSSFCellStyle bigStyle, Locale locale, String processName, boolean isAdmin,
+			List<String> standardFieldsInfo,List<AdvancedProperty> availableVariables) {
 		IWResourceBundle iwrb = getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 
-		short cellRow = 0;
+		int cellRow = sheet.getLastRowNum()+2;
+		if(cellRow == 2){// First row is 0
+			cellRow = 0;
+		}
 		int cellIndex = 0;
 
 		//	Default header labels
@@ -320,7 +349,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 
 		//	Labels of variables
-		List<AdvancedProperty> availableVariables = getAvailableVariablesByProcessDefinition(locale, processName, isAdmin);
 		if (!ListUtil.isEmpty(availableVariables)) {
 			for (AdvancedProperty variable: availableVariables) {
 				cell = row.createCell(cellIndex++);
@@ -331,7 +359,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		for (short cellIndexTmp = 0; cellIndexTmp < cellIndex; cellIndexTmp++)
 			sheet.setColumnWidth(cellIndexTmp++, DEFAULT_CELL_WIDTH);
 
-		return availableVariables;
 	}
 
 	private Integer getNumber(String value) {
@@ -364,7 +391,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet,
-			HSSFCellStyle bigStyle, Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel) {
+			HSSFCellStyle bigStyle, Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel,HSSFCellStyle normalStyle) {
 		if (ListUtil.isEmpty(variablesByProcessDefinition))
 			return;
 
@@ -376,7 +403,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		for (AdvancedProperty processVariable: variablesByProcessDefinition) {
 			variable = getVariableByValue(variablesByProcessInstance, processVariable.getValue());
 			String value = getVariableValue(processVariable.getId(), variable);
-			row.createCell(cellIndex++).setCellValue(value);
+			HSSFCell cell = row.createCell(cellIndex++);
+			cell.setCellStyle(normalStyle);
+			cell.setCellValue(value);
 		}
 	}
 
@@ -432,14 +461,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 
-	private MemoryFileBuffer getExportedData(String id) {
-		return getExportedData(getCasesByProcessDefinition(id), id, getSearchCriteria(id).getExportColumns());
+	private MemoryFileBuffer getExportedData(String id,boolean exportContacts, boolean showCompany) {
+		return getExportedData(getCasesByProcessDefinition(id), id, getSearchCriteria(id).getExportColumns(),exportContacts,showCompany);
 	}
 
 	private MemoryFileBuffer getExportedData(
 			Map<String, List<CasePresentation>> casesByProcessDefinition,
 			String id,
-			List<String> exportColumns
+			List<String> exportColumns,boolean exportContacts, boolean showCompany
 	) {
 		if (casesByProcessDefinition == null || ListUtil.isEmpty(casesByProcessDefinition.values()))
 			return null;
@@ -450,9 +479,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		HSSFFont bigFont = workBook.createFont();
 		bigFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
-		bigFont.setFontHeightInPoints((short) 13);
+		bigFont.setFontHeightInPoints((short) 16);
 		HSSFCellStyle bigStyle = workBook.createCellStyle();
 		bigStyle.setFont(bigFont);
+
+		HSSFFont normalFont = workBook.createFont();
+		normalFont.setFontHeightInPoints((short) 16);
+		HSSFCellStyle normalStyle = workBook.createCellStyle();
+		normalStyle.setFont(normalFont);
 
 		boolean isAdmin = false;
 		List<CasePresentation> cases = null;
@@ -470,6 +504,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		List<String> standardFieldsLabels = getStandardFieldsLabels(id, locale);
 		List<String> createdSheets = new ArrayList<String>();
 
+		IWResourceBundle iwrb = IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(locale);
+
 		for (String processName: casesByProcessDefinition.keySet()) {
 			if (processName == null)
 				continue;
@@ -482,45 +518,81 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 			int lastCellNumber = 0;
 			if (ListUtil.isEmpty(exportColumns)) {
-				List<AdvancedProperty> variablesByProcessDefinition = createHeaders(sheet, bigStyle, locale, processName, isAdmin,
-						standardFieldsLabels);
+				List<AdvancedProperty> availableVariables = getAvailableVariablesByProcessDefinition(locale, processName, isAdmin);
+				if(!exportContacts){
+					createHeaders(sheet, bigStyle, locale, processName, isAdmin,standardFieldsLabels,availableVariables);
+				}
 				List<Integer> fileCellsIndexes = null;
-				short rowNumber = 1;
+				int rowNumber = 0;
 
 				for (CasePresentation theCase: cases) {
+					if(exportContacts){
+						createHeaders(sheet, bigStyle, locale, processName, isAdmin,standardFieldsLabels,availableVariables);
+					}
 					fileCellsIndexes = new ArrayList<Integer>();
-					HSSFRow row = sheet.createRow(rowNumber++);
+					HSSFRow row = sheet.createRow(++rowNumber);
 					int cellIndex = 0;
 
-					//	Default header values
-					row.createCell(cellIndex++).setCellValue(theCase.getCaseIdentifier());
+//					Default header values
+					HSSFCell cell = row.createCell(cellIndex++);
+					cell.setCellStyle(normalStyle);
+					cell.setCellValue(theCase.getCaseIdentifier());
 
-					row.createCell(cellIndex++).setCellValue(theCase.getCaseStatusLocalized());
-					row.createCell(cellIndex++).setCellValue(getCaseCreator(theCase));
-					row.createCell(cellIndex++).setCellValue(getCaseCreatorPersonalId(theCase));
-					row.createCell(cellIndex++).setCellValue(getCaseCreatorEmail(theCase));
+					cell = row.createCell(cellIndex++);
+					cell.setCellStyle(normalStyle);
+					cell.setCellValue(theCase.getCaseStatusLocalized());
+
+					cell = row.createCell(cellIndex++);
+					cell.setCellStyle(normalStyle);
+					cell.setCellValue(getCaseCreator(theCase));
+
+					cell = row.createCell(cellIndex++);
+					cell.setCellStyle(normalStyle);
+					cell.setCellValue(getCaseCreatorPersonalId(theCase));
+
+					cell = row.createCell(cellIndex++);
+					cell.setCellStyle(normalStyle);
+					cell.setCellValue(getCaseCreatorEmail(theCase));
+
 
 					if (!ListUtil.isEmpty(standardFieldsLabels)) {
 						List<String> standardFieldsValues = getStandardFieldsValues(id, theCase);
 						if (!ListUtil.isEmpty(standardFieldsValues)) {
 							for (String standardFieldValue: standardFieldsValues) {
-								row.createCell(cellIndex++).setCellValue(standardFieldValue);
+								cell = row.createCell(cellIndex++);
+								cell.setCellStyle(normalStyle);
+								cell.setCellValue(standardFieldValue);
 							}
 						}
 					}
 
 					//	Variable values
-					addVariables(variablesByProcessDefinition, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes,
-							fileNameLabel);
+					addVariables(availableVariables, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes,
+							fileNameLabel,normalStyle);
+
+					if(exportContacts){
+						CaseProcInstBind bind = getCasesBinder().getCaseProcInstBindByCaseId(Integer.valueOf(theCase.getId()));
+						Long processInstanceId = bind.getProcInstId();
+						ProcessManager processManager = bpmFactory.getProcessManagerByProcessInstanceId(processInstanceId);
+						ProcessInstanceW piw = processManager.getProcessInstance(processInstanceId);
+						Collection<User> users = processArtifacts.getUsersConnectedToProces(piw);
+						addUsersToSheet(workBook, sheet, users, iwrb, showCompany);
+						rowNumber = (short) (sheet.getLastRowNum()+2);
+					}
 
 					lastCellNumber = row.getLastCellNum();
 				}
 			} else {
-				doCreateHeaders(sheet, bigStyle, exportColumns, locale);
-				short rowNumber = 1;
+				if(!exportContacts){
+					doCreateHeaders(sheet, bigStyle, exportColumns, locale);
+				}
+				int rowNumber = 0;
 
 				for (CasePresentation theCase: cases) {
-					HSSFRow row = sheet.createRow(rowNumber++);
+					if(exportContacts){
+						doCreateHeaders(sheet, bigStyle, exportColumns, locale);
+					}
+					HSSFRow row = sheet.createRow(++rowNumber);
 					int cellIndex = 0;
 
 					List<AdvancedProperty> varsForCase = getVariablesForCase(theCase, locale, isAdmin);
@@ -562,8 +634,19 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 								value = getVariableValue(column, variable);
 						}
 
-						row.createCell(cellIndex++).setCellValue(value);
+						HSSFCell cell = row.createCell(cellIndex++);
+						cell.setCellStyle(normalStyle);
+						cell.setCellValue(value);
+						if(exportContacts){
+							CaseProcInstBind bind = getCasesBinder().getCaseProcInstBindByCaseId(Integer.valueOf(theCase.getId()));
+							Long processInstanceId = bind.getProcInstId();
+							ProcessManager processManager = bpmFactory.getProcessManagerByProcessInstanceId(processInstanceId);
+							ProcessInstanceW piw = processManager.getProcessInstance(processInstanceId);
+							Collection<User> users = processArtifacts.getUsersConnectedToProces(piw);
+							addUsersToSheet(workBook, sheet, users, iwrb, showCompany);
+						}
 					}
+
 
 					lastCellNumber = row.getLastCellNum();
 				}
@@ -572,8 +655,135 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			if (lastCellNumber > 0)
 				for (int i = 0; i < lastCellNumber; i++)
 					sheet.autoSizeColumn(i);
+
 		}
 
+
+		try {
+			workBook.write(streamOut);
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "Error writing search results to Excel!", e);
+			return null;
+		} finally {
+			IOUtil.closeOutputStream(streamOut);
+		}
+
+		return memory;
+	}
+
+	private void addUsersToSheet(HSSFWorkbook workBook ,HSSFSheet sheet,Collection<User> users,IWResourceBundle iwrb,
+			boolean showUserCompany){
+		HSSFFont bigFont = workBook.createFont();
+		bigFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
+		bigFont.setFontHeightInPoints((short) 16);
+		HSSFCellStyle bigStyle = workBook.createCellStyle();
+		bigStyle.setFont(bigFont);
+
+		HSSFFont normalFont = workBook.createFont();
+		normalFont.setFontHeightInPoints((short) 16);
+		HSSFCellStyle normalStyle = workBook.createCellStyle();
+		normalStyle.setFont(normalFont);
+
+		int columnWidth = DEFAULT_CELL_WIDTH;
+		int rowNum = sheet.getLastRowNum()+1;
+		HSSFRow row = sheet.createRow(rowNum++);
+
+		int column = 0;
+
+		sheet.setColumnWidth(column, columnWidth);
+		HSSFCell cell = row.createCell(column++);
+		cell.setCellStyle(bigStyle);
+		cell.setCellValue(iwrb.getLocalizedString("name", "Name"));
+
+		if(showUserCompany){
+			sheet.setColumnWidth(column, columnWidth);
+			cell = row.createCell(column++);
+			cell.setCellStyle(bigStyle);
+			cell.setCellValue(iwrb.getLocalizedString("cases_bpm.company", "Company"));
+		}
+
+		sheet.setColumnWidth(column, columnWidth);
+		cell = row.createCell(column++);
+		cell.setCellStyle(bigStyle);
+		cell.setCellValue(iwrb.getLocalizedString("email_address", "E-mail address"));
+
+		sheet.setColumnWidth(column, columnWidth);
+		cell = row.createCell(column++);
+		cell.setCellStyle(bigStyle);
+		cell.setCellValue(iwrb.getLocalizedString("phone_number", "Phone number"));
+
+		for(User user : users){
+			row = sheet.createRow(rowNum++);
+
+			column = 0;
+
+			cell = row.createCell(column++);
+			cell.setCellStyle(normalStyle);
+			cell.setCellValue(user.getName());
+
+			if (showUserCompany) {
+				GeneralCompanyBusiness generalCompanyBusiness = getGeneralCompanyBusiness();
+				if (generalCompanyBusiness != null) {
+					cell = row.createCell(column++);
+					cell.setCellStyle(normalStyle);
+					Collection<GeneralCompany> companies = generalCompanyBusiness.getCompaniesForUser(user);
+					String companyName;
+					if(!ListUtil.isEmpty(companies)){
+						GeneralCompany company = companies.iterator().next();
+						companyName = company.getName();
+					}else{
+						companyName = CoreConstants.MINUS;
+					}
+					cell.setCellValue(companyName);
+				}
+			}
+
+
+			cell = row.createCell(column++);
+			cell.setCellStyle(normalStyle);
+			Collection<Email> emails =  user.getEmails();
+			if(!ListUtil.isEmpty(emails)){
+				StringBuilder builder = new StringBuilder();
+				boolean added = false;
+				for(Email email : emails){
+					String emailAddress = email.getEmailAddress();
+					if(StringUtil.isEmpty(emailAddress)){
+						continue;
+					}
+					if(added){
+						builder.append(", ");
+					}else{
+						added = true;
+					}
+					builder.append(emailAddress);
+				}
+				cell.setCellValue(builder.toString());
+			}
+
+			Collection<Phone> phones = user.getPhones();
+			StringBuilder userPhones = new StringBuilder();
+			for(Phone phone : phones){
+				String number = phone.getNumber();
+				if(StringUtil.isEmpty(number)){
+					continue;
+				}
+				userPhones.append(number).append("; ");
+			}
+			cell = row.createCell(column++);
+			cell.setCellStyle(normalStyle);
+			cell.setCellValue(userPhones.toString());
+
+		}
+	}
+	@Override
+	public MemoryFileBuffer getUsersExport(Collection<User> users,Locale locale,boolean showUserCompany){
+		MemoryFileBuffer memory = new MemoryFileBuffer();
+		OutputStream streamOut = new MemoryOutputStream(memory);
+		HSSFWorkbook workBook = new HSSFWorkbook();
+
+		IWResourceBundle bpmIwrb = IWMainApplication.getDefaultIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(locale);
+		HSSFSheet sheet = workBook.createSheet();
+		addUsersToSheet(workBook, sheet, users, bpmIwrb, showUserCompany);
 		try {
 			workBook.write(streamOut);
 		} catch (Exception e) {
@@ -731,11 +941,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public MemoryFileBuffer getExportedSearchResults(String id) {
+	public MemoryFileBuffer getExportedSearchResults(String id,boolean exportContacts, boolean showCompany) {
 		if (memory != null)
 			return memory;
 
-		if (doExport(id))
+		if (doExport(id,exportContacts,showCompany))
 			return memory;
 
 		return null;
@@ -755,7 +965,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public MemoryFileBuffer getExportedCases(String id) {
+	public MemoryFileBuffer getExportedCases(String id,boolean exportContacts, boolean showCompany) {
 		if (StringUtil.isEmpty(id)) {
 			LOGGER.warning("Key is not provided");
 			return null;
@@ -770,7 +980,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		Map<String, List<CasePresentation>> casesByProcDef = getCasesByProcessDefinition(cases);
 		CasesSearchCriteriaBean bean = getSearchCriteria(id);
 
-		return getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns());
+		return getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns(),exportContacts,showCompany);
 	}
 
 	private Map<String, List<CasePresentation>> getCasesByProcessDefinition(String id) {

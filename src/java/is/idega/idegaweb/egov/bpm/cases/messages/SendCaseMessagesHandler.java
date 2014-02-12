@@ -2,6 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.messages;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
+import java.util.Arrays;
 import java.util.logging.Logger;
 
 import org.jbpm.graph.exe.ExecutionContext;
@@ -18,6 +19,7 @@ import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.bpm.process.messages.SendMessagesHandler;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.util.CoreUtil;
+import com.idega.util.EmailValidator;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -37,6 +39,8 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 	private SendMessage sendMessage;
 
+	private SendMessage emailSender;
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -47,6 +51,8 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	private Long processInstanceId;
 
 	private Token token;
+
+	private String sendToEmail;
 
 	public void setToken(Token token) {
 		this.token = token;
@@ -124,7 +130,24 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 		msgs.setSendToRoles(sendToRoles);
 		msgs.setRecipientUserId(recipientUserId);
-		getSendMessage().send(null, new Integer(caseIdStr), pi, msgs, tkn);
+		boolean validSendToEmail = EmailValidator.getInstance().validateEmail(getSendToEmail());
+		if (validSendToEmail) {
+			msgs.setSendToEmails(Arrays.asList(getSendToEmail()));
+		}
+		getSendMessage().send(null, Integer.valueOf(caseIdStr), pi, msgs, tkn);
+
+		if (isSendViaEmail() || validSendToEmail) {
+			getEmailSender().send(null, ectx, pi, msgs, tkn);
+		}
+	}
+
+	public SendMessage getEmailSender() {
+		return emailSender;
+	}
+
+	@Autowired
+	public void setEmailSender(@SendMessageType("email") SendMessage emailSender) {
+		this.emailSender = emailSender;
 	}
 
 	@Override
@@ -146,4 +169,13 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	public void setProcessInstanceId(Long processInstanceId) {
 		this.processInstanceId = processInstanceId;
 	}
+
+	public String getSendToEmail() {
+		return sendToEmail;
+	}
+
+	public void setSendToEmail(String sendToEmail) {
+		this.sendToEmail = sendToEmail;
+	}
+
 }

@@ -352,7 +352,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						getNewCaseProcBind(context.getSession(), piBind, piId);
 					}
 
-					// TODO: if variables submission and process execution fails here, rollback case proc inst bind
 					pi.getContextInstance().setVariables(caseData);
 
 					variables.putAll(viewSubmission.resolveVariables());
@@ -482,9 +481,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 
 	/**
-	 * <p>
-	 * TODO: this is probably totally incorrect implementation, review and fix!
-	 * </p>
 	 * sets roles, whose users can start process (and see application).
 	 *
 	 * @param rolesKeys

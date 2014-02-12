@@ -63,8 +63,14 @@ public interface CasesBPMDAO extends GenericDao {
 	public abstract List<Token> getCaseProcInstBindSubprocessBySubprocessName(Long processInstanceId);
 
 	public abstract List<Long> getCaseIdsByProcessDefinition(String processDefinitionName);
-
 	public abstract List<Long> getCaseIdsByProcessDefinitionNameAndVariables(String processDefinitionName, List<BPMProcessVariable> variables);
+	public abstract List<Integer> getCaseIdsByProcessDefinitionId(Long processDefinitionId);
+	public abstract List<Integer> getCaseIdsByProcessDefinitionIdAndStatusAndDateRange(
+			Long processDefinitionId,
+			String status,
+			IWTimestamp from,
+			IWTimestamp to
+	);
 
 	public abstract List<Long> getCaseIdsByCaseNumber(String caseNumber);
 
@@ -308,13 +314,21 @@ public interface CasesBPMDAO extends GenericDao {
 	 * @param subscribersIDs is {@link Collection} of {@link User}, who
 	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
 	 * then this option will be skipped;
+<<<<<<< HEAD
 	 * @param subscribersGroupIDs is {@link Collection} of
+=======
+	 * @param subscriberGroupsIDs is {@link Collection} of
+>>>>>>> c80c2f5b60b3bf94838b9781539a5b16357f2e4d
 	 * {@link Group#getPrimaryKey()} where should be searched for
 	 * {@link com.idega.user.data.User}s who are in {@link Case#getSubscribers()}
 	 * list. Skipped if <code>null</code>;
 	 * @param handlersIDs is {@link com.idega.user.data.User}s, who has ability
 	 * to manage {@link Case}s, skipped if <code>null</code>;
+<<<<<<< HEAD
 	 * @param handlerGroupIDs is {@link Collection} of
+=======
+	 * @param handlerGroupIds is {@link Collection} of
+>>>>>>> c80c2f5b60b3bf94838b9781539a5b16357f2e4d
 	 * {@link Group#getPrimaryKey()} which is connected to {@link Case#getHandler()}.
 	 * Skipped if <code>null</code>;
 	 * @param caseManagerTypes is {@link Collection} of
@@ -366,4 +380,6 @@ public interface CasesBPMDAO extends GenericDao {
 			Timestamp to
 	);
 
+	public int getNumberOfApplications(Long procDefId);
+	
 }

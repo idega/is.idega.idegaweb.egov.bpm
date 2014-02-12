@@ -193,7 +193,6 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 
 	@Override
 	public UIComponent getUIComponent(FacesContext ctx, Application app) {
-
 		UIApplicationTypeBPMHandler h = new UIApplicationTypeBPMHandler();
 		h.setApplication(app);
 

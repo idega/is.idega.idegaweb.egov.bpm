@@ -99,7 +99,13 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 					createdVars.put(CaseHandlerAssignmentHandler.handlerUserIdVarName, handlerUserId);
 				}
 
-				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(this, pi.getProcessDefinition().getName(), pi.getId(), createdVars);
+				VariableCreatedEvent performerVarCreated = new VariableCreatedEvent(
+						this,
+						pi.getProcessDefinition().getName(),
+						pi.getId(),
+						null,
+						createdVars
+				);
 				ELUtil.getInstance().publishEvent(performerVarCreated);
 
 				String event = null;

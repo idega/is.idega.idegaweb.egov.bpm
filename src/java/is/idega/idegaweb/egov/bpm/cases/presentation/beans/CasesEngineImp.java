@@ -12,6 +12,7 @@ import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter;
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
+import is.idega.idegaweb.egov.cases.bean.CasesExportParams;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
@@ -19,11 +20,16 @@ import is.idega.idegaweb.egov.cases.presentation.OpenCases;
 import is.idega.idegaweb.egov.cases.presentation.PublicCases;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -49,6 +55,9 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.CaseManagersProvider;
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.business.ProcessConstants;
+import com.idega.block.process.business.file.CaseAttachment;
+import com.idega.block.process.business.pdf.CaseConverterToPDF;
+import com.idega.block.process.business.pdf.CasePDF;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.block.process.event.CaseModifiedEvent;
@@ -86,6 +95,8 @@ import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.RepositoryStartedEvent;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.idegaweb.egov.bpm.presentation.CasesExporter;
+import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceType;
@@ -95,12 +106,16 @@ import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ListNavigator;
 import com.idega.presentation.paging.PagedDataCollection;
+import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.user.business.GroupBusiness;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.Group;
 import com.idega.user.data.User;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.FileUtil;
+import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
@@ -133,6 +148,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+
+	@Autowired
+	private CaseConverterToPDF caseConverter;
 
 	public static final String	FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader",
 								PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader",
@@ -193,6 +211,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				stateBean.setNameFromExternalEntity(properties.isNameFromExternalEntity());
 				stateBean.setShowUserProfilePicture(properties.isShowUserProfilePicture());
 				stateBean.setAddExportContacts(properties.isAddExportContacts());
+				stateBean.setShowUserCompany(properties.isShowUserCompany());
+				stateBean.setShowLastLoginDate(properties.isShowLastLoginDate());
 			}
 
 			Integer caseId = new Integer(caseIdStr);
@@ -318,6 +338,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setCustomColumns(criterias.getCustomColumns());
 		properties.setShowLoadingMessage(criterias.isShowLoadingMessage());
 		properties.setSubscribersGroupId(criterias.getSubscribersGroupId());
+		properties.setShowUserProfilePicture(criterias.isShowUserProfilePicture());
+		properties.setShowAttachmentStatistics(criterias.isShowAttachmentStatistics());
+		properties.setShowUserCompany(criterias.isShowUserCompany());
+		properties.setAddExportContacts(criterias.isAddExportContacts());
 
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criterias.getCaseListType())) {
@@ -496,7 +520,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private PagedDataCollection<CasePresentation> getCasesByQuery(
-			IWContext iwc, CasesListSearchCriteriaBean criterias) {
+			IWContext iwc,
+			CasesListSearchCriteriaBean criterias
+	) {
 		User currentUser = null;
 		if (!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
@@ -776,7 +802,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public AdvancedProperty getExportedCases(String instanceId, String uri) {
+	public AdvancedProperty getExportedCases(String instanceId, String uri,Boolean exportContacts, Boolean showCompany) {
 		if (StringUtil.isEmpty(instanceId))
 			return null;
 
@@ -834,6 +860,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		URIUtil uriUtil = new URIUtil(iwc.getIWMainApplication().getMediaServletURI());
 		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class));
 		uriUtil.setParameter(CasesSearchResultsExporter.ALL_CASES_DATA, instanceId);
+		uriUtil.setParameter(CasesSearchResultsExporter.EXPORT_CONTACTS, (exportContacts != null) && (exportContacts.equals(Boolean.TRUE)) ? "y" : "n");
+		uriUtil.setParameter(CasesSearchResultsExporter.SHOW_USER_COMPANY, (showCompany != null) && (showCompany.equals(Boolean.TRUE)) ? "y" : "n");
 		result.setValue(uriUtil.getUri());
 
 		return result;
@@ -841,6 +869,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public AdvancedProperty getExportedSearchResults(String id) {
+		return getExportedSearchResults(id, false, false);
+	}
+
+	public AdvancedProperty getExportedSearchResults(String id,boolean exportContacts, boolean showCompany) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -874,9 +906,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 
 		getExternalSearchResults(resultsHolder, id);
-		if (!resultsHolder.doExport(id)) {
-			result.setValue(getResourceBundle(iwc)
-					.getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
+		if (!resultsHolder.doExport(id, exportContacts, showCompany)) {
+			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
 
@@ -1295,4 +1326,270 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		return false;
 	}
+
+	@Override
+	public AdvancedProperty getExportedCasesToPDF(CasesExportParams params) {
+		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
+		AdvancedProperty result = new AdvancedProperty(
+				Boolean.FALSE.toString(),
+				iwrb.getLocalizedString("failed_to_export_cases", "Failed to export cases"),
+				String.valueOf(0)
+		);
+
+		if (params == null) {
+			return result;
+		}
+
+		String id = params.getId();
+		Map<String, List<Integer>> idsCache = getCache("cases_to_export_to_pdf_cache", 86400, 100);
+
+		Map<String, Map<String, String>> statusesCache = getCache("cases_to_export_to_pdf_statuses_cache", 86400, 100);
+		Map<String, String> exportStatuses = statusesCache.get(id);
+		if (exportStatuses != null) {
+			exportStatuses.remove(id);
+		}
+
+		Long processDefinitionId = params.getProcessDefinitionId();
+		if (processDefinitionId == null) {
+			return result;
+		}
+
+		IWTimestamp from = null, to = null;
+		Date tmp = IWDatePickerHandler.getParsedDate(params.getDateFrom());
+		if (tmp != null) {
+			from = new IWTimestamp(tmp);
+		}
+		tmp = null;
+		tmp = IWDatePickerHandler.getParsedDate(params.getDateTo());
+		if (tmp != null) {
+			to = new IWTimestamp(tmp);
+		}
+
+		List<Integer> casesIds = casesBPMDAO.getCaseIdsByProcessDefinitionIdAndStatusAndDateRange(processDefinitionId, params.getStatus(), from, to);
+		if (ListUtil.isEmpty(casesIds)) {
+			result.setValue(iwrb.getLocalizedString("there_are_no_cases_to_export", "There are no cases to export"));
+			return result;
+		}
+
+		idsCache.put(id, casesIds);
+
+		result.setId(id);
+		int seconds = casesIds.size() * 10;
+		int minutes = ((seconds / 60) % 60);
+		int hours   = ((seconds / (60*60)) % 24);
+		String label = iwrb.getLocalizedString("found_cases_to_export", "Found applications to export") + ": " + casesIds.size() + ". " +
+			iwrb.getLocalizedString("export_process_may_take_time", "Approximately it may take") + CoreConstants.SPACE +
+			(hours > 0 ? hours + CoreConstants.SPACE + iwrb.getLocalizedString("hours", "hour(s)") + CoreConstants.SPACE : CoreConstants.EMPTY) +
+			(minutes > 0 ? minutes + CoreConstants.SPACE + iwrb.getLocalizedString("minutes", "minute(s)") + CoreConstants.SPACE : CoreConstants.EMPTY) +
+			(seconds % 60 > 0 ? (seconds % 60) + CoreConstants.SPACE + iwrb.getLocalizedString("seconds", "second(s)") + CoreConstants.SPACE : CoreConstants.EMPTY) +
+			iwrb.getLocalizedString("to_export_do_you_want_to_continue", "to export. Do you want to continue?");
+		result.setValue(label);
+		result.setName(String.valueOf(casesIds.size()));
+		return result;
+	}
+
+	@Override
+	public AdvancedProperty doActualExport(String id) {
+		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
+		AdvancedProperty result = new AdvancedProperty(
+				Boolean.FALSE.toString(),
+				iwrb.getLocalizedString("failed_to_export_cases", "Failed to export cases")
+		);
+
+		Map<String, String> exportStatuses = null;
+		try {
+
+			if (StringUtil.isEmpty(id)) {
+				return result;
+			}
+
+			Map<String, List<Integer>> idsCache = getCache("cases_to_export_to_pdf_cache", 86400, 100);
+			List<Integer> casesIds = idsCache.get(id);
+
+			Map<String, Map<String, String>> statusesCache = getCache("cases_to_export_to_pdf_statuses_cache", 86400, 100);
+			exportStatuses = statusesCache.get(id);
+			if (exportStatuses == null) {
+				exportStatuses = new HashMap<String, String>();
+				statusesCache.put(id, exportStatuses);
+			}
+
+			File baseDir = CasesExporter.getDirectory(id);
+
+			int i = 0;
+			for (Iterator<Integer> casesIdsIter = casesIds.iterator(); casesIdsIter.hasNext();) {
+				Integer caseId = casesIdsIter.next();
+
+				i++;
+				exportStatuses.put(
+					id,
+					iwrb.getLocalizedString("exporting", "Exporting") + CoreConstants.SPACE + i+ CoreConstants.SPACE +
+							iwrb.getLocalizedString("of", "of") + CoreConstants.SPACE + casesIds.size()
+				);
+
+				List<CasePDF> casePDFs = null;
+				try {
+					casePDFs = caseConverter.getPDFsAndAttachmentsForCase(caseId);
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error exporting case (ID: " + caseId + ") to PDFs", e);
+				}
+				if (ListUtil.isEmpty(casePDFs)) {
+					continue;
+				}
+
+				File caseFolder = new File(baseDir.getAbsolutePath() + File.separator + casePDFs.get(0).getIdentifier());
+				if (!caseFolder.exists()) {
+					caseFolder.mkdir();
+				}
+				for (CasePDF casePDF: casePDFs) {
+					if (casePDF == null) {
+						continue;
+					}
+					byte[] pdfData = casePDF.getBytes();
+					if (pdfData == null || pdfData.length <= 0) {
+						continue;
+					}
+
+					File pdf = new File(caseFolder.getAbsoluteFile() + File.separator + casePDF.getName());
+					if (!pdf.exists()) {
+						pdf.createNewFile();
+					}
+
+					FileUtil.streamToFile(new ByteArrayInputStream(pdfData), pdf);
+
+					List<CaseAttachment> attachments = casePDF.getAttachments();
+					if (!ListUtil.isEmpty(attachments)) {
+						File attachmentsFolder = new File(caseFolder.getAbsoluteFile() + File.separator + "attachments");
+						if (!attachmentsFolder.exists()) {
+							attachmentsFolder.mkdir();
+						}
+
+						for (CaseAttachment attachment: attachments) {
+							if (attachment == null) {
+								continue;
+							}
+							byte[] attachmentData = attachment.getBytes();
+							if (attachmentData == null || attachmentData.length <= 0) {
+								continue;
+							}
+
+							File attachmentFile = new File(attachmentsFolder.getAbsoluteFile() + File.separator + attachment.getName());
+							if (!attachmentFile.exists()) {
+								attachmentFile.createNewFile();
+							}
+
+							FileUtil.streamToFile(new ByteArrayInputStream(attachmentData), attachmentFile);
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error exporting cases to PDFs", e);
+			if (exportStatuses != null) {
+				exportStatuses.remove(id);
+			}
+			return result;
+		}
+
+		result.setId(Boolean.TRUE.toString());
+		result.setValue(iwrb.getLocalizedString("cases_were_successfully_exported", "Cases were successfully exported"));
+		result.setName(id);
+		if (exportStatuses != null) {
+			exportStatuses.remove(id);
+		}
+		return result;
+	}
+
+	@Override
+	public AdvancedProperty getStatusOfExport(String id) {
+		if (StringUtil.isEmpty(id)) {
+			return new AdvancedProperty(Boolean.FALSE.toString());
+		}
+
+		Map<String, Map<String, String>> statusesCache = getCache("cases_to_export_to_pdf_statuses_cache", 86400, 100);
+		Map<String, String> exportStatuses = statusesCache.get(id);
+		if (exportStatuses == null) {
+			return null;
+		}
+		String status = exportStatuses.remove(id);
+		if (StringUtil.isEmpty(status)) {
+			return null;
+		}
+
+		return new AdvancedProperty(Boolean.TRUE.toString(), status);
+	}
+
+	@Override
+	public Boolean doRemoveFromMemory(String id) {
+		if (StringUtil.isEmpty(id)) {
+			return false;
+		}
+
+		Map<String, List<Integer>> idsCache = getCache("cases_to_export_to_pdf_cache", 86400, 100);
+		idsCache.remove(id);
+		return true;
+	}
+
+	@Override
+	public AdvancedProperty getLinkForZippedCases(String id, List<String> casesIdentifiers) {
+		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
+		AdvancedProperty result = new AdvancedProperty(
+				Boolean.FALSE.toString(),
+				iwrb.getLocalizedString("unable_to_download_zipped_cases", "Unable to download exported case(s)")
+		);
+
+		if (StringUtil.isEmpty(id)) {
+			return result;
+		}
+
+		File baseDir = CasesExporter.getDirectory(id);
+		if (baseDir == null || !baseDir.exists() || !baseDir.canRead() || !baseDir.isDirectory()) {
+			return result;
+		}
+
+		Collection<File> toZip = null;
+		String name = "Exported_cases.zip";
+		if (ListUtil.isEmpty(casesIdentifiers)) {
+			File[] casesFolders = baseDir.listFiles();
+			if (ArrayUtil.isEmpty(casesFolders)) {
+				return result;
+			}
+			toZip = Arrays.asList(casesFolders);
+		} else {
+			toZip = new ArrayList<File>();
+			for (String identifier: casesIdentifiers) {
+				File caseFolderToZip = new File(baseDir.getAbsoluteFile() + File.separator + identifier);
+				if (!caseFolderToZip.exists() || !caseFolderToZip.canRead() || !caseFolderToZip.isDirectory()) {
+					continue;
+				}
+				toZip.add(caseFolderToZip);
+			}
+			if (casesIdentifiers.size() == 1) {
+				name = "Exported_case_" + casesIdentifiers.get(0) + ".zip";
+			}
+		}
+
+		if (ListUtil.isEmpty(toZip)) {
+			return result;
+		}
+
+		File zippedFile = null;
+		try {
+			zippedFile = FileUtil.getZippedFiles(toZip, name, false);
+		} catch (IOException e) {
+			getLogger().log(Level.WARNING, "Error zipping content at " + baseDir.getAbsolutePath(), e);
+		}
+
+		if (zippedFile == null || !zippedFile.exists() || !zippedFile.canRead()) {
+			return result;
+		}
+
+		result.setId(Boolean.TRUE.toString());
+		URIUtil uri = new URIUtil(getApplication().getMediaServletURI());
+		uri.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(DownloadWriter.class));
+		uri.setParameter(DownloadWriter.PRM_ABSOLUTE_FILE_PATH, zippedFile.getAbsolutePath());
+		result.setValue(uri.getUri());
+		result.setName(iwrb.getLocalizedString("downloading_exported_data", "Downloading exported data"));
+		return result;
+	}
+
 }

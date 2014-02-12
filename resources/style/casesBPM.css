@@ -109,3 +109,18 @@
 div.protestRullingDecisionReason select {
 	color: #101010 !important;
 }
+
+div.shortFormItem {
+    width: 100% !important;
+}
+div.shortFormItem label {
+    display: block !important;
+    float: left !important;
+    width: 100px !important;
+}
+div.formItem select {
+    width: 300px !important;
+}
+input.hasDatepicker {
+    width: 300px !important;
+}

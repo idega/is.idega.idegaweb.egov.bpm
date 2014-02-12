@@ -9,7 +9,21 @@
     <key>
       <name>iw_components</name>
       <value>
-        <map />
+        <map>
+          <key>
+            <name>com.idega.idegaweb.egov.bpm.presentation.CasesExporter</name>
+            <value>
+              <map>
+                <key>
+                  <name>component_property_file</name>
+                  <type>java.lang.String</type>
+                  <value>com.idega.idegaweb.egov.bpm.presentation.CasesExporter.pxml</value>
+                </key>
+              </map>
+            </value>
+            <type>map</type>
+          </key>
+        </map>  
       </value>
       <type>map</type>
     </key>
