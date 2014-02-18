@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -233,7 +234,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					false	//	Mirrow
 			);
 			Map<Long, Map<String, VariableInstanceInfo>> groupedVars = new HashMap<Long, Map<String,VariableInstanceInfo>>();
-			if (!ListUtil.isEmpty(vars)) {
+			if (ListUtil.isEmpty(vars)) {
+				LOGGER.info("Nothing found in database for proc. inst.: " + subProcInstId);
+			} else {
 				for (VariableInstanceInfo var: vars) {
 					if (var == null) {
 						continue;
@@ -259,10 +262,16 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 			IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 
-			if (!MapUtil.isEmpty(groupedVars)) {
+			boolean foundExisting = false;
+			if (MapUtil.isEmpty(groupedVars)) {
+				if (!ListUtil.isEmpty(vars)) {
+					LOGGER.warning("There are no grouped variables for " + vars);
+				}
+			} else {
 				String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
 
-				for (Long tiId: groupedVars.keySet()) {
+				for (Iterator<Long> taskInstIdsIter = groupedVars.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
+					Long tiId = taskInstIdsIter.next();
 					Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
 
 					String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
@@ -281,6 +290,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) && fromAddress.equals(fromAddressVarValue);
 					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
 						message.setParsed(true);
+						foundExisting = true;
 						return true;
 					} else {
 						if (subjectsMatch && fromMatch && addressesMatch) {
@@ -310,6 +320,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 								textsMatch = isTheSameContentOfFiles(toAttach, toCompare, patterns, subject);
 								if (textsMatch) {
 									message.setParsed(true);
+									foundExisting = true;
 									return true;
 								} else {
 									String msg = "Wrote files " + toAttach.getName() + " and " + toCompare.getName() + " to " + dir.getAbsolutePath() +
@@ -327,6 +338,11 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				}
 			}
 
+			if (foundExisting) {
+				LOGGER.info("Email with subject '" + subject + "' is already attached to sub-proc. inst. ID: " + subProcInstId);
+				message.setParsed(true);
+				return true;
+			}
 			if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
 				return true;
 			}
