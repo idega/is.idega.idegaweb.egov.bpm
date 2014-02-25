@@ -1302,7 +1302,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		builder.append(") union (select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ");
-		builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
+		if (!ListUtil.isEmpty(procInstIds))
+			builder.append(" inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
+
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
 			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
 			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
@@ -1313,7 +1315,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
-		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		if (!ListUtil.isEmpty(procInstIds))
+			builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 
 		builder.append(" proc_case.user_id=:identityId and proc_case.case_code not in (:caseCodes) ");
 

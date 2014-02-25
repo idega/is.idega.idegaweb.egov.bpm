@@ -105,7 +105,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 			final Role caseHandlerRole;
 
 			if (getCaseHandlerRoleExp() != null) {
-				caseHandlerRole = JSONExpHandler.resolveRoleFromJSONExpression(getCaseHandlerRoleExp());
+				caseHandlerRole = JSONExpHandler.resolveRoleFromJSONExpression(getCaseHandlerRoleExp(), ectx);
 			} else {
 				String defaultCaseHandlerRoleName = "bpm_caseHandler";
 				Logger.getLogger(getClass().getName()).info("No caseHandler role expression found, using default=" + defaultCaseHandlerRoleName);
