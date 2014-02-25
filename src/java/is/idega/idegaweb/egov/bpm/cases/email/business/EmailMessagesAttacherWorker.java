@@ -173,7 +173,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	}
 
 	private String getTextValue(IWMainApplicationSettings settings, final Long tiId) {
-		String value = getIdegaJbpmContext().execute(new JbpmCallback() {
+		String value = getIdegaJbpmContext().execute(new JbpmCallback<String>() {
 
 			@Override
 			public String doInJbpm(JbpmContext context) throws JbpmException {
@@ -453,7 +453,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			final Map<String, InputStream> attachments,
 			final Collection<File> attachedFiles
 	) {
-		Boolean result = getIdegaJbpmContext().execute(new JbpmCallback() {
+		Boolean result = getIdegaJbpmContext().execute(new JbpmCallback<Boolean>() {
 
 			@Override
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {

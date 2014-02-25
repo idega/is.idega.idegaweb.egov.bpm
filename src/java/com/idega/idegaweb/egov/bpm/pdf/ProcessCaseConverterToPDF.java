@@ -33,7 +33,7 @@ import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.jbpm.variables.BinaryVariablesHandler;
 import com.idega.presentation.IWContext;
-import com.idega.user.data.User;
+import com.idega.user.data.bean.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IOUtil;

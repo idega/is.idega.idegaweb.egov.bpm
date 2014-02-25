@@ -56,6 +56,7 @@ import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.data.impl.VariableInstanceQuerierImpl;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -83,6 +84,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	@Autowired
 	private BPMContext bpmContext;
 
+	@Autowired
+	private BPMFactory bpmFactory;
+	
 	@Override
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
 
