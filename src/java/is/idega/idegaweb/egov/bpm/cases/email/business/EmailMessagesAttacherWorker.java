@@ -279,10 +279,12 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			if (!ListUtil.isEmpty(vars)) {
 				LOGGER.warning("There are no grouped variables for " + vars);
 			}
-		} else {
-			String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
-			String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
+			return true;
+		}
 
+		String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
+		String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
+		try {
 			for (Iterator<Long> taskInstIdsIter = groupedVars.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
 				Long tiId = taskInstIdsIter.next();
 				Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
@@ -315,7 +317,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 					if (subjectsMatch && fromMatch && addressesMatch) {
 						Long subProcInstId = existingValues.values().iterator().next().getProcessInstanceId();
-						LOGGER.info("Will compare texts again, because all other fields match. Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId);
+						LOGGER.info("Will compare texts again for '" + subject + "', because all other fields match. Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId);
 						//	Will write texts to files and will compare content of these files
 						try {
 							File dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "bpm_emails");
@@ -341,7 +343,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 							textsMatch = isContentOfFilesEqual(toAttach, toCompare, patterns, encodedPatterns, subject);
 							if (textsMatch) {
-								LOGGER.info("Email with subject '" + subject + "' is already attached to proc. inst. ID: " + procInstId + ", sub-proc. inst ID: " + subProcInstId);
+								LOGGER.info("Email with subject '" + subject + "' is already attached to proc. inst. ID: " + procInstId + ", sub-proc. inst ID: " + subProcInstId + ", no need to attach it");
 								message.setParsed(true);
 								foundExisting = true;
 								return true;
@@ -361,7 +363,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					}
 				}
 			}
-
+		} finally {
 			if (foundExisting) {
 				LOGGER.info("Email with subject '" + subject + "' is already attached to proc. inst. ID: " + procInstId + ", sub-proc. inst IDs: " + subProcInstIds);
 				message.setParsed(true);
@@ -371,37 +373,35 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						"' (comparisons:\n" + fromComparisons + ")\nfrom: '" + fromAddress + "' (comparisons:\n" + addressesComparisons +
 						")\n is not attached to proc. inst. ID: " + procInstId + ", sub-proc. inst IDs: " + subProcInstIds + ", need to attach it");
 			}
-			if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
-				return true;
-			}
-
-			List<Long> fetchEmailsSubProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
-					procInstId,
-					EmailMessagesAttacher.email_fetch_process_name
-			);
-			if (ListUtil.isEmpty(fetchEmailsSubProcInstIds)) {
-				return false;
-			}
-
-			Map<String, InputStream> attachments = message.getAttachments();
-			if (attachments == null) {
-				attachments = new HashMap<String, InputStream>(1);
-			}
-			if (doAttachEmailToProcess(
-					fetchEmailsSubProcInstIds.get(0),
-					subject,
-					text,
-					senderPersonalName,
-					fromAddress,
-					attachments,
-					message.getAttachedFiles()
-			)) {
-				message.setParsed(true);
-			} else {
-				return false;
-			}
 		}
-		return true;
+
+		if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
+			return true;
+		}
+
+		List<Long> fetchEmailsSubProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
+				procInstId,
+				EmailMessagesAttacher.email_fetch_process_name
+		);
+		if (ListUtil.isEmpty(fetchEmailsSubProcInstIds)) {
+			return false;
+		}
+
+		Map<String, InputStream> attachments = message.getAttachments();
+		if (attachments == null) {
+			attachments = new HashMap<String, InputStream>(1);
+		}
+		boolean result = doAttachEmailToProcess(
+				fetchEmailsSubProcInstIds.get(0),
+				subject,
+				text,
+				senderPersonalName,
+				fromAddress,
+				attachments,
+				message.getAttachedFiles()
+		);
+		message.setParsed(result);
+		return result;
 	}
 
 	private boolean isContentOfLinesEqual(String identifier, List<String> lines1, List<String> lines2) {
@@ -453,7 +453,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				content2.add(content);
 			}
 
-			return isContentOfLinesEqual(identifier, content1, content2);
+			sameContent = isContentOfLinesEqual(identifier, content1, content2);
+			return sameContent;
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error while comparing content of files " + file1 + " and " + file2, e);
 		} finally {
