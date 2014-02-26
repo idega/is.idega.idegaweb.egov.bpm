@@ -205,10 +205,24 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return true;
 		}
 
-		List<Long> subProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
-				message.getProcessInstanceId(),
-				EmailMessagesAttacher.email_fetch_process_name
-		);
+		Long procInstId = message.getProcessInstanceId();
+		if (procInstId == null) {
+			return false;
+		}
+
+		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+
+		List<Long> subProcInstIds = null;
+		if (settings.getBoolean("bpm.email_find_all_sub_proc", Boolean.TRUE)) {
+			ProcessInstanceW piW = getBpmFactory().getProcessInstanceW(procInstId);
+			subProcInstIds = piW.getIdsOfSubProcesses(procInstId);
+		} else {
+			subProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
+					 procInstId,
+					EmailMessagesAttacher.email_fetch_process_name
+			);
+		}
+		LOGGER.info("Sub-processes (" + subProcInstIds + ") for process instance: " + procInstId);
 		if (ListUtil.isEmpty(subProcInstIds)) {
 			return false;
 		}
@@ -259,8 +273,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					taskVars.put(name, var);
 				}
 			}
-
-			IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 
 			boolean foundExisting = false;
 			Map<String, Boolean> 	subjectsComparisons = new HashMap<String, Boolean>(),
