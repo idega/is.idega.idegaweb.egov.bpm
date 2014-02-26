@@ -220,164 +220,167 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			subProcInstIds = piW.getIdsOfSubProcesses(procInstId);
 		} else {
 			subProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
-					 procInstId,
+					procInstId,
 					EmailMessagesAttacher.email_fetch_process_name
 			);
 		}
-		LOGGER.info("Sub-processes (" + subProcInstIds + ") for process instance: " + procInstId);
 		if (ListUtil.isEmpty(subProcInstIds)) {
 			return false;
 		}
 
-		for (Long subProcInstId: subProcInstIds) {
-			if (subProcInstId == null) {
-				continue;
-			}
 
-			String subject = message.getSubject();
-			String text = message.getBody();
-			if (text == null) {
-				text = CoreConstants.EMPTY;
-			}
-			String senderPersonalName = message.getSenderName();
-			String fromAddress = message.getFromAddress();
+		String subject = message.getSubject();
+		String text = message.getBody();
+		if (text == null) {
+			text = CoreConstants.EMPTY;
+		}
+		String senderPersonalName = message.getSenderName();
+		String fromAddress = message.getFromAddress();
 
-			Collection<VariableInstanceInfo> vars = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(
-					Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS),
-					Arrays.asList(subProcInstId),
-					true,	//	Check task instance
-					false,	//	Add empty variables
-					false	//	Mirrow
-			);
-			Map<Long, Map<String, VariableInstanceInfo>> groupedVars = new HashMap<Long, Map<String,VariableInstanceInfo>>();
-			if (ListUtil.isEmpty(vars)) {
-				LOGGER.info("Nothing found in database for proc. inst.: " + subProcInstId);
-			} else {
-				for (VariableInstanceInfo var: vars) {
-					if (var == null) {
-						continue;
-					}
-					String name = var.getName();
-					if (StringUtil.isEmpty(name)) {
-						continue;
-					}
-					Long tiId = var.getTaskInstanceId();
-					if (tiId == null) {
-						continue;
-					}
-
-					Map<String, VariableInstanceInfo> taskVars = groupedVars.get(tiId);
-					if (taskVars == null) {
-						taskVars = new HashMap<String, VariableInstanceInfo>();
-						groupedVars.put(tiId, taskVars);
-					}
-
-					taskVars.put(name, var);
+		Collection<VariableInstanceInfo> vars = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(
+				Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS),
+				subProcInstIds,
+				true,	//	Check task instance
+				false,	//	Add empty variables
+				false	//	Mirrow
+		);
+		Map<Long, Map<String, VariableInstanceInfo>> groupedVars = new HashMap<Long, Map<String,VariableInstanceInfo>>();
+		if (ListUtil.isEmpty(vars)) {
+			LOGGER.info("Nothing found in database for sub-proc. inst. IDs: " + subProcInstIds + ". Main proc. inst. ID: " + procInstId);
+		} else {
+			for (VariableInstanceInfo var: vars) {
+				if (var == null) {
+					continue;
 				}
-			}
-
-			boolean foundExisting = false;
-			Map<String, Boolean> 	subjectsComparisons = new HashMap<String, Boolean>(),
-									fromComparisons = new HashMap<String, Boolean>(),
-									addressesComparisons = new HashMap<String, Boolean>();
-			if (MapUtil.isEmpty(groupedVars)) {
-				if (!ListUtil.isEmpty(vars)) {
-					LOGGER.warning("There are no grouped variables for " + vars);
+				String name = var.getName();
+				if (StringUtil.isEmpty(name)) {
+					continue;
 				}
-			} else {
-				String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
-				String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
+				Long tiId = var.getTaskInstanceId();
+				if (tiId == null) {
+					continue;
+				}
 
-				for (Iterator<Long> taskInstIdsIter = groupedVars.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
-					Long tiId = taskInstIdsIter.next();
-					Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
+				Map<String, VariableInstanceInfo> taskVars = groupedVars.get(tiId);
+				if (taskVars == null) {
+					taskVars = new HashMap<String, VariableInstanceInfo>();
+					groupedVars.put(tiId, taskVars);
+				}
 
-					String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
+				taskVars.put(name, var);
+			}
+		}
 
-					String textVarValue = getTextValue(settings, tiId);
-					if (textVarValue == null) {
-						textVarValue = getValue(existingValues.get(BPMConstants.VAR_TEXT));
+		boolean foundExisting = false;
+		Map<String, Boolean> 	subjectsComparisons = new HashMap<String, Boolean>(),
+								fromComparisons = new HashMap<String, Boolean>(),
+								addressesComparisons = new HashMap<String, Boolean>();
+		if (MapUtil.isEmpty(groupedVars)) {
+			if (!ListUtil.isEmpty(vars)) {
+				LOGGER.warning("There are no grouped variables for " + vars);
+			}
+		} else {
+			String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
+			String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
+
+			for (Iterator<Long> taskInstIdsIter = groupedVars.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
+				Long tiId = taskInstIdsIter.next();
+				Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
+
+				String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
+
+				String textVarValue = getTextValue(settings, tiId);
+				if (textVarValue == null) {
+					textVarValue = getValue(existingValues.get(BPMConstants.VAR_TEXT));
+				}
+
+				String fromVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM));
+				String fromAddressVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM_ADDRESS));
+
+				boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) && subject.equals(subjectVarValue);
+				boolean textsMatch = !StringUtil.isEmpty(textVarValue) && text.equals(textVarValue);
+				boolean fromMatch = fromVarValue == null && senderPersonalName == null ||
+						!StringUtil.isEmpty(fromVarValue) && senderPersonalName.equals(fromVarValue);
+				boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) && fromAddress.equals(fromAddressVarValue);
+				if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
+					message.setParsed(true);
+					foundExisting = true;
+					return true;
+				} else {
+					subjectsComparisons.put(subjectVarValue, subjectsMatch);
+					if (fromVarValue != null) {
+						fromComparisons.put(fromVarValue, fromMatch);
 					}
+					addressesComparisons.put(fromAddressVarValue, addressesMatch);
 
-					String fromVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM));
-					String fromAddressVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM_ADDRESS));
-
-					boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) && subject.equals(subjectVarValue);
-					boolean textsMatch = !StringUtil.isEmpty(textVarValue) && text.equals(textVarValue);
-					boolean fromMatch = fromVarValue == null && senderPersonalName == null ||
-							!StringUtil.isEmpty(fromVarValue) && senderPersonalName.equals(fromVarValue);
-					boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) && fromAddress.equals(fromAddressVarValue);
-					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
-						message.setParsed(true);
-						foundExisting = true;
-						return true;
-					} else {
-						subjectsComparisons.put(subjectVarValue, subjectsMatch);
-						if (fromVarValue != null) {
-							fromComparisons.put(fromVarValue, fromMatch);
-						}
-						addressesComparisons.put(fromAddressVarValue, addressesMatch);
-
-						if (subjectsMatch && fromMatch && addressesMatch) {
-							LOGGER.info("Will compare texts again, because all other fields match. Sub-proc. inst. ID: " + subProcInstId);
-							//	Will write texts to files and will compare content of these files
-							try {
-								File dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "bpm_emails");
-								if (!dir.exists()) {
-									dir.mkdir();
-								}
-
-								String toAttachName = "to_attach_" + subject + "_" + tiId + ".txt";
-								toAttachName = StringHandler.removeWhiteSpace(toAttachName);
-								File toAttach = new File(dir.getAbsolutePath() + File.separator + toAttachName);
-								if (!toAttach.exists()) {
-									toAttach.createNewFile();
-								}
-								FileUtil.streamToFile(StringHandler.getStreamFromString(text), toAttach);
-
-								String toCompareName = "to_compare_" + subjectVarValue + "_" + tiId + ".txt";
-								toCompareName = StringHandler.removeWhiteSpace(toCompareName);
-								File toCompare = new File(dir.getAbsolutePath() + File.separator + toCompareName);
-								if (!toCompare.exists()) {
-									toCompare.createNewFile();
-								}
-								FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
-
-								textsMatch = isTheSameContentOfFiles(toAttach, toCompare, patterns, encodedPatterns, subject);
-								if (textsMatch) {
-									LOGGER.info("Email with subject '" + subject + "' is already attached to sub-proc. inst. ID: " + subProcInstId);
-									message.setParsed(true);
-									foundExisting = true;
-									return true;
-								} else {
-									String msg = "Wrote files " + toAttach.getName() + " and " + toCompare.getName() + " to " + dir.getAbsolutePath() +
-											". Content is not the same of these files while subject ('" + subject +
-											"'), sender address and name are the same. " +
-											"Sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId;
-									LOGGER.warning(msg);
-									if (settings.getBoolean("bpm.email_send_comparisons", false)) {
-										CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
-									}
-								}
-							} catch (Exception e) {
-								e.printStackTrace();
+					if (subjectsMatch && fromMatch && addressesMatch) {
+						Long subProcInstId = existingValues.values().iterator().next().getProcessInstanceId();
+						LOGGER.info("Will compare texts again, because all other fields match. Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId);
+						//	Will write texts to files and will compare content of these files
+						try {
+							File dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "bpm_emails");
+							if (!dir.exists()) {
+								dir.mkdir();
 							}
+
+							String toAttachName = "to_attach_" + subject + "_" + tiId + ".txt";
+							toAttachName = StringHandler.removeWhiteSpace(toAttachName);
+							File toAttach = new File(dir.getAbsolutePath() + File.separator + toAttachName);
+							if (!toAttach.exists()) {
+								toAttach.createNewFile();
+							}
+							FileUtil.streamToFile(StringHandler.getStreamFromString(text), toAttach);
+
+							String toCompareName = "to_compare_" + subjectVarValue + "_" + tiId + ".txt";
+							toCompareName = StringHandler.removeWhiteSpace(toCompareName);
+							File toCompare = new File(dir.getAbsolutePath() + File.separator + toCompareName);
+							if (!toCompare.exists()) {
+								toCompare.createNewFile();
+							}
+							FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
+
+							textsMatch = isContentOfFilesEqual(toAttach, toCompare, patterns, encodedPatterns, subject);
+							if (textsMatch) {
+								LOGGER.info("Email with subject '" + subject + "' is already attached to proc. inst. ID: " + procInstId + ", sub-proc. inst ID: " + subProcInstId);
+								message.setParsed(true);
+								foundExisting = true;
+								return true;
+							} else {
+								String msg = "Wrote files " + toAttach.getName() + " and " + toCompare.getName() + " to " + dir.getAbsolutePath() +
+										". Content is not the same of these files while subject ('" + subject +
+										"'), sender address and name are the same. " +
+										"Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId;
+								LOGGER.warning(msg);
+								if (settings.getBoolean("bpm.email_send_comparisons", false)) {
+									CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
+								}
+							}
+						} catch (Exception e) {
+							e.printStackTrace();
 						}
 					}
 				}
 			}
 
 			if (foundExisting) {
-				LOGGER.info("Email with subject '" + subject + "' is already attached to sub-proc. inst. ID: " + subProcInstId);
+				LOGGER.info("Email with subject '" + subject + "' is already attached to proc. inst. ID: " + procInstId + ", sub-proc. inst IDs: " + subProcInstIds);
 				message.setParsed(true);
 				return true;
 			} else {
 				LOGGER.info("Email with subject '" + subject + "' (comparisons:\n" + subjectsComparisons + ")\nsender: '" + senderPersonalName +
 						"' (comparisons:\n" + fromComparisons + ")\nfrom: '" + fromAddress + "' (comparisons:\n" + addressesComparisons +
-						")\n is not attached to sub-proc. inst. ID: " + subProcInstId + ", need to attach it");
+						")\n is not attached to proc. inst. ID: " + procInstId + ", sub-proc. inst IDs: " + subProcInstIds + ", need to attach it");
 			}
 			if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
 				return true;
+			}
+
+			List<Long> fetchEmailsSubProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
+					procInstId,
+					EmailMessagesAttacher.email_fetch_process_name
+			);
+			if (ListUtil.isEmpty(fetchEmailsSubProcInstIds)) {
+				return false;
 			}
 
 			Map<String, InputStream> attachments = message.getAttachments();
@@ -385,7 +388,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				attachments = new HashMap<String, InputStream>(1);
 			}
 			if (doAttachEmailToProcess(
-					subProcInstId,
+					fetchEmailsSubProcInstIds.get(0),
 					subject,
 					text,
 					senderPersonalName,
@@ -401,21 +404,26 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return true;
 	}
 
-	private boolean doCompareLines(String identifier, List<String> lines1, List<String> lines2) {
-		if (ListUtil.isEmpty(lines1) || ListUtil.isEmpty(lines2)) {
+	private boolean isContentOfLinesEqual(String identifier, List<String> lines1, List<String> lines2) {
+		if (ListUtil.isEmpty(lines1)) {
+			LOGGER.warning("Lines1 are not provided");
+			return false;
+		}
+		if (ListUtil.isEmpty(lines2)) {
+			LOGGER.warning("Lines2 are not provided");
 			return false;
 		}
 
 		boolean numberOfLinesIsTheSame = lines1.size() == lines2.size();
 		if (!numberOfLinesIsTheSame) {
+			LOGGER.warning("Number of lines is not the same: lines1: " + lines1.size() + " vs. lines2: " + lines2.size());
 			return false;
 		}
 
 		for (int i = 0; i < lines1.size(); i++) {
 			String line1 = lines1.get(i);
 			String line2 = lines2.get(i);
-			boolean equals = line1.equals(line2);
-			if (!equals) {
+			if (!line1.equals(line2)) {
 				LOGGER.warning("Line number: " + i + ": 'Line 1' (length: " + line1.length() + "):\n'" + line1+ "'\n'Line 2' (length: " + line2.length() +
 						"):\n'" + line2 + "'\n. They are not equal. Identifier: " + identifier);
 				return false;
@@ -424,7 +432,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return true;
 	}
 
-	private boolean isTheSameContentOfFiles(File file1, File file2, String[] patterns, String[] encodedPatterns, String identifier) {
+	private boolean isContentOfFilesEqual(File file1, File file2, String[] patterns, String[] encodedPatterns, String identifier) {
 		boolean sameContent = false;
 		BufferedReader bfr1 = null, bfr2 = null;
 		List<String> content1 = null, content2 = null;
@@ -445,8 +453,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				content2.add(content);
 			}
 
-			sameContent = doCompareLines(identifier, content1, content2);
-			return sameContent;
+			return isContentOfLinesEqual(identifier, content1, content2);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error while comparing content of files " + file1 + " and " + file2, e);
 		} finally {
