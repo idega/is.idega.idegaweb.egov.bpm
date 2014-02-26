@@ -263,12 +263,16 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 
 			boolean foundExisting = false;
+			Map<String, Boolean> 	subjectsComparisons = new HashMap<String, Boolean>(),
+									fromComparisons = new HashMap<String, Boolean>(),
+									addressesComparisons = new HashMap<String, Boolean>();
 			if (MapUtil.isEmpty(groupedVars)) {
 				if (!ListUtil.isEmpty(vars)) {
 					LOGGER.warning("There are no grouped variables for " + vars);
 				}
 			} else {
 				String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
+				String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
 
 				for (Iterator<Long> taskInstIdsIter = groupedVars.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
 					Long tiId = taskInstIdsIter.next();
@@ -286,14 +290,22 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 					boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) && subject.equals(subjectVarValue);
 					boolean textsMatch = !StringUtil.isEmpty(textVarValue) && text.equals(textVarValue);
-					boolean fromMatch = !StringUtil.isEmpty(fromVarValue) && senderPersonalName.equals(fromVarValue);
+					boolean fromMatch = fromVarValue == null && senderPersonalName == null ||
+							!StringUtil.isEmpty(fromVarValue) && senderPersonalName.equals(fromVarValue);
 					boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) && fromAddress.equals(fromAddressVarValue);
 					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
 						message.setParsed(true);
 						foundExisting = true;
 						return true;
 					} else {
+						subjectsComparisons.put(subjectVarValue, subjectsMatch);
+						if (fromVarValue != null) {
+							fromComparisons.put(fromVarValue, fromMatch);
+						}
+						addressesComparisons.put(fromAddressVarValue, addressesMatch);
+
 						if (subjectsMatch && fromMatch && addressesMatch) {
+							LOGGER.info("Will compare texts again, because all other fields match. Sub-proc. inst. ID: " + subProcInstId);
 							//	Will write texts to files and will compare content of these files
 							try {
 								File dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "bpm_emails");
@@ -317,8 +329,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 								}
 								FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
 
-								textsMatch = isTheSameContentOfFiles(toAttach, toCompare, patterns, subject);
+								textsMatch = isTheSameContentOfFiles(toAttach, toCompare, patterns, encodedPatterns, subject);
 								if (textsMatch) {
+									LOGGER.info("Email with subject '" + subject + "' is already attached to sub-proc. inst. ID: " + subProcInstId);
 									message.setParsed(true);
 									foundExisting = true;
 									return true;
@@ -328,7 +341,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 											"'), sender address and name are the same. " +
 											"Sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId;
 									LOGGER.warning(msg);
-									CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
+									if (settings.getBoolean("bpm.email_send_comparisons", false)) {
+										CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
+									}
 								}
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -342,6 +357,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				LOGGER.info("Email with subject '" + subject + "' is already attached to sub-proc. inst. ID: " + subProcInstId);
 				message.setParsed(true);
 				return true;
+			} else {
+				LOGGER.info("Email with subject '" + subject + "' (comparisons:\n" + subjectsComparisons + ")\nsender: '" + senderPersonalName +
+						"' (comparisons:\n" + fromComparisons + ")\nfrom: '" + fromAddress + "' (comparisons:\n" + addressesComparisons +
+						")\n is not attached to sub-proc. inst. ID: " + subProcInstId + ", need to attach it");
 			}
 			if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
 				return true;
@@ -383,7 +402,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String line2 = lines2.get(i);
 			boolean equals = line1.equals(line2);
 			if (!equals) {
-				LOGGER.warning("Line number: " + i + ". 'Line 1' (length: " + line1.length() + "):\n'" + line1+ "'\n'Line 2' (length: " + line2.length() +
+				LOGGER.warning("Line number: " + i + ": 'Line 1' (length: " + line1.length() + "):\n'" + line1+ "'\n'Line 2' (length: " + line2.length() +
 						"):\n'" + line2 + "'\n. They are not equal. Identifier: " + identifier);
 				return false;
 			}
@@ -391,7 +410,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return true;
 	}
 
-	private boolean isTheSameContentOfFiles(File file1, File file2, String[] patterns, String identifier) {
+	private boolean isTheSameContentOfFiles(File file1, File file2, String[] patterns, String[] encodedPatterns, String identifier) {
 		boolean sameContent = false;
 		BufferedReader bfr1 = null, bfr2 = null;
 		List<String> content1 = null, content2 = null;
@@ -401,22 +420,14 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String content = null;
 			content1 = new ArrayList<String>();
 			while ((content = bfr1.readLine()) != null) {
-				if (!ArrayUtil.isEmpty(patterns)) {
-					for (String pattern: patterns) {
-						content = StringHandler.replace(content, pattern, CoreConstants.EMPTY);
-					}
-				}
+				content = getRidOfInvalidSymbols(content, patterns, encodedPatterns);
 				content1.add(content);
 			}
 
 			bfr2 = new BufferedReader(new FileReader(file2));
 			content2 = new ArrayList<String>();
 			while ((content = bfr2.readLine()) != null) {
-				if (!ArrayUtil.isEmpty(patterns)) {
-					for (String pattern: patterns) {
-						content = StringHandler.replace(content, pattern, CoreConstants.EMPTY);
-					}
-				}
+				content = getRidOfInvalidSymbols(content, patterns, encodedPatterns);
 				content2.add(content);
 			}
 
@@ -441,6 +452,25 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			IOUtil.close(bfr2);
 		}
 		return false;
+	}
+
+	private String getRidOfInvalidSymbols(String content, String[] patterns, String[] encodedPatterns) {
+		if (content == null || ArrayUtil.isEmpty(patterns)) {
+			return content;
+		}
+
+		String tmp = content;
+		for (String pattern: patterns) {
+			content = StringHandler.replace(content, pattern, CoreConstants.EMPTY);
+		}
+		if (tmp.equals(content)) {
+			String encoded = StringConverterUtility.saveConvert(content, false);
+			for (String encodedPattern: encodedPatterns) {
+				encoded = StringHandler.replace(encoded, CoreConstants.BACK_SLASH + encodedPattern, CoreConstants.EMPTY);
+			}
+			content = StringConverterUtility.loadConvert(encoded);
+		}
+		return content;
 	}
 
 	@Transactional
@@ -471,6 +501,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					// taking here view for new task instance
 					long tiId = ti.getId();
 					View view = getBpmFactory().takeView(tiId, false, null);
+					if (view == null) {
+						return Boolean.FALSE;
+					}
 
 					long pdId = ti.getProcessInstance().getProcessDefinition().getId();
 
@@ -479,7 +512,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 					TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
 					taskInstance.submit(emailViewSubmission, false);
-					LOGGER.info("Task instance ID for email message to attach: " + tiId + ". View: " + view + "\nSubmitted task instance " +
+					LOGGER.info("Task instance ID for email message to attach: " + tiId + "\nSubmitted task instance " +
 							taskInstance.getTaskInstanceId() + " with data from email message (sender: " + fromAddress +
 							", subject: " + subject + ") for process instance: " + taskInstance.getProcessInstanceW().getProcessInstanceId());
 
