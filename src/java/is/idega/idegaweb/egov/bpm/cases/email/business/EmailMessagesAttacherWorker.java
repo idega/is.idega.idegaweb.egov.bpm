@@ -365,7 +365,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			}
 		} finally {
 			if (foundExisting) {
-				LOGGER.info("Email with subject '" + subject + "' is already attached to proc. inst. ID: " + procInstId + ", sub-proc. inst IDs: " + subProcInstIds);
 				message.setParsed(true);
 				return true;
 			} else {
