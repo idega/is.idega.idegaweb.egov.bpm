@@ -81,8 +81,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	private BPMContext idegaJbpmContext;
 	@Autowired
 	private BPMFactory bpmFactory;
-	@Autowired
-	private VariableInstanceQuerier variablesQuerier;
 
 	private ApplicationEmailEvent emailEvent;
 
