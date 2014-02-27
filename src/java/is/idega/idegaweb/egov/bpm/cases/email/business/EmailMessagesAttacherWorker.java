@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,8 +47,6 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
-import com.idega.jbpm.bean.VariableInstanceInfo;
-import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -163,43 +160,72 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
-	private String getValue(VariableInstanceInfo var) {
-		if (var == null) {
+	private Map<Long, Map<Long, Map<String, String>>> getEmailsValues(final List<Long> subProcInstIds, final List<String> names) {
+		if (ListUtil.isEmpty(subProcInstIds) || ListUtil.isEmpty(names)) {
 			return null;
 		}
-		Serializable value = var.getValue();
-		if (value == null) {
-			return null;
+
+		//	Proc. inst. ID -> task inst. ID -> name -> value
+		Map<Long, Map<Long, Map<String, String>>> results = new HashMap<Long, Map<Long, Map<String, String>>>();
+		for (final Long subProcInstId: subProcInstIds) {
+			Map<Long, Map<String, String>> dataForSubProcInst = getIdegaJbpmContext().execute(new JbpmCallback() {
+				@Override
+				public Map<Long, Map<String, String>> doInJbpm(JbpmContext context) throws JbpmException {
+					ProcessInstance pi = context.getProcessInstance(subProcInstId);
+					@SuppressWarnings("unchecked")
+					Collection<TaskInstance> taskInsances = pi.getTaskMgmtInstance().getTaskInstances();
+					if (ListUtil.isEmpty(taskInsances)) {
+						return null;
+					}
+
+					Map<Long, Map<String, String>> tasksData = new HashMap<Long, Map<String, String>>();
+					for (TaskInstance ti: taskInsances) {
+						Long tiId = ti.getId();
+						for (String name: names) {
+							String value = getVariableValue(context, tiId, name);
+							if (StringUtil.isEmpty(value)) {
+								continue;
+							}
+
+							Map<String, String> taskData = tasksData.get(tiId);
+							if (taskData == null) {
+								taskData = new HashMap<String, String>();
+								tasksData.put(tiId, taskData);
+							}
+							taskData.put(name, value);
+						}
+					}
+					return tasksData;
+				}
+			});
+			if (MapUtil.isEmpty(dataForSubProcInst)) {
+				continue;
+			}
+
+			results.put(subProcInstId, dataForSubProcInst);
 		}
-		return value.toString();
+
+		return results;
 	}
 
-	private String getTextValue(IWMainApplicationSettings settings, final Long tiId) {
-		String value = getIdegaJbpmContext().execute(new JbpmCallback() {
+	private String getVariableValue(JbpmContext context, Long tiId, String name) {
+		TaskInstance ti = context.getTaskInstance(tiId);
+		Object value = ti.getVariableLocally(name);
+		if (value instanceof String) {
+			return (String) value;
+		}
 
-			@Override
-			public String doInJbpm(JbpmContext context) throws JbpmException {
-				TaskInstance ti = context.getTaskInstance(tiId);
-				Object value = ti.getVariableLocally(BPMConstants.VAR_TEXT);
-				if (value instanceof String) {
-					return (String) value;
-				}
+		value = ti.getVariable(name);
+		if (value instanceof String) {
+			return (String) value;
+		}
 
-				value = ti.getVariable(BPMConstants.VAR_TEXT);
-				if (value instanceof String) {
-					return (String) value;
-				}
+		VariableInstance variable = ti.getVariableInstance(name);
+		if (variable instanceof StringInstance) {
+			return (String) ((StringInstance) variable).getValue();
+		}
 
-				VariableInstance variable = ti.getVariableInstance(BPMConstants.VAR_TEXT);
-				if (variable instanceof StringInstance) {
-					return (String) ((StringInstance) variable).getValue();
-				}
-
-				return null;
-			}
-		});
-
-		return value;
+		return null;
 	}
 
 	public boolean doAttachMessageIfNeeded(BPMEmailMessage message) {
@@ -237,128 +263,103 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		String senderPersonalName = message.getSenderName();
 		String fromAddress = message.getFromAddress();
 
-		Collection<VariableInstanceInfo> vars = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(
-				Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS),
+		//	Proc. inst. ID -> task inst. ID -> variable name -> variable value
+		Map<Long, Map<Long, Map<String, String>>> groupedVars = getEmailsValues(
 				subProcInstIds,
-				true,	//	Check task instance
-				false,	//	Add empty variables
-				false	//	Mirrow
+				Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS)
 		);
-		Map<Long, Map<String, VariableInstanceInfo>> groupedVars = new HashMap<Long, Map<String,VariableInstanceInfo>>();
-		if (ListUtil.isEmpty(vars)) {
-			LOGGER.info("Nothing found in database for sub-proc. inst. IDs: " + subProcInstIds + ". Main proc. inst. ID: " + procInstId);
-		} else {
-			for (VariableInstanceInfo var: vars) {
-				if (var == null) {
-					continue;
-				}
-				String name = var.getName();
-				if (StringUtil.isEmpty(name)) {
-					continue;
-				}
-				Long tiId = var.getTaskInstanceId();
-				if (tiId == null) {
-					continue;
-				}
 
-				Map<String, VariableInstanceInfo> taskVars = groupedVars.get(tiId);
-				if (taskVars == null) {
-					taskVars = new HashMap<String, VariableInstanceInfo>();
-					groupedVars.put(tiId, taskVars);
-				}
-
-				taskVars.put(name, var);
-			}
+		if (MapUtil.isEmpty(groupedVars)) {
+			return true;
 		}
 
 		boolean foundExisting = false;
 		Map<String, Boolean> 	subjectsComparisons = new HashMap<String, Boolean>(),
 								fromComparisons = new HashMap<String, Boolean>(),
 								addressesComparisons = new HashMap<String, Boolean>();
-		if (MapUtil.isEmpty(groupedVars)) {
-			if (!ListUtil.isEmpty(vars)) {
-				LOGGER.warning("There are no grouped variables for " + vars);
-			}
-			return true;
-		}
 
 		String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
 		String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
 		try {
-			for (Iterator<Long> taskInstIdsIter = groupedVars.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
-				Long tiId = taskInstIdsIter.next();
-				Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
-
-				String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
-
-				String textVarValue = getTextValue(settings, tiId);
-				if (textVarValue == null) {
-					textVarValue = getValue(existingValues.get(BPMConstants.VAR_TEXT));
+			for (Iterator<Long> subProcInstIdsIter = groupedVars.keySet().iterator(); (subProcInstIdsIter.hasNext() && !foundExisting);) {
+				Long subProcInstId = subProcInstIdsIter.next();
+				Map<Long, Map<String, String>> tasksVariables = groupedVars.get(subProcInstId);
+				if (MapUtil.isEmpty(tasksVariables)) {
+					continue;
 				}
 
-				String fromVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM));
-				String fromAddressVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM_ADDRESS));
-
-				boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) && subject.equals(subjectVarValue);
-				boolean textsMatch = !StringUtil.isEmpty(textVarValue) && text.equals(textVarValue);
-				boolean fromMatch = fromVarValue == null && senderPersonalName == null ||
-						!StringUtil.isEmpty(fromVarValue) && senderPersonalName.equals(fromVarValue);
-				boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) && fromAddress.equals(fromAddressVarValue);
-				if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
-					message.setParsed(true);
-					foundExisting = true;
-					return true;
-				} else {
-					subjectsComparisons.put(subjectVarValue, subjectsMatch);
-					if (fromVarValue != null) {
-						fromComparisons.put(fromVarValue, fromMatch);
+				for (Iterator<Long> taskInstIdsIter = tasksVariables.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
+					Long tiId = taskInstIdsIter.next();
+					Map<String, String> existingValues = tasksVariables.get(tiId);
+					if (MapUtil.isEmpty(existingValues)) {
+						continue;
 					}
-					addressesComparisons.put(fromAddressVarValue, addressesMatch);
 
-					if (subjectsMatch && fromMatch && addressesMatch) {
-						Long subProcInstId = existingValues.values().iterator().next().getProcessInstanceId();
-						LOGGER.info("Will compare texts again for '" + subject + "', because all other fields match. Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId);
-						//	Will write texts to files and will compare content of these files
-						try {
-							File dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "bpm_emails");
-							if (!dir.exists()) {
-								dir.mkdir();
-							}
+					String subjectVarValue = existingValues.get(BPMConstants.VAR_SUBJECT);
+					String textVarValue = existingValues.get(BPMConstants.VAR_TEXT);
+					String fromVarValue = existingValues.get(BPMConstants.VAR_FROM);
+					String fromAddressVarValue = existingValues.get(BPMConstants.VAR_FROM_ADDRESS);
 
-							String toAttachName = "to_attach_" + subject + "_" + tiId + ".txt";
-							toAttachName = StringHandler.removeWhiteSpace(toAttachName);
-							File toAttach = new File(dir.getAbsolutePath() + File.separator + toAttachName);
-							if (!toAttach.exists()) {
-								toAttach.createNewFile();
-							}
-							FileUtil.streamToFile(StringHandler.getStreamFromString(text), toAttach);
+					boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) && subject.equals(subjectVarValue);
+					boolean textsMatch = !StringUtil.isEmpty(textVarValue) && text.equals(textVarValue);
+					boolean fromMatch = (fromVarValue == null && senderPersonalName == null) ||
+							(!StringUtil.isEmpty(fromVarValue) && !StringUtil.isEmpty(senderPersonalName) && senderPersonalName.equals(fromVarValue));
+					boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) && fromAddress.equals(fromAddressVarValue);
+					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
+						message.setParsed(true);
+						foundExisting = true;
+						return true;
+					} else {
+						subjectsComparisons.put(tiId + "_:_ '" + subjectVarValue + "'", subjectsMatch);
+						if (fromVarValue != null) {
+							fromComparisons.put(tiId + "_:_ '" + fromVarValue + "'", fromMatch);
+						}
+						addressesComparisons.put(tiId + "_:_ '" + fromAddressVarValue + "'", addressesMatch);
 
-							String toCompareName = "to_compare_" + subjectVarValue + "_" + tiId + ".txt";
-							toCompareName = StringHandler.removeWhiteSpace(toCompareName);
-							File toCompare = new File(dir.getAbsolutePath() + File.separator + toCompareName);
-							if (!toCompare.exists()) {
-								toCompare.createNewFile();
-							}
-							FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
-
-							textsMatch = isContentOfFilesEqual(toAttach, toCompare, patterns, encodedPatterns, subject);
-							if (textsMatch) {
-								LOGGER.info("Email with subject '" + subject + "' is already attached to proc. inst. ID: " + procInstId + ", sub-proc. inst ID: " + subProcInstId + ", no need to attach it");
-								message.setParsed(true);
-								foundExisting = true;
-								return true;
-							} else {
-								String msg = "Wrote files " + toAttach.getName() + " and " + toCompare.getName() + " to " + dir.getAbsolutePath() +
-										". Content is not the same of these files while subject ('" + subject +
-										"'), sender address and name are the same. " +
-										"Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId;
-								LOGGER.warning(msg);
-								if (settings.getBoolean("bpm.email_send_comparisons", false)) {
-									CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
+						if (subjectsMatch && fromMatch && addressesMatch) {
+							LOGGER.info("Will compare texts again for '" + subject + "', because all other fields match. Proc. inst. ID: " +
+									procInstId + ", sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId);
+							//	Will write texts to files and will compare content of these files
+							try {
+								File dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "bpm_emails");
+								if (!dir.exists()) {
+									dir.mkdir();
 								}
+
+								String toAttachName = "to_attach_" + subject + "_" + tiId + ".txt";
+								toAttachName = StringHandler.removeWhiteSpace(toAttachName);
+								File toAttach = new File(dir.getAbsolutePath() + File.separator + toAttachName);
+								if (!toAttach.exists()) {
+									toAttach.createNewFile();
+								}
+								FileUtil.streamToFile(StringHandler.getStreamFromString(text), toAttach);
+
+								String toCompareName = "to_compare_" + subjectVarValue + "_" + tiId + ".txt";
+								toCompareName = StringHandler.removeWhiteSpace(toCompareName);
+								File toCompare = new File(dir.getAbsolutePath() + File.separator + toCompareName);
+								if (!toCompare.exists()) {
+									toCompare.createNewFile();
+								}
+								FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
+
+								textsMatch = isContentOfFilesEqual(toAttach, toCompare, patterns, encodedPatterns, subject);
+								if (textsMatch) {
+									message.setParsed(true);
+									foundExisting = true;
+									return true;
+								} else {
+									String msg = "Wrote files " + toAttach.getName() + " and " + toCompare.getName() + " to " + dir.getAbsolutePath() +
+											". Content is not the same of these files while subject ('" + subject +
+											"'), sender address and name are the same. " +
+											"Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId;
+									LOGGER.warning(msg);
+									if (settings.getBoolean("bpm.email_send_comparisons", false)) {
+										CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
+									}
+								}
+							} catch (Exception e) {
+								e.printStackTrace();
 							}
-						} catch (Exception e) {
-							e.printStackTrace();
 						}
 					}
 				}
