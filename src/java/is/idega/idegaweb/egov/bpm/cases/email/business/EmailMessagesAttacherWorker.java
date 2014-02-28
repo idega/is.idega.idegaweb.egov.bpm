@@ -76,6 +76,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 	private static final Logger LOGGER = Logger.getLogger(EmailMessagesAttacherWorker.class.getName());
 
+	private static final String FETCH_EMAILS_TASK_NAME = "Email";
+
 	@Autowired
 	private BPMContext idegaJbpmContext;
 	@Autowired
@@ -114,6 +116,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			LOGGER.log(Level.SEVERE, "Error getting beans of type: " + EmailsParsersProvider.class, e);
 		}
 		if (parsersProviders == null || parsersProviders.isEmpty()) {
+			return;
+		}
+
+		if (!IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
 			return;
 		}
 
@@ -158,44 +164,36 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
-	private Map<Long, Map<Long, Map<String, String>>> getEmailsValues(final List<Long> subProcInstIds, final List<String> names) {
+	private Map<Long, Map<Long, Map<String, String>>> getEmailsValues(List<Long> subProcInstIds, List<String> names) {
 		if (ListUtil.isEmpty(subProcInstIds) || ListUtil.isEmpty(names)) {
 			return null;
 		}
 
 		//	Proc. inst. ID -> task inst. ID -> name -> value
 		Map<Long, Map<Long, Map<String, String>>> results = new HashMap<Long, Map<Long, Map<String, String>>>();
-		for (final Long subProcInstId: subProcInstIds) {
-			Map<Long, Map<String, String>> dataForSubProcInst = getIdegaJbpmContext().execute(new JbpmCallback() {
-				@Override
-				public Map<Long, Map<String, String>> doInJbpm(JbpmContext context) throws JbpmException {
-					ProcessInstance pi = context.getProcessInstance(subProcInstId);
-					@SuppressWarnings("unchecked")
-					Collection<TaskInstance> taskInsances = pi.getTaskMgmtInstance().getTaskInstances();
-					if (ListUtil.isEmpty(taskInsances)) {
-						return null;
+		for (Long subProcInstId: subProcInstIds) {
+			List<Long> tiIds = getBpmFactory().getBPMDAO().getIdsOfFinishedTaskInstancesForTask(subProcInstId, FETCH_EMAILS_TASK_NAME);
+			if (ListUtil.isEmpty(tiIds)) {
+				continue;
+			}
+
+			Map<Long, Map<String, String>> dataForSubProcInst = new HashMap<Long, Map<String, String>>();
+			for (Long tiId: tiIds) {
+				for (String name: names) {
+					String value = getVariableValue(tiId, name);
+					if (StringUtil.isEmpty(value)) {
+						continue;
 					}
 
-					Map<Long, Map<String, String>> tasksData = new HashMap<Long, Map<String, String>>();
-					for (TaskInstance ti: taskInsances) {
-						Long tiId = ti.getId();
-						for (String name: names) {
-							String value = getVariableValue(context, tiId, name);
-							if (StringUtil.isEmpty(value)) {
-								continue;
-							}
-
-							Map<String, String> taskData = tasksData.get(tiId);
-							if (taskData == null) {
-								taskData = new HashMap<String, String>();
-								tasksData.put(tiId, taskData);
-							}
-							taskData.put(name, value);
-						}
+					Map<String, String> taskData = dataForSubProcInst.get(tiId);
+					if (taskData == null) {
+						taskData = new HashMap<String, String>();
+						dataForSubProcInst.put(tiId, taskData);
 					}
-					return tasksData;
+					taskData.put(name, value);
 				}
-			});
+			}
+
 			if (MapUtil.isEmpty(dataForSubProcInst)) {
 				continue;
 			}
@@ -206,24 +204,29 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return results;
 	}
 
-	private String getVariableValue(JbpmContext context, Long tiId, String name) {
-		TaskInstance ti = context.getTaskInstance(tiId);
-		Object value = ti.getVariableLocally(name);
-		if (value instanceof String) {
-			return (String) value;
-		}
+	private String getVariableValue(final Long tiId, final String name) {
+		return getIdegaJbpmContext().execute(new JbpmCallback() {
+			@Override
+			public String doInJbpm(JbpmContext context) throws JbpmException {
+				TaskInstance ti = context.getTaskInstance(tiId);
+				Object value = ti.getVariableLocally(name);
+				if (value instanceof String) {
+					return (String) value;
+				}
 
-		value = ti.getVariable(name);
-		if (value instanceof String) {
-			return (String) value;
-		}
+				value = ti.getVariable(name);
+				if (value instanceof String) {
+					return (String) value;
+				}
 
-		VariableInstance variable = ti.getVariableInstance(name);
-		if (variable instanceof StringInstance) {
-			return (String) ((StringInstance) variable).getValue();
-		}
+				VariableInstance variable = ti.getVariableInstance(name);
+				if (variable instanceof StringInstance) {
+					return (String) ((StringInstance) variable).getValue();
+				}
 
-		return null;
+				return null;
+			}
+		});
 	}
 
 	public boolean doAttachMessageIfNeeded(BPMEmailMessage message) {
@@ -251,7 +254,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		if (ListUtil.isEmpty(subProcInstIds)) {
 			return false;
 		}
-
 
 		String subject = message.getSubject();
 		String text = message.getBody();
@@ -371,10 +373,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						"' (comparisons:\n" + fromComparisons + ")\nfrom: '" + fromAddress + "' (comparisons:\n" + addressesComparisons +
 						")\n is not attached to proc. inst. ID: " + procInstId + ", sub-proc. inst IDs: " + subProcInstIds + ", need to attach it");
 			}
-		}
-
-		if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
-			return true;
 		}
 
 		List<Long> fetchEmailsSubProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
