@@ -61,7 +61,8 @@ CasesExporter.doExportCases = function(params) {
 				}
 				CasesEngine.doRemoveFromMemory(params.id);
 			}
-		}, errorHandler: function(o1, o2) {
+		},
+		errorHandler: function(o1, o2) {
 			closeAllLoadingMessages();
 			CasesExporter.doShowExportedCases(params);
 			return;

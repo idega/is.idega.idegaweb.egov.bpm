@@ -1952,9 +1952,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		String query = "select distinct c.proc_case_id from BPM_CASES_PROCESSINSTANCES b, PROC_CASE c, JBPM_PROCESSINSTANCE pi," +
+		String query = "select distinct b.case_id from BPM_CASES_PROCESSINSTANCES b, PROC_CASE c, JBPM_PROCESSINSTANCE pi," +
 				" JBPM_PROCESSDEFINITION pd where pd.name_ = '" + procDefName + "' and pd.id_ = pi.processdefinition_ and" +
-				" pi.id_ = b.process_instance_id";
+				" pi.id_ = b.process_instance_id and c.proc_case_id = b.case_id ";
 		if (!StringUtil.isEmpty(status) && !String.valueOf(-1).equals(status)) {
 			query += " and c.CASE_STATUS ";
 			if (status.indexOf(CoreConstants.COMMA) == -1) {
@@ -1978,13 +1978,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			query += " and c.CREATED <= '" + to.getDateString("yyyy-MM-dd") + "'";
 		}
 
-		query += " and c.proc_case_id = b.case_id";
-
+		long start = System.currentTimeMillis();
 		List<Serializable[]> results = null;
 		try {
 			results = SimpleQuerier.executeQuery(query, 1);
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
+		} finally {
+			if (CoreUtil.isSQLMeasurementOn()) {
+				getLogger().info("Query '" + query + "' was executed in " + (System.currentTimeMillis() - start) + " ms");
+			}
 		}
 		if (ListUtil.isEmpty(results)) {
 			return null;
