@@ -1308,8 +1308,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public AdvancedProperty getExportedCasesToPDF(CasesExportParams params) {
-		getLogger().info("Will export cases by params: " + params);
-
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
 		AdvancedProperty result = new AdvancedProperty(
 				Boolean.FALSE.toString(),
