@@ -104,7 +104,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			return null;
 		}
 
-		return getPDFsAndAttachmentsForCase(null, caseId, true, false);
+		return getPDFsAndAttachmentsForCase(null, caseId, true, true);
 	}
 
 	private List<CasePDF> getPDFsAndAttachmentsForCase(Case theCase, Integer caseId, boolean loadAttachments, boolean switchUser) throws Exception {
