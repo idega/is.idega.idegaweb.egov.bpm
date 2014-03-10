@@ -149,8 +149,10 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 			}
 
 			String appUrl = getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(procDefId);
-			if (StringUtil.isEmpty(appUrl))
+			if (StringUtil.isEmpty(appUrl)) {
+				getLogger().warning("App URL can not be resolved from proc. def. ID: " + procDefId);
 				return true;	//	Error - can not determine
+			}
 
 			ApplicationBusiness appBusiness = getServiceInstance(ApplicationBusiness.class);
 			Collection<Application> apps = appBusiness.getApplicationHome().findAllByApplicationUrl(appUrl);
