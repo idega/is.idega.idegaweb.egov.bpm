@@ -280,6 +280,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
 		String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
+		boolean printComparison = settings.getBoolean("bpm.emails_print_comparison", Boolean.FALSE);
 		try {
 			for (Iterator<Long> subProcInstIdsIter = groupedVars.keySet().iterator(); (subProcInstIdsIter.hasNext() && !foundExisting);) {
 				Long subProcInstId = subProcInstIdsIter.next();
@@ -342,7 +343,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 								}
 								FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
 
-								textsMatch = isContentOfFilesEqual(toAttach, toCompare, patterns, encodedPatterns, subject);
+								textsMatch = isContentOfFilesEqual(toAttach, toCompare, patterns, encodedPatterns, subject, printComparison);
 								if (textsMatch) {
 									message.setParsed(true);
 									foundExisting = true;
@@ -400,7 +401,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return result;
 	}
 
-	private boolean isContentOfLinesEqual(String identifier, List<String> lines1, List<String> lines2) {
+	private boolean isContentOfLinesEqual(String identifier, List<String> lines1, List<String> lines2, boolean printComparison) {
 		if (ListUtil.isEmpty(lines1)) {
 			LOGGER.warning("Lines1 are not provided");
 			return false;
@@ -420,15 +421,17 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String line1 = lines1.get(i);
 			String line2 = lines2.get(i);
 			if (!line1.equals(line2)) {
-				LOGGER.warning("Line number: " + i + ": 'Line 1' (length: " + line1.length() + "):\n'" + line1+ "'\n'Line 2' (length: " + line2.length() +
+				if (printComparison) {
+					LOGGER.warning("Line number: " + i + ": 'Line 1' (length: " + line1.length() + "):\n'" + line1+ "'\n'Line 2' (length: " + line2.length() +
 						"):\n'" + line2 + "'\n. They are not equal. Identifier: " + identifier);
+				}
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private boolean isContentOfFilesEqual(File file1, File file2, String[] patterns, String[] encodedPatterns, String identifier) {
+	private boolean isContentOfFilesEqual(File file1, File file2, String[] patterns, String[] encodedPatterns, String identifier, boolean printComparison) {
 		boolean sameContent = false;
 		BufferedReader bfr1 = null, bfr2 = null;
 		List<String> content1 = null, content2 = null;
@@ -449,7 +452,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				content2.add(content);
 			}
 
-			sameContent = isContentOfLinesEqual(identifier, content1, content2);
+			sameContent = isContentOfLinesEqual(identifier, content1, content2, printComparison);
 			return sameContent;
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error while comparing content of files " + file1 + " and " + file2, e);
@@ -461,7 +464,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				if (file2 != null) {
 					file2.delete();
 				}
-			} else if (content1 != null && content2 != null) {
+			} else if (content1 != null && content2 != null && printComparison) {
 				LOGGER.warning("Content 1 (lines: " + content1.size() + "):\n" + content1 + "\nis not the same as content 2 (lines: " +
 						content2.size() + ")\n" + content2);
 			}
