@@ -33,41 +33,44 @@ CasesExporter.doExportCases = function(params) {
 		dateFrom: from,
 		dateTo: to
 	};
-	CasesEngine.getExportedCasesToPDF(exportParams, {
-		callback: function(result) {
-			closeAllLoadingMessages();
-			if (result == null) {
-				humanMsg.displayMsg('Error', {timeout: 3000});
-				return;
-			}
-			
-			if (result.name != '0' && window.confirm(result.value)) {
-				showLoadingMessage(params.exporting);
-				CasesEngine.doActualExport(params.id, {
-					callback: function(result) {
-						CasesExporter.FINSHED_EXPORT = true;
-						humanMsg.displayMsg(result.value, {timeout: 3000});
-				
-						if (result.id == 'true') {
-							CasesExporter.doShowExportedCases(params);
-						}
-					}
-				});
-				CasesExporter.doFetchStatus(params.id);
-			} else {
+	LazyLoader.loadMultiple(['/dwr/engine.js', '/dwr/interface/CasesEngine.js'], function() {
+		CasesEngine.getExportedCasesToPDF(exportParams, {
+			callback: function(result) {
 				closeAllLoadingMessages();
-				if (result.name == '0') {
-					humanMsg.displayMsg(result.value, {timeout: 3000});
+				if (result == null) {
+					humanMsg.displayMsg('Error', {timeout: 3000});
+					return;
 				}
-				CasesEngine.doRemoveFromMemory(params.id);
-			}
-		}, errorHandler: function(o1, o2) {
-			closeAllLoadingMessages();
-			CasesExporter.doShowExportedCases(params);
-			return;
-		},
-		timeout: 86400000
-	});
+				
+				if (result.name != '0' && window.confirm(result.value)) {
+					showLoadingMessage(params.exporting);
+					CasesEngine.doActualExport(params.id, {
+						callback: function(result) {
+							CasesExporter.FINSHED_EXPORT = true;
+							humanMsg.displayMsg(result.value, {timeout: 3000});
+					
+							if (result.id == 'true') {
+								CasesExporter.doShowExportedCases(params);
+							}
+						}
+					});
+					CasesExporter.doFetchStatus(params.id);
+				} else {
+					closeAllLoadingMessages();
+					if (result.name == '0') {
+						humanMsg.displayMsg(result.value, {timeout: 3000});
+					}
+					CasesEngine.doRemoveFromMemory(params.id);
+				}
+			},
+			errorHandler: function(o1, o2) {
+				closeAllLoadingMessages();
+				CasesExporter.doShowExportedCases(params);
+				return;
+			},
+			timeout: 86400000
+		});
+	}, null);
 }
 
 CasesExporter.doShowExportedCases = function(params) {

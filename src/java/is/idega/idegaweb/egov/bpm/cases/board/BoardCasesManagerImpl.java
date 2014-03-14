@@ -97,7 +97,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	            	"string_financeDescriptionValue",			//	20
 	            	"string_costAndMainTasksGrade",				//	21
 	            	"string_planForFundingGrade",				//	22
-	            	"string_evaluationOfOtherGrantsGrade"		//	23
+	            	"string_evaluationOfOtherGrantsGrade",		//	23
+	            	"string_specialProjectValue",				//	24
+	            	"string_estimatedSaleValue"					//	25
 	 ));
 
 	protected static final Logger LOGGER = Logger.getLogger(BoardCasesManagerImpl.class.getName());
@@ -494,10 +496,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			String caseManagerType
 	) {
 		Collection<Case> allCases = getCaseManager().getCases(
-				Arrays.asList(processName), 
-				null, 
-				caseStatuses, 
-				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null, 
+				Arrays.asList(processName),
+				null,
+				caseStatuses,
+				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null,
 				Arrays.asList(caseManagerType));
 		if (ListUtil.isEmpty(allCases)) {
 			return null;

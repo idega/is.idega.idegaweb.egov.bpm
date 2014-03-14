@@ -7,7 +7,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -42,14 +41,14 @@ import com.idega.block.email.parser.EmailParser;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
+import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
-import com.idega.jbpm.bean.VariableInstanceInfo;
-import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
@@ -77,12 +76,12 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 	private static final Logger LOGGER = Logger.getLogger(EmailMessagesAttacherWorker.class.getName());
 
+	private static final String FETCH_EMAILS_TASK_NAME = "Email";
+
 	@Autowired
 	private BPMContext idegaJbpmContext;
 	@Autowired
 	private BPMFactory bpmFactory;
-	@Autowired
-	private VariableInstanceQuerier variablesQuerier;
 
 	private ApplicationEmailEvent emailEvent;
 
@@ -117,6 +116,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			LOGGER.log(Level.SEVERE, "Error getting beans of type: " + EmailsParsersProvider.class, e);
 		}
 		if (parsersProviders == null || parsersProviders.isEmpty()) {
+			return;
+		}
+
+		if (!IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
 			return;
 		}
 
@@ -161,34 +164,62 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
-	private String getValue(VariableInstanceInfo var) {
-		if (var == null) {
+	private Map<Long, Map<Long, Map<String, String>>> getEmailsValues(List<Long> subProcInstIds, List<String> names) {
+		if (ListUtil.isEmpty(subProcInstIds) || ListUtil.isEmpty(names)) {
 			return null;
 		}
-		Serializable value = var.getValue();
-		if (value == null) {
-			return null;
+
+		//	Proc. inst. ID -> task inst. ID -> name -> value
+		Map<Long, Map<Long, Map<String, String>>> results = new HashMap<Long, Map<Long, Map<String, String>>>();
+		for (Long subProcInstId: subProcInstIds) {
+			List<Long> tiIds = getBpmFactory().getBPMDAO().getIdsOfFinishedTaskInstancesForTask(subProcInstId, FETCH_EMAILS_TASK_NAME);
+			if (ListUtil.isEmpty(tiIds)) {
+				continue;
+			}
+
+			Map<Long, Map<String, String>> dataForSubProcInst = new HashMap<Long, Map<String, String>>();
+			for (Long tiId: tiIds) {
+				for (String name: names) {
+					String value = getVariableValue(tiId, name);
+					if (StringUtil.isEmpty(value)) {
+						continue;
+					}
+
+					Map<String, String> taskData = dataForSubProcInst.get(tiId);
+					if (taskData == null) {
+						taskData = new HashMap<String, String>();
+						dataForSubProcInst.put(tiId, taskData);
+					}
+					taskData.put(name, value);
+				}
+			}
+
+			if (MapUtil.isEmpty(dataForSubProcInst)) {
+				continue;
+			}
+
+			results.put(subProcInstId, dataForSubProcInst);
 		}
-		return value.toString();
+
+		return results;
 	}
 
-	private String getTextValue(IWMainApplicationSettings settings, final Long tiId) {
-		String value = getIdegaJbpmContext().execute(new JbpmCallback<String>() {
-
+	private String getVariableValue(final Long tiId, final String name) {
+		return getIdegaJbpmContext().execute(new JbpmCallback<String>() {
 			@Override
 			public String doInJbpm(JbpmContext context) throws JbpmException {
 				TaskInstance ti = context.getTaskInstance(tiId);
-				Object value = ti.getVariableLocally(BPMConstants.VAR_TEXT);
+				Object value = ti.getVariableLocally(name);
 				if (value instanceof String) {
 					return (String) value;
 				}
 
-				value = ti.getVariable(BPMConstants.VAR_TEXT);
+				value = ti.getVariable(name);
 				if (value instanceof String) {
 					return (String) value;
 				}
 
-				VariableInstance variable = ti.getVariableInstance(BPMConstants.VAR_TEXT);
+				VariableInstance variable = ti.getVariableInstance(name);
 				if (variable instanceof StringInstance) {
 					return (String) ((StringInstance) variable).getValue();
 				}
@@ -196,8 +227,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				return null;
 			}
 		});
-
-		return value;
 	}
 
 	public boolean doAttachMessageIfNeeded(BPMEmailMessage message) {
@@ -205,95 +234,92 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return true;
 		}
 
-		List<Long> subProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
-				message.getProcessInstanceId(),
-				EmailMessagesAttacher.email_fetch_process_name
-		);
+		Long procInstId = message.getProcessInstanceId();
+		if (procInstId == null) {
+			return false;
+		}
+
+		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+
+		List<Long> subProcInstIds = null;
+		if (settings.getBoolean("bpm.email_find_all_sub_proc", Boolean.TRUE)) {
+			ProcessInstanceW piW = getBpmFactory().getProcessInstanceW(procInstId);
+			subProcInstIds = piW.getIdsOfSubProcesses(procInstId);
+		} else {
+			subProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
+					procInstId,
+					EmailMessagesAttacher.email_fetch_process_name
+			);
+		}
 		if (ListUtil.isEmpty(subProcInstIds)) {
 			return false;
 		}
 
-		for (Long subProcInstId: subProcInstIds) {
-			if (subProcInstId == null) {
-				continue;
-			}
+		String subject = message.getSubject();
+		String text = message.getBody();
+		if (text == null) {
+			text = CoreConstants.EMPTY;
+		}
+		String senderPersonalName = message.getSenderName();
+		String fromAddress = message.getFromAddress();
 
-			String subject = message.getSubject();
-			String text = message.getBody();
-			if (text == null) {
-				text = CoreConstants.EMPTY;
-			}
-			String senderPersonalName = message.getSenderName();
-			String fromAddress = message.getFromAddress();
+		//	Proc. inst. ID -> task inst. ID -> variable name -> variable value
+		Map<Long, Map<Long, Map<String, String>>> groupedVars = getEmailsValues(
+				subProcInstIds,
+				Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS)
+		);
 
-			Collection<VariableInstanceInfo> vars = variablesQuerier.getVariablesByProcessInstanceIdAndVariablesNames(
-					Arrays.asList(BPMConstants.VAR_SUBJECT, BPMConstants.VAR_TEXT, BPMConstants.VAR_FROM, BPMConstants.VAR_FROM_ADDRESS),
-					Arrays.asList(subProcInstId),
-					true,	//	Check task instance
-					false,	//	Add empty variables
-					false	//	Mirrow
-			);
-			Map<Long, Map<String, VariableInstanceInfo>> groupedVars = new HashMap<Long, Map<String,VariableInstanceInfo>>();
-			if (ListUtil.isEmpty(vars)) {
-				LOGGER.info("Nothing found in database for proc. inst.: " + subProcInstId);
-			} else {
-				for (VariableInstanceInfo var: vars) {
-					if (var == null) {
-						continue;
-					}
-					String name = var.getName();
-					if (StringUtil.isEmpty(name)) {
-						continue;
-					}
-					Long tiId = var.getTaskInstanceId();
-					if (tiId == null) {
-						continue;
-					}
+		if (MapUtil.isEmpty(groupedVars)) {
+			return true;
+		}
 
-					Map<String, VariableInstanceInfo> taskVars = groupedVars.get(tiId);
-					if (taskVars == null) {
-						taskVars = new HashMap<String, VariableInstanceInfo>();
-						groupedVars.put(tiId, taskVars);
-					}
+		boolean foundExisting = false;
+		Map<String, Boolean> 	subjectsComparisons = new HashMap<String, Boolean>(),
+								fromComparisons = new HashMap<String, Boolean>(),
+								addressesComparisons = new HashMap<String, Boolean>();
 
-					taskVars.put(name, var);
+		String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
+		String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
+		boolean printComparison = settings.getBoolean("bpm.emails_print_comparison", Boolean.FALSE);
+		try {
+			for (Iterator<Long> subProcInstIdsIter = groupedVars.keySet().iterator(); (subProcInstIdsIter.hasNext() && !foundExisting);) {
+				Long subProcInstId = subProcInstIdsIter.next();
+				Map<Long, Map<String, String>> tasksVariables = groupedVars.get(subProcInstId);
+				if (MapUtil.isEmpty(tasksVariables)) {
+					continue;
 				}
-			}
 
-			IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
-
-			boolean foundExisting = false;
-			if (MapUtil.isEmpty(groupedVars)) {
-				if (!ListUtil.isEmpty(vars)) {
-					LOGGER.warning("There are no grouped variables for " + vars);
-				}
-			} else {
-				String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
-
-				for (Iterator<Long> taskInstIdsIter = groupedVars.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
+				for (Iterator<Long> taskInstIdsIter = tasksVariables.keySet().iterator(); (taskInstIdsIter.hasNext() && !foundExisting);) {
 					Long tiId = taskInstIdsIter.next();
-					Map<String, VariableInstanceInfo> existingValues = groupedVars.get(tiId);
-
-					String subjectVarValue = getValue(existingValues.get(BPMConstants.VAR_SUBJECT));
-
-					String textVarValue = getTextValue(settings, tiId);
-					if (textVarValue == null) {
-						textVarValue = getValue(existingValues.get(BPMConstants.VAR_TEXT));
+					Map<String, String> existingValues = tasksVariables.get(tiId);
+					if (MapUtil.isEmpty(existingValues)) {
+						continue;
 					}
 
-					String fromVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM));
-					String fromAddressVarValue = getValue(existingValues.get(BPMConstants.VAR_FROM_ADDRESS));
+					String subjectVarValue = existingValues.get(BPMConstants.VAR_SUBJECT);
+					String textVarValue = existingValues.get(BPMConstants.VAR_TEXT);
+					String fromVarValue = existingValues.get(BPMConstants.VAR_FROM);
+					String fromAddressVarValue = existingValues.get(BPMConstants.VAR_FROM_ADDRESS);
 
 					boolean subjectsMatch = !StringUtil.isEmpty(subjectVarValue) && subject.equals(subjectVarValue);
 					boolean textsMatch = !StringUtil.isEmpty(textVarValue) && text.equals(textVarValue);
-					boolean fromMatch = !StringUtil.isEmpty(fromVarValue) && senderPersonalName.equals(fromVarValue);
+					boolean fromMatch = (fromVarValue == null && senderPersonalName == null) ||
+							(!StringUtil.isEmpty(fromVarValue) && !StringUtil.isEmpty(senderPersonalName) && senderPersonalName.equals(fromVarValue));
 					boolean addressesMatch = !StringUtil.isEmpty(fromAddressVarValue) && fromAddress.equals(fromAddressVarValue);
 					if (subjectsMatch && textsMatch && fromMatch && addressesMatch) {
 						message.setParsed(true);
 						foundExisting = true;
 						return true;
 					} else {
+						subjectsComparisons.put(tiId + "_:_ '" + subjectVarValue + "'", subjectsMatch);
+						if (fromVarValue != null) {
+							fromComparisons.put(tiId + "_:_ '" + fromVarValue + "'", fromMatch);
+						}
+						addressesComparisons.put(tiId + "_:_ '" + fromAddressVarValue + "'", addressesMatch);
+
 						if (subjectsMatch && fromMatch && addressesMatch) {
+							LOGGER.info("Will compare texts again for '" + subject + "', because all other fields match. Proc. inst. ID: " +
+									procInstId + ", sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId);
 							//	Will write texts to files and will compare content of these files
 							try {
 								File dir = new File(System.getProperty("java.io.tmpdir") + File.separator + "bpm_emails");
@@ -317,7 +343,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 								}
 								FileUtil.streamToFile(StringHandler.getStreamFromString(textVarValue), toCompare);
 
-								textsMatch = isTheSameContentOfFiles(toAttach, toCompare, patterns, subject);
+								textsMatch = isContentOfFilesEqual(toAttach, toCompare, patterns, encodedPatterns, subject, printComparison);
 								if (textsMatch) {
 									message.setParsed(true);
 									foundExisting = true;
@@ -326,9 +352,11 @@ public class EmailMessagesAttacherWorker implements Runnable {
 									String msg = "Wrote files " + toAttach.getName() + " and " + toCompare.getName() + " to " + dir.getAbsolutePath() +
 											". Content is not the same of these files while subject ('" + subject +
 											"'), sender address and name are the same. " +
-											"Sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId;
+											"Proc. inst. ID: " + procInstId + ", sub-proc. inst. ID: " + subProcInstId + ", task inst. ID: " + tiId;
 									LOGGER.warning(msg);
-									CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
+									if (settings.getBoolean("bpm.email_send_comparisons", false)) {
+										CoreUtil.sendExceptionNotification(msg, null, toAttach, toCompare);
+									}
 								}
 							} catch (Exception e) {
 								e.printStackTrace();
@@ -337,61 +365,73 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					}
 				}
 			}
-
+		} finally {
 			if (foundExisting) {
-				LOGGER.info("Email with subject '" + subject + "' is already attached to sub-proc. inst. ID: " + subProcInstId);
 				message.setParsed(true);
 				return true;
-			}
-			if (!settings.getBoolean("bpm.attach_emails_to_case", Boolean.TRUE)) {
-				return true;
-			}
-
-			Map<String, InputStream> attachments = message.getAttachments();
-			if (attachments == null) {
-				attachments = new HashMap<String, InputStream>(1);
-			}
-			if (doAttachEmailToProcess(
-					subProcInstId,
-					subject,
-					text,
-					senderPersonalName,
-					fromAddress,
-					attachments,
-					message.getAttachedFiles()
-			)) {
-				message.setParsed(true);
 			} else {
-				return false;
+				LOGGER.info("Email with subject '" + subject + "' (comparisons:\n" + subjectsComparisons + ")\nsender: '" + senderPersonalName +
+						"' (comparisons:\n" + fromComparisons + ")\nfrom: '" + fromAddress + "' (comparisons:\n" + addressesComparisons +
+						")\n is not attached to proc. inst. ID: " + procInstId + ", sub-proc. inst IDs: " + subProcInstIds + ", need to attach it");
 			}
 		}
-		return true;
+
+		List<Long> fetchEmailsSubProcInstIds = getBpmFactory().getBPMDAO().getSubProcInstIdsByParentProcInstIdAndProcDefName(
+				procInstId,
+				EmailMessagesAttacher.email_fetch_process_name
+		);
+		if (ListUtil.isEmpty(fetchEmailsSubProcInstIds)) {
+			return false;
+		}
+
+		Map<String, InputStream> attachments = message.getAttachments();
+		if (attachments == null) {
+			attachments = new HashMap<String, InputStream>(1);
+		}
+		boolean result = doAttachEmailToProcess(
+				fetchEmailsSubProcInstIds.get(0),
+				subject,
+				text,
+				senderPersonalName,
+				fromAddress,
+				attachments,
+				message.getAttachedFiles()
+		);
+		message.setParsed(result);
+		return result;
 	}
 
-	private boolean doCompareLines(String identifier, List<String> lines1, List<String> lines2) {
-		if (ListUtil.isEmpty(lines1) || ListUtil.isEmpty(lines2)) {
+	private boolean isContentOfLinesEqual(String identifier, List<String> lines1, List<String> lines2, boolean printComparison) {
+		if (ListUtil.isEmpty(lines1)) {
+			LOGGER.warning("Lines1 are not provided");
+			return false;
+		}
+		if (ListUtil.isEmpty(lines2)) {
+			LOGGER.warning("Lines2 are not provided");
 			return false;
 		}
 
 		boolean numberOfLinesIsTheSame = lines1.size() == lines2.size();
 		if (!numberOfLinesIsTheSame) {
+			LOGGER.warning("Number of lines is not the same: lines1: " + lines1.size() + " vs. lines2: " + lines2.size());
 			return false;
 		}
 
 		for (int i = 0; i < lines1.size(); i++) {
 			String line1 = lines1.get(i);
 			String line2 = lines2.get(i);
-			boolean equals = line1.equals(line2);
-			if (!equals) {
-				LOGGER.warning("Line number: " + i + ". 'Line 1' (length: " + line1.length() + "):\n'" + line1+ "'\n'Line 2' (length: " + line2.length() +
+			if (!line1.equals(line2)) {
+				if (printComparison) {
+					LOGGER.warning("Line number: " + i + ": 'Line 1' (length: " + line1.length() + "):\n'" + line1+ "'\n'Line 2' (length: " + line2.length() +
 						"):\n'" + line2 + "'\n. They are not equal. Identifier: " + identifier);
+				}
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private boolean isTheSameContentOfFiles(File file1, File file2, String[] patterns, String identifier) {
+	private boolean isContentOfFilesEqual(File file1, File file2, String[] patterns, String[] encodedPatterns, String identifier, boolean printComparison) {
 		boolean sameContent = false;
 		BufferedReader bfr1 = null, bfr2 = null;
 		List<String> content1 = null, content2 = null;
@@ -401,26 +441,18 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String content = null;
 			content1 = new ArrayList<String>();
 			while ((content = bfr1.readLine()) != null) {
-				if (!ArrayUtil.isEmpty(patterns)) {
-					for (String pattern: patterns) {
-						content = StringHandler.replace(content, pattern, CoreConstants.EMPTY);
-					}
-				}
+				content = getRidOfInvalidSymbols(content, patterns, encodedPatterns);
 				content1.add(content);
 			}
 
 			bfr2 = new BufferedReader(new FileReader(file2));
 			content2 = new ArrayList<String>();
 			while ((content = bfr2.readLine()) != null) {
-				if (!ArrayUtil.isEmpty(patterns)) {
-					for (String pattern: patterns) {
-						content = StringHandler.replace(content, pattern, CoreConstants.EMPTY);
-					}
-				}
+				content = getRidOfInvalidSymbols(content, patterns, encodedPatterns);
 				content2.add(content);
 			}
 
-			sameContent = doCompareLines(identifier, content1, content2);
+			sameContent = isContentOfLinesEqual(identifier, content1, content2, printComparison);
 			return sameContent;
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error while comparing content of files " + file1 + " and " + file2, e);
@@ -432,7 +464,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				if (file2 != null) {
 					file2.delete();
 				}
-			} else if (content1 != null && content2 != null) {
+			} else if (content1 != null && content2 != null && printComparison) {
 				LOGGER.warning("Content 1 (lines: " + content1.size() + "):\n" + content1 + "\nis not the same as content 2 (lines: " +
 						content2.size() + ")\n" + content2);
 			}
@@ -441,6 +473,25 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			IOUtil.close(bfr2);
 		}
 		return false;
+	}
+
+	private String getRidOfInvalidSymbols(String content, String[] patterns, String[] encodedPatterns) {
+		if (content == null || ArrayUtil.isEmpty(patterns)) {
+			return content;
+		}
+
+		String tmp = content;
+		for (String pattern: patterns) {
+			content = StringHandler.replace(content, pattern, CoreConstants.EMPTY);
+		}
+		if (tmp.equals(content)) {
+			String encoded = StringConverterUtility.saveConvert(content, false);
+			for (String encodedPattern: encodedPatterns) {
+				encoded = StringHandler.replace(encoded, CoreConstants.BACK_SLASH + encodedPattern, CoreConstants.EMPTY);
+			}
+			content = StringConverterUtility.loadConvert(encoded);
+		}
+		return content;
 	}
 
 	@Transactional
@@ -471,6 +522,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					// taking here view for new task instance
 					long tiId = ti.getId();
 					View view = getBpmFactory().takeView(tiId, false, null);
+					if (view == null) {
+						return Boolean.FALSE;
+					}
 
 					long pdId = ti.getProcessInstance().getProcessDefinition().getId();
 
@@ -479,7 +533,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 					TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(ti.getId());
 					taskInstance.submit(emailViewSubmission, false);
-					LOGGER.info("Task instance ID for email message to attach: " + tiId + ". View: " + view + "\nSubmitted task instance " +
+					LOGGER.info("Task instance ID for email message to attach: " + tiId + "\nSubmitted task instance " +
 							taskInstance.getTaskInstanceId() + " with data from email message (sender: " + fromAddress +
 							", subject: " + subject + ") for process instance: " + taskInstance.getProcessInstanceW().getProcessInstanceId());
 

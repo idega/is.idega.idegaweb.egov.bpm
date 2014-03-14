@@ -65,6 +65,7 @@ public class CasesExporter extends CasesSearcher {
 		PresentationUtil.addJavaScriptSourcesLinesToHeader(iwc, Arrays.asList(
 				jQuery.getBundleURIToJQueryLib(),
 				web2.getBundleUriToHumanizedMessagesScript(),
+				CoreConstants.DWR_ENGINE_SCRIPT,
 				"/dwr/interface/CasesEngine.js",
 				getBundle(iwc).getVirtualPathWithFileNameString("javascript/CasesExporter.js")
 		));
