@@ -2229,7 +2229,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		try {
 			List<Serializable[]> data = SimpleQuerier.executeQuery(query, 2);
 			if (sqlMeasurementOn) {
-				getLogger().info("Query: " + query.toString() + " executed in " + (System.currentTimeMillis() - startTimeInMillis) + " ms");
+				getLogger().info("Query: " + query.toString() + " executed in " + (System.currentTimeMillis() - startTimeInMillis) +
+					" ms. " + (ListUtil.isEmpty(data) ? "Nothing found" : "Results are: " + data));
 			}
 			return getResults(data);
 		} catch (Exception e) {
