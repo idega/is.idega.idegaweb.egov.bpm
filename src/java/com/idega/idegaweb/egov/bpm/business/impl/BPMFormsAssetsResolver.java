@@ -1,6 +1,7 @@
 package com.idega.idegaweb.egov.bpm.business.impl;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.logging.Level;
@@ -55,9 +56,15 @@ public class BPMFormsAssetsResolver extends DefaultSpringBean implements FormAss
 			}
 
 			List<Param> params = new ArrayList<Param>();
-			params.add(new Param("roles", roles));
 			String query = "select distinct pd.name from " + ProcessDefinition.class.getName() + " pd, " + ProcessInstance.class.getName() + " pi, " + StringInstance.class.getName() +
-					" v where v.value in (:roles) ";
+					" v where (";
+			for (Iterator<String> rolesIter = roles.iterator(); rolesIter.hasNext();) {
+				query += "v.value like '" + rolesIter.next() + "'";
+				if (rolesIter.hasNext()) {
+					query += " or ";
+				}
+			}
+			query += ") ";
 			if (!ListUtil.isEmpty(processes)) {
 				query += " and pd.name in (:names) ";
 				params.add(new Param("names", processes));
