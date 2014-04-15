@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -32,6 +33,7 @@ import java.util.logging.Logger;
 import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;
+import javax.servlet.http.HttpSession;
 
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
@@ -802,7 +804,24 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		);
 	}
 
-	private Map<Integer, Date> getCasesIds(
+	private Set<String> getRoles(HttpSession session, AccessController access, User user) {
+		if (user == null) {
+			return null;
+		}
+
+		if (session == null) {
+			return access.getAllRolesForUser(user);
+		}
+
+		String activeRole = (String) session.getAttribute(CoreConstants.ACTIVE_ROLE);
+		if (StringUtil.isEmpty(activeRole)) {
+			return access.getAllRolesForUser(user);
+		}
+
+		return new HashSet<String>(Arrays.asList(activeRole));
+	}
+	
+	private Map<Integer, Date> getCaseIds(
 			User user,
 			String type,
 			List<String> caseCodes,
@@ -816,7 +835,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Collection<Long> handlerCategoryIDs,
 			Timestamp from,
 			Timestamp to,
-
 			List<String> statusesToShow,
 			List<String> statusesToHide,
 			List<Integer> groups,
@@ -975,8 +993,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			/* Getting roles for given user */
 			roles = params.getRoles();
-			if (ListUtil.isEmpty(roles) && user != null)
-				roles = accessController.getAllRolesForUser(user);
+			if (ListUtil.isEmpty(roles) && user != null) {
+				roles = getRoles(iwc == null ? getSession() : iwc.getSession(), accessController, user);
+			}
 
 			statusesToShow = showAllCases ? statusesToShow : ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
 			statusesToHide = showAllCases ? statusesToHide : ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
@@ -1012,7 +1031,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 						IWTimestamp to = new IWTimestamp(from.getTime());
 						to.setDay(to.getDay() + 1);
 						to.setMilliSecond(to.getMilliSecond() - 1);
-						casesIds = getCasesIds(
+						casesIds = getCaseIds(
 								user,
 								type,
 								caseCodes,
@@ -1064,7 +1083,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				procInstIds = Collections.emptyList();
 			}
 
-			casesIds = getCasesIds(
+			casesIds = getCaseIds(
 					user,
 					type,
 					caseCodes,
@@ -1141,7 +1160,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			if (!isSuperAdmin) {
-				roles = accessController.getAllRolesForUser(user);
+				roles = getRoles(getSession(), accessController, user);
+
 				Collection<Group> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 				if (!ListUtil.isEmpty(groupBeans)) {
 					groups = new ArrayList<Integer>(groupBeans.size());
@@ -1158,8 +1178,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			if (!isSuperAdmin) {
-				if (user != null)
-					roles = accessController.getAllRolesForUser(user);
+				if (user != null) {
+					roles = getRoles(getSession(), accessController, user);
+				}
+
 				Collection<Group> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 				if (!ListUtil.isEmpty(groupBeans)) {
 					groups = new ArrayList<Integer>(groupBeans.size());
@@ -1179,8 +1201,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
 			statusesToShow = showAllCases ? statusesToShow : ListUtil.getFilteredList(statusesToShow);
 			CaseCode[] casecodes = getCaseBusiness().getCaseCodesForUserCasesList();
-			if (user != null)
-				roles = accessController.getAllRolesForUser(user);
+			if (user != null) {
+				roles = getRoles(getSession(), accessController, user);
+			}
 
 			codes = new ArrayList<String>(casecodes.length);
 			for (CaseCode code : casecodes) {
