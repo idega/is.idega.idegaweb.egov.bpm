@@ -2,7 +2,10 @@ package is.idega.idegaweb.egov.bpm.cases.messages;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
+import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 import org.jbpm.graph.exe.ExecutionContext;
@@ -13,13 +16,18 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.data.Case;
 import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMessage;
 import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.bpm.process.messages.SendMessagesHandler;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.process.business.messages.MessageValueContext;
+import com.idega.jbpm.process.business.messages.TypeRef;
 import com.idega.util.CoreUtil;
 import com.idega.util.EmailValidator;
+import com.idega.util.IWTimestamp;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -137,7 +145,25 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		getSendMessage().send(null, Integer.valueOf(caseIdStr), pi, msgs, tkn);
 
 		if (isSendViaEmail() || validSendToEmail) {
-			getEmailSender().send(null, ectx, pi, msgs, tkn);
+			MessageValueContext mvCtx = new MessageValueContext();
+			CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
+			Case theCase = null;
+			try {
+				theCase = caseBusiness.getCase(caseIdStr);
+			} catch (Exception e) {
+				getLogger().warning("Error getting case by ID: " + caseIdStr);
+			}
+			if (theCase != null) {
+				Timestamp creationDate = theCase.getCreated();
+				if (creationDate != null) {
+					IWTimestamp iwCreationDate = new IWTimestamp(creationDate);
+					Locale locale = getCurrentLocale();
+					mvCtx.setValue(TypeRef.CREATION_DATE, iwCreationDate.getLocaleDate(locale, DateFormat.MEDIUM));
+					mvCtx.setValue(TypeRef.CREATION_TIME, iwCreationDate.getLocaleTime(locale, DateFormat.FULL));
+				}
+			}
+
+			getEmailSender().send(mvCtx, ectx, pi, msgs, tkn);
 		}
 	}
 
