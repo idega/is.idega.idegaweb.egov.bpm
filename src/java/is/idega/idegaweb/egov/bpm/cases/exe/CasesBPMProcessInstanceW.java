@@ -8,6 +8,7 @@ import java.rmi.RemoteException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 
 import javax.annotation.Resource;
 import javax.ejb.FinderException;
@@ -24,7 +25,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.ProcessConstants;
+import com.idega.block.process.data.Case;
 import com.idega.bpm.exe.DefaultBPMProcessInstanceW;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -160,6 +163,26 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 				.getVariable(ProcessConstants.CASE_DESCRIPTION);
 
 		return description;
+	}
+
+	@Override
+	public String getProcessOwner() {
+		Long piId = null;
+		try {
+			piId = getProcessInstanceId();
+			CaseProcInstBind bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+			if (bind == null) {
+				return null;
+			}
+
+			CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
+			Case theCase = caseBusiness.getCase(bind.getCaseId());
+			User owner = theCase == null ? null : theCase.getOwner();
+			return owner == null ? null : owner.getName();
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error resolving process (ID: " + piId + ") owner", e);
+		}
+		return null;
 	}
 
 	@Override
