@@ -205,9 +205,8 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			return null;
 
 		List<String> numberVariables = Arrays.asList(
-				CasesBoardViewer.CASE_FIELDS.get(7).getId(),
-				CasesBoardViewer.CASE_FIELDS.get(8).getId(),
-
+				CaseBoardBean.CASE_OWNER_TOTAL_COST,
+				CasesConstants.APPLIED_GRANT_AMOUNT_VARIABLE,
 				ProcessConstants.BOARD_FINANCING_SUGGESTION,
 				ProcessConstants.BOARD_FINANCING_DECISION
 		);
@@ -219,26 +218,27 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		}
 
 		Map<Long, String> links = getTaskViewer().getLinksToTheTaskRedirector(
-				iwc, relations, backPage, taskName);
+				CoreUtil.getIWContext(), relations, backPage, taskName);
 
 		/* Filling board cases */
 		List<CaseBoardBean> boardCases = new ArrayList<CaseBoardBean>();
 		for (CaseBoardView view: boardViews) {
 			CaseBoardBean boardCase = new CaseBoardBean(view.getCaseId(), view.getProcessInstanceId());
+			boardCase.setApplicantName(view.getValue(CaseBoardBean.CASE_OWNER_FULL_NAME));
+			boardCase.setCaseIdentifier(view.getValue(ProcessConstants.CASE_IDENTIFIER));
+			boardCase.setCategory(view.getValue(CaseBoardBean.CASE_CATEGORY));
+			boardCase.setHandler(view.getHandler());
+			boardCase.setFinancingOfTheTasks(view.getFinancingOfTheTasks());
+
 			boardCase.setLinkToCase(links.get(Long.valueOf(view.getCaseId())));
-			boardCase.setApplicantName(view.getValue(CasesBoardViewer.CASE_FIELDS.get(0).getId()));
-			boardCase.setCaseIdentifier(view.getValue(CasesBoardViewer.CASE_FIELDS.get(5).getId()));
-
-			String[] gradingSums = getGradingSum(view);
-
-			boardCase.setCategory(view.getValue(CasesBoardViewer.CASE_FIELDS.get(12).getId()));
 
 			long boardDecision = getNumberValue(view.getValue(ProcessConstants.BOARD_FINANCING_DECISION), false);
 			boardCase.setBoardAmount(boardDecision);
+
 			long boardSuggestion = getNumberValue(view.getValue(ProcessConstants.BOARD_FINANCING_SUGGESTION), false);
 			boardCase.setGrantAmountSuggestion(boardSuggestion);
 
-			boardCase.setHandler(view.getHandler());
+			boardCase.addValues(getGradingSum(view, getGradingVariables()));
 
 			for (String variable: variablesToQuery) {
 				String value = view.getValue(variable);
@@ -248,12 +248,9 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					else
 						value = String.valueOf(getNumberValue(value, true));
 				}
+
 				boardCase.addValue(variable, value);
 			}
-			boardCase.addValue(CasesBoardViewer.CASE_FIELDS.get(10).getId(), gradingSums[1]);
-			boardCase.addValue(CasesBoardViewer.CASE_FIELDS.get(11).getId(), gradingSums[0]);
-
-			boardCase.setFinancingOfTheTasks(view.getFinancingOfTheTasks());
 
 			boardCases.add(boardCase);
 		}
@@ -598,39 +595,43 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	/**
-	 *
-	 * @param view
-	 * @return returns String array, 0 element contains sum of positive grade values,
-	 * 1 element contains sum of negative grade values
+	 * 
+	 * @return {@link Map} of variable name and sum of grading values;
 	 */
-	public String [] getGradingSum(CaseBoardView view) {
-		List<String> gradingValues = view.getValues(getGradingVariables());
-		String[] gradings = new String[] {String.valueOf(0), String.valueOf(0)};
+	public Map<String, BigDecimal> getGradingSum(
+			CaseBoardView view, 
+			List<String> variables) {
+		Map<String, BigDecimal> gradings = new HashMap<String, BigDecimal>();
+
+		List<String> gradingValues = view.getValues(variables);
 		if (ListUtil.isEmpty(gradingValues))
 			return gradings;
 
-		long sum = 0;
-		long negativeSum = 0;
-		Long gradeValue = null;
+		BigDecimal sum = new BigDecimal(0);
+		BigDecimal negativeSum = new BigDecimal(0);
+
 		for (String value: gradingValues) {
 			if (StringUtil.isEmpty(getStringValue(value))) {
 				continue;
 			}
 
-			if (value.indexOf("_") != -1) {
+			if (value.contains("_")) {
 				value = value.substring(0, value.indexOf("_"));
 			}
-			if (value.indexOf("a") != -1) {
+
+			if (value.contains("a")) {
 				value = value.substring(0, value.indexOf("a"));
 			}
-			if (value.indexOf("b") != -1) {
+
+			if (value.contains("b")) {
 				value = value.substring(0, value.indexOf("b"));
 			}
-			if (value.indexOf("c") != -1) {
+
+			if (value.contains("c")) {
 				value = value.substring(0, value.indexOf("c"));
 			}
 
-			gradeValue = null;
+			Long gradeValue = null;
 			try {
 				gradeValue = Long.valueOf(value.trim());
 			} catch (Exception e) {
@@ -638,53 +639,67 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			}
 
 			if (gradeValue != null) {
-				long longValue = gradeValue.longValue();
-				sum += longValue;
-				if (longValue < 0)
-					negativeSum += longValue;
+				sum = sum.add(BigDecimal.valueOf(gradeValue));
+				if (gradeValue < 0) {
+					negativeSum = negativeSum.add(BigDecimal.valueOf(gradeValue));
+				}
 			}
 		}
 
-		gradings[0] = String.valueOf(sum);
-		gradings[1] = String.valueOf(negativeSum);
+		gradings.put(CaseBoardBean.CASE_SUM_ALL_GRADES, sum);
+		gradings.put(CaseBoardBean.CASE_SUM_OF_NEGATIVE_GRADES, negativeSum);
 
 		return gradings;
 	}
 
 	@Override
-	public boolean isColumnOfDomain(String currentColumn, String columnOfDomain) {
-		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
+	public boolean isEqual(String currentColumn, String columnOfDomain) {
+		return !StringUtil.isEmpty(currentColumn) && 
+				!StringUtil.isEmpty(columnOfDomain) && 
+				currentColumn.equals(columnOfDomain);
 	}
 
 	@Override
-	public CaseBoardTableBean getTableData(IWContext iwc, Collection<String> caseStatuses,
-			String processName, String uuid, boolean isSubscribedOnly, boolean backPage, String taskName) {
-		if (iwc == null)
-			return null;
-
-		IWBundle bundle = iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
-		IWResourceBundle iwrb = bundle.getResourceBundle(iwc);
+	public CaseBoardTableBean getTableData(
+			Date dateFrom, 
+			Date dateTo,
+			Collection<String> caseStatuses, 
+			String processName, 
+			String uuid,
+			boolean isSubscribedOnly, 
+			boolean useBasePage, 
+			String taskName) {
 		CaseBoardTableBean data = new CaseBoardTableBean();
 
-		List<CaseBoardBean> boardCases = getAllSortedCases(iwc, iwrb, caseStatuses, processName, uuid, isSubscribedOnly, backPage, taskName);
+		List<CaseBoardBean> boardCases = getAllSortedCases(
+				caseStatuses, 
+				processName, 
+				uuid, 
+				isSubscribedOnly, 
+				useBasePage, 
+				taskName, 
+				dateFrom, 
+				dateTo);
 		if (ListUtil.isEmpty(boardCases)) {
-			data.setErrorMessage(iwrb.getLocalizedString("cases_board_viewer.no_cases_found", "There are no cases!"));
+			data.setErrorMessage(localize("cases_board_viewer.no_cases_found", "There are no cases!"));
 			return data;
 		}
 
 		// Header
-		data.setHeaderLabels(getTableHeaders(iwrb, uuid));
+		data.setHeaderLabels(getTableHeaders(uuid));
 
 		// Body
-		Map<Integer, List<AdvancedProperty>> columns = getColumns(iwrb, uuid);
+		Map<Integer, List<AdvancedProperty>> columns = getColumns(uuid);
 
-		long boardAmountTotal = 0;
-		long grantAmountSuggestionTotal = 0;
+		BigDecimal boardAmountTotal = new BigDecimal(0);
+		BigDecimal grantAmountSuggestionTotal = new BigDecimal(0);
 		boolean financingTableAdded = false;
 		String uniqueCaseId = "uniqueCaseId";
 		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<CaseBoardTableBodyRowBean>(boardCases.size());
 		for (CaseBoardBean caseBoard: boardCases) {
-			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(caseBoard.getCaseId(), caseBoard.getProcessInstanceId());
+			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(
+					caseBoard.getCaseId(), 
+					caseBoard.getProcessInstanceId());
 			rowBean.setId(new StringBuilder(uniqueCaseId).append(caseBoard.getCaseId()).toString());
 			rowBean.setCaseIdentifier(caseBoard.getCaseIdentifier());
 			rowBean.setHandler(caseBoard.getHandler());
@@ -741,16 +756,32 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			rowBean.setValues(rowValues);
 			bodyRows.add(rowBean);
 		}
+
 		data.setBodyBeans(bodyRows);
 
 		// Footer
-		data.setFooterValues(getFooterValues(iwrb, data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? 3 : 0),
+		data.setFooterValues(getFooterValues(data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? 3 : 0),
 				grantAmountSuggestionTotal, boardAmountTotal, uuid));
 
 		// Everything is OK
 		data.setFilledWithData(Boolean.TRUE);
 
 		return data;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see is.idega.idegaweb.egov.cases.business.BoardCasesManager#getTableData(com.idega.presentation.IWContext, java.util.Collection, java.lang.String, java.lang.String, boolean, boolean, java.lang.String)
+	 */
+	@Override
+	public CaseBoardTableBean getTableData(
+			Collection<String> caseStatuses,
+			String processName, 
+			String uuid, 
+			boolean isSubscribedOnly, 
+			boolean backPage, 
+			String taskName) {
+		return getTableData(null, null, caseStatuses, processName, uuid, isSubscribedOnly, backPage, taskName);
 	}
 
 	@Override
@@ -800,7 +831,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	@Override
-	public Map<Integer, List<AdvancedProperty>> getColumns(IWResourceBundle iwrb, String uuid) {
+	public Map<Integer, List<AdvancedProperty>> getColumns(String uuid) {
 		Map<Integer, List<AdvancedProperty>> columns = new TreeMap<Integer, List<AdvancedProperty>>();
 		int index = 1;
 
@@ -810,24 +841,24 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				if (index == 14) {
 					columns.put(index, Arrays.asList(
 							new AdvancedProperty(CasesBoardViewer.WORK_ITEM,
-									iwrb.getLocalizedString(CasesBoardViewer.WORK_ITEM, "Work item")),
+									localize(CasesBoardViewer.WORK_ITEM, "Work item")),
 							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST,
-									iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
+									localize(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
-									iwrb.getLocalizedString(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
+									localize(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION,
-									iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
+									localize(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
 							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION,
-									iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision"))
+									localize(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision"))
 					));
 				} else {
 					columns.put(index, Arrays.asList(new AdvancedProperty(header.getId(),
-						iwrb.getLocalizedString(new StringBuilder(LOCALIZATION_PREFIX).append(header.getId()).toString(), header.getValue()))));
+						localize(new StringBuilder(LOCALIZATION_PREFIX).append(header.getId()).toString(), header.getValue()))));
 				}
 				index++;
 			}
 			columns.put(index, Arrays.asList(new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName,
-					iwrb.getLocalizedString(LOCALIZATION_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName, "Case handler"))));
+					localize(LOCALIZATION_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName, "Case handler"))));
 		} else {
 			String localized = null;
 			IWContext iwc = CoreUtil.getIWContext();
@@ -835,19 +866,19 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			for (String column: customColumns) {
 				if (CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN.equals(column)) {
 					columns.put(index, Arrays.asList(
-							new AdvancedProperty(CasesBoardViewer.WORK_ITEM, iwrb.getLocalizedString(CasesBoardViewer.WORK_ITEM, "Work item")),
-							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, iwrb.getLocalizedString(CasesBoardViewer.ESTIMATED_COST,
+							new AdvancedProperty(CasesBoardViewer.WORK_ITEM, localize(CasesBoardViewer.WORK_ITEM, "Work item")),
+							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, localize(CasesBoardViewer.ESTIMATED_COST,
 									"Estimated cost")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_SUGGESTION,
+							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, localize(CasesBoardViewer.BOARD_SUGGESTION,
 									"Board suggestion")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, iwrb.getLocalizedString(CasesBoardViewer.BOARD_DECISION,
+							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, localize(CasesBoardViewer.BOARD_DECISION,
 									"Board decision"))
 					));
 				} else if (CasesBoardViewer.ESTIMATED_COST.equals(column) || CasesBoardViewer.BOARD_SUGGESTION.equals(column) ||
 						CasesBoardViewer.BOARD_DECISION.equals(column) || CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT.equals(column))
 					continue;
 				else {
-					localized = iwrb.getLocalizedString(LOCALIZATION_PREFIX.concat(column), column);
+					localized = localize(LOCALIZATION_PREFIX.concat(column), column);
 					if (column.equals(localized))
 						localized = bpmIWRB.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(column), column);
 					if (column.equals(localized)) {
@@ -865,11 +896,14 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		return columns;
 	}
 
-	protected Map<Integer, List<AdvancedProperty>> getTableHeaders(IWResourceBundle iwrb, String uuid) {
-		return getColumns(iwrb, uuid);
+	protected Map<Integer, List<AdvancedProperty>> getTableHeaders(String uuid) {
+		return getColumns(uuid);
 	}
 
-	protected List<String> getFooterValues(IWResourceBundle iwrb, int numberOfColumns, long grantAmountSuggestionTotal, long boardAmountTotal,
+	protected List<String> getFooterValues(
+			int numberOfColumns, 
+			BigDecimal grantAmountSuggestionTotal, 
+			BigDecimal boardAmountTotal,
 			String uuid) {
 
 		List<String> values = new ArrayList<String>();
@@ -880,7 +914,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		int indexOfSuggestion = indexOfTotal + 3;
 		int indexOfDecision = indexOfSuggestion + 1;
 
-		String total = iwrb.getLocalizedString("case_board_viewer.total_sum", "Total").concat(CoreConstants.COLON).toString();
+		String total = localize("case_board_viewer.total_sum", "Total").concat(CoreConstants.COLON).toString();
 		for (int i = 0; i < numberOfColumns; i++) {
 			if (indexOfTotal > -1 && indexOfTotal == i) {
 				// SUMs label
@@ -1126,13 +1160,16 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				cells.put(CasesBoardViewer.ESTIMATED_COST, String.valueOf(cost));
 
 				String suggestion = taskInfo.get(CasesBoardViewer.BOARD_SUGGESTION);
-				cells.put(CasesBoardViewer.BOARD_SUGGESTION, StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
+				cells.put(CasesBoardViewer.BOARD_SUGGESTION, 
+						StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
 
 				String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
-				cells.put(CasesBoardViewer.BOARD_DECISION, StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
+				cells.put(CasesBoardViewer.BOARD_DECISION, 
+						StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
 
 				String proposal = taskInfo.get(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT);
-				cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
+				cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, 
+						StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
 
 				valuesToReplace.put(tasksIndex, cells);
 				tasksIndex++;
@@ -1143,5 +1180,20 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			}
 			caseBoard.setFinancingOfTheTasks(tasksInfo);
 		}
+	}
+
+	protected String localize(String key, String value) {
+		return getWebUtil().getLocalizedString(CasesConstants.IW_BUNDLE_IDENTIFIER, key, value);
+	}
+
+	@Autowired
+	private WebUtil webUtil = null;
+
+	protected WebUtil getWebUtil() {
+		if (this.webUtil == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.webUtil;
 	}
 }
