@@ -221,6 +221,10 @@ public interface CasesBPMDAO extends GenericDao {
 	 * the {@link Case} has {@link ProcessInstance#getEnd()}. If <code>false</code>
 	 * is provided, then only not ended processes will be returned. Skipped
 	 * if <code>null</code>;
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * skipped if <code>null</code>;
+	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
+	 * skipped if <code>null</code>;
 	 * @return array of {@link Case#getPrimaryKey()} by criteria or
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
@@ -240,7 +244,11 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<String> roles,
 			Collection<? extends Number> authorsIDs,
 			Collection<? extends Number> casesIds,
-			Boolean isAnonymous, Boolean generalCases, Boolean hasEnded);
+			Boolean isAnonymous, 
+			Boolean generalCases, 
+			Boolean hasEnded, 
+			Date dateCreatedFrom, 
+			Date dateCreatedTo);
 
 	/**
 	 * <p>"AND" relation for filtering BPM {@link Case}s.
@@ -293,6 +301,10 @@ public interface CasesBPMDAO extends GenericDao {
 	 * the {@link Case} has {@link ProcessInstance#getEnd()}. If <code>false</code>
 	 * is provided, then only not ended processes will be returned. Skipped
 	 * if <code>null</code>;
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * skipped if <code>null</code>;
+	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
+	 * skipped if <code>null</code>;
 	 * @return array of {@link Case#getPrimaryKey()} by criteria or
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
@@ -312,7 +324,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<String> roles,
 			Collection<? extends Number> authorsIDs,
 			Collection<? extends Number> casesIds,
-			Boolean isAnonymous, Boolean isGeneralCases, Boolean hasEnded);
+			Boolean isAnonymous, Boolean isGeneralCases, Boolean hasEnded, Date dateCreatedFrom, Date dateCreatedTo);
 
 	/**
 	 *

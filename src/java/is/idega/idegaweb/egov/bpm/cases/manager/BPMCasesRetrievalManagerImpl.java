@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -1265,10 +1266,20 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	 */
 	@Override
 	public List<Case> getCases(Collection<String> processDefinitionNames,
-			Collection<Long> processInstanceIds, Collection<String> caseStatuses,
-			Collection<User> subscribers, Collection<String> caseManagerTypes) {
-		String[] primaryKeys = getCasesPrimaryKeys(processDefinitionNames,
-				null, caseStatuses, subscribers, caseManagerTypes);
+			Collection<Long> processInstanceIds, 
+			Collection<String> caseStatuses,
+			Collection<User> subscribers, 
+			Collection<String> caseManagerTypes, 
+			Date dateFrom, 
+			Date dateTo) {
+		String[] primaryKeys = getCasesPrimaryKeys(
+				processDefinitionNames,
+				null, 
+				caseStatuses, 
+				subscribers, 
+				caseManagerTypes, 
+				dateFrom, 
+				dateTo);
 		if (ArrayUtil.isEmpty(primaryKeys)) {
 			return Collections.emptyList();
 		}
@@ -1292,7 +1303,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 	@Override
 	public List<Case> getCases(Collection<String> processDefinitionNames,
 			Collection<String> caseStatuses, Collection<User> subscribers) {
-		return getCases(processDefinitionNames, null, caseStatuses, subscribers, null);
+		return getCases(processDefinitionNames, null, caseStatuses, subscribers, null, null, null);
 	}
 
 	/*
@@ -1316,7 +1327,9 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			Collection<? extends Number> processInstanceIds,
 			Collection<String> caseStatuses,
 			Collection<User> subscribers,
-			Collection<String> caseManagerTypes) {
+			Collection<String> caseManagerTypes, 
+			Date dateCreatedFrom, 
+			Date dateCreatedTo) {
 
 		List<Long> subscribersIds = null;
 
@@ -1328,9 +1341,12 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			}
 		}
 
-		return getCasesBPMDAO().getCasesPrimaryKeys(processDefinitionNames, processInstanceIds,
+		return getCasesBPMDAO().getCasesPrimaryKeys(
+				processDefinitionNames, 
+				processInstanceIds,
 				caseStatuses, null, subscribersIds, null, null, null,
-				caseManagerTypes, null, null, null, null, null, null, null, null);
+				caseManagerTypes, null, null, null, null, null, null, null, null, 
+				dateCreatedFrom, dateCreatedTo);
 	}
 
 	/*
@@ -1343,7 +1359,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			Collection<String> caseStatuses,
 			Collection<User> subscribers) {
 		return getCasesPrimaryKeys(processDefinitionNames, null, caseStatuses,
-				subscribers, null);
+				subscribers, null, null, null);
 	}
 
 	/*
@@ -1355,7 +1371,7 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			Collection<String> processDefinitionNames,
 			Collection<String> caseStatuses) {
 		return getCasesPrimaryKeys(processDefinitionNames, null,
-				caseStatuses, null, null);
+				caseStatuses, null, null, null, null);
 	}
 
 	public VariablesHandler getVariablesHandler() {
@@ -1699,6 +1715,6 @@ public class BPMCasesRetrievalManagerImpl extends CasesRetrievalManagerImpl impl
 			piids.add(processInstance.getProcessInstanceId());
 		}
 
-		return getCases(null, piids, null, null, null);
+		return getCases(null, piids, null, null, null, null, null);
 	}
 }

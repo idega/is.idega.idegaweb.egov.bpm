@@ -18,11 +18,13 @@ import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBodyRowBean
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -66,6 +69,7 @@ import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
+import com.idega.util.WebUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -148,26 +152,35 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 	@Override
 	public List<CaseBoardBean> getAllSortedCases(
-			IWContext iwc,
-			IWResourceBundle iwrb,
 			Collection<String> caseStatuses,
 			String processName,
 			String uuid,
 			boolean isSubscribedOnly,
 			boolean backPage,
-			String taskName
-	) {
+			String taskName, 
+			Date dateFrom, 
+			Date dateTo) {
 		//	Getting cases by the configuration
-		Collection<GeneralCase> cases = getCases(caseStatuses, processName, isSubscribedOnly, ProcessConstants.BPM_CASE);
+		Collection<GeneralCase> cases = getCases(
+				caseStatuses, 
+				processName, 
+				isSubscribedOnly, 
+				ProcessConstants.BPM_CASE, 
+				dateFrom, 
+				dateTo);
 		if (ListUtil.isEmpty(cases))
 			return null;
 
 		//	Filling beans with info
-		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(cases, uuid, backPage, taskName, iwc);
+		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(
+				cases, 
+				uuid, 
+				backPage, 
+				taskName);
 		if (ListUtil.isEmpty(boardCases))
 			return null;
 
-		sortBoardCases(iwc, boardCases);
+		sortBoardCases(boardCases);
 
 		return boardCases;
 	}
@@ -176,9 +189,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 			Collection<? extends GeneralCase> casesIdsAndHandlers,
 			String uuid,
 			boolean backPage,
-			String taskName,
-			IWContext iwc
-	) {
+			String taskName) {
 		List<String> variablesToQuery = new ArrayList<String>(getVariables(uuid));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
@@ -477,30 +488,48 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 	}
 
 	@SuppressWarnings("unchecked")
-	private void sortBoardCases(IWContext iwc, List<CaseBoardBean> boardCases) {
+	private void sortBoardCases(List<CaseBoardBean> boardCases) {
 		if (ListUtil.isEmpty(boardCases))
 			return;
 
 		List<String> sortingPreferences = null;
-		Object o = iwc.getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
+		Object o = CoreUtil.getIWContext().getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
 		if (o instanceof List)
 			sortingPreferences = (List<String>) o;
 
-		Collections.sort(boardCases, new BoardCasesComparator(iwc.getLocale(), sortingPreferences));
+		Collections.sort(boardCases, new BoardCasesComparator(
+				CoreUtil.getCurrentLocale(), sortingPreferences));
 	}
 
+	/**
+	 * 
+	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()},
+	 * skipped if <code>null</code>;
+	 * @param processName is {@link ProcessDefinition#getName()}, 
+	 * skipped if <code>null</code>
+	 * @param subscribedOnly
+	 * @param caseManagerType
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * skipped if <code>null</code>;
+	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
+	 * skipped if <code>null</code>;
+	 * @return entities by criteria or {@link Collections#emptyList()} on failure;
+	 */
 	protected Collection<GeneralCase> getCases(
 			Collection<String> caseStatuses,
 			String processName,
 			boolean subscribedOnly,
-			String caseManagerType
-	) {
+			String caseManagerType, 
+			Date dateCreatedFrom, 
+			Date dateCreatedTo) {
 		Collection<Case> allCases = getCaseManager().getCases(
 				Arrays.asList(processName),
 				null,
 				caseStatuses,
 				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null,
-				Arrays.asList(caseManagerType));
+				Arrays.asList(caseManagerType), 
+				dateCreatedFrom, 
+				dateCreatedTo);
 		if (ListUtil.isEmpty(allCases)) {
 			return null;
 		}
@@ -670,36 +699,40 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				List<AdvancedProperty> columnLabels = columns.get(key);
 
 				for (AdvancedProperty column: columnLabels) {
-					if (isColumnOfDomain(column.getId(), CasesBoardViewer.CASE_FIELDS.get(5).getId()))
+					if (isEqual(column.getId(), CasesBoardViewer.CASE_FIELDS.get(5).getId()))
 						// Link to grading task
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(column.getId(), caseBoard.getCaseIdentifier())));
 					else if (column.getId().equals(CaseHandlerAssignmentHandler.handlerUserIdVarName)) {
 						//	Handler
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName,
-								caseBoard.getHandler() == null ? String.valueOf(-1) : caseBoard.getHandler().getId())));
+						rowValues.put(index, 
+								Arrays.asList(new AdvancedProperty(
+										CaseHandlerAssignmentHandler.handlerUserIdVarName,
+										caseBoard.getHandler() == null ? String.valueOf(-1) : caseBoard.getHandler().getId())));
 
 					//	Financing table
-					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.WORK_ITEM)) {
+					} else if (isEqual(column.getId(), CasesBoardViewer.WORK_ITEM)) {
 						financingTableAdded = true;
 						rowBean.setFinancingInfo(caseBoard.getFinancingOfTheTasks());
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(ProcessConstants.FINANCING_OF_THE_TASKS,
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(
+								ProcessConstants.FINANCING_OF_THE_TASKS,
 								CoreConstants.EMPTY)));
-					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
-					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.BOARD_SUGGESTION)) {
-					} else if (isColumnOfDomain(column.getId(), CasesBoardViewer.BOARD_DECISION)) {
-					}else if (isColumnOfDomain(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
+					} else if (isEqual(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
+					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION)) {
+					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION)) {
+					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
 
 						//	Other value
 					} else
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(column.getId(), caseBoard.getValue(column.getId()))));
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(
+								column.getId(), caseBoard.getValue(column.getId()))));
 
 					//	Calculations
-					if (isColumnOfDomain(column.getId(), ProcessConstants.BOARD_FINANCING_DECISION))
+					if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_DECISION))
 						// Calculating board amounts
-						boardAmountTotal += caseBoard.getBoardAmount();
-					else if (isColumnOfDomain(column.getId(), ProcessConstants.BOARD_FINANCING_SUGGESTION))
+						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
+					else if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_SUGGESTION))
 						// Calculating grant amount suggestions
-						grantAmountSuggestionTotal += caseBoard.getGrantAmountSuggestion();
+						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion());
 				}
 
 				index++;

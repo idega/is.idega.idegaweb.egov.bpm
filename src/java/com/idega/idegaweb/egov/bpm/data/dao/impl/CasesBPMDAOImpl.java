@@ -1041,7 +1041,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				Arrays.asList(Long.valueOf(handler.getPrimaryKey().toString())),
 				null, null, null, null, null, null,
 				caseIDs != null ? caseIDs : null,
-				null, null, null));
+				null, null, null, null, null));
 	}
 
 	@Override
@@ -1143,18 +1143,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				return convertIDs(getCasesPrimaryKeys(caseCodes, procInstIds,
 						caseStatusesToShow,	caseStatusesToHide, null,
 						handlerCategoryIDs, null, null, null, null, null, null,
-						null, caseIDs, Boolean.TRUE, Boolean.TRUE, null));
+						null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, null, null));
 			} else {
 				return convertIDs(getCasesPrimaryKeys(null, procInstIds,
 						caseStatusesToShow,	caseStatusesToHide, null,
 						handlerCategoryIDs, null, null, null, null, caseCodes,
-						null, null, caseIDs, Boolean.TRUE, Boolean.TRUE, null));
+						null, null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, null, null));
 			}
 		} else {
 			return convertIDs(getCasesPrimaryKeys(null, procInstIds,
 					caseStatusesToShow,	caseStatusesToHide, null,
 					handlerCategoryIDs, null, null, null, null, null, null,
-					null, caseIDs, Boolean.TRUE, Boolean.TRUE, null));
+					null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, null, null));
 		}
 	}
 
@@ -1719,7 +1719,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous,
 			Boolean isGeneralCases,
-			Boolean hasEnded) {
+			Boolean hasEnded, Date dateCreatedFrom, Date dateCreatedTo) {
 
 		StringBuilder query = new StringBuilder();
 		query.append("SELECT bcpi.case_id FROM bpm_cases_processinstances bcpi ");
@@ -1754,7 +1754,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				!ListUtil.isEmpty(caseCodes) ||
 				!ListUtil.isEmpty(authorsIDs) ||
 				!ListUtil.isEmpty(casesIds) ||
-				!ListUtil.isEmpty(handlerGroupIds)) {
+				!ListUtil.isEmpty(handlerGroupIds) ||
+				dateCreatedFrom != null ||
+				dateCreatedTo != null) {
 
 			query.append("JOIN proc_case pc ON bcpi.case_id=pc.PROC_CASE_ID ");
 
@@ -1802,6 +1804,22 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			/* Filtering by handler group ids */
 			if (!ListUtil.isEmpty(handlerGroupIds)) {
 				query.append("AND pc.HANDLER_GROUP_ID IN (").append(toStringNumbers(handlerGroupIds)).append(") ");
+			}
+
+			/*
+			 * Filtering by date floor
+			 */
+			if (dateCreatedFrom != null) {
+				IWTimestamp timestamp = new IWTimestamp(dateCreatedFrom);
+				query.append("AND pc.CREATED >= '").append(timestamp.toSQLDateString()).append("' ");
+			}
+
+			/*
+			 * Filtering by date ceiling
+			 */
+			if (dateCreatedTo != null) {
+				IWTimestamp timestamp = new IWTimestamp(dateCreatedTo);
+				query.append("AND pc.CREATED <= '").append(timestamp.toSQLDateString()).append("' ");
 			}
 		}
 
@@ -1878,13 +1896,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous,
 			Boolean generalCases,
-			Boolean ended) {
+			Boolean ended, 
+			Date dateCreatedFrom,
+			Date dateCreatedTo) {
 
 		String query = getCasesPrimaryKeysQuery(processDefinitionNames,
 				processInstanceIds, caseStatuses, caseStatusesToHide,
 				subscribersIDs, subscribersGroupIDs, handlersIDs, handlerGroupIDs,
 				caseManagerTypes, hasCaseManagerType, caseCodes, roles, authorsIDs,
-				casesIds, isAnonymous, generalCases, ended);
+				casesIds, isAnonymous, generalCases, ended, dateCreatedFrom, dateCreatedTo);
 
 		/* Ordering by date created */
 		query = query + "ORDER BY bcpi.date_created DESC";
