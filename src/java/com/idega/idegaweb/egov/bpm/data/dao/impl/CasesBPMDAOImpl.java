@@ -1359,18 +1359,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				return getCasesPrimaryKeys(caseCodes, procInstIds,
 						caseStatusesToShow,	caseStatusesToHide, null,
 						handlerCategoryIDs, null, null, null, null, null, null,
-						null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, null, null);
+						null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to);
 			} else {
 				return getCasesPrimaryKeys(null, procInstIds,
 						caseStatusesToShow,	caseStatusesToHide, null,
 						handlerCategoryIDs, null, null, null, null, caseCodes,
-						null, null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, null, null);
+						null, null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to);
 			}
 		} else {
 			return getCasesPrimaryKeys(null, procInstIds,
 					caseStatusesToShow,	caseStatusesToHide, null,
 					handlerCategoryIDs, null, null, null, null, null, null,
-					null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, null, null);
+					null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to);
 		}
 	}
 
@@ -2066,24 +2066,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 		} else {
 			caseCreatedColumn = "bcpi.DATE_CREATED";
-
-			/*
-			 * Filtering by date floor
-			 */
-			if (dateCreatedFrom != null) {
-				IWTimestamp timestamp = new IWTimestamp(dateCreatedFrom);
-				query.append("AND pc.CREATED >= '").append(timestamp.toSQLDateString()).append("' ");
-			}
-
-			/*
-			 * Filtering by date ceiling
-			 */
-			if (dateCreatedTo != null) {
-				IWTimestamp timestamp = new IWTimestamp(dateCreatedTo);
-				query.append("AND pc.CREATED <= '").append(timestamp.toSQLDateString()).append("' ");
-			}
 		}
-
+		
 		/* Filter by handlers */
 		if (!ListUtil.isEmpty(handlersIDs)) {
 			query.append("JOIN jbpm_variableinstance jvi ")
@@ -2128,16 +2112,25 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 		}
 
-		String sql = query.toString();
-		sql = StringHandler.replace(sql, "case_created", caseCreatedColumn);
-		if (dateCreatedFrom != null && dateCreatedTo != null) {
-			String pattern = "yyyy-MM-dd HH:mm:ss.S";
+		String pattern = "yyyy-MM-dd HH:mm:ss.S";
+		/*
+		 * Filtering by date floor
+		 */
+		if (dateCreatedFrom != null) {
 			IWTimestamp iwFrom = new IWTimestamp(dateCreatedFrom);
-			IWTimestamp iwTo = new IWTimestamp(dateCreatedTo);
-			sql = sql.concat(" and ").concat(caseCreatedColumn).concat(" >= '").concat(iwFrom.getDateString(pattern)).concat("' and ")
-					.concat(caseCreatedColumn).concat(" <= '").concat(iwTo.getDateString(pattern + "SS")).concat("'");
+			query.append("AND case_created >= '").append(iwFrom.getDateString(pattern)).append("' ");
 		}
 
+		/*
+		 * Filtering by date ceiling
+		 */
+		if (dateCreatedTo != null) {
+			IWTimestamp iwTo = new IWTimestamp(dateCreatedTo);
+			query.append("AND case_created <= '").append(iwTo.getDateString(pattern + "SS")).append("' ");
+		}
+
+		String sql = query.toString();
+		sql = StringHandler.replace(sql, "case_created", caseCreatedColumn);
 		return sql;
 	}
 
@@ -2314,13 +2307,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public Map<Integer, Date> getHandlerCasesIds(
+	public <N extends Number> Map<Integer, Date> getHandlerCasesIds(
 			User handler,
 			Collection<String> caseStatusesToShow,
 			Collection<String> caseStatusesToHide,
 			Collection<? extends Number> subscribersIDs,
 			Collection<? extends Number> subscribersGroupIDs,
-			Collection<? extends Number> handlersIDs, //	TODO
+			Collection<N> handlersIDs,
 			Collection<? extends Number> handlerGroupIDs,
 			Collection<String> caseManagerTypes,
 			Boolean hasCaseManagerType,
@@ -2339,11 +2332,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		
 		if (handlersIDs == null) {
-			handlersIDs = new ArrayList<Number>();
+			handlersIDs = new ArrayList<N>();
 		} else {
-			handlersIDs = new ArrayList<Number>(handlersIDs);
+			handlersIDs = new ArrayList<N>(handlersIDs);
 		}
-		handlersIDs.add((Number) Long.valueOf(handler.getPrimaryKey().toString()));
+		Long handlerId = Long.valueOf(handler.getPrimaryKey().toString());
+		handlersIDs.add((N) handlerId);
 
 		return getCasesPrimaryKeys(
 				null,				//	proc. def. names

@@ -315,13 +315,13 @@ public interface CasesBPMDAO extends GenericDao {
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
-	public Map<Integer, Date> getHandlerCasesIds(
+	public <N extends Number> Map<Integer, Date> getHandlerCasesIds(
 			User handler,
 			Collection<String> caseStatusesToShow,
 			Collection<String> caseStatusesToHide,
 			Collection<? extends Number> subscribersIDs,
 			Collection<? extends Number> subscribersGroupIDs,
-			Collection<? extends Number> handlersIDs,
+			Collection<N> handlersIDs,
 			Collection<? extends Number> handlerGroupIDs,
 			Collection<String> caseManagerTypes,
 			Boolean hasCaseManagerType,

@@ -1624,12 +1624,21 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 		}
 
-		return getCasesBPMDAO().getCasesPrimaryKeys(
+		Map<Integer, Date> data = getCasesBPMDAO().getCasesPrimaryKeys(
 				processDefinitionNames, 
 				processInstanceIds,
 				caseStatuses, null, subscribersIds, null, null, null,
 				caseManagerTypes, null, null, null, null, null, null, null, null, 
 				dateCreatedFrom, dateCreatedTo);
+		if (MapUtil.isEmpty(data)) {
+			return null;
+		}
+		
+		List<String> ids = new ArrayList<String>();
+		for (Integer id: data.keySet()) {
+			ids.add(String.valueOf(id));
+		}
+		return ArrayUtil.convertListToArray(ids);
 	}
 
 	/*
