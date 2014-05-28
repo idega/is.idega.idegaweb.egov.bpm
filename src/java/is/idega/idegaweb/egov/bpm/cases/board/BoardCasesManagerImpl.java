@@ -1151,7 +1151,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 
 				String taskName = taskInfo.get("task");
 				if (StringUtil.isEmpty(taskName))
-					continue;
+					taskName = CoreConstants.MINUS;
 
 				Long cost = getNumberValue(taskInfo.get("cost_estimate"), Boolean.FALSE);
 
