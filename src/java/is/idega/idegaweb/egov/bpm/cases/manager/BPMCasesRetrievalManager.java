@@ -86,6 +86,7 @@ import is.idega.idegaweb.egov.application.data.Application;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -336,7 +337,8 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param processDefinitionNames is {@link Collection} of 
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
-	 * @param processInstanceIds TODO
+	 * @param processInstanceIds is {@link Collection} of {@link ProcessInstance#getId()}
+	 * to search by, skipped if <code>null</code>;
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
 	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
 	 * @param subscribers is {@link Collection} of {@link User}, who
@@ -345,6 +347,10 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param caseManagerTypes is {@link Collection} of 
 	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
 	 * will be skipped;
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * skipped if <code>null</code>;
+	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
+	 * skipped if <code>null</code>;
 	 * @return array of {@link Case#getPrimaryKey()} by criteria or 
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
@@ -353,7 +359,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 			Collection<String> processDefinitionNames,
 			Collection<? extends Number> processInstanceIds, 
 			Collection<String> caseStatuses,
-			Collection<User> subscribers, Collection<String> caseManagerTypes);
+			Collection<User> subscribers, Collection<String> caseManagerTypes, Date dateCreatedFrom, Date dateCreatedTo);
 
 	/**
 	 * <p>Only PROC_CASE</p>
@@ -391,7 +397,8 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param processDefinitionNames is {@link Collection} of 
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
-	 * @param processInstanceIds TODO
+	 * @param processInstanceIds is {@link Collection} of {@link ProcessInstance#getId()}
+	 * to filter {@link Case}s by, skipped if <code>null</code>;
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
 	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
 	 * @param subscribers is {@link Collection} of {@link User}, who
@@ -400,6 +407,10 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param caseManagerTypes is {@link Collection} of 
 	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
 	 * will be skipped;
+	 * @param dateFrom is floor of {@link Case#getCreated()}, 
+	 * skipped if <code>null</code>;
+	 * @param dateTo is ceiling of {@link Case#getCreated()},
+	 * skipped if <code>null</code>;
 	 * @return {@link List} of {@link Case}s by criteria or 
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
@@ -409,13 +420,14 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 			Collection<Long> processInstanceIds, 
 			Collection<String> caseStatuses,
 			Collection<User> subscribers, 
-			Collection<String> caseManagerTypes);
+			Collection<String> caseManagerTypes, 
+			Date dateFrom, 
+			Date dateTo);
 
 	/**
 	 * 
-	 * <p>TODO</p>
-	 * @param processInstances
-	 * @return
+	 * @param processInstances to search by, not <code>null</code>;
+	 * @return {@link Case}s by criteria, {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	public List<Case> getCases(Collection<ProcessInstanceW> processInstances);

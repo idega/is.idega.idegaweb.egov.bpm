@@ -1549,10 +1549,20 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	 */
 	@Override
 	public List<Case> getCases(Collection<String> processDefinitionNames,
-			Collection<Long> processInstanceIds, Collection<String> caseStatuses,
-			Collection<User> subscribers, Collection<String> caseManagerTypes) {
-		String[] primaryKeys = getCasesPrimaryKeys(processDefinitionNames,
-				null, caseStatuses, subscribers, caseManagerTypes);
+			Collection<Long> processInstanceIds, 
+			Collection<String> caseStatuses,
+			Collection<User> subscribers, 
+			Collection<String> caseManagerTypes, 
+			Date dateFrom, 
+			Date dateTo) {
+		String[] primaryKeys = getCasesPrimaryKeys(
+				processDefinitionNames,
+				null, 
+				caseStatuses, 
+				subscribers, 
+				caseManagerTypes, 
+				dateFrom, 
+				dateTo);
 		if (ArrayUtil.isEmpty(primaryKeys)) {
 			return Collections.emptyList();
 		}
@@ -1576,7 +1586,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	@Override
 	public List<Case> getCases(Collection<String> processDefinitionNames,
 			Collection<String> caseStatuses, Collection<User> subscribers) {
-		return getCases(processDefinitionNames, null, caseStatuses, subscribers, null);
+		return getCases(processDefinitionNames, null, caseStatuses, subscribers, null, null, null);
 	}
 
 	/*
@@ -1600,8 +1610,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Collection<? extends Number> processInstanceIds,
 			Collection<String> caseStatuses,
 			Collection<User> subscribers,
-			Collection<String> caseManagerTypes
-	) {
+			Collection<String> caseManagerTypes, 
+			Date dateCreatedFrom, 
+			Date dateCreatedTo) {
+
 		List<Long> subscribersIds = null;
 
 		/* Searching by subscribers */
@@ -1612,36 +1624,12 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 		}
 
-		Map<Integer, Date> data = getCasesBPMDAO().getCasesPrimaryKeys(
-				processDefinitionNames,
+		return getCasesBPMDAO().getCasesPrimaryKeys(
+				processDefinitionNames, 
 				processInstanceIds,
-				caseStatuses,
-				null,
-				subscribersIds,
-				null,
-				null,
-				null,
-				caseManagerTypes,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null,
-				null
-		);
-		if (MapUtil.isEmpty(data)) {
-			return null;
-		}
-
-		List<String> ids = new ArrayList<String>(data.size());
-		for (Integer id: data.keySet()) {
-			ids.add(String.valueOf(id));
-		}
-		return ArrayUtil.convertListToArray(ids);
+				caseStatuses, null, subscribersIds, null, null, null,
+				caseManagerTypes, null, null, null, null, null, null, null, null, 
+				dateCreatedFrom, dateCreatedTo);
 	}
 
 	/*
@@ -1652,9 +1640,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
 			Collection<String> caseStatuses,
-			Collection<User> subscribers
-	) {
-		return getCasesPrimaryKeys(processDefinitionNames, null, caseStatuses, subscribers, null);
+			Collection<User> subscribers) {
+		return getCasesPrimaryKeys(processDefinitionNames, null, caseStatuses,
+				subscribers, null, null, null);
 	}
 
 	/*
@@ -1664,9 +1652,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	@Override
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
-			Collection<String> caseStatuses
-	) {
-		return getCasesPrimaryKeys(processDefinitionNames, null, caseStatuses, null, null);
+			Collection<String> caseStatuses) {
+		return getCasesPrimaryKeys(processDefinitionNames, null,
+				caseStatuses, null, null, null, null);
 	}
 
 	public VariablesHandler getVariablesHandler() {
@@ -2044,6 +2032,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			piids.add(processInstance.getProcessInstanceId());
 		}
 
-		return getCases(null, piids, null, null, null);
+		return getCases(null, piids, null, null, null, null, null);
 	}
 }

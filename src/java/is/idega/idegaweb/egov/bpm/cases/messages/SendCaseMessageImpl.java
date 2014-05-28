@@ -6,6 +6,8 @@ import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
 import is.idega.idegaweb.egov.message.business.MessageValue;
 
+import java.sql.Timestamp;
+import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -37,6 +39,7 @@ import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
+import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
@@ -112,6 +115,13 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				mvCtx.setValue(MessageValueContext.userBean, user);
 				mvCtx.setValue(caseUserBean, caseUser);
 				mvCtx.setValue(MessageValueContext.piwBean, piw);
+
+				Timestamp creationDate = theCase.getCreated();
+				if (creationDate != null) {
+					IWTimestamp iwCreationDate = new IWTimestamp(creationDate);
+					mvCtx.setValue(TypeRef.CREATION_DATE, iwCreationDate.getLocaleDate(preferredLocale, DateFormat.MEDIUM));
+					mvCtx.setValue(TypeRef.CREATION_TIME, iwCreationDate.getLocaleTime(preferredLocale, DateFormat.FULL));
+				}
 
 				String[] subjNMsg = getFormattedMessage(mvCtx, preferredLocale, msgs, unformattedForLocales, tkn);
 

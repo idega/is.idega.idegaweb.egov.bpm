@@ -256,8 +256,164 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
-	        Timestamp from,
-	        Timestamp to
+	        Date from,
+	        Date to
+	);
+
+	public Long getProcessInstanceIdByCaseIdAndMetaData(String caseId, Param metadata);
+	
+	/**
+	 *
+	 * @param caseStatusesToShow is {@link Collection} of {@link Case#getCaseStatus()}
+	 * of {@link Case}s that show be shown, skipped if <code>null</code>;
+	 * @param caseStatusesToHide is {@link Collection} of {@link Case#getCaseStatus()}
+	 * of {@link Case}s that show be hidden, skipped if <code>null</code>;
+	 * @param processDefinitionNames is {@link Collection} of {@link ProcessDefinition}s,
+	 * skipped if <code>null</code>;
+	 * @param caseIDs is {@link Case#getPrimaryKey()}s of {@link Case}s, that
+	 * already are selected;
+	 * @param procInstIds is {@link Collection} of {@link ProcessInstance}s,
+	 * to filter cases by. Skipped if <code>null</code>;
+	 * @param handlerCategoryIDs is {@link Collection} of
+	 * {@link Group#getPrimaryKey()} where should be searched for
+	 * {@link com.idega.user.data.User}s who are in {@link Case#getSubscribers()}
+	 * list. Skipped if <code>null</code>;
+	 * @param handlersIDs is {@link com.idega.user.data.User}s, who has ability
+	 * to manage {@link Case}s, skipped if <code>null</code>;
+	 * @param handlerGroupIDs is {@link Collection} of
+	 * {@link Group#getPrimaryKey()} which is connected to {@link Case#getHandler()}.
+	 * Skipped if <code>null</code>;
+	 * @param caseManagerTypes is {@link Collection} of
+	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
+	 * will be skipped;
+	 * @param hasCaseManagerType means that {@link Case#getCaseManagerType()}
+	 * must be <code>null</code> on <code>true</code>, must be not
+	 * <code>null</code> on <code>false</code>. Skipped if <code>null</code> or
+	 * overrided by "caseManagerTypes property";
+	 * @param caseCodes is {@link Collection} of {@link Case#getCaseCode()}
+	 * to filter {@link Case}s that are general ones, skipped if <code>null</code>;
+	 * @param roles is {@link Collection} of {@link Actor#getProcessName()},
+	 * skipped if <code>null</code>;
+	 * @param authorsIDs is {@link User}s, who created the {@link Case}. Usually
+	 * written in {@link Case#getOwner()}, skipped if <code>null</code>;
+	 * @param casesIds is {@link Collection} of {@link Case#getId()}. It
+	 * defines a subset of {@link Case}s, where should be searched, skipped if
+	 * <code>null</code>;
+	 * @param isAnonymous filters by {@link GeneralCase#isAnonymous()} property,
+	 * skipped if <code>null</code>;
+	 * @param generalCases tells if only {@link GeneralCase}s should be returned,
+	 * skipped if <code>null</code> or <code>false</code>;
+	 * @param hasEnded checks is {@link ProcessInstance} connected to
+	 * the {@link Case} has {@link ProcessInstance#getEnd()}. If <code>false</code>
+	 * is provided, then only not ended processes will be returned. Skipped
+	 * if <code>null</code>;
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * skipped if <code>null</code>;
+	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
+	 * skipped if <code>null</code>;
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or
+	 * <code>null</code> on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public Map<Integer, Date> getHandlerCasesIds(
+			User handler,
+			Collection<String> caseStatusesToShow,
+			Collection<String> caseStatusesToHide,
+			Collection<? extends Number> subscribersIDs,
+			Collection<? extends Number> subscribersGroupIDs,
+			Collection<? extends Number> handlersIDs,
+			Collection<? extends Number> handlerGroupIDs,
+			Collection<String> caseManagerTypes,
+			Boolean hasCaseManagerType,
+			Collection<String> caseCodes,
+			Collection<String> roles,
+			Collection<? extends Number> authorsIDs,
+			Collection<? extends Number> casesIds,
+			Boolean isAnonymous, 
+			Boolean generalCases, 
+			Boolean hasEnded, 
+			Date dateCreatedFrom, 
+			Date dateCreatedTo);
+
+	/**
+	 * <p>"AND" relation for filtering BPM {@link Case}s.
+	 * {@link Case}s are filtered by provided properties below. If there is
+	 * no need to filter by some of these properties, just add <code>null</code>.
+	 * If all properties will be <code>null</code>, then all BPM {@link Case}s
+	 * will be returned.</p>
+	 * @param processDefinitionNames is {@link Collection} of
+	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
+	 * skipped, if <code>null</code>;
+	 * @param processInstanceIds is {@link Collection} of {@link ProcessInstance#getId()},
+	 * skipped if <code>null</code>;
+	 * @param caseStatusesToShow is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @param caseStatusesToHide is {@link Collection} of {@link Case#getStatus()}
+	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
+	 * @param subscribersIDs is {@link Collection} of {@link User}, who
+	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
+	 * then this option will be skipped;
+	 * @param subscriberGroupsIDs is {@link Collection} of
+	 * {@link Group#getPrimaryKey()} where should be searched for
+	 * {@link com.idega.user.data.User}s who are in {@link Case#getSubscribers()}
+	 * list. Skipped if <code>null</code>;
+	 * @param handlersIDs is {@link com.idega.user.data.User}s, who has ability
+	 * to manage {@link Case}s, skipped if <code>null</code>;
+	 * @param handlerGroupIds is {@link Collection} of
+	 * {@link Group#getPrimaryKey()} which is connected to {@link Case#getHandler()}.
+	 * Skipped if <code>null</code>;
+	 * @param caseManagerTypes is {@link Collection} of
+	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
+	 * will be skipped;
+	 * @param hasCaseManagerType means that {@link Case#getCaseManagerType()}
+	 * must be <code>null</code> on <code>true</code>, must be not
+	 * <code>null</code> on <code>false</code>. Skipped if <code>null</code> or
+	 * overrided by "caseManagerTypes property";
+	 * @param caseCodes is {@link Collection} of {@link Case#getCaseCode()}
+	 * to filter {@link Case}s that are general ones, skipped if <code>null</code>;
+	 * @param roles is {@link Collection} of {@link Actor#getProcessName()},
+	 * skipped if <code>null</code>;
+	 * @param authorsIDs is {@link User}s, who created the {@link Case}. Usually
+	 * written in {@link Case#getOwner()}, skipped if <code>null</code>;
+	 * @param casesIds is {@link Collection} of {@link Case#getId()}. It
+	 * defines a subset of {@link Case}s, where should be searched, skipped if
+	 * <code>null</code>;
+	 * @param isAnonymous filters by {@link GeneralCase#isAnonymous()} property,
+	 * skipped if <code>null</code>;
+	 * @param generalCases tells if only {@link GeneralCase}s should be returned,
+	 * skipped if <code>null</code> or <code>false</code>;
+	 * @param hasEnded checks is {@link ProcessInstance} connected to
+	 * the {@link Case} has {@link ProcessInstance#getEnd()}. If <code>false</code>
+	 * is provided, then only not ended processes will be returned. Skipped
+	 * if <code>null</code>;
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * skipped if <code>null</code>;
+	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
+	 * skipped if <code>null</code>;
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or
+	 * <code>null</code> on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	public Map<Integer, Date> getCasesPrimaryKeys(
+			Collection<String> processDefinitionNames,
+			Collection<? extends Number> processInstanceIds,
+			Collection<String> caseStatusesToShow,
+			Collection<String> caseStatusesToHide,
+			Collection<? extends Number> subscribersIDs,
+			Collection<? extends Number> subscribersGroupIDs,
+			Collection<? extends Number> handlersIDs,
+			Collection<? extends Number> handlerGroupIDs,
+			Collection<String> caseManagerTypes,
+			Boolean hasCaseManagerType,
+			Collection<String> caseCodes,
+			Collection<String> roles,
+			Collection<? extends Number> authorsIDs,
+			Collection<? extends Number> casesIds,
+			Boolean isAnonymous,
+			Boolean generalCases,
+			Boolean hasEnded,
+			Date from,
+			Date to
 	);
 
 	/**
@@ -290,96 +446,10 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> procInstIds,
 			Set<String> roles,
 			Collection<? extends Number> handlerCategoryIDs,
-	        Timestamp from,
-	        Timestamp to
+			Date from,
+			Date to
 	);
-
-	public Long getProcessInstanceIdByCaseIdAndMetaData(String caseId, Param metadata);
-
-	/**
-	 * <p>"AND" relation for filtering BPM {@link Case}s.
-	 * {@link Case}s are filtered by provided properties below. If there is
-	 * no need to filter by some of these properties, just add <code>null</code>.
-	 * If all properties will be <code>null</code>, then all BPM {@link Case}s
-	 * will be returned.</p>
-	 * @param processDefinitionNames is {@link Collection} of
-	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
-	 * skipped, if <code>null</code>;
-	 * @param processInstanceIds is {@link Collection} of {@link ProcessInstance#getId()},
-	 * skipped if <code>null</code>;
-	 * @param caseStatusesToShow is {@link Collection} of {@link Case#getStatus()}
-	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
-	 * @param caseStatusesToHide is {@link Collection} of {@link Case#getStatus()}
-	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
-	 * @param subscribersIDs is {@link Collection} of {@link User}, who
-	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
-	 * then this option will be skipped;
-<<<<<<< HEAD
-	 * @param subscribersGroupIDs is {@link Collection} of
-=======
-	 * @param subscriberGroupsIDs is {@link Collection} of
->>>>>>> c80c2f5b60b3bf94838b9781539a5b16357f2e4d
-	 * {@link Group#getPrimaryKey()} where should be searched for
-	 * {@link com.idega.user.data.User}s who are in {@link Case#getSubscribers()}
-	 * list. Skipped if <code>null</code>;
-	 * @param handlersIDs is {@link com.idega.user.data.User}s, who has ability
-	 * to manage {@link Case}s, skipped if <code>null</code>;
-<<<<<<< HEAD
-	 * @param handlerGroupIDs is {@link Collection} of
-=======
-	 * @param handlerGroupIds is {@link Collection} of
->>>>>>> c80c2f5b60b3bf94838b9781539a5b16357f2e4d
-	 * {@link Group#getPrimaryKey()} which is connected to {@link Case#getHandler()}.
-	 * Skipped if <code>null</code>;
-	 * @param caseManagerTypes is {@link Collection} of
-	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
-	 * will be skipped;
-	 * @param hasCaseManagerType means that {@link Case#getCaseManagerType()}
-	 * must be <code>null</code> on <code>true</code>, must be not
-	 * <code>null</code> on <code>false</code>. Skipped if <code>null</code> or
-	 * overrided by "caseManagerTypes property";
-	 * @param caseCodes is {@link Collection} of {@link Case#getCaseCode()}
-	 * to filter {@link Case}s that are general ones, skipped if <code>null</code>;
-	 * @param roles is {@link Collection} of {@link Actor#getProcessName()},
-	 * skipped if <code>null</code>;
-	 * @param authorsIDs is {@link User}s, who created the {@link Case}. Usually
-	 * written in {@link Case#getOwner()}, skipped if <code>null</code>;
-	 * @param casesIds is {@link Collection} of {@link Case#getId()}. It
-	 * defines a subset of {@link Case}s, where should be searched, skipped if
-	 * <code>null</code>;
-	 * @param isAnonymous filters by {@link GeneralCase#isAnonymous()} property,
-	 * skipped if <code>null</code>;
-	 * @param generalCases tells if only {@link GeneralCase}s should be returned,
-	 * skipped if <code>null</code> or <code>false</code>;
-	 * @param hasEnded checks is {@link ProcessInstance} connected to
-	 * the {@link Case} has {@link ProcessInstance#getEnd()}. If <code>false</code>
-	 * is provided, then only not ended processes will be returned. Skipped
-	 * if <code>null</code>;
-	 * @return array of {@link Case#getPrimaryKey()} by criteria or
-	 * <code>null</code> on failure;
-	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
-	 */
-	public Map<Integer, Date> getCasesPrimaryKeys(
-			Collection<String> processDefinitionNames,
-			Collection<? extends Number> processInstanceIds,
-			Collection<String> caseStatusesToShow,
-			Collection<String> caseStatusesToHide,
-			Collection<? extends Number> subscribersIDs,
-			Collection<? extends Number> subscribersGroupIDs,
-			Collection<? extends Number> handlersIDs,
-			Collection<? extends Number> handlerGroupIDs,
-			Collection<String> caseManagerTypes,
-			Boolean hasCaseManagerType,
-			Collection<String> caseCodes,
-			Collection<String> roles,
-			Collection<? extends Number> authorsIDs,
-			Collection<? extends Number> casesIds,
-			Boolean isAnonymous, Boolean generalCases,
-			Boolean hasEnded,
-			Timestamp from,
-			Timestamp to
-	);
-
+	
 	public int getNumberOfApplications(Long procDefId);
 	
 }
