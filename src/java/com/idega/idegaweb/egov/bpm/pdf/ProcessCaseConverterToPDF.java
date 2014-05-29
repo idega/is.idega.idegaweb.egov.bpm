@@ -140,6 +140,10 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			}
 
 			ProcessInstanceW piW = getProcessInstance(caseId);
+			if (piW == null) {
+				getLogger().warning("Proc. inst. ID can not be found for case: " + caseId);
+				return null;
+			}
 			List<TaskInstanceW> finishedTasks = getFinishedTasks(piW);
 			if (ListUtil.isEmpty(finishedTasks)) {
 				getLogger().info("There are no submitted documents for case " + theCase + ", proc. inst. ID: " + piW.getProcessInstanceId() + ", identifier: " + identifier);
