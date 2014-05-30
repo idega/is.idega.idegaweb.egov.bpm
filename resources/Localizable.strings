@@ -112,3 +112,4 @@ bpm_variable.string_ownerGrantAmauntValue=Result board
 bpm_variable.string_ownerGrade=Reviewed choice
 bpm_variable.string_ownerAnswer=Conditions
 bpm_variable.handlerUserId=The manager
+bpm_variable.string_ownerGender=Gender
