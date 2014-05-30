@@ -714,7 +714,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 				List<AdvancedProperty> columnLabels = columns.get(key);
 
 				for (AdvancedProperty column: columnLabels) {
-					if (isEqual(column.getId(), CasesBoardViewer.CASE_FIELDS.get(5).getId()))
+					if (isEqual(column.getId(), ProcessConstants.CASE_IDENTIFIER))
 						// Link to grading task
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(column.getId(), caseBoard.getCaseIdentifier())));
 					else if (column.getId().equals(CaseHandlerAssignmentHandler.handlerUserIdVarName)) {
@@ -735,6 +735,10 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
+					} else if (isEqual(column.getId(), CaseBoardBean.CASE_OWNER_GENDER)) {
+						String value = caseBoard.getValue(CaseBoardBean.CASE_OWNER_GENDER);
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(
+								CaseBoardBean.CASE_OWNER_GENDER, localize(value, value))));
 
 						//	Other value
 					} else
@@ -838,7 +842,7 @@ public class BoardCasesManagerImpl implements BoardCasesManager {
 		List<String> customColumns = getCustomColumns(uuid);
 		if (ListUtil.isEmpty(customColumns)) {
 			for (AdvancedProperty header: CasesBoardViewer.CASE_FIELDS) {
-				if (index == 14) {
+				if (index == 15) {
 					columns.put(index, Arrays.asList(
 							new AdvancedProperty(CasesBoardViewer.WORK_ITEM,
 									localize(CasesBoardViewer.WORK_ITEM, "Work item")),
