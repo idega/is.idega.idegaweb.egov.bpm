@@ -60,6 +60,7 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.DBUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
@@ -131,7 +132,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				Long mainProcessId = null;
 		    	Token superToken = currentProcess.getSuperProcessToken();
 		    	while (superToken != null) {
-		    		superToken = HibernateUtil.initializeAndUnproxy(superToken);
+		    		superToken = DBUtil.getInstance().initializeAndUnproxy(superToken);
 		    		ProcessInstance processInstance = superToken.getProcessInstance();
 					mainProcessId = processInstance.getId();
 		    		superToken = processInstance.getSuperProcessToken();

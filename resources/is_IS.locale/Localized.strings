@@ -156,3 +156,7 @@ bpm_variable.long_issueStatusId=Sta\u00F0a
 export=Flytja
 cases_bpm.company=Fyrirt\u00E6ki
 exported_contacts=flutt tengili\u00F0ir
+doesnotapply=-
+male=Karl
+female=Kona
+bpm_variable.string_ownerGender=Kyn

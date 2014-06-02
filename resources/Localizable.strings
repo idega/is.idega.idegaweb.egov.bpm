@@ -117,3 +117,5 @@ bpm_variable.long_municipalityId=Municipality
 bpm_variable.string_issueCaption=Description
 bpm_variable.string_issueAddress=Address
 bpm_variable.long_issueStatusId=Status
+
+bpm_variable.string_ownerGender=Gender
