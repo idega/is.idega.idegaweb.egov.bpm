@@ -820,7 +820,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 		return new HashSet<String>(Arrays.asList(activeRole));
 	}
-	
+
 	private Map<Integer, Date> getCaseIds(
 			User user,
 			String type,
@@ -1095,8 +1095,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					procInstIds,
 					roles,
 					handlerCategoryIDs,
-					null,
-					null,
+					null,	//	from
+					null,	//	to
 					statusesToShow,
 					statusesToHide,
 					groups,
@@ -1109,7 +1109,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			return new ArrayList<Integer>(casesIds.keySet());
 		} catch (Exception e) {
-			getLogger().log(Level.WARNING, "Error getting cases", e);
+			getLogger().log(Level.WARNING, "Error getting cases for " + user + ", type: " + type + ", case codes: " + caseCodes + ", statuses to hide: " + caseStatusesToHide + ", statuses to show: " +
+					caseStatusesToShow + ", only subscribed cases to: " + onlySubscribedCases + ", show all cases: " + showAllCases + ", case ID: " + caseId + ", proc. inst. IDs: " + procInstIds + ", roles: " + roles +
+					", handler category IDs: " + handlerCategoryIDs + ", statuses to show: " + statusesToShow + ", statuses to hide: " + statusesToHide + ", groups: " + groups + ", case codes: " + casecodes +
+					", super admin: " + isSuperAdmin, e);
 			throw new RuntimeException(e);
 		} finally {
 			if (casesListCacheTurnedOn && caseId == null) {
@@ -1549,19 +1552,19 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	 */
 	@Override
 	public List<Case> getCases(Collection<String> processDefinitionNames,
-			Collection<Long> processInstanceIds, 
+			Collection<Long> processInstanceIds,
 			Collection<String> caseStatuses,
-			Collection<User> subscribers, 
-			Collection<String> caseManagerTypes, 
-			Date dateFrom, 
+			Collection<User> subscribers,
+			Collection<String> caseManagerTypes,
+			Date dateFrom,
 			Date dateTo) {
 		String[] primaryKeys = getCasesPrimaryKeys(
 				processDefinitionNames,
-				null, 
-				caseStatuses, 
-				subscribers, 
-				caseManagerTypes, 
-				dateFrom, 
+				null,
+				caseStatuses,
+				subscribers,
+				caseManagerTypes,
+				dateFrom,
 				dateTo);
 		if (ArrayUtil.isEmpty(primaryKeys)) {
 			return Collections.emptyList();
@@ -1610,8 +1613,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Collection<? extends Number> processInstanceIds,
 			Collection<String> caseStatuses,
 			Collection<User> subscribers,
-			Collection<String> caseManagerTypes, 
-			Date dateCreatedFrom, 
+			Collection<String> caseManagerTypes,
+			Date dateCreatedFrom,
 			Date dateCreatedTo) {
 
 		List<Long> subscribersIds = null;
@@ -1625,15 +1628,15 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 
 		Map<Integer, Date> data = getCasesBPMDAO().getCasesPrimaryKeys(
-				processDefinitionNames, 
+				processDefinitionNames,
 				processInstanceIds,
 				caseStatuses, null, subscribersIds, null, null, null,
-				caseManagerTypes, null, null, null, null, null, null, null, null, 
+				caseManagerTypes, null, null, null, null, null, null, null, null,
 				dateCreatedFrom, dateCreatedTo);
 		if (MapUtil.isEmpty(data)) {
 			return null;
 		}
-		
+
 		List<String> ids = new ArrayList<String>();
 		for (Integer id: data.keySet()) {
 			ids.add(String.valueOf(id));
