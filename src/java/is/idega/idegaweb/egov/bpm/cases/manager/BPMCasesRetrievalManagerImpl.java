@@ -1253,7 +1253,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	private final HashMap<String, String> uris = new HashMap<String, String>(2);
 
-	protected synchronized String getPageUri(IWApplicationContext iwac, String pageType) {
+	protected String getPageUri(IWApplicationContext iwac, String pageType) {
 		if (uris != null && uris.containsKey(pageType))
 			return uris.get(pageType);
 

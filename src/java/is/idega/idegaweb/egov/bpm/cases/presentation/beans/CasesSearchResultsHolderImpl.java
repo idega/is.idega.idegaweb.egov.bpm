@@ -71,6 +71,7 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
+import com.idega.util.text.TextSoap;
 
 @Scope("session")
 @Service(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER)
@@ -512,7 +513,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 			cases = casesByProcessDefinition.get(processName);
 
-			String sheetName = StringHandler.shortenToLength(getSheetName(locale, processName), 30);
+			String sheetName = TextSoap.encodeToValidExcelSheetName(StringHandler.shortenToLength(getSheetName(locale, processName), 30));
 			HSSFSheet sheet = createdSheets.contains(sheetName) ? workBook.getSheet(sheetName) : workBook.createSheet(sheetName);
 			createdSheets.add(sheetName);
 
