@@ -35,44 +35,44 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 
 	@Autowired
 	private BPMUserFactory userFactory;
-	
+
 	BPMUserFactory getUserFactory() {
 		if (userFactory == null)
 			ELUtil.getInstance().autowire(this);
 		return userFactory;
 	}
-	
+
 	@Override
 	public Collection<AdvancedProperty> getValues(String procDefId, String variableName) {
 		if (StringUtil.isEmpty(procDefId) || StringUtil.isEmpty(variableName)) {
 			addEmptyLabel(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 			return values;
 		}
-		
+
 		String procDefName = getBpmDAO().getProcessDefinitionNameByProcessDefinitionId(Long.valueOf(procDefId));
 		if (StringUtil.isEmpty(procDefName)) {
 			addEmptyLabel(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 			return values;
 		}
-		
+
 		List<Integer> ids = getUserFactory().getAllHandlersForProcess(procDefName);
 		if (ListUtil.isEmpty(ids)) {
 			addEmptyLabel(IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 			return values;
 		}
-		
+
 		values = new ArrayList<AdvancedProperty>();
 		for (Integer id: ids) {
 			values.add(new AdvancedProperty(String.valueOf(id), getUserName(id)));
 		}
-		
+
 		List<AdvancedProperty> sorted = new ArrayList<AdvancedProperty>(values);
 		Collections.sort(sorted, new AdvancedPropertyComparator(getCurrentLocale()));
 		values = new ArrayList<AdvancedProperty>(sorted);
-		
+
 		return values;
 	}
-	
+
 	protected String getUserName(Integer id) {
 		try {
 			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
@@ -113,7 +113,7 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 	public String getPresentation(String value) {
 		if (StringUtil.isEmpty(value))
 			return null;
-		
+
 		String[] ids = value.split(CoreConstants.SEMICOLON);
 		return ArrayUtil.isEmpty(ids) ? CoreConstants.MINUS : getPresentation(Arrays.asList(ids));
 	}
@@ -122,25 +122,24 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 	public String getPresentation(VariableInstanceInfo variable) {
 		return (variable == null || variable.getValue() == null) ? CoreConstants.MINUS : getPresentation(Arrays.asList(variable.getValue().toString()));
 	}
-	
+
 	private String getPresentation(Collection<String> usersIds) {
 		if (ListUtil.isEmpty(usersIds))
 			return CoreConstants.MINUS;
-		
+
 		try {
 			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
-			@SuppressWarnings("unchecked")
 			Collection<User> users = userBusiness.getUsers(ArrayUtil.convertListToArray(usersIds));
 			if (ListUtil.isEmpty(users))
 				return CoreConstants.MINUS;
-			
+
 			StringBuilder presentation = new StringBuilder();
 			for (Iterator<User> usersIter = users.iterator(); usersIter.hasNext();) {
 				User user = usersIter.next();
 				String name = user == null ? null : user.getName();
 				if (StringUtil.isEmpty(name))
 					continue;
-				
+
 				presentation.append(name);
 				if (usersIter.hasNext())
 					presentation.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
@@ -150,7 +149,7 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		
+
 		return CoreConstants.MINUS;
 	}
 

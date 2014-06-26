@@ -133,7 +133,6 @@ public class CasesBPMProcessMgmtBean {
 
 		try {
 
-			@SuppressWarnings("unchecked")
 			Collection<CaseType> types = getCasesBusiness(
 					IWMainApplication.getIWMainApplication(
 							FacesContext.getCurrentInstance())
@@ -167,7 +166,6 @@ public class CasesBPMProcessMgmtBean {
 
 		try {
 
-			@SuppressWarnings("unchecked")
 			Collection<CaseCategory> categories = getCasesBusiness(
 					IWMainApplication.getIWMainApplication(
 							FacesContext.getCurrentInstance())
@@ -197,7 +195,7 @@ public class CasesBPMProcessMgmtBean {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 					CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);

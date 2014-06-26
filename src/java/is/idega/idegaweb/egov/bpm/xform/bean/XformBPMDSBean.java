@@ -26,65 +26,66 @@ import com.idega.util.text.Item;
 @Scope("singleton")
 @Service("xformBPM")
 public class XformBPMDSBean implements XformBPM {
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	protected BPMFactory getBpmFactory() {
 		return bpmFactory;
 	}
-	
+
 	protected void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
-	
+
+	@Override
 	public List<Item> getUsersConnectedToProcess(String pid) {
-		
+
 		List<User> users = getUsersConnectedList(new Long(pid));
-		
+
 		List<Item> usersItem = new ArrayList<Item>();
-		
+
 		for (User user : users)
 			usersItem.add(new Item(user.getId(), user.getName()));
-		
+
 		return usersItem;
 	}
-	
+
 	public List<Item> getUsersNamesConnectedToProcess(String pid) {
-		
+
 		List<User> users = getUsersConnectedList(new Long(pid));
-		
+
 		List<Item> usersItem = new ArrayList<Item>();
-		
+
 		for (User user : users)
 			usersItem.add(new Item(user.getName(), user.getName()));
-		
+
 		return usersItem;
 	}
-	
-	@SuppressWarnings("unchecked")
+
+	@Override
 	public List<Item> getUsersConnectedToProcessEmails(String pid) {
-		
+
 		List<User> users = getUsersConnectedList(new Long(pid));
-		
+
 		List<Item> usersItem = new ArrayList<Item>();
-		
+
 		for (User user : users)
 			usersItem.add(new Item(getUserEmails(user.getEmails()), user
 			        .getName()));
-		
+
 		return usersItem;
 	}
-	
+
 	private List<User> getUsersConnectedList(Long pid) {
-		
+
 		ProcessInstanceW piw = getProcessInstanceW(pid);
-		
+
 		Collection<User> peopleConnectedToProcess = piw
 		        .getUsersConnectedToProcess();
-		
+
 		List<User> uniqueUsers = new ArrayList<User>();
-		
+
 		if (peopleConnectedToProcess != null) {
 			for (User user : peopleConnectedToProcess) {
 				if (!uniqueUsers.contains(user)) {
@@ -94,25 +95,26 @@ public class XformBPMDSBean implements XformBPM {
 		}
 		return uniqueUsers;
 	}
-	
+
 	private String getUserEmails(Collection<Email> emails) {
-		
+
 		StringBuilder userEmails = new StringBuilder();
-		
+
 		for (Email email : emails)
 			userEmails.append(email.getEmailAddress());
-		
+
 		return userEmails.toString();
-		
+
 	}
-	
+
+	@Override
 	public List<Item> getProcessAttachments(String pid) {
-		
+
 		long processInstanceId = Long.valueOf(pid);
 		ProcessInstanceW piw = getProcessInstanceW(processInstanceId);
-		
+
 		List<Item> attachments = new ArrayList<Item>();
-		
+
 		for (BinaryVariable binaryVariable : piw.getAttachments())
 			if (binaryVariable.getHidden() == null
 			        || binaryVariable.getHidden().equals(false)) {
@@ -128,28 +130,29 @@ public class XformBPMDSBean implements XformBPM {
 				                        .getCurrentLocale(), IWTimestamp.SHORT,
 				                    IWTimestamp.SHORT)));
 			}
-		
+
 		return attachments;
 	}
-	
+
+	@Override
 	public boolean hasProcessAttachments(String pid) {
-		
+
 		if (pid.equals(CoreConstants.EMPTY))
 			return Boolean.FALSE;
-		
+
 		long processInstanceId = Long.valueOf(pid);
 		ProcessInstanceW piw = getProcessInstanceW(processInstanceId);
-		
+
 		return piw.getAttachments().size() != 0 ? Boolean.TRUE : Boolean.FALSE;
 	}
-	
+
 	private ProcessInstanceW getProcessInstanceW(Long pid) {
-		
+
 		ProcessInstanceW piw = getBpmFactory()
 		        .getProcessManagerByProcessInstanceId(pid).getProcessInstance(
 		            pid);
-		
+
 		return piw;
 	}
-	
+
 }
