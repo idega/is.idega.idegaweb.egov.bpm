@@ -10,6 +10,8 @@ import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.jbpm.graph.def.ActionHandler;
 import org.jbpm.graph.exe.ExecutionContext;
+import org.jbpm.graph.exe.ProcessInstance;
+import org.jbpm.graph.exe.Token;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -59,6 +61,24 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 	@Override
 	@Transactional(readOnly = false)
 	public void execute(ExecutionContext ectx) throws Exception {
+		if (processInstanceId == null) {
+			getLogger().warning("Proc. inst. ID is unknown, trying to resolve it from execution context");
+			try {
+				ProcessInstance pi = ectx.getProcessInstance();
+				Token superProcessToken = pi.getSuperProcessToken();
+				if (superProcessToken == null) {
+					processInstanceId = pi.getId();
+				} else {
+					processInstanceId = superProcessToken.getProcessInstance().getId();
+				}
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error getting proc. inst. ID from execution context!", e);
+			}
+			if (processInstanceId != null) {
+				getLogger().info("Got proc. inst. (" + processInstanceId + ") ID from execution context");
+			}
+		}
+
 		CaseProcInstBind cpi = null;
 		try {
 			cpi = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
@@ -66,7 +86,7 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 			getLogger().log(Level.WARNING, "Error loading case and proc. inst. bind by proc. inst. ID: " + processInstanceId, e);
 		}
 		if (cpi == null) {
-			throw new RuntimeException("Unable to findc case and proc. inst. bind by proc. inst. ID: " + processInstanceId);
+			throw new RuntimeException("Unable to find case and proc. inst. bind by proc. inst. ID: " + processInstanceId);
 		}
 
 		Integer caseId = cpi.getCaseId();
@@ -75,14 +95,12 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 		CasesBusiness casesBusiness = getCasesBusiness(iwac);
 		GeneralCase genCase = casesBusiness.getGeneralCase(caseId);
 
-		JBPMConstants.bpmLogger.fine("Setting new owner for a case (" + caseId
-		        + ") to be user id = " + getOwnerUserId());
+		JBPMConstants.bpmLogger.fine("Setting new owner for a case (" + caseId + ") to be user id = " + getOwnerUserId());
 
 		User ownerUser = null;
 		if (getOwnerUserId() == null) {
 			ownerUser = getLoggedInUser();
-		}
-		else {
+		} else {
 			ownerUser = getUserBusiness(iwac).getUser(getOwnerUserId());
 		}
 		genCase.setOwner(ownerUser);
