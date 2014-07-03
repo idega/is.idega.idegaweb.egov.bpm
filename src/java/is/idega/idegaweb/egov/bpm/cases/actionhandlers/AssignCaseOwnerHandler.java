@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -19,6 +20,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.block.form.bean.SubmissionDataBean;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -30,11 +32,14 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.ListUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -57,6 +62,9 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 
 	@Autowired
 	private BPMContext bpmContext;
+
+	@Autowired
+	private VariableInstanceQuerier querier;
 
 	@Override
 	@Transactional(readOnly = false)
@@ -95,14 +103,40 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 		CasesBusiness casesBusiness = getCasesBusiness(iwac);
 		GeneralCase genCase = casesBusiness.getGeneralCase(caseId);
 
-		JBPMConstants.bpmLogger.fine("Setting new owner for a case (" + caseId + ") to be user id = " + getOwnerUserId());
-
 		User ownerUser = null;
-		if (getOwnerUserId() == null) {
-			ownerUser = getLoggedInUser();
+		Integer ownerId = getOwnerUserId();
+		if (ownerId == null) {
+			Object ownerPersonalIdVar = ectx.getVariable(SubmissionDataBean.VARIABLE_OWNER_PERSONAL_ID);
+			if (ownerPersonalIdVar instanceof String) {
+				try {
+					ownerUser = getUserBusiness(iwac).getUser((String) ownerPersonalIdVar);
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error getting user by personal ID: " + ownerPersonalIdVar, e);
+				}
+			}
+			if (ownerUser == null) {
+				Collection<VariableInstanceInfo> data = getVariableInstanceQuerier().getVariableByProcessInstanceIdAndVariableName(processInstanceId, SubmissionDataBean.VARIABLE_OWNER_PERSONAL_ID);
+				if (!ListUtil.isEmpty(data)) {
+					String personalId = data.iterator().next().getValue();
+					try {
+						ownerUser = getUserBusiness(iwac).getUser(personalId);
+						ownerPersonalIdVar = personalId;
+					} catch (Exception e) {
+						getLogger().log(Level.WARNING, "Error getting user by personal ID: " + personalId, e);
+					}
+				}
+			}
+			if (ownerUser == null) {
+				ownerUser = getLoggedInUser();
+				getLogger().warning("Owner ID is unknown, failed to resolve personal ID from submitted data, using currently logged in user (" + ownerUser + ") as owner");
+			} else {
+				getLogger().info("Owner ID was unknown, managed to resolve case owner (" + ownerUser + ") from submitted data. Personal ID: " + ownerPersonalIdVar);
+			}
 		} else {
-			ownerUser = getUserBusiness(iwac).getUser(getOwnerUserId());
+			ownerUser = getUserBusiness(iwac).getUser(ownerId);
 		}
+
+		JBPMConstants.bpmLogger.fine("Setting new owner for a case (" + caseId + ") to be user id = " + ownerUser.getId() + " (" + ownerUser.getName() + ")");
 		genCase.setOwner(ownerUser);
 		genCase.store();
 
@@ -184,6 +218,13 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 		}
 
 		return iwac;
+	}
+
+	private VariableInstanceQuerier getVariableInstanceQuerier() {
+		if (querier == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return querier;
 	}
 
 	CasesBPMDAO getCasesBPMDAO() {
