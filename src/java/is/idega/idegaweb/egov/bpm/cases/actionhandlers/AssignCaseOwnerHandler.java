@@ -59,7 +59,15 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 	@Override
 	@Transactional(readOnly = false)
 	public void execute(ExecutionContext ectx) throws Exception {
-		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
+		CaseProcInstBind cpi = null;
+		try {
+			cpi = getCasesBPMDAO().find(CaseProcInstBind.class, processInstanceId);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error loading case and proc. inst. bind by proc. inst. ID: " + processInstanceId, e);
+		}
+		if (cpi == null) {
+			throw new RuntimeException("Unable to findc case and proc. inst. bind by proc. inst. ID: " + processInstanceId);
+		}
 
 		Integer caseId = cpi.getCaseId();
 
@@ -126,7 +134,7 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -135,7 +143,7 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 
 	protected UserBusiness getUserBusiness(IWApplicationContext iwac) {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 			    UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
