@@ -97,8 +97,8 @@ public class CasesBPMAssetsState implements Serializable {
 			addExportContacts = Boolean.FALSE,
 			showUserCompany = Boolean.FALSE,
 			showLastLoginDate = Boolean.FALSE;
-	
-			
+
+
 
 	public Long getViewSelected() {
 		if (viewSelected == null)
@@ -589,7 +589,7 @@ public class CasesBPMAssetsState implements Serializable {
 
 			Long nextTaskId = getNextTaskId(id, getNextCaseId());
 			if (nextTaskId == null) {
-				LOGGER.info("NOT shoing next task - couldn't resolve IDs for next task");
+				LOGGER.info("NOT showing next task - couldn't resolve IDs for next task");
 				return showNextTask;
 			}
 
@@ -811,7 +811,7 @@ public class CasesBPMAssetsState implements Serializable {
 	public void setAddExportContacts(Boolean addExportContacts) {
 		this.addExportContacts = addExportContacts;
 	}
-	
+
 	public String getExportUsersUrl(){
 		URIUtil uriUtil = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
 		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(ProcessUsersExporter.class));
