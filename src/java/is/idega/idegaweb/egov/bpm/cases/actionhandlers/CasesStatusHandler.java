@@ -127,23 +127,26 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 			Map<String, CaseStatusGuardian> guardians = getBeansOfType(CaseStatusGuardian.class);
 			if (!MapUtil.isEmpty(guardians)) {
 				boolean canChange = true;
+				String procDefName = ectx.getProcessDefinition().getName();
 				for (Iterator<CaseStatusGuardian> guardiansIter = guardians.values().iterator(); guardiansIter.hasNext();) {
 					CaseStatusGuardian guardian = guardiansIter.next();
-					if (canChange) {
-						canChange = guardian.isAllowedToChangeStatus(ectx, caseId);
-					}
+					if (guardian.isValidProcessDefinition(procDefName)) {
+						if (canChange) {
+							canChange = guardian.isAllowedToChangeStatus(ectx, caseId);
+						}
 
-					String beanName = guardian.getExtraHandlerBeanName(ectx, caseId);
-					if (!StringUtil.isEmpty(beanName)) {
-						ActionHandler extraHandler = ELUtil.getInstance().getBean(beanName);
-						IWContext iwc = CoreUtil.getIWContext();
-						iwc.getRequest().setAttribute("comments", commentExpression);
-						extraHandler.execute(ectx);
-						iwc.getRequest().removeAttribute("comments");
+						String beanName = guardian.getExtraHandlerBeanName(ectx, caseId);
+						if (!StringUtil.isEmpty(beanName)) {
+							ActionHandler extraHandler = ELUtil.getInstance().getBean(beanName);
+							IWContext iwc = CoreUtil.getIWContext();
+							iwc.getRequest().setAttribute("comments", commentExpression);
+							extraHandler.execute(ectx);
+							iwc.getRequest().removeAttribute("comments");
+						}
 					}
-				}
-				if (!canChange) {
-					return;
+					if (!canChange) {
+						return;
+					}
 				}
 			}
 
