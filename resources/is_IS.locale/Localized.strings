@@ -124,6 +124,7 @@ bpm_variable.string_ownerFullName=Ums\u00E6kjandi
 bpm_variable.string_caseDescription=Ums\u00F3kn
 
 bpm_variable.string_classification=Flokkun
+bpm_variable.task_status=Sta\u00F0a
 
 back=Til baka
 loading=Hle\u00F0ur...
