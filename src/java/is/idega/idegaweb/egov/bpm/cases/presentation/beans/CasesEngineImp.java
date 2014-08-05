@@ -287,6 +287,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				.append(criterias.getStatusId()).append(", dateRange: ").append(criterias.getDateRange()).append(", casesListType: ")
 				.append(criterias.getCaseListType()).append(", contact: ").append(criterias.getContact()).append(", variables provided: ")
 				.append(ListUtil.isEmpty(criterias.getProcessVariables()) ? "none" : criterias.getProcessVariables())
+				.append(", address: ").append(criterias.getAddress())
 				.append(", process instance IDs: ").append(ListUtil.isEmpty(piIds) ? "none" :
 					piIds.size() >= 1000 ? new ArrayList<Long>(piIds).subList(0, 999) + " ..." : piIds)
 		.toString());
@@ -410,6 +411,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 		if (!StringUtil.isEmpty(criterias.getContact())) {
 			searchFields.add(new AdvancedProperty("contact", criterias.getContact()));
+		}
+		if (!StringUtil.isEmpty(criterias.getAddress())) {
+			searchFields.add(new AdvancedProperty("address", criterias.getAddress()));
 		}
 
 		if (criterias.getSubscribersGroupId() != null) {
