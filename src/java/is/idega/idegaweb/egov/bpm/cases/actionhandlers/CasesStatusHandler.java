@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
+import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
@@ -36,6 +37,7 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
 /**
@@ -54,7 +56,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 	private MessageValueHandler messageValueHandler;
 
 	private CaseHome caseHome = null;
-	
+
 	protected CaseHome getCaseHome() {
 		if (caseHome == null) {
 			try {
@@ -63,10 +65,10 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 				getLogger().log(Level.WARNING, "Unable to get " + CaseHome.class, e);
 			}
 		}
-		
+
 		return caseHome;
 	}
-	
+
 	/**
 	 * variable which contains string representation of case status to set
 	 */
@@ -121,6 +123,33 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 		String comment = null;
 		try {
 			caseId = getCaseId(ectx);
+
+			Map<String, CaseStatusGuardian> guardians = getBeansOfType(CaseStatusGuardian.class);
+			if (!MapUtil.isEmpty(guardians)) {
+				boolean canChange = true;
+				String procDefName = ectx.getProcessDefinition().getName();
+				for (Iterator<CaseStatusGuardian> guardiansIter = guardians.values().iterator(); guardiansIter.hasNext();) {
+					CaseStatusGuardian guardian = guardiansIter.next();
+					if (guardian.isValidProcessDefinition(procDefName)) {
+						if (canChange) {
+							canChange = guardian.isAllowedToChangeStatus(ectx, caseId);
+						}
+
+						String beanName = guardian.getExtraHandlerBeanName(ectx, caseId);
+						if (!StringUtil.isEmpty(beanName)) {
+							ActionHandler extraHandler = ELUtil.getInstance().getBean(beanName);
+							IWContext iwc = CoreUtil.getIWContext();
+							iwc.getRequest().setAttribute("comments", commentExpression);
+							extraHandler.execute(ectx);
+							iwc.getRequest().removeAttribute("comments");
+						}
+					}
+					if (!canChange) {
+						return;
+					}
+				}
+			}
+
 			status = getCaseStatus();
 			if (caseId == null) {
 				LOGGER.warning("Case ID was resolved for proc. inst. ID " + processInstanceId + ", skipping case status change (to " + status + ")");
