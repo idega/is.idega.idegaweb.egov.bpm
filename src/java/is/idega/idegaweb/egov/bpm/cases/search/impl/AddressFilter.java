@@ -35,7 +35,7 @@ public class AddressFilter extends DefaultCasesListSearchFilter {
 	@Override
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		String addressToSearch = getAddress();
-		String addressToSearchWithoutSymbols = addressToSearch.trim().replaceAll("[.,-]", "").replace(" ", "");
+		String addressToSearchWithoutSymbols = addressToSearch.trim().replaceAll("[.,-]", "").replaceAll(" ", "");
 		List<Integer> casesByAddressIds = new ArrayList<Integer>();
 		List<CaseProcInstBind> bindList = null;
 
