@@ -94,6 +94,8 @@ CasesBPMAssets.initGridsContainer = function(container, piId, caseId,
 	});
 }
 
+CasesBPMAssets.externalFunctionOnGridInited = null;
+
 CasesBPMAssets.initGrid = function(container, piId, caseId, 
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
@@ -172,6 +174,10 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 					}
 					
 					CasesBPMAssets.manageLoadingMessage();
+					
+					if (CasesBPMAssets.externalFunctionOnGridInited != null) {
+						CasesBPMAssets.externalFunctionOnGridInited(identifier, needToShow, container);
+					}
 				}
 				
 				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection,

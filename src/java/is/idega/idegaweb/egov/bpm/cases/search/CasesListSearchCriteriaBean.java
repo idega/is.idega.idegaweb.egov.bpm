@@ -35,7 +35,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					showAttachmentStatistics = false,
 					showUserProfilePicture = true,
 					addExportContacts = false,
-					showUserCompany = false;
+					showUserCompany = false,
+					search = false;
 
 	public String getProcessId() {
 		return processId;
@@ -208,6 +209,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Component ID: " + componentId).append("\n")
 			.append("Criterias ID: " + criteriasId).append("\n")
 			.append("Clear results: " + clearResults)
+			.append("Search: " + search)
 		.toString();
 	}
 
@@ -242,4 +244,13 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	public void setShowUserCompany(boolean showUserCompany) {
 		this.showUserCompany = showUserCompany;
 	}
+
+	public boolean isSearch() {
+		return search;
+	}
+
+	public void setSearch(boolean search) {
+		this.search = search;
+	}
+
 }

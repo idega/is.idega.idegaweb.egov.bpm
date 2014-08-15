@@ -276,6 +276,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
+		criterias.setSearch(true);
 		if (criterias.isClearResults())
 			//	Clearing search result before new search
 			clearSearchResults(criterias.getId());
@@ -342,6 +343,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setShowAttachmentStatistics(criterias.isShowAttachmentStatistics());
 		properties.setShowUserCompany(criterias.isShowUserCompany());
 		properties.setAddExportContacts(criterias.isAddExportContacts());
+		properties.setSearch(criterias.isSearch());
 
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criterias.getCaseListType())) {
