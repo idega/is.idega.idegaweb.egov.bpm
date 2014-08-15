@@ -12,6 +12,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasesListCustomizer;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.business.DefaultSpringBean;
@@ -74,7 +75,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 	}
 
 	@Override
-	public Map<String, String> getHeadersAndVariables(List<String> headersKeys) {
+	public Map<String, String> getHeadersAndVariables(CaseListPropertiesBean properties, List<String> headersKeys) {
 		if (ListUtil.isEmpty(headersKeys))
 			return null;
 
@@ -213,6 +214,11 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 	@Override
 	public Map<String, String> getLocalizedStatuses(List<String> casesIds, Locale locale) {
+		return null;
+	}
+
+	@Override
+	public Map<String, Map<String, String>> getCustomColumnsForSearchResult(List<String> casesIds, Locale locale) {
 		return null;
 	}
 }
