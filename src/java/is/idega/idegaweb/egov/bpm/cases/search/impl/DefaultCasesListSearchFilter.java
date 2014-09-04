@@ -364,4 +364,9 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	protected List<BPMProcessVariable> getProcessVariables() {
 		return criterias instanceof CasesListSearchCriteriaBean ? ((CasesListSearchCriteriaBean) criterias).getProcessVariables() : null;
 	}
+
+	protected String getAddress() {
+		return criterias instanceof CasesListSearchCriteriaBean ? ((CasesListSearchCriteriaBean) criterias).getAddress() : null;
+	}
+
 }

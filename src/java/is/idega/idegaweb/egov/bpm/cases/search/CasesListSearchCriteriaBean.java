@@ -208,6 +208,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Page size: " + getPageSize()).append("\n")
 			.append("Component ID: " + componentId).append("\n")
 			.append("Criterias ID: " + criteriasId).append("\n")
+			.append("Address: " + getAddress()).append("\n")
 			.append("Clear results: " + clearResults)
 			.append("Search: " + search)
 		.toString();
