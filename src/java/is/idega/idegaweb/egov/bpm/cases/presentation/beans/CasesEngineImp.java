@@ -540,6 +540,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				CasesRetrievalManager.CASE_LIST_TYPE_OPEN :
 				criterias.getCaseListType();
 
+		Collection<Long> handlerCategoryIDs = null;
 		List<Integer> casesIds = null;
 		try {
 			if (criterias.isShowAllCases()) {
@@ -559,6 +560,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				criterias.setStatusesToHide(null);
 			}
 
+			handlerCategoryIDs = criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId());
 			casesIds = getCaseManagersProvider().getCaseManager().getCasePrimaryKeys(
 					currentUser,
 					casesProcessorType,
@@ -569,14 +571,19 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					criterias.isShowAllCases(),
 					criterias.getProcInstIds(),
 					criterias.getRoles(),
-					criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId()),
+					handlerCategoryIDs,
 					true
 			);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
 		}
-		if (ListUtil.isEmpty(casesIds))
+		if (ListUtil.isEmpty(casesIds)) {
+			LOGGER.warning("No primary keys for cases found, terminating search. Parameters: current user: " + currentUser + ", cases processor type: " + casesProcessorType +
+					", case codes: " + criterias.getCaseCodesInList() + ", statuses to hide: " + criterias.getStatusesToHideInList() + ", statuses to show: " + criterias.getStatusesToShowInList() +
+					", only subscribed cases: " + criterias.isOnlySubscribedCases() + ", show all cases: " + criterias.isShowAllCases() + ", proc. inst. IDs: " + criterias.getProcInstIds() +
+					", roles: " + criterias.getRoles() + ", handler category IDs: " + handlerCategoryIDs + ", search query: " + true);
 			return null;
+		}
 
 		long end = System.currentTimeMillis();
 		LOGGER.info("Cases IDs were resolved in " + (end - start) + " ms");

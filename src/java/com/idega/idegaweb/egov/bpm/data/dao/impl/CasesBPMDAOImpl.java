@@ -41,7 +41,6 @@ import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
 import com.idega.data.MetaDataBMPBean;
 import com.idega.data.SimpleQuerier;
-import com.idega.hibernate.HibernateUtil;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
@@ -87,7 +86,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	@Override
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
 
@@ -891,7 +890,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		builder.append(") order by Created desc");
 
-		return getResults(builder.toString(), params);
+		Map<Integer, Date> results = getResults(builder.toString(), params);
+		return results;
 	}
 
 	@Override
@@ -2068,7 +2068,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		} else {
 			caseCreatedColumn = "bcpi.DATE_CREATED";
 		}
-		
+
 		/* Filter by handlers */
 		if (!ListUtil.isEmpty(handlersIDs)) {
 			query.append("JOIN jbpm_variableinstance jvi ")
@@ -2157,7 +2157,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> casesIds,
 			Boolean isAnonymous,
 			Boolean generalCases,
-			Boolean ended, 
+			Boolean ended,
 			Date dateCreatedFrom,
 			Date dateCreatedTo
 	) {
@@ -2331,7 +2331,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (handler == null) {
 			return null;
 		}
-		
+
 		if (handlersIDs == null) {
 			handlersIDs = new ArrayList<N>();
 		} else {

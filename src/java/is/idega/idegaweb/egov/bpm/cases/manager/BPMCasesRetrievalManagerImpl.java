@@ -1000,7 +1000,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			statusesToShow = showAllCases ? statusesToShow : ListUtil.isEmpty(caseStatusesToShow) ? params.getStatusesToShow() : caseStatusesToShow;
 			statusesToHide = showAllCases ? statusesToHide : ListUtil.isEmpty(caseStatusesToHide) ? params.getStatusesToHide() : caseStatusesToHide;
 			groups = params.getGroups();
+			caseCodes = ListUtil.isEmpty(caseCodes) ? null : caseCodes;
 			casecodes = params.getCodes();
+			casecodes = ListUtil.isEmpty(casecodes) ? null : casecodes;
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
 
 			/* Querying cache */

@@ -127,7 +127,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	}
 
 	public List<String> getCaseCodesInList() {
-		return caseCodes == null ? null : StringUtil.getValuesFromString(caseCodes, CoreConstants.COMMA);
+		return StringUtil.isEmpty(caseCodes) ? null : StringUtil.getValuesFromString(caseCodes, CoreConstants.COMMA);
 	}
 
 	public void setCaseCodes(String caseCodes) {
