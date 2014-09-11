@@ -20,7 +20,9 @@ import com.idega.block.process.business.pdf.CaseConverterToPDF;
 import com.idega.block.process.business.pdf.CasePDF;
 import com.idega.block.process.data.Case;
 import com.idega.bpm.pdf.business.FormConverterToPDFBean;
+import com.idega.core.accesscontrol.business.LoggedOnInfo;
 import com.idega.core.accesscontrol.business.LoginBusinessBean;
+import com.idega.core.accesscontrol.business.LoginSession;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.graphics.generator.business.PDFGenerator;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -125,6 +127,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 		IWContext iwc = CoreUtil.getIWContext();
 		LoginBusinessBean login = null;
 		User currentUser = iwc == null ? null : getCurrentUser();
+		LoggedOnInfo loggedOnInfo = null;
 		Locale locale = iwc == null ? getCurrentLocale() : iwc.getCurrentLocale();
 		try {
 			if (switchUser && iwc != null) {
@@ -132,6 +135,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 
 				User admin = iwc.getAccessController().getAdministratorUser();
 				if (currentUser == null || !admin.getId().equals(currentUser.getId())) {
+					loggedOnInfo = LoginBusinessBean.getLoggedOnInfo(iwc);
 					login.logOutUser(iwc);
 					login.logInAsAnotherUser(iwc, admin);
 
@@ -221,7 +225,9 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 				if (currentUser != null) {
 					login.logInAsAnotherUser(iwc, currentUser);
 					iwc.getRequest().setAttribute(BPMUserImpl.bpmUsrParam, currentUser.getUniqueId());
-					LoginBusinessBean.getLoginSessionBean().setUser(currentUser);
+					LoginSession loginSession = LoginBusinessBean.getLoginSessionBean();
+					loginSession.setLoggedOnInfo(loggedOnInfo);
+					loginSession.setUser(currentUser);
 				}
 
 				iwc.setCurrentLocale(locale);
