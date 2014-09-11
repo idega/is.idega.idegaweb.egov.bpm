@@ -28,7 +28,11 @@ import javax.persistence.Table;
 @NamedQueries(
 		{
 			@NamedQuery(name=ProcessUserBind.byUserIdNPID, query="from ProcessUserBind pub where pub.userId = :"+ProcessUserBind.userIdParam+ " and pub.caseProcessBind.procInstId = :"+ProcessUserBind.pidParam),
-			@NamedQuery(name=ProcessUserBind.byUserIdAndCaseId, query="select pub from ProcessUserBind pub, com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cpib where pub.userId = :"+ProcessUserBind.userIdParam+ " and cpib.caseId in(:"+ProcessUserBind.casesIdsParam+") and pub.caseProcessBind = cpib.procInstId")
+			@NamedQuery(name=ProcessUserBind.byUserIdAndCaseId, query="select pub from ProcessUserBind pub, com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cpib where pub.userId = :"+ProcessUserBind.userIdParam+ " and cpib.caseId in(:"+ProcessUserBind.casesIdsParam+") and pub.caseProcessBind = cpib.procInstId"),
+			@NamedQuery(
+					name=ProcessUserBind.byPID, 
+					query="FROM ProcessUserBind pub "
+							+ "WHERE pub.caseProcessBind.procInstId = :" + ProcessUserBind.pidParam)
 		}
 )
 public class ProcessUserBind implements Serializable {
@@ -44,6 +48,7 @@ public class ProcessUserBind implements Serializable {
 	public static final String TABLE_NAME = "BPM_PROCESSES_USERS";
 	
 	public static final String byUserIdNPID = "ProcessUserBind.byUserIdNPID";
+	public static final String byPID = "ProcessUserBind.byPID";
 	public static final String byUserIdAndCaseId = "ProcessUserBind.byUserIdNCaseId";
 	public static final String casesIdsParam = "casesIdsParam";
 	public static final String userIdParam = "userIdParam";

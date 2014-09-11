@@ -451,5 +451,23 @@ public interface CasesBPMDAO extends GenericDao {
 	);
 	
 	public int getNumberOfApplications(Long procDefId);
+
+	/**
+	 * 
+	 * @param processInstanceId is {@link ProcessInstance#getId()}, 
+	 * not <code>null</code>;
+	 * @return list of entities by criteria or {@link Collections#emptyList()}
+	 * on failure;
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	List<ProcessUserBind> getProcessUserBind(long processInstanceId);
+
+	/**
+	 * 
+	 * @param processInstanceId is {@link ProcessInstance#getId()}, 
+	 * not <code>null</code>;
+	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
+	 */
+	void removeProcessUserBinds(long processInstanceId);
 	
 }

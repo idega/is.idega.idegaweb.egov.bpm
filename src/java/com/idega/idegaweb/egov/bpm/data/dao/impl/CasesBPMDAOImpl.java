@@ -19,6 +19,8 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.persistence.TypedQuery;
+
 import org.hibernate.HibernateException;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
@@ -41,7 +43,6 @@ import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
 import com.idega.data.MetaDataBMPBean;
 import com.idega.data.SimpleQuerier;
-import com.idega.hibernate.HibernateUtil;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
@@ -216,6 +217,30 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return u.iterator().next();
 		} else
 			return null;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO#getProcessUserBind(long)
+	 */
+	@Override
+	public List<ProcessUserBind> getProcessUserBind(long processInstanceId) {
+		 TypedQuery<ProcessUserBind> query = getEntityManager().createNamedQuery(
+				 ProcessUserBind.byPID, ProcessUserBind.class);
+		 query = query.setParameter(ProcessUserBind.pidParam, processInstanceId);
+		 return query.getResultList();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * @see com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO#removeProcessUserBinds(long)
+	 */
+	@Override
+	public void removeProcessUserBinds(long processInstanceId) {
+		List<ProcessUserBind> users = getProcessUserBind(processInstanceId);
+		for (ProcessUserBind user : users) {
+			remove(user);
+		}
 	}
 
 	@Override
