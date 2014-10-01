@@ -204,7 +204,9 @@ public interface CasesBPMDAO extends GenericDao {
 	        Timestamp to
 	);
 
+	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
+	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Integer firstResult, Integer maxResults, boolean newestOnTop);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
 			List<String> procDefNames);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
@@ -261,7 +263,7 @@ public interface CasesBPMDAO extends GenericDao {
 	);
 
 	public Long getProcessInstanceIdByCaseIdAndMetaData(String caseId, Param metadata);
-	
+
 	/**
 	 *
 	 * @param caseStatusesToShow is {@link Collection} of {@link Case#getCaseStatus()}
@@ -307,7 +309,7 @@ public interface CasesBPMDAO extends GenericDao {
 	 * the {@link Case} has {@link ProcessInstance#getEnd()}. If <code>false</code>
 	 * is provided, then only not ended processes will be returned. Skipped
 	 * if <code>null</code>;
-	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
 	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
@@ -329,10 +331,10 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<String> roles,
 			Collection<? extends Number> authorsIDs,
 			Collection<? extends Number> casesIds,
-			Boolean isAnonymous, 
-			Boolean generalCases, 
-			Boolean hasEnded, 
-			Date dateCreatedFrom, 
+			Boolean isAnonymous,
+			Boolean generalCases,
+			Boolean hasEnded,
+			Date dateCreatedFrom,
 			Date dateCreatedTo);
 
 	/**
@@ -386,7 +388,7 @@ public interface CasesBPMDAO extends GenericDao {
 	 * the {@link Case} has {@link ProcessInstance#getEnd()}. If <code>false</code>
 	 * is provided, then only not ended processes will be returned. Skipped
 	 * if <code>null</code>;
-	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
 	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
@@ -449,12 +451,12 @@ public interface CasesBPMDAO extends GenericDao {
 			Date from,
 			Date to
 	);
-	
+
 	public int getNumberOfApplications(Long procDefId);
 
 	/**
-	 * 
-	 * @param processInstanceId is {@link ProcessInstance#getId()}, 
+	 *
+	 * @param processInstanceId is {@link ProcessInstance#getId()},
 	 * not <code>null</code>;
 	 * @return list of entities by criteria or {@link Collections#emptyList()}
 	 * on failure;
@@ -463,11 +465,11 @@ public interface CasesBPMDAO extends GenericDao {
 	List<ProcessUserBind> getProcessUserBind(long processInstanceId);
 
 	/**
-	 * 
-	 * @param processInstanceId is {@link ProcessInstance#getId()}, 
+	 *
+	 * @param processInstanceId is {@link ProcessInstance#getId()},
 	 * not <code>null</code>;
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
 	void removeProcessUserBinds(long processInstanceId);
-	
+
 }

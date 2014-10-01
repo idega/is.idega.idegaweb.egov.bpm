@@ -688,8 +688,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			if (ListUtil.isEmpty(casesIds)) {
-				LOGGER.info("User '" + user + "' doesn't have any cases!");
-				return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
+				LOGGER.info("User '" + user + "' doesn't have any cases in case list: " + type);
+				return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), Long.valueOf(0));
 			}
 
 			start = System.currentTimeMillis();
@@ -710,7 +710,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			} else if (startIndex == Integer.MAX_VALUE) {
 				cases = getCaseBusiness().getCasesByIds(casesIds);
 			} else {
-				cases = new ArrayList<Case>();
+				cases = getCaseBusiness().getCasesByIds(casesIds);
 			}
 
 			List<CasePresentation> casesPresentation = convertToPresentationBeans(cases, locale);
@@ -723,14 +723,14 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				getLogger().info("Cases (total: " + cases.size() + ") converted into beans in " + duration + " ms");
 			}
 
-			return new PagedDataCollection<CasePresentation>(casesPresentation, totalCount);
+			return new PagedDataCollection<CasePresentation>(casesPresentation, Long.valueOf(totalCount));
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occurred while getting cases for user: " + user + " by type: " + type + ", by locale: " + locale +
 					", by case codes: " + caseCodes + ", by case statuses to hide: " + caseStatusesToHide + ", by case statuses to show: " +
 					caseStatusesToShow + ", start index: " + startIndex + ", count: " + count + ", only subscribed cases: " + onlySubscribedCases, e);
 		}
 
-		return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), 0);
+		return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), Long.valueOf(0));
 	}
 
 	@Override
@@ -1441,7 +1441,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByEntities(Collection<Case> cases, Locale locale) {
-		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), cases.size());
+		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), Long.valueOf(cases.size()));
 	}
 
 	@SuppressWarnings("unchecked")

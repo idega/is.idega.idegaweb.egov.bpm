@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ehcache>
+
+
+    <cache
+        maxElementsInMemory="5000"
+        name="com.idega.idegaweb.egov.bpm.data.CaseProcInstBind"
+        timeToIdleSeconds="86400"
+        timeToLiveSeconds="86400"
+    />
+    
+
+</ehcache>

@@ -1420,14 +1420,36 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames) {
+		return getProcessInstancesByCaseStatusesAndProcessDefinitionNames(caseStatuses, procDefNames, null, null, false);
+	}
+	@Override
+	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Integer firstResult, Integer maxResults, boolean newestOnTop) {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames)) {
 			return Collections.emptyList();
 		}
 
-		return getResultList(CaseProcInstBind.getProcInstIdsByCaseStatusesAndProcDefNames, Long.class,
+		String query = "select cp.procInstId from " + CaseProcInstBind.class.getSimpleName() + " cp, " + Case.class.getSimpleName() + " pc, " + ProcessInstance.class.getName() + " pi, " +
+				ProcessDefinition.class.getName() + " pd where pd.name in (:procDefNames) and pc.caseStatus in (:statuses) and pi.processDefinition.id = pd.id and pi.id = " +
+				"cp.procInstId and cp.caseId = pc.id";
+		if (newestOnTop) {
+			query += " order by pc.created desc";
+		}
+		return getResultListByInlineQuery(query, Long.class, firstResult, maxResults, "caseProcInstIds", new Param("procDefNames", procDefNames), new Param("statuses", caseStatuses));
+	}
+
+	@Override
+	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames) {
+		Number count = getSingleResult(
+				CaseProcInstBind.getCountedProcInstIdsByCaseStatusesAndProcDefNames,
+				Number.class,
 				new Param(CaseProcInstBind.caseStatusParam, caseStatuses),
 				new Param(CaseProcInstBind.processDefinitionNameProp, procDefNames)
 		);
+		if (count instanceof Number) {
+			return count.longValue();
+		}
+
+		return Long.valueOf(0);
 	}
 
 	@Override

@@ -1139,7 +1139,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				cases = new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>());
 
 			listCriterias.setAllDataLoaded(Boolean.TRUE);
-			listCriterias.setPageSize(cases.getTotalCount());
+			listCriterias.setPageSize(cases.getTotalCount().intValue());
 			setSearchResults(iwc, cases.getCollection(), listCriterias);
 
 			if (resultsHolder != null && id != null) {

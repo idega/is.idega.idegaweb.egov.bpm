@@ -6,9 +6,11 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import java.io.Serializable;
 import java.util.Date;
 
+import javax.persistence.Cacheable;
 import javax.persistence.Column;
 import javax.persistence.ColumnResult;
 import javax.persistence.Entity;
+import javax.persistence.EntityResult;
 import javax.persistence.Id;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
@@ -20,9 +22,13 @@ import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Index;
 
 import com.idega.block.process.business.ProcessConstants;
+import com.idega.block.process.data.CaseBMPBean;
+import com.idega.block.process.data.bean.Case;
 import com.idega.jbpm.data.BPMVariableData;
 
 /**
@@ -49,12 +55,25 @@ import com.idega.jbpm.data.BPMVariableData;
 
 @SqlResultSetMappings({
 	@SqlResultSetMapping(name="caseId", columns=@ColumnResult(name="caseId")),
-	@SqlResultSetMapping(name=CaseProcInstBind.procInstIdProp, columns=@ColumnResult(name=CaseProcInstBind.procInstIdProp))
+	@SqlResultSetMapping(name=CaseProcInstBind.procInstIdProp, columns=@ColumnResult(name=CaseProcInstBind.procInstIdProp)),
+	@SqlResultSetMapping(name="case_proc_bind", entities=@EntityResult(entityClass=CaseProcInstBind.class))
 })
 @NamedNativeQueries({
 			@NamedNativeQuery(name=CaseProcInstBind.getProcInstIdsByCaseStatusesAndProcDefNames, resultSetMapping=CaseProcInstBind.procInstIdProp,
 					query= "select cp." + CaseProcInstBind.procInstIdColumnName + " " + CaseProcInstBind.procInstIdProp + " from " + CaseProcInstBind.TABLE_NAME + " cp " +
-					"inner join proc_case pc on cp.case_id = pc.PROC_CASE_ID inner join JBPM_PROCESSINSTANCE pi on cp." + CaseProcInstBind.procInstIdColumnName + " = pi.id_ " +
+					"inner join " + CaseBMPBean.TABLE_NAME + " pc on cp.case_id = pc.PROC_CASE_ID inner join JBPM_PROCESSINSTANCE pi on cp." + CaseProcInstBind.procInstIdColumnName + " = pi.id_ " +
+					"inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ where pd.name_ in (:" + CaseProcInstBind.processDefinitionNameProp +
+					") and pc.CASE_STATUS in (:" + CaseProcInstBind.caseStatusParam + ")"
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getProcInstIdsByCaseStatusesAndProcDefNamesNewestOnTop, resultSetMapping=CaseProcInstBind.procInstIdProp,
+					query= "select cp.procInstId from " + CaseProcInstBind.TABLE_NAME + " cp, " + Case.ENTITY_NAME + " pc, jbpm_processinstance pi, " +
+					"jbpm_processdefinition pd where pd.name in (:" + CaseProcInstBind.processDefinitionNameProp + ") and pc.caseStatus in (:" + CaseProcInstBind.caseStatusParam +
+					") and pi.processDefinition.id = pd.id and pi.id = cp.procInstId and cp.caseId = pc.id order by pc.created desc"
+			),
+
+			@NamedNativeQuery(name=CaseProcInstBind.getCountedProcInstIdsByCaseStatusesAndProcDefNames,
+					query= "select count(cp." + CaseProcInstBind.procInstIdColumnName + ") from " + CaseProcInstBind.TABLE_NAME + " cp " +
+					"inner join " + CaseBMPBean.TABLE_NAME + " pc on cp.case_id = pc.PROC_CASE_ID inner join JBPM_PROCESSINSTANCE pi on cp." + CaseProcInstBind.procInstIdColumnName + " = pi.id_ " +
 					"inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ where pd.name_ in (:" + CaseProcInstBind.processDefinitionNameProp +
 					") and pc.CASE_STATUS in (:" + CaseProcInstBind.caseStatusParam + ")"
 			),
@@ -190,6 +209,8 @@ import com.idega.jbpm.data.BPMVariableData;
 
 		}
 )
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 public class CaseProcInstBind implements Serializable {
 
 	private static final long serialVersionUID = -335682330238243547L;
@@ -223,6 +244,8 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
 	public static final String getProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getProcInstIdsByCaseStatus";
+	public static final String getProcInstIdsByCaseStatusesAndProcDefNamesNewestOnTop = "CaseProcInstBind.getProcInstIdsByCaseStatusNewestOnTop";
+	public static final String getCountedProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getCountedProcInstIdsByCaseStatus";
 
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
