@@ -63,10 +63,10 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	private static final String assetsFacet = "assets", assetViewFacet = "assetView";
 
-	private boolean fullView = false, inCasesComponent = false, 
-			usePdfDownloadColumn = true, allowPDFSigning = true, 
-			hideEmptySection = true, showAttachmentStatistics, 
-			showOnlyCreatorInContacts, showLogExportButton, showComments = true, 
+	private boolean fullView = false, inCasesComponent = false,
+			usePdfDownloadColumn = true, allowPDFSigning = true,
+			hideEmptySection = true, showAttachmentStatistics,
+			showOnlyCreatorInContacts, showLogExportButton, showComments = true,
 			showContacts = true, nameFromExternalEntity = false, showUserProfilePicture = Boolean.TRUE,
 			showUserCompany = false, showLastLoginDate = false;;
 
@@ -407,11 +407,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			mainAction.append("null");
 		else
 			mainAction.append("'").append(specialBackPage).append("'");
-		
+
 		mainAction.append(CoreConstants.COMMA);
 		mainAction.append(isNameFromExternalEntity()).append(CoreConstants.COMMA)
 		.append(isShowUserProfilePicture()).append(", ").append(isShowUserCompany())
-		.append(", ").append(isShowLastLoginDate()).append(");").toString();
+		.append(", ").append(isShowLastLoginDate()).append(", ").append(iwc.getIWMainApplication().getSettings().getBoolean("bpm.show_pdf_name_in_list", Boolean.FALSE)).append(");").toString();
 
 		if (!isSingle)
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction.toString()).append("\n});");
