@@ -44,6 +44,9 @@ public class CasesBPMProcessConstants {
 	public static final String caseStatusCreated = "string_caseStatusCreated";
 	public static final String caseStatusFinished = "string_caseStatusFinished";
 	public static final String caseStatusClosed = "string_caseStatusClosed";
+	public static final String caseStatusOffered = "string_caseStatusOffered";
+	public static final String caseStatusCancelled = "string_caseStatusCancelled";
+
 
 	// mapped case status names
 	public static final String CASE_STATUS_GRANTED_MAPNAME = "caseStatusGranted";
@@ -62,5 +65,6 @@ public class CasesBPMProcessConstants {
 	public static final String CASE_STATUS_CREATED_MAPNAME = "caseStatusCreated";
 	public static final String CASE_STATUS_FINISHED_MAPNAME = "caseStatusFinished";
 	public static final String CASE_STATUS_CLOSED_MAPNAME = "caseStatusClosed";
-
+	public static final String CASE_STATUS_OFFERED_MAPNAME = "caseStatusOffered";
+	public static final String CASE_STATUS_CANCELLED_MAPNAME = "caseStatusCancelled";
 }

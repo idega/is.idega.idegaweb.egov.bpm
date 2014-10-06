@@ -32,6 +32,8 @@ public class CasesStatusMapperHandler {
 	private static final String CASE_STATUS_DELETED_KEY = CaseBMPBean.CASE_STATUS_DELETED_KEY;
 	private static final String CASE_STATUS_FINISHED_KEY = CaseBMPBean.CASE_STATUS_FINISHED_KEY;
 	private static final String CASE_STATUS_CLOSED_KEY = CaseBMPBean.CASE_STATUS_CLOSED;
+	private static final String CASE_STATUS_OFFERED_KEY = CaseBMPBean.CASE_STATUS_OFFERED;
+	private static final String CASE_STATUS_CANCELLED_KEY = CaseBMPBean.CASE_STATUS_CANCELLED_KEY;
 	
 	private static final String STATUS_EXP = "string_";
 	
@@ -71,6 +73,10 @@ public class CasesStatusMapperHandler {
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusCreated;
 		else if (CASE_STATUS_FINISHED_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusFinished;
+		else if (CASE_STATUS_OFFERED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusOffered;
+		else if (CASE_STATUS_CANCELLED_KEY.equals(statusCode))
+			caseStatusVariableName = CasesBPMProcessConstants.caseStatusCancelled;
 		else if (CASE_STATUS_CLOSED_KEY.equals(statusCode))
 			caseStatusVariableName = CasesBPMProcessConstants.caseStatusFinished;
 		
@@ -129,6 +135,12 @@ public class CasesStatusMapperHandler {
 		else if (CasesBPMProcessConstants.CASE_STATUS_FINISHED_MAPNAME
 		        .equals(statusMappedName))
 			statusKey = CASE_STATUS_FINISHED_KEY;
+		else if (CasesBPMProcessConstants.CASE_STATUS_OFFERED_MAPNAME
+		        .equals(statusMappedName))
+			statusKey = CASE_STATUS_OFFERED_KEY;
+		else if (CasesBPMProcessConstants.CASE_STATUS_CANCELLED_MAPNAME
+		        .equals(statusMappedName))
+			statusKey = CASE_STATUS_CANCELLED_KEY;
 		else if (CasesBPMProcessConstants.CASE_STATUS_CLOSED_MAPNAME
 		        .equals(statusMappedName))
 			statusKey = CASE_STATUS_CLOSED_KEY;
