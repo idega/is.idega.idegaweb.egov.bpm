@@ -1852,7 +1852,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Long> getProcessInstancesByCasesIds(List<Integer> casesIds) {
+	public List<Long> getProcessInstancesByCasesIds(Collection<Integer> casesIds) {
 		if (ListUtil.isEmpty(casesIds))
 			return Collections.emptyList();
 

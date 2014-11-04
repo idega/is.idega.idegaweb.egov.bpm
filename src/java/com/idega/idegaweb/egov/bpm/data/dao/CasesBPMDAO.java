@@ -214,7 +214,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
 			List<Long> procInstIds);
 
-	public List<Long> getProcessInstancesByCasesIds(List<Integer> casesIds);
+	public List<Long> getProcessInstancesByCasesIds(Collection<Integer> casesIds);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds);
 
 	public Long getProcessInstanceIdByCaseSubject(String subject);
