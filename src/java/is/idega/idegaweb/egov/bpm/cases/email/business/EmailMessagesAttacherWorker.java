@@ -42,7 +42,6 @@ import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.parser.EmailParser;
 import com.idega.block.process.variables.Variable;
-import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
 import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.core.messaging.EmailMessage;
@@ -54,6 +53,7 @@ import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.variables.BinaryVariable;
 import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
@@ -574,13 +574,20 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						}
 					}
 					if (!MapUtil.isEmpty(attachments)) {
-						Variable variable = new Variable("attachments", VariableDataType.FILES);
+						Variable variable = Variable.parseDefaultStringRepresentation("files_attachments");
 
 						InputStream fileStream = null;
 						for (String fileName: attachments.keySet()) {
 							fileStream = attachments.get(fileName);
 							try {
-								taskInstance.addAttachment(variable, fileName, fileName, fileStream);
+								BinaryVariable attachment = taskInstance.addAttachment(variable, fileName, fileName, fileStream);
+								if (attachment == null) {
+									LOGGER.warning("Failed to add attachment " + fileName + " for task inst. with ID: " + tiId);
+								} else {
+									if (!attachment.isPersisted()) {
+										attachment.persist();
+									}
+								}
 							} catch (Exception e) {
 								LOGGER.log(Level.SEVERE, "Unable to add attachment for task instance: " + tiId + ", file name: " + fileName, e);
 							} finally {

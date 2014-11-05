@@ -10,7 +10,7 @@
          <controller>
             <variable name="string_subject" access="write"></variable>
             <variable name="string_text" access="write"></variable>
-            <variable name="files_attachments" access="write"></variable>
+            <variable name="files_attachments" access="read,write"></variable>
 				<variable access="write" name="string_fromPersonal"></variable>
 				<variable access="write" name="string_fromAddress"></variable>
          </controller>
