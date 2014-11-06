@@ -104,7 +104,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	            	"string_planForFundingGrade",				//	22
 	            	"string_evaluationOfOtherGrantsGrade",		//	23
 	            	"string_specialProjectValue",				//	24
-	            	"string_estimatedSaleValue"					//	25
+	            	"string_estimatedSaleValue",				//	25
+	            	"string_aspectOfTheDesignProjectGrade"		//	26
 	 ));
 
 	public static final String BOARD_CASES_LIST_SORTING_PREFERENCES = "boardCasesListSortingPreferencesAttribute";
