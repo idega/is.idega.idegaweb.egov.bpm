@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.logging.Level;
@@ -156,7 +157,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boolean backPage,
 			String taskName,
 			Date dateFrom,
-			Date dateTo) {
+			Date dateTo
+	) {
 		//	Getting cases by the configuration
 		Collection<GeneralCase> cases = getCases(
 				caseStatuses,
@@ -186,7 +188,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			Collection<? extends GeneralCase> casesIdsAndHandlers,
 			String uuid,
 			boolean backPage,
-			String taskName) {
+			String taskName
+	) {
 		List<String> variablesToQuery = new ArrayList<String>(getVariables(uuid));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
@@ -214,8 +217,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			relations.put(Long.valueOf(view.getCaseId()), view.getProcessInstance());
 		}
 
-		Map<Long, String> links = getTaskViewer().getLinksToTheTaskRedirector(
-				CoreUtil.getIWContext(), relations, backPage, taskName);
+		IWContext iwc = CoreUtil.getIWContext();
+		Map<Long, String> links = getTaskViewer().getLinksToTheTaskRedirector(iwc, relations, backPage, taskName);
+
+		Locale locale = iwc.getCurrentLocale();
 
 		/* Filling board cases */
 		List<CaseBoardBean> boardCases = new ArrayList<CaseBoardBean>();
@@ -235,15 +240,17 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			long boardSuggestion = getNumberValue(view.getValue(ProcessConstants.BOARD_FINANCING_SUGGESTION), false);
 			boardCase.setGrantAmountSuggestion(boardSuggestion);
 
-			boardCase.addValues(getGradingSum(view, getGradingVariables()));
+			Map<String, BigDecimal> gradingSums = getGradingSum(view, getGradingVariables());
+			boardCase.addValues(gradingSums, locale);
 
 			for (String variable: variablesToQuery) {
 				String value = view.getValue(variable);
 				if (numberVariables.contains(variable)) {
-					if (variable.equals(ProcessConstants.BOARD_FINANCING_DECISION) || variable.equals(ProcessConstants.BOARD_FINANCING_SUGGESTION))
+					if (variable.equals(ProcessConstants.BOARD_FINANCING_DECISION) || variable.equals(ProcessConstants.BOARD_FINANCING_SUGGESTION)) {
 						value = String.valueOf(getNumberValue(value, false));
-					else
+					} else {
 						value = String.valueOf(getNumberValue(value, true));
+					}
 				}
 
 				boardCase.addValue(variable, value);
@@ -618,7 +625,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			CaseBoardView view,
 			List<String> variables
 	) {
-		Map<String, BigDecimal> gradings = new HashMap<String, BigDecimal>();
+		Map<String, BigDecimal> gradings = new HashMap<String, BigDecimal>(2);
 
 		List<String> gradingValues = view.getValues(variables);
 		if (ListUtil.isEmpty(gradingValues)) {
@@ -706,7 +713,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		for (CaseBoardBean caseBoard: boardCases) {
 			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(
 					caseBoard.getCaseId(),
-					caseBoard.getProcessInstanceId());
+					caseBoard.getProcessInstanceId()
+			);
 			rowBean.setId(new StringBuilder(uniqueCaseId).append(caseBoard.getCaseId()).toString());
 			rowBean.setCaseIdentifier(caseBoard.getCaseIdentifier());
 			rowBean.setHandler(caseBoard.getHandler());
@@ -721,44 +729,58 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				List<AdvancedProperty> columnLabels = columns.get(key);
 
 				for (AdvancedProperty column: columnLabels) {
-					if (isEqual(column.getId(), ProcessConstants.CASE_IDENTIFIER))
+					if (isEqual(column.getId(), ProcessConstants.CASE_IDENTIFIER)) {
 						// Link to grading task
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(column.getId(), caseBoard.getCaseIdentifier())));
-					else if (column.getId().equals(CaseHandlerAssignmentHandler.handlerUserIdVarName)) {
+
+					} else if (column.getId().equals(CaseHandlerAssignmentHandler.handlerUserIdVarName)) {
 						//	Handler
 						rowValues.put(index,
-								Arrays.asList(new AdvancedProperty(
-										CaseHandlerAssignmentHandler.handlerUserIdVarName,
-										caseBoard.getHandler() == null ? String.valueOf(-1) : caseBoard.getHandler().getId())));
+								Arrays.asList(
+										new AdvancedProperty(
+												CaseHandlerAssignmentHandler.handlerUserIdVarName,
+												caseBoard.getHandler() == null ? String.valueOf(-1) : caseBoard.getHandler().getId()
+										)
+								)
+						);
 
-					//	Financing table
 					} else if (isEqual(column.getId(), CasesBoardViewer.WORK_ITEM)) {
+						//	Financing table
 						financingTableAdded = true;
 						rowBean.setFinancingInfo(caseBoard.getFinancingOfTheTasks());
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(
-								ProcessConstants.FINANCING_OF_THE_TASKS,
-								CoreConstants.EMPTY)));
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(ProcessConstants.FINANCING_OF_THE_TASKS, CoreConstants.EMPTY)));
 					} else if (isEqual(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
-					} else if (isEqual(column.getId(), CaseBoardBean.CASE_OWNER_GENDER)) {
-						String value = caseBoard.getValue(CaseBoardBean.CASE_OWNER_GENDER);
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(
-								CaseBoardBean.CASE_OWNER_GENDER, localize(value, value))));
 
+					} else if (isEqual(column.getId(), CaseBoardBean.CASE_OWNER_GENDER)) {
+						//	Gender
+						String value = caseBoard.getValue(CaseBoardBean.CASE_OWNER_GENDER);
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(CaseBoardBean.CASE_OWNER_GENDER, localize(value, value))));
+
+					} else {
 						//	Other value
-					} else
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(
-								column.getId(), caseBoard.getValue(column.getId()))));
+						String columnKey = column.getId();
+						String value = caseBoard.getValue(columnKey);
+						if (StringUtil.isEmpty(value)) {
+							if (CaseBoardBean.CASE_SUM_ALL_GRADES.equals(columnKey)) {
+								value = caseBoard.getGradingSum();
+							} else if (CaseBoardBean.CASE_SUM_OF_NEGATIVE_GRADES.equals(columnKey)) {
+								value = caseBoard.getNegativeGradingSum();
+							}
+						}
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(columnKey, value)));
+					}
 
 					//	Calculations
-					if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_DECISION))
+					if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_DECISION)) {
 						// Calculating board amounts
 						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
-					else if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_SUGGESTION))
+					} else if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_SUGGESTION)) {
 						// Calculating grant amount suggestions
 						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion());
+					}
 				}
 
 				index++;
@@ -771,8 +793,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		data.setBodyBeans(bodyRows);
 
 		// Footer
-		data.setFooterValues(getFooterValues(data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? 3 : 0),
-				grantAmountSuggestionTotal, boardAmountTotal, uuid));
+		data.setFooterValues(getFooterValues(data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? 3 : 0), grantAmountSuggestionTotal, boardAmountTotal, uuid));
 
 		// Everything is OK
 		data.setFilledWithData(Boolean.TRUE);
@@ -841,6 +862,16 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return null;
 	}
 
+	private List<AdvancedProperty> getFinancingTableHeaders() {
+		return Arrays.asList(
+				new AdvancedProperty(CasesBoardViewer.WORK_ITEM, localize(CasesBoardViewer.WORK_ITEM, "Work item")),
+				new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, localize(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
+				new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, localize(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
+				new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, localize(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
+				new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, localize(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision"))
+		);
+	}
+
 	@Override
 	public Map<Integer, List<AdvancedProperty>> getColumns(String uuid) {
 		Map<Integer, List<AdvancedProperty>> columns = new TreeMap<Integer, List<AdvancedProperty>>();
@@ -849,46 +880,34 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		List<String> customColumns = getCustomColumns(uuid);
 		if (ListUtil.isEmpty(customColumns)) {
 			for (AdvancedProperty header: CasesBoardViewer.CASE_FIELDS) {
-				if (index == 15) {
-					columns.put(index, Arrays.asList(
-							new AdvancedProperty(CasesBoardViewer.WORK_ITEM,
-									localize(CasesBoardViewer.WORK_ITEM, "Work item")),
-							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST,
-									localize(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
-									localize(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION,
-									localize(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION,
-									localize(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision"))
-					));
+				if (ProcessConstants.FINANCING_OF_THE_TASKS.equals(header.getId())) {
+					columns.put(index, getFinancingTableHeaders());
 				} else {
-					columns.put(index, Arrays.asList(new AdvancedProperty(header.getId(),
-						localize(new StringBuilder(LOCALIZATION_PREFIX).append(header.getId()).toString(), header.getValue()))));
+					columns.put(index, Arrays.asList(
+							new AdvancedProperty(header.getId(), localize(new StringBuilder(LOCALIZATION_PREFIX).append(header.getId()).toString(), header.getValue()))
+					));
 				}
 				index++;
 			}
-			columns.put(index, Arrays.asList(new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName,
-					localize(LOCALIZATION_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName, "Case handler"))));
+			columns.put(index, Arrays.asList(
+					new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName, localize(LOCALIZATION_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName, "Case handler"))
+			));
 		} else {
 			String localized = null;
 			IWContext iwc = CoreUtil.getIWContext();
 			IWResourceBundle bpmIWRB = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 			for (String column: customColumns) {
 				if (CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN.equals(column)) {
-					columns.put(index, Arrays.asList(
-							new AdvancedProperty(CasesBoardViewer.WORK_ITEM, localize(CasesBoardViewer.WORK_ITEM, "Work item")),
-							new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, localize(CasesBoardViewer.ESTIMATED_COST,
-									"Estimated cost")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, localize(CasesBoardViewer.BOARD_SUGGESTION,
-									"Board suggestion")),
-							new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, localize(CasesBoardViewer.BOARD_DECISION,
-									"Board decision"))
-					));
-				} else if (CasesBoardViewer.ESTIMATED_COST.equals(column) || CasesBoardViewer.BOARD_SUGGESTION.equals(column) ||
-						CasesBoardViewer.BOARD_DECISION.equals(column) || CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT.equals(column))
+					columns.put(index, getFinancingTableHeaders());
+				} else if (
+						CasesBoardViewer.ESTIMATED_COST.equals(column) ||
+						CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT.equals(column) ||
+						CasesBoardViewer.BOARD_SUGGESTION.equals(column) ||
+						CasesBoardViewer.BOARD_DECISION.equals(column)
+
+				) {
 					continue;
-				else {
+				} else {
 					localized = localize(LOCALIZATION_PREFIX.concat(column), column);
 					if (column.equals(localized))
 						localized = bpmIWRB.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(column), column);
