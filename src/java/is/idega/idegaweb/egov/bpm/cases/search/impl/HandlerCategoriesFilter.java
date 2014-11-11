@@ -109,7 +109,7 @@ import com.idega.util.CoreConstants;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class HandlerCategoriesFilter extends DefaultCasesListSearchFilter {
 
-	protected Group getSelectedGroup() {
+	private Group getSelectedGroup() {
 		if (getCriterias().getSubscribersGroupId() == null) {
 			return null;
 		}

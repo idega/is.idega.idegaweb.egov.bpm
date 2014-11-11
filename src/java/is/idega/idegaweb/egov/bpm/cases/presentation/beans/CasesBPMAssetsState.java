@@ -98,8 +98,6 @@ public class CasesBPMAssetsState implements Serializable {
 			showUserCompany = Boolean.FALSE,
 			showLastLoginDate = Boolean.FALSE;
 
-
-
 	public Long getViewSelected() {
 		if (viewSelected == null)
 			viewSelected = getResolvedTaskInstanceId();
