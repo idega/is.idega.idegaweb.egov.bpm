@@ -134,14 +134,15 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		}
 
 		startFiltering();
+
 		List<Integer> filtered = getSearchResults(casesIds);
 		if (ListUtil.isEmpty(filtered)) {
 			return getNarrowedResults(casesIds, filtered);
-		} else {
-			afterFiltering(getInfo(), filtered);
 		}
 
 		filtered = getNarrowedResults(casesIds, filtered);
+		afterFiltering(getInfo(), filtered);
+
 		return filtered;
 	}
 

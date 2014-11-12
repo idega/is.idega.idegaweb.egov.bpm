@@ -83,8 +83,11 @@
 package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.ejb.FinderException;
@@ -93,10 +96,16 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.Group;
+import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
+import com.idega.util.ListUtil;
+import com.idega.util.datastructures.map.MapUtil;
 
 /**
  * <p>You can report about problems to:
@@ -117,11 +126,14 @@ public class HandlerCategoriesFilter extends DefaultCasesListSearchFilter {
 		try {
 			return IDOLookup.findByPrimaryKey(
 					Group.class,
-					getCriterias().getSubscribersGroupId().intValue());
+					getCriterias().getSubscribersGroupId().intValue()
+			);
 		} catch (IDOLookupException e) {
 			getLogger().log(
 					Level.WARNING,
-					"Failed to get data access object, casue of: ", e);
+					"Failed to get data access object by group ID: " + getCriterias().getSubscribersGroupId(),
+					e
+			);
 		} catch (FinderException e) {
 			getLogger().log(
 					Level.WARNING,
@@ -150,7 +162,31 @@ public class HandlerCategoriesFilter extends DefaultCasesListSearchFilter {
 	 */
 	@Override
 	protected List<Integer> getSearchResults(List<Integer> casesIds) {
-		return casesIds;
+		if (ListUtil.isEmpty(casesIds)) {
+			getLogger().warning("No cases IDs provided, not filtering by handler group");
+			return casesIds;
+		}
+
+		IWContext iwc = CoreUtil.getIWContext();
+		User user = iwc == null ? null : iwc.isLoggedOn() ? iwc.getCurrentUser() : null;
+		if (user == null) {
+			getLogger().warning("User is not logged in, not filtering by handler group");
+			return casesIds;
+		}
+
+		List<Integer> ids = new ArrayList<Integer>();
+		CasesSearchCriteriaBean criterias = getCriterias();
+		Map<String, CasesSubcriberManager> beans = getBeansOfType(CasesSubcriberManager.class);
+		if (!MapUtil.isEmpty(beans)) {
+			for (CasesSubcriberManager bean: beans.values()) {
+				List<Integer> tmpIDs = bean.getSubscribedCasesByQuery(user, criterias);
+				if (!ListUtil.isEmpty(tmpIDs)) {
+					ids.addAll(tmpIDs);
+				}
+			}
+		}
+
+		return ListUtil.isEmpty(ids) ? casesIds : ids;
 	}
 
 	/* (non-Javadoc)

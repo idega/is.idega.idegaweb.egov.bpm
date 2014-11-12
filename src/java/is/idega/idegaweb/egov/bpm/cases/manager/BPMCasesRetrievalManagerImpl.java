@@ -947,6 +947,30 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		return null;
 	}
 
+	private Collection<Long> getHandlerCategoryIDs(User user, Collection<Long> handlerCategoryIDs) {
+		if (user == null || ListUtil.isEmpty(handlerCategoryIDs)) {
+			return null;
+		}
+
+		handlerCategoryIDs = new ArrayList<Long>(handlerCategoryIDs);
+		Map<String, CasesSubcriberManager> beans = getBeansOfType(CasesSubcriberManager.class);
+		if (!MapUtil.isEmpty(beans)) {
+			for (CasesSubcriberManager bean: beans.values()) {
+				List<Integer> ids = bean.getSuperHandlersGroups(user);
+				if (!ListUtil.isEmpty(ids)) {
+					for (Integer id: ids) {
+						Long tmp = id.longValue();
+						if (!handlerCategoryIDs.contains(tmp)) {
+							handlerCategoryIDs.add(tmp);
+						}
+					}
+				}
+			}
+		}
+
+		return handlerCategoryIDs;
+	}
+
 	@Override
 	protected List<Integer> getCasesIds(
 			User user,
@@ -1004,6 +1028,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			casecodes = params.getCodes();
 			casecodes = ListUtil.isEmpty(casecodes) ? null : casecodes;
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
+			handlerCategoryIDs = getHandlerCategoryIDs(user, handlerCategoryIDs);
 
 			/* Querying cache */
 			if (casesListCacheTurnedOn && caseId == null) {
@@ -1071,9 +1096,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				try {
 					Map<String, CasesSubcriberManager> beans = getBeansOfType(CasesSubcriberManager.class);
 					if (!MapUtil.isEmpty(beans)) {
-						for (Object bean: beans.values()) {
-							if (bean instanceof CasesSubcriberManager)
-								((CasesSubcriberManager) bean).doEnsureUserIsSubscribed(user);
+						for (CasesSubcriberManager bean: beans.values()) {
+							bean.doEnsureUserIsSubscribed(user);
 						}
 					}
 				} catch (Exception e) {

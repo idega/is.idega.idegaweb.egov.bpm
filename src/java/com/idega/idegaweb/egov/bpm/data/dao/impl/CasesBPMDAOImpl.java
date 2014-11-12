@@ -38,6 +38,7 @@ import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
 import com.idega.business.IBOLookup;
+import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
@@ -703,14 +704,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		        .append("inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id ");
 
 		if (onlySubscribedCases || !ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ");
-
-			if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-				builder.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ");
-				builder.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
-			}
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "proc_case.proc_case_id"));
 		}
-
 		builder.append("left join ").append(ProcessUserBind.TABLE_NAME)
 		        .append(" pu on cp.").append(CaseProcInstBind.procInstIdColumnName).append(" = pu.process_instance_id ").append("where ");
 
@@ -737,9 +732,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "comm_case.comm_case_id"));
 		}
 
 		builder.append(" where ");
@@ -819,6 +812,29 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return " proc_case.created >= :from and proc_case.created <= :to and ";
 	}
 
+	private <U extends com.idega.core.user.data.User> String getSubscriberQueryPart(U user, Collection<? extends Number> subscriberGroupIDs, String tableAndColumnName) {
+		StringBuilder queryPart = new StringBuilder(" inner join proc_case_subscribers on " + tableAndColumnName + " = proc_case_subscribers.proc_case_id ");
+
+		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
+			List<U> users = new ArrayList<U>(1);
+			users.add(user);
+			queryPart.append(getSubscribedUsersQueryPart(users, subscriberGroupIDs));
+		}
+
+		return queryPart.toString();
+	}
+
+	private <U extends com.idega.core.user.data.User> String getSubscribedUsersQueryPart(Collection<U> users, Collection<? extends Number> subscriberGroupIDs) {
+		return getSubscribedUsersQueryPart(toStringUsers(users), subscriberGroupIDs);
+	}
+	private String getSubscribedUsersQueryPart(String usersExpression, Collection<? extends Number> subscriberGroupIDs) {
+		StringBuilder queryPart = new StringBuilder(" JOIN ic_group_relation ON ic_group_relation.RELATED_IC_GROUP_ID = proc_case_subscribers.IC_USER_ID ");
+		queryPart.append(" AND (proc_case_subscribers.IC_USER_ID in (").append(usersExpression).append(") ");
+		queryPart.append(" AND ic_group_relation.IC_GROUP_ID in (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+		queryPart.append(" AND ic_group_relation.RELATIONSHIP_TYPE = 'GROUP_PARENT' AND ic_group_relation.GROUP_RELATION_STATUS = 'ST_ACTIVE') ");
+		return queryPart.toString();
+	}
+
 	@Override
 	public Map<Integer, Date> getOpenCasesIds(
 			User user,
@@ -854,12 +870,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		                + "left join bpm_native_identities ni on act.actor_id = ni.actor_fk ");
 
 		if (onlySubscribedCases || !ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ");
-
-			if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-				builder.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ");
-				builder.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
-			}
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "proc_case.proc_case_id"));
 		}
 
 		builder.append("where");
@@ -895,9 +906,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "comm_case.comm_case_id"));
 		}
 
 		builder.append(" where ");
@@ -920,6 +929,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return results;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public Map<Integer, Date> getOpenCasesIdsForAdmin(
 			List<String> caseCodes,
@@ -949,9 +959,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		        .append("left join bpm_native_identities ni on act.actor_id = ni.actor_fk ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			try {
+				AccessController ac = IWMainApplication.getDefaultIWMainApplication().getAccessController();
+				builder.append(getSubscriberQueryPart(ac.getAdministratorUserLegacy(), subscriberGroupIDs, "proc_case.proc_case_id"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		builder.append("where ");
@@ -974,9 +987,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			try {
+				AccessController ac = IWMainApplication.getDefaultIWMainApplication().getAccessController();
+				builder.append(getSubscriberQueryPart(ac.getAdministratorUserLegacy(), subscriberGroupIDs, "comm_case.comm_case_id"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		builder.append(" where ");
@@ -1072,12 +1088,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		                + "left join bpm_native_identities ni on act.actor_id = ni.actor_fk ");
 
 		if (onlySubscribedCases || !ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ");
-
-			if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-				builder.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ");
-				builder.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
-			}
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "proc_case.proc_case_id"));
 		}
 
 		builder.append("where");
@@ -1109,9 +1120,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "comm_case.comm_case_id"));
 		}
 
 		builder.append(" where");
@@ -1133,6 +1142,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getResults(builder.toString(), params);
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public Map<Integer, Date> getClosedCasesIdsForAdmin(
 			List<String> caseStatusesToShow,
@@ -1157,9 +1167,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		                + "left join bpm_native_identities ni on act.actor_id = ni.actor_fk ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			try {
+				AccessController ac = IWMainApplication.getDefaultIWMainApplication().getAccessController();
+				builder.append(getSubscriberQueryPart(ac.getAdministratorUserLegacy(), subscriberGroupIDs, "proc_case.proc_case_id"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		builder.append("where ");
@@ -1178,9 +1191,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append(" inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = comm_case.comm_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			try {
+				AccessController ac = IWMainApplication.getDefaultIWMainApplication().getAccessController();
+				builder.append(getSubscriberQueryPart(ac.getAdministratorUserLegacy(), subscriberGroupIDs, "comm_case.comm_case_id"));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 
 		builder.append(" where ");
@@ -1301,12 +1317,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				.append("inner join bpm_actors act on act.process_instance_id = cp.process_instance_id ");
 
 		if (onlySubscribedCases || !ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ");
-
-			if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-				builder.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ");
-				builder.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
-			}
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "proc_case.proc_case_id"));
 		}
 
 		builder.append("left join bpm_native_identities ni on act.actor_id = ni.actor_fk where ");
@@ -1337,9 +1348,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append(" inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			builder.append("inner join proc_case_subscribers on proc_case.proc_case_id = proc_case_subscribers.proc_case_id ")
-			.append("JOIN ic_user ON ic_user.IC_USER_ID = proc_case_subscribers.IC_USER_ID ")
-			.append("AND ic_user.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupIDs)).append(") ");
+			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "comm_case.comm_case_id"));
 		}
 
 		builder.append(" where ");
@@ -1989,16 +1998,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	 * @return comma separated string of values or <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
-	protected String toStringUsers(Collection<com.idega.user.data.User> collection) {
+	protected <U extends com.idega.core.user.data.User> String toStringUsers(Collection<U> collection) {
 		if (ListUtil.isEmpty(collection)) {
 			return null;
 		}
 
 		StringBuilder sb = new StringBuilder();
-		for (Iterator<com.idega.user.data.User> iterator = collection.iterator(); iterator.hasNext();) {
-			sb.append(CoreConstants.QOUTE_SINGLE_MARK)
-			.append(iterator.next().getPrimaryKey().toString())
-			.append(CoreConstants.QOUTE_SINGLE_MARK);
+		for (Iterator<U> iterator = collection.iterator(); iterator.hasNext();) {
+			sb.append(iterator.next().getPrimaryKey().toString());
 
 			if (iterator.hasNext()) {
 				sb.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
@@ -2135,8 +2142,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 			/* Searching by groups of subscribers */
 			if (!ListUtil.isEmpty(subscriberGroupsIDs)) {
-				query.append("JOIN ic_user iu ON iu.IC_USER_ID = pcs.IC_USER_ID ")
-				.append("AND iu.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupsIDs)).append(") ");
+//				query.append("JOIN ic_user iu ON iu.IC_USER_ID = pcs.IC_USER_ID ")
+//				.append("AND iu.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupsIDs)).append(") ");
+				query.append(getSubscribedUsersQueryPart(toStringNumbers(handlersIDs), subscriberGroupsIDs));
 			}
 		}
 
@@ -2386,7 +2394,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			handlersIDs = new ArrayList<N>(handlersIDs);
 		}
 		Long handlerId = Long.valueOf(handler.getPrimaryKey().toString());
-		handlersIDs.add((N) handlerId);
+		@SuppressWarnings("unchecked")
+		N number = (N) handlerId;
+		handlersIDs.add(number);
 
 		return getCasesPrimaryKeys(
 				null,				//	proc. def. names
