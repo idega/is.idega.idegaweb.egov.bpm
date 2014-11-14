@@ -4,7 +4,9 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
 
@@ -60,7 +62,7 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 	private Token token;
 
-	private String sendToEmail;
+	private String sendToEmail, sendToCCEmail;
 
 	public void setToken(Token token) {
 		this.token = token;
@@ -136,6 +138,18 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		final ProcessInstance pi = candPI;
 		final Token tkn = ectx == null ? token : ectx.getToken();
 
+		String sendToCCEmail = getSendToCCEmail();
+		if (EmailValidator.getInstance().isValid(sendToCCEmail)) {
+			List<String> sendCcEmails = msgs.getSendCcEmails();
+			if (sendCcEmails == null) {
+				sendCcEmails = new ArrayList<String>();
+			} else {
+				sendCcEmails = new ArrayList<String>(sendCcEmails);
+			}
+			sendCcEmails.add(sendToCCEmail);
+			msgs.setSendCcEmails(sendCcEmails);
+		}
+
 		msgs.setSendToRoles(sendToRoles);
 		msgs.setRecipientUserId(recipientUserId);
 		boolean validSendToEmail = EmailValidator.getInstance().validateEmail(getSendToEmail());
@@ -202,6 +216,14 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 	public void setSendToEmail(String sendToEmail) {
 		this.sendToEmail = sendToEmail;
+	}
+
+	public String getSendToCCEmail() {
+		return sendToCCEmail;
+	}
+
+	public void setSendToCCEmail(String sendToCCEmail) {
+		this.sendToCCEmail = sendToCCEmail;
 	}
 
 }
