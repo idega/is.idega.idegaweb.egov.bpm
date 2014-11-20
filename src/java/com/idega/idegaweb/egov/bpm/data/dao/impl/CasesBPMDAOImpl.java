@@ -942,8 +942,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Timestamp to
 	) {
 		boolean showClosedCases = false;
-		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
-				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY))
+		if (
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || 
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY) || 
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_OFFERED) || 
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CANCELLED_KEY))
 			showClosedCases = true;
 
 		List<Param> params = new ArrayList<Param>();
