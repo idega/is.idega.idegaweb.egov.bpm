@@ -1037,7 +1037,7 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(
             	closeAllLoadingMessages();
             	alert('Error loading attachments');
             },
-            timeout: 30000
+            timeout: 300000
         });
     };
     
