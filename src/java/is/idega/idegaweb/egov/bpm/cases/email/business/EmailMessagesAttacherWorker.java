@@ -286,9 +286,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		if (!MapUtil.isEmpty(groupedVars)) {
 			//	Checking if current message is not attached already
 
-			Map<String, Boolean> 	subjectsComparisons = new HashMap<String, Boolean>(),
-					fromComparisons = new HashMap<String, Boolean>(),
-					addressesComparisons = new HashMap<String, Boolean>();
+			Map<String, Boolean>	subjectsComparisons = new HashMap<String, Boolean>(),
+									fromComparisons = new HashMap<String, Boolean>(),
+									addressesComparisons = new HashMap<String, Boolean>();
 
 			String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
 			String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
@@ -516,6 +516,26 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	}
 
 	@Transactional
+	private Long getIdOfStartTask(final Long subProcInstId, final String subject) {
+		return getIdegaJbpmContext().execute(new JbpmCallback<Long>() {
+
+			@Override
+			public Long doInJbpm(JbpmContext context) throws JbpmException {
+				try {
+					ProcessInstance subPI = context.getProcessInstance(subProcInstId);
+					TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
+					ti.setName(subject);
+					context.save(ti);
+					return ti.getId();
+				} catch (Exception e) {
+					LOGGER.log(Level.WARNING, "Error while trying to start JBPM task instance for email message (subject: " + subject + ") for sub-proc. inst. ID: " + subProcInstId, e);
+					return null;
+				}
+			}
+		});
+	}
+
+	@Transactional
 	private Boolean doAttachEmailToProcess(
 			final Long subProcInstId,
 			final String subject,
@@ -525,25 +545,29 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			final Map<String, InputStream> attachments,
 			final Collection<File> attachedFiles
 	) {
+		final Long taskInstId = getIdOfStartTask(subProcInstId, subject);
+		if (taskInstId == null) {
+			LOGGER.warning("Error starting task instance for email with subject: " + subject + ". Sub-proc. inst. ID: " + subProcInstId + ". Email will not be marked as parsed.");
+			return Boolean.FALSE;
+		}
+
 		final Map<String, Object> newVars = new HashMap<String, Object>();
 		newVars.put(BPMConstants.VAR_SUBJECT, subject);
 		newVars.put(BPMConstants.VAR_TEXT, text);
 		newVars.put(BPMConstants.VAR_FROM, senderPersonalName);
 		newVars.put(BPMConstants.VAR_FROM_ADDRESS, fromAddress);
-		final Long tiId = getIdegaJbpmContext().execute(new JbpmCallback<Long>() {
+		TaskInstance ti = getIdegaJbpmContext().execute(new JbpmCallback<TaskInstance>() {
 
 			@Override
-			public Long doInJbpm(JbpmContext context) throws JbpmException {
-				long piId = -1, pdId = -1, tiId = -1;
+			public TaskInstance doInJbpm(JbpmContext context) throws JbpmException {
+				Long piId = Long.valueOf(-1), pdId = Long.valueOf(-1);
 				try {
-					ProcessInstance subPI = context.getProcessInstance(subProcInstId);
-					TaskInstance ti = subPI.getTaskMgmtInstance().createStartTaskInstance();
-					ti.setName(subject);
+					TaskInstance ti = context.getTaskInstance(taskInstId);
 
 					// taking here view for new task instance
-					tiId = ti.getId();
-					View view = getBpmFactory().takeView(tiId, false, null);
+					View view = getBpmFactory().takeView(taskInstId, false, null);
 					if (view == null) {
+						LOGGER.warning("View is undefined for task instance with ID: " + taskInstId);
 						return null;
 					}
 
@@ -555,15 +579,15 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					emailViewSubmission.populateVariables(newVars);
 					emailViewSubmission.setProcessInstanceId(piId);
 
-					TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(tiId);
+					TaskInstanceW taskInstance = bpmFactory.getProcessManager(pdId).getTaskInstance(taskInstId);
 					if (taskInstance == null) {
-						LOGGER.warning("Task instance can not be initialized with ID: " + tiId + ", proc. def. ID: " + pdId + ". Unable to attach email message (sender: " + fromAddress +
+						LOGGER.warning("Task instance can not be initialized with ID: " + taskInstId + ", proc. def. ID: " + pdId + ". Unable to attach email message (sender: " + fromAddress +
 							", subject: " + subject + ") for process instance: " + piId);
 					}
 
 					taskInstance.submit(emailViewSubmission, false);
-					LOGGER.info("Task instance ID for email message to attach: " + tiId + "\nSubmitted task instance " +
-							tiId + " with data from email message (sender: " + fromAddress +
+					LOGGER.info("Task instance ID for email message to attach: " + taskInstId + "\nSubmitted task instance " +
+							taskInstId + " with data from email message (sender: " + fromAddress +
 							", subject: " + subject + ") for process instance: " + piId);
 
 					if (!ListUtil.isEmpty(attachedFiles)) {
@@ -582,14 +606,14 @@ public class EmailMessagesAttacherWorker implements Runnable {
 							try {
 								BinaryVariable attachment = taskInstance.addAttachment(variable, fileName, fileName, fileStream);
 								if (attachment == null) {
-									LOGGER.warning("Failed to add attachment " + fileName + " for task inst. with ID: " + tiId);
+									LOGGER.warning("Failed to add attachment " + fileName + " for task inst. with ID: " + taskInstId);
 								} else {
 									if (!attachment.isPersisted()) {
 										attachment.persist();
 									}
 								}
 							} catch (Exception e) {
-								LOGGER.log(Level.SEVERE, "Unable to add attachment for task instance: " + tiId + ", file name: " + fileName, e);
+								LOGGER.log(Level.SEVERE, "Unable to add attachment for task instance: " + taskInstId + ", file name: " + fileName, e);
 							} finally {
 								IOUtil.closeInputStream(fileStream);
 								if (!ListUtil.isEmpty(attachedFiles)) {
@@ -601,23 +625,29 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						}
 					}
 
-					return taskInstance.getTaskInstanceId();
+					return ti;
 				} catch (Exception e) {
-					LOGGER.log(Level.WARNING, "Exception while attaching email message (sender: " + fromAddress + ", subject: " + subject + ") for task inst. ID: " + tiId +
+					LOGGER.log(Level.WARNING, "Exception while attaching email message (sender: " + fromAddress + ", subject: " + subject + ") for task inst. ID: " + taskInstId +
 							" proc. inst.: " + piId + ", sub-proc. inst. ID: " + subProcInstId + ", proc. def. ID: " + pdId, e);
 				}
 				return null;
 			}
 		});
 
-		if (tiId == null) {
+		if (ti == null) {
+			LOGGER.warning("Task instance is undefined! Sub-proc. inst. ID: " + subProcInstId + ". Email will not be marked as parsed.");
+			return false;
+		}
+		final Long tiId = ti.getId();
+		if (tiId == null || tiId <= 0) {
+			LOGGER.warning("ID (" + tiId + ") of submitted task instance is invalid! Sub-proc. inst. ID: " + subProcInstId + ". Email will not be marked as parsed.");
 			return false;
 		}
 
 		//	Checking variables
 		Map<String, Object> reSubmit = new HashMap<String, Object>();
 		for (String varName: newVars.keySet()) {
-			Object value = getVariableValue(tiId, varName);
+			Object value = getVariableValue(ti.getId(), varName);
 			if (value == null || StringUtil.isEmpty(value.toString())) {
 				reSubmit.put(varName, newVars.get(varName));
 			}
@@ -625,12 +655,14 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		if (!MapUtil.isEmpty(reSubmit)) {
 			Map<String, Object> results = getVariablesHandler().submitVariablesExplicitly(reSubmit, tiId);
 			if (MapUtil.isEmpty(results)) {
+				LOGGER.warning("Re-submitted variables explicitly (" + reSubmit + ") for task instance (ID: " + tiId + "), but some error occured. Sub-proc. inst. ID: " +
+						subProcInstId + ". Email will not be marked as parsed.");
 				return false;
 			}
 		}
 
 		//	Checking if end date was stored
-		return getIdegaJbpmContext().execute(new JbpmCallback<Boolean>() {
+		boolean endDateIsSet = getIdegaJbpmContext().execute(new JbpmCallback<Boolean>() {
 
 			@Override
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
@@ -677,6 +709,11 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				return false;
 			}
 		});
+
+		if (!endDateIsSet) {
+			LOGGER.warning("Unable to set end date for task instance (ID: " + tiId + "). Sub-proc. inst. ID: " + subProcInstId + ". Email will not be marked as parsed.");
+		}
+		return endDateIsSet;
 	}
 
 	public BPMContext getIdegaJbpmContext() {
