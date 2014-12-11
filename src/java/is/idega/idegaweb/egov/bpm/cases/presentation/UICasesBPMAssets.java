@@ -63,12 +63,20 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	private static final String assetsFacet = "assets", assetViewFacet = "assetView";
 
-	private boolean fullView = false, inCasesComponent = false,
-			usePdfDownloadColumn = true, allowPDFSigning = true,
-			hideEmptySection = true, showAttachmentStatistics,
-			showOnlyCreatorInContacts, showLogExportButton, showComments = true,
-			showContacts = true, nameFromExternalEntity = false, showUserProfilePicture = Boolean.TRUE,
-			showUserCompany = false, showLastLoginDate = false;;
+	private boolean fullView = Boolean.FALSE,
+			inCasesComponent = Boolean.FALSE,
+			usePdfDownloadColumn = Boolean.TRUE,
+			allowPDFSigning = Boolean.TRUE,
+			hideEmptySection = Boolean.TRUE,
+			showAttachmentStatistics = Boolean.FALSE,
+			showOnlyCreatorInContacts = Boolean.FALSE,
+			showLogExportButton = Boolean.FALSE,
+			showComments = Boolean.TRUE,
+			showContacts = Boolean.TRUE,
+			nameFromExternalEntity = Boolean.FALSE,
+			showUserProfilePicture = Boolean.TRUE,
+			showUserCompany = Boolean.FALSE,
+			showLastLoginDate = Boolean.FALSE;
 
 	private String commentsPersistenceManagerIdentifier, specialBackPage;
 

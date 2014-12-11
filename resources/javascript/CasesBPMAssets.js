@@ -293,10 +293,19 @@ CasesBPMAssets.reloadCaseView = function(controller, container, piId) {
 	});
 }
 
-CasesBPMAssets.initTakeCaseSelector = function(container, piId) {
+CasesBPMAssets.getExcludedHandlerIds = function() {
+	var excludedHandlerIdsParameter = jQuery('input[name="commaSeparatedExcludedHandlersIdsProperty"]');
+	if (excludedHandlerIdsParameter != null && excludedHandlerIdsParameter.length > 0) {
+		return excludedHandlerIdsParameter.val().split(',');
+	}
+
+	return null;
+}
+
+CasesBPMAssets.initTakeCaseSelector = function(container, piId, excludedHandlersIds) {
 	var takeCaseSelect = jQuery('.takeCaseSelect', container);
 	
-	BPMProcessAssets.getAllHandlerUsers(piId, {
+	BPMProcessAssets.getAllHandlerUsers(piId, CasesBPMAssets.getExcludedHandlerIds(), {
         callback: function(handlerUsers) {
         	if (handlerUsers == null || handlerUsers.length == 0) {
         		return;

@@ -78,18 +78,29 @@ public class CasesBPMAssetsState implements Serializable {
 
 	private Integer caseId, nextCaseId;
 
-	private Long processInstanceId, viewSelected, nextProcessInstanceId, nextTaskId;
+	private Long processInstanceId, 
+			viewSelected, 
+			nextProcessInstanceId, 
+			nextTaskId;
 
-	private String displayPropertyForStyleAttribute = "block", specialBackPage, commentsPersistenceManagerIdentifier, currentTaskInstanceName,
+	private String displayPropertyForStyleAttribute = "block", 
+			specialBackPage, 
+			commentsPersistenceManagerIdentifier, 
+			currentTaskInstanceName,
 			systemEmailAddress;
 
-	private Boolean isWatched, usePDFDownloadColumn = Boolean.TRUE,
-			allowPDFSigning = Boolean.TRUE, standAloneComponent = Boolean.TRUE,
+	private Boolean isWatched, 
+			usePDFDownloadColumn = Boolean.TRUE,
+			allowPDFSigning = Boolean.TRUE, 
+			standAloneComponent = Boolean.TRUE,
 			hideEmptySection = Boolean.FALSE,
 			showAttachmentStatistics = Boolean.FALSE,
-			showOnlyCreatorInContacts = Boolean.FALSE, showBackButton,
-			showLogExportButton = Boolean.FALSE, showComments = Boolean.TRUE,
-			showContacts = Boolean.TRUE, showNextTask,
+			showOnlyCreatorInContacts = Boolean.FALSE, 
+			showBackButton,
+			showLogExportButton = Boolean.FALSE, 
+			showComments = Boolean.TRUE,
+			showContacts = Boolean.TRUE, 
+			showNextTask,
 			specialBackPageDecoded = Boolean.FALSE,
 			autoShowComments = Boolean.FALSE,
 			nameFromExternalEntity = Boolean.FALSE,
