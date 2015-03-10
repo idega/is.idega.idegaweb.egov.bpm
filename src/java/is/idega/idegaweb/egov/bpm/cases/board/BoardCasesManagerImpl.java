@@ -59,6 +59,7 @@ import com.idega.jbpm.bean.VariableByteArrayInstance;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.data.dao.BPMDAO;
+import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.NoEmailFoundException;
@@ -201,7 +202,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		List<String> allVariables = new ArrayList<String>(variablesToQuery);
 		allVariables.addAll(getGradingVariables());
 
-		List<CaseBoardView> boardViews = getVariablesValuesByNamesForCases(casesIdsAndHandlers, allVariables);
+		List<CaseBoardView> boardViews = getVariablesValuesByNamesForCases(casesIdsAndHandlers, allVariables, taskName);
 		if (ListUtil.isEmpty(boardViews))
 			return null;
 
@@ -279,15 +280,23 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
 	protected List<CaseBoardView> getVariablesValuesByNamesForCases(
 			Collection<? extends GeneralCase> cases,
-			List<String> variablesNames
+			List<String> variablesNames,
+			String gradingTaskName
 	) {
+		gradingTaskName = StringUtil.isEmpty(gradingTaskName) ? "Grading" : gradingTaskName;
+
 		/* Getting relations between cases and process instances */
 		Map<ProcessInstance, Case> casesAndProcesses = getCaseProcessInstanceRelation()
 				.getCasesAndProcessInstances(cases);
 
 		/* Getting variables */
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariables(
-				variablesNames, casesAndProcesses.keySet(), Boolean.TRUE, Boolean.FALSE, Boolean.FALSE);
+				variablesNames,
+				casesAndProcesses.keySet(),
+				Boolean.TRUE,
+				Boolean.FALSE,
+				Boolean.FALSE
+		);
 		if (ListUtil.isEmpty(variables)) {
 			getLogger().warning("Didn't find any variables values for processes " + casesAndProcesses.values() + " and variables names " + variablesNames);
 			return null;
@@ -364,6 +373,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				} else if (ProcessConstants.BOARD_FINANCING_DECISION.equals(variable.getName())) {
 					fillWithBoardInfoOnTheTasks(variable, view, CasesBoardViewer.BOARD_DECISION);
 					view.addVariable(variable.getName(), value.toString());
+				} else if (GRADING_VARIABLES.contains(variable.getName())) {
+					String latestValue = getVariableLatestValue(processInstanceId, gradingTaskName, variable.getName());
+					view.addVariable(variable.getName(), StringUtil.isEmpty(latestValue) ? value.toString() : latestValue.toString());
 				} else
 					view.addVariable(variable.getName(), value.toString());
 			} else {
@@ -372,6 +384,31 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		return views;
+	}
+
+	@Autowired(required = false)
+	private BPMFactory bpmFactory;
+
+	private BPMFactory getBPMFactory() {
+		if (bpmFactory == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return bpmFactory;
+	}
+
+	private String getVariableLatestValue(Long piId, String taskName, String variableName) {
+		if (piId == null || StringUtil.isEmpty(taskName) || StringUtil.isEmpty(variableName)) {
+			return null;
+		}
+
+		Object value = null;
+		try {
+			value = getBPMFactory().getProcessInstanceW(piId).getValueForTaskInstance("Grading", variableName);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting latest value for " + variableName + ", proc. inst. ID: " + piId + ", task: " + taskName, e);
+		}
+
+		return value instanceof String ? (String) value : null;
 	}
 
 	private void fillWithBoardInfoOnTheTasks(VariableInstanceInfo variable, CaseBoardView view, String key) {
