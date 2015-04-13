@@ -169,17 +169,20 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				ProcessConstants.BPM_CASE,
 				dateFrom,
 				dateTo);
-		if (ListUtil.isEmpty(cases))
+		if (ListUtil.isEmpty(cases)) {
 			return null;
+		}
 
 		//	Filling beans with info
 		List<CaseBoardBean> boardCases = getFilledBoardCaseWithInfo(
 				cases,
 				uuid,
 				backPage,
-				taskName);
-		if (ListUtil.isEmpty(boardCases))
+				taskName
+		);
+		if (ListUtil.isEmpty(boardCases)) {
 			return null;
+		}
 
 		sortBoardCases(boardCases);
 
@@ -203,8 +206,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		allVariables.addAll(getGradingVariables());
 
 		List<CaseBoardView> boardViews = getVariablesValuesByNamesForCases(casesIdsAndHandlers, allVariables, taskName);
-		if (ListUtil.isEmpty(boardViews))
+		if (ListUtil.isEmpty(boardViews)) {
 			return null;
+		}
 
 		List<String> numberVariables = Arrays.asList(
 				CaseBoardBean.CASE_OWNER_TOTAL_COST,
@@ -286,15 +290,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		gradingTaskName = StringUtil.isEmpty(gradingTaskName) ? "Grading" : gradingTaskName;
 
 		/* Getting relations between cases and process instances */
-		Map<ProcessInstance, Case> casesAndProcesses = getCaseProcessInstanceRelation()
-				.getCasesAndProcessInstances(cases);
+		Map<ProcessInstance, Case> casesAndProcesses = getCaseProcessInstanceRelation().getCasesAndProcessInstances(cases);
 
 		/* Getting variables */
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariables(
 				variablesNames,
 				casesAndProcesses.keySet(),
-				Boolean.TRUE,
 				Boolean.FALSE,
+				Boolean.TRUE,
 				Boolean.FALSE
 		);
 		if (ListUtil.isEmpty(variables)) {
@@ -329,9 +332,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						List<Map<String, String>> obValue = getObjectValue((VariableByteArrayInstance) variable);
 
 						List<Map<String, String>> financing = view.getFinancingOfTheTasks();
-						if (financing == null)
+						if (financing == null) {
 							view.setFinancingOfTheTasks(obValue);
-						else {
+						} else {
 							int taskIndex = 0;
 							for (Map<String, String> taskInfo: obValue) {
 								if (MapUtil.isEmpty(taskInfo))
@@ -353,8 +356,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 								taskInfoFromBoard.put(CasesBoardViewer.ESTIMATED_COST, estimatedCost);
 
 								String tmp = taskInfoFromBoard.get(ProcessConstants.BOARD_FINANCING_SUGGESTION);
-								if (StringUtil.isEmpty(tmp))
+								if (StringUtil.isEmpty(tmp)) {
 									taskInfoFromBoard.put(ProcessConstants.BOARD_FINANCING_SUGGESTION, CoreConstants.MINUS);
+								}
 								tmp = taskInfoFromBoard.get(ProcessConstants.BOARD_FINANCING_DECISION);
 								if (StringUtil.isEmpty(tmp))
 									taskInfoFromBoard.put(ProcessConstants.BOARD_FINANCING_DECISION, CoreConstants.MINUS);
@@ -748,7 +752,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			String uuid,
 			boolean isSubscribedOnly,
 			boolean useBasePage,
-			String taskName) {
+			String taskName
+	) {
 		CaseBoardTableBean data = new CaseBoardTableBean();
 
 		List<CaseBoardBean> boardCases = getAllSortedCases(
@@ -759,11 +764,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				useBasePage,
 				taskName,
 				dateFrom,
-				dateTo);
+				dateTo
+		);
 		if (ListUtil.isEmpty(boardCases)) {
 			data.setErrorMessage(localize("cases_board_viewer.no_cases_found", "There are no cases!"));
 			return data;
 		}
+
+		getLogger().info("Got data: " + boardCases);	//	TODO
 
 		// Header
 		data.setHeaderLabels(getTableHeaders(uuid));
@@ -944,14 +952,19 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		int index = 1;
 
 		List<String> customColumns = getCustomColumns(uuid);
+		getLogger().info("Custom header columns: " + customColumns);	//	TODO
 		if (ListUtil.isEmpty(customColumns)) {
 			for (AdvancedProperty header: CasesBoardViewer.CASE_FIELDS) {
 				if (ProcessConstants.FINANCING_OF_THE_TASKS.equals(header.getId())) {
 					columns.put(index, getFinancingTableHeaders());
 				} else {
 					columns.put(index, Arrays.asList(
-							new AdvancedProperty(header.getId(), localize(new StringBuilder(LOCALIZATION_PREFIX).append(header.getId()).toString(), header.getValue()))
-					));
+							new AdvancedProperty(
+									header.getId(),
+									localize(new StringBuilder(LOCALIZATION_PREFIX).append(header.getId()).toString(), header.getValue())
+								)
+							)
+					);
 				}
 				index++;
 			}
@@ -970,7 +983,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT.equals(column) ||
 						CasesBoardViewer.BOARD_SUGGESTION.equals(column) ||
 						CasesBoardViewer.BOARD_DECISION.equals(column)
-
 				) {
 					continue;
 				} else {
@@ -989,6 +1001,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			}
 		}
 
+		getLogger().info("Header: " + columns + ", size: " + columns.size());	//	TODO
 		return columns;
 	}
 
@@ -1000,13 +1013,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			int numberOfColumns,
 			BigDecimal grantAmountSuggestionTotal,
 			BigDecimal boardAmountTotal,
-			String uuid) {
-
+			String uuid
+	) {
 		List<String> values = new ArrayList<String>();
 
 		int indexOfTotal = getIndexOfColumn(ProcessConstants.FINANCING_OF_THE_TASKS, uuid);
-		if (indexOfTotal < 0)
+		if (indexOfTotal < 0) {
 			indexOfTotal = getIndexOfColumn(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN, uuid);
+		}
 		int indexOfSuggestion = indexOfTotal + 3;
 		int indexOfDecision = indexOfSuggestion + 1;
 
@@ -1024,13 +1038,15 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			} else
 				values.add(CoreConstants.EMPTY);
 		}
-		if (values.size() <= indexOfTotal)
+		if (values.size() <= indexOfTotal) {
 			values.add(total);
-		if (values.size() <= indexOfSuggestion)
+		}
+		if (values.size() <= indexOfSuggestion) {
 			values.add(String.valueOf(grantAmountSuggestionTotal));
-		if (values.size() <= indexOfDecision)
+		}
+		if (values.size() <= indexOfDecision) {
 			values.add(String.valueOf(boardAmountTotal));
-
+		}
 		values.add(CoreConstants.EMPTY);
 
 		return values;
@@ -1147,7 +1163,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 		@Override
 		public String toString() {
-			return "CaseBoardView: case ID: " + caseId + ", process instance ID: " + processInstanceId;
+			return "CaseBoardView: case ID: " + caseId + ", process instance ID: " + processInstanceId + ", variables: " + getVariables() + ", financing of other tasks: " + getFinancingOfTheTasks();
 		}
 	}
 
@@ -1180,8 +1196,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	@Override
-	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage,
-			String taskName) {
+	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage, String taskName) {
 		return getTaskViewer().getLinkToTheTaskRedirector(iwc, basePage, caseId, processInstanceId, backPage, taskName);
 	}
 
@@ -1198,8 +1213,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	@Override
 	public List<AdvancedProperty> getAvailableVariables(String processName) {
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null)
+		if (iwc == null) {
 			return null;
+		}
 
 		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariablesByProcessDefinition(processName);
 		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
@@ -1220,9 +1236,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return null;
 		}
 
-		IWBundle bundle = application.getBundle(
-				getBundleIdentifier()
-				);
+		IWBundle bundle = application.getBundle(getBundleIdentifier());
 		if (bundle == null) {
 			return null;
 		}
@@ -1240,44 +1254,46 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		List<Map<String, String>> tasksInfo = caseBoard.getFinancingOfTheTasks();
-		if (!ListUtil.isEmpty(tasksInfo)) {
-			int tasksIndex = 0;
-			Map<Integer, Map<String, String>> valuesToReplace = new TreeMap<Integer, Map<String,String>>();
-			for (Map<String, String> taskInfo: tasksInfo) {
-				if (MapUtil.isEmpty(taskInfo))
-					continue;
-
-				String taskName = taskInfo.get("task");
-				if (StringUtil.isEmpty(taskName))
-					taskName = CoreConstants.MINUS;
-
-				Long cost = getNumberValue(taskInfo.get("cost_estimate"), Boolean.FALSE);
-
-				Map<String, String> cells = new HashMap<String, String>();
-				cells.put(CasesBoardViewer.WORK_ITEM, taskName);
-				cells.put(CasesBoardViewer.ESTIMATED_COST, String.valueOf(cost));
-
-				String suggestion = taskInfo.get(CasesBoardViewer.BOARD_SUGGESTION);
-				cells.put(CasesBoardViewer.BOARD_SUGGESTION,
-						StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
-
-				String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
-				cells.put(CasesBoardViewer.BOARD_DECISION,
-						StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
-
-				String proposal = taskInfo.get(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT);
-				cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT,
-						StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
-
-				valuesToReplace.put(tasksIndex, cells);
-				tasksIndex++;
-			}
-			tasksInfo = new ArrayList<Map<String,String>>();
-			for (Map<String, String> infoToReplace: valuesToReplace.values()) {
-				tasksInfo.add(infoToReplace);
-			}
-			caseBoard.setFinancingOfTheTasks(tasksInfo);
+		if (ListUtil.isEmpty(tasksInfo)) {
+			return;
 		}
+
+		int tasksIndex = 0;
+		Map<Integer, Map<String, String>> valuesToReplace = new TreeMap<Integer, Map<String,String>>();
+		for (Map<String, String> taskInfo: tasksInfo) {
+			if (MapUtil.isEmpty(taskInfo)) {
+				continue;
+			}
+
+			String taskName = taskInfo.get("task");
+			if (StringUtil.isEmpty(taskName)) {
+				taskName = CoreConstants.MINUS;
+			}
+
+			Long cost = getNumberValue(taskInfo.get("cost_estimate"), Boolean.FALSE);
+
+			Map<String, String> cells = new HashMap<String, String>();
+			cells.put(CasesBoardViewer.WORK_ITEM, taskName);
+			cells.put(CasesBoardViewer.ESTIMATED_COST, String.valueOf(cost));
+
+			String suggestion = taskInfo.get(CasesBoardViewer.BOARD_SUGGESTION);
+			cells.put(CasesBoardViewer.BOARD_SUGGESTION, StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
+
+			String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
+			cells.put(CasesBoardViewer.BOARD_DECISION, StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
+
+			String proposal = taskInfo.get(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT);
+			cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
+
+			valuesToReplace.put(tasksIndex, cells);
+			tasksIndex++;
+		}
+
+		tasksInfo = new ArrayList<Map<String,String>>();
+		for (Map<String, String> infoToReplace: valuesToReplace.values()) {
+			tasksInfo.add(infoToReplace);
+		}
+		caseBoard.setFinancingOfTheTasks(tasksInfo);
 	}
 
 	protected String localize(String key, String value) {
