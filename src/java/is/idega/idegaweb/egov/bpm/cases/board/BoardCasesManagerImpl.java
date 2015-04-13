@@ -265,6 +265,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boardCases.add(boardCase);
 		}
 
+		getLogger().info("Views: " + boardCases);	//	TODO
+
 		return boardCases;
 	}
 
@@ -770,8 +772,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			data.setErrorMessage(localize("cases_board_viewer.no_cases_found", "There are no cases!"));
 			return data;
 		}
-
-		getLogger().info("Got data: " + boardCases);	//	TODO
 
 		// Header
 		data.setHeaderLabels(getTableHeaders(uuid));
