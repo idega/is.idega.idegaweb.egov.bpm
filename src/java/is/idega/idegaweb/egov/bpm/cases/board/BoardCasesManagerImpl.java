@@ -269,8 +269,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	private CaseBoardView getCaseView(List<CaseBoardView> views, Long processInstanceId) {
-		if (ListUtil.isEmpty(views) || processInstanceId == null)
+		if (ListUtil.isEmpty(views) || processInstanceId == null) {
 			return null;
+		}
 
 		for (CaseBoardView view: views) {
 			if (processInstanceId.longValue() == view.getProcessInstanceId().longValue()) {
@@ -297,7 +298,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				variablesNames,
 				casesAndProcesses.keySet(),
 				Boolean.FALSE,
-				Boolean.TRUE,
+				Boolean.FALSE,
 				Boolean.FALSE
 		);
 		if (ListUtil.isEmpty(variables)) {
@@ -360,8 +361,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 									taskInfoFromBoard.put(ProcessConstants.BOARD_FINANCING_SUGGESTION, CoreConstants.MINUS);
 								}
 								tmp = taskInfoFromBoard.get(ProcessConstants.BOARD_FINANCING_DECISION);
-								if (StringUtil.isEmpty(tmp))
+								if (StringUtil.isEmpty(tmp)) {
 									taskInfoFromBoard.put(ProcessConstants.BOARD_FINANCING_DECISION, CoreConstants.MINUS);
+								}
 
 								taskIndex++;
 							}
@@ -371,6 +373,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					} else if (ProcessConstants.BOARD_FINANCING_DECISION.equals(variable.getName())) {
 						fillWithBoardInfoOnTheTasks(variable, view, CasesBoardViewer.BOARD_DECISION);
 					}
+
 				} else if (ProcessConstants.BOARD_FINANCING_SUGGESTION.equals(variable.getName())) {
 					fillWithBoardInfoOnTheTasks(variable, view, CasesBoardViewer.BOARD_SUGGESTION);
 					view.addVariable(variable.getName(), value.toString());
@@ -771,13 +774,15 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return data;
 		}
 
-		getLogger().info("Data: " + boardCases);
+		getLogger().info("Data: " + boardCases);	//	TODO
 
 		// Header
 		data.setHeaderLabels(getTableHeaders(uuid));
 
 		// Body
 		Map<Integer, List<AdvancedProperty>> columns = getColumns(uuid);
+
+		getLogger().info("Columns: " + columns + ", size: " + columns.size());	//	TODO
 
 		BigDecimal boardAmountTotal = new BigDecimal(0);
 		BigDecimal grantAmountSuggestionTotal = new BigDecimal(0);
@@ -798,9 +803,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			updateTasksInfo(caseBoard);
 
 			int index = 0;
+			List<AdvancedProperty> columnLabels = null;
 			Map<Integer, List<AdvancedProperty>> rowValues = new TreeMap<Integer, List<AdvancedProperty>>();
 			for (Integer key: columns.keySet()) {
-				List<AdvancedProperty> columnLabels = columns.get(key);
+				columnLabels = columns.get(key);
 
 				for (AdvancedProperty column: columnLabels) {
 					if (isEqual(column.getId(), ProcessConstants.CASE_IDENTIFIER)) {
@@ -827,7 +833,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
-
 					} else if (isEqual(column.getId(), CaseBoardBean.CASE_OWNER_GENDER)) {
 						//	Gender
 						String value = caseBoard.getValue(CaseBoardBean.CASE_OWNER_GENDER);
@@ -860,6 +865,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				index++;
 			}
 
+			getLogger().info("Columns: " + columnLabels + " and values: " + rowValues);	//	TODO
 			rowBean.setValues(rowValues);
 			bodyRows.add(rowBean);
 		}
@@ -952,7 +958,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		int index = 1;
 
 		List<String> customColumns = getCustomColumns(uuid);
-		getLogger().info("Custom header columns: " + customColumns);	//	TODO
 		if (ListUtil.isEmpty(customColumns)) {
 			for (AdvancedProperty header: CasesBoardViewer.CASE_FIELDS) {
 				if (ProcessConstants.FINANCING_OF_THE_TASKS.equals(header.getId())) {
@@ -1001,7 +1006,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			}
 		}
 
-		getLogger().info("Header: " + columns + ", size: " + columns.size());	//	TODO
 		return columns;
 	}
 
@@ -1255,6 +1259,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 		List<Map<String, String>> tasksInfo = caseBoard.getFinancingOfTheTasks();
 		if (ListUtil.isEmpty(tasksInfo)) {
+			getLogger().info("No info about the financing tasks. Case identifier: " + caseBoard.getCaseIdentifier());
 			return;
 		}
 
