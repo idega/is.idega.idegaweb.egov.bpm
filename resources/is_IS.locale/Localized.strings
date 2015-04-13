@@ -163,3 +163,13 @@ female=Kona
 bpm_variable.string_ownerGender=Kyn
 
 bpm_variable.incident_registered=Skrá atvik
+
+bpm_variable.string_userName=Sendandi
+bpm_variable.string_userPersonalId=Kennitala
+bpm_variable.string_userEmail=Email
+bpm_variable.long_marketPermissionInterval=Sölusvæði/tegund leyfis
+bpm_variable.string_saleDateArea=Sölusvæði/tegund leyfis
+bpm_variable.string_nightSaleArea=Sölusvæði/tegund leyfis
+bpm_variable.string_suggestionsAboutOtherPlaces=Sölusvæði/tegund leyfis
+bpm_variable.string_cityFestivalsArea=Sölusvæði/tegund leyfis
+StreetTradingPermission.case_body=Sölusvæði/tegund leyfis
