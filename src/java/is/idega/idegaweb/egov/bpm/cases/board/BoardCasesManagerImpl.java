@@ -771,6 +771,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return data;
 		}
 
+		getLogger().info("Data: " + boardCases);
+
 		// Header
 		data.setHeaderLabels(getTableHeaders(uuid));
 
