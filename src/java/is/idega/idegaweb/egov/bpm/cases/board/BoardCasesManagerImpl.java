@@ -265,8 +265,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boardCases.add(boardCase);
 		}
 
-		getLogger().info("Views: " + boardCases);	//	TODO
-
 		return boardCases;
 	}
 
