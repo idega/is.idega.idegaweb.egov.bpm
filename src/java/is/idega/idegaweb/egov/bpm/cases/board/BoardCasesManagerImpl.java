@@ -835,11 +835,11 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 					} else if (isEqual(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION) && addBoardSuggestion) {
-						indexOfSugesstion = index;
+						indexOfSugesstion = index - 1;
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION))));
 
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION) && addBoardDecision) {
-						indexOfDesicion = index;
+						indexOfDesicion = index - 1;
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, caseBoard.getValue(CasesBoardViewer.BOARD_DECISION))));
 
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
