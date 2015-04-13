@@ -54,6 +54,7 @@ import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.bean.VariableByteArrayInstance;
 import com.idega.jbpm.bean.VariableInstanceInfo;
@@ -789,6 +790,11 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		boolean financingTableAdded = false;
 		String uniqueCaseId = "uniqueCaseId";
 		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<CaseBoardTableBodyRowBean>(boardCases.size());
+
+		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+		boolean addBoardSuggestion = settings.getBoolean("cases_board_add_board_suggestion", false);
+		boolean addBoardDecision = settings.getBoolean("cases_board_add_board_descision", false);
+
 		for (CaseBoardBean caseBoard: boardCases) {
 			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(
 					caseBoard.getCaseId(),
@@ -829,9 +835,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						financingTableAdded = true;
 						rowBean.setFinancingInfo(caseBoard.getFinancingOfTheTasks());
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(ProcessConstants.FINANCING_OF_THE_TASKS, CoreConstants.EMPTY)));
+
 					} else if (isEqual(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
-					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION)) {
-					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION)) {
+					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION) && addBoardSuggestion) {
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION))));
+
+					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION) && addBoardDecision) {
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, caseBoard.getValue(CasesBoardViewer.BOARD_DECISION))));
+
 					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
 					} else if (isEqual(column.getId(), CaseBoardBean.CASE_OWNER_GENDER)) {
 						//	Gender
