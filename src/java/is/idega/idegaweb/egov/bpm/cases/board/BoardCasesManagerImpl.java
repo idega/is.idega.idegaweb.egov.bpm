@@ -412,7 +412,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 		if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("cases_board_latest_value_db", true)) {
 			Map<Long, Map<String, VariableInstanceInfo>> data = getVariablesQuerier().getGroupedData(
-					getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, Arrays.asList(piId), true, false, false)
+					getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, Arrays.asList(piId), false, true, false)
 			);
 			if (!MapUtil.isEmpty(data)) {
 				Map<String, VariableInstanceInfo> vars = data.get(piId);
