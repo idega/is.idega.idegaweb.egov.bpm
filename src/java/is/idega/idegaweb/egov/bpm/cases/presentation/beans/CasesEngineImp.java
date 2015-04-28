@@ -346,6 +346,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		properties.setAddExportContacts(criterias.isAddExportContacts());
 		properties.setSearch(criterias.isSearch());
 		properties.setShowContacts(criterias.isShowContacts());
+		properties.setCustomColumnsForExport(criterias.getExportColumns());
 
 		UIComponent component = null;
 		if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(criterias.getCaseListType())) {

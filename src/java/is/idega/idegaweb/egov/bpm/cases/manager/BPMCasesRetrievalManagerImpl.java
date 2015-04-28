@@ -1782,7 +1782,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 		final String id = theCase.getId();
 		if (casesBeingUpdated.containsKey(id)) {
-			getLogger().info("Info case by ID " + id + " is already being handled");
 			return;
 		}
 
