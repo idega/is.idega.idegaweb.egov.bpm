@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.logging.Level;
 
 import javax.faces.component.UIComponent;
 import javax.servlet.http.HttpServletRequest;
@@ -170,7 +171,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 					try {
 						component = formConverter.getComponentToRender(iwc, taskInstanceId, null, null);
 					} catch (Exception e) {
-
+						getLogger().log(Level.WARNING, "Error getting UI component for task instance: " + taskInstanceId, e);
 					}
 					if (component == null) {
 						getLogger().warning("Failed to get UI component for task instance: " + taskInstanceId);
