@@ -1,5 +1,6 @@
 package com.idega.idegaweb.egov.bpm.pdf;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.Locale;
 import java.util.logging.Level;
 
 import javax.faces.component.UIComponent;
+import javax.faces.context.ResponseWriter;
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,17 +89,21 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			return null;
 		}
 
-		return getPDFsAndAttachmentsForCase(null, caseId, false, true);
+		return getPDFsAndAttachmentsForCase(null, caseId, false, true, false);
 	}
 
 	@Override
 	public List<CasePDF> getPDFsForCase(Case theCase) throws Exception {
+		return getPDFsForCase(theCase, false);
+	}
+	@Override
+	public List<CasePDF> getPDFsForCase(Case theCase, boolean resetContex) throws Exception {
 		if (theCase == null) {
 			getLogger().warning("Case is not provided");
 			return null;
 		}
 
-		return getPDFsAndAttachmentsForCase(theCase, null, false, true);
+		return getPDFsAndAttachmentsForCase(theCase, null, false, true, resetContex);
 	}
 
 	@Override
@@ -107,10 +113,10 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			return null;
 		}
 
-		return getPDFsAndAttachmentsForCase(null, caseId, true, true);
+		return getPDFsAndAttachmentsForCase(null, caseId, true, true, false);
 	}
 
-	private List<CasePDF> getPDFsAndAttachmentsForCase(Case theCase, Integer caseId, boolean loadAttachments, boolean switchUser) throws Exception {
+	private List<CasePDF> getPDFsAndAttachmentsForCase(Case theCase, Integer caseId, boolean loadAttachments, boolean switchUser, boolean resetContext) throws Exception {
 		if (theCase == null && caseId == null) {
 			return null;
 		}
@@ -177,7 +183,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 						getLogger().warning("Failed to get UI component for task instance: " + taskInstanceId);
 						continue;
 					}
-					byte[] bytes = pdfGenerator.getBytesOfGeneratedPDF(iwc, component, true, true);
+					byte[] bytes = pdfGenerator.getBytesOfGeneratedPDF(iwc, component, true, true, resetContext);
 					if (bytes == null) {
 						getLogger().warning("Failed to generate PDF for task instance: " + taskInstanceId);
 						continue;
@@ -233,7 +239,25 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 
 				iwc.setCurrentLocale(locale);
 			}
+
+			if (iwc != null && resetContext) {
+				doResetContext(iwc);
+			}
 		}
+	}
+
+	private void doResetContext(IWContext iwc) {
+		ResponseWriter rw = iwc.getResponseWriter();
+		if (rw != null) {
+			try {
+				rw.flush();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+			IOUtil.close(rw);
+			rw = null;
+		}
+		iwc = null;
 	}
 
 	private IWContext getIWContext() {
