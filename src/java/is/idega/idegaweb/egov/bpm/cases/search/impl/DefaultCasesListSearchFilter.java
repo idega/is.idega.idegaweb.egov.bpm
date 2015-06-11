@@ -151,8 +151,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			return;
 		}
 
-		end = System.currentTimeMillis();
-		getLogger().info("Query (" + info + ") executed in: " + (end - start) + " ms");
+		CoreUtil.doDebugSQL(start, System.currentTimeMillis(), info);
 	}
 
 	private void startFiltering() {

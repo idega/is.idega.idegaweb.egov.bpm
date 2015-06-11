@@ -943,10 +943,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	) {
 		boolean showClosedCases = false;
 		if (
-				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || 
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) ||
 				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
-				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY) || 
-				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_OFFERED) || 
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY) ||
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_OFFERED) ||
 				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CANCELLED_KEY))
 			showClosedCases = true;
 
@@ -1035,8 +1035,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			CoreUtil.sendExceptionNotification(message, e);
 		} finally {
 			if (sqlMeasurementOn) {
-				getLogger().info("Results for query '" + hqlQuery + "' and params " + params + " where loaded in " +
-						(System.currentTimeMillis() - start) + " ms");
+				CoreUtil.doDebugSQL(start, System.currentTimeMillis(), hqlQuery, params);
 			}
 		}
 		return Collections.emptyMap();
@@ -2231,14 +2230,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		/* Ordering by date created */
 		query = query + "ORDER BY created DESC";
 
-		boolean sqlMeasurementOn = CoreUtil.isSQLMeasurementOn();
-		Long startTimeInMillis = sqlMeasurementOn ? System.currentTimeMillis() : 0;
 		try {
 			List<Serializable[]> data = SimpleQuerier.executeQuery(query, 2);
-			if (sqlMeasurementOn) {
-				getLogger().info("Query: " + query.toString() + " executed in " + (System.currentTimeMillis() - startTimeInMillis) +
-					" ms. " + (ListUtil.isEmpty(data) ? "Nothing found" : "Results are: " + data));
-			}
 			return getResults(data);
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Unable to find ids for " + Case.class.getName() + " by query: '" + query.toString() + "'", e);
@@ -2318,16 +2311,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			query += " and c.CREATED <= '" + to.getDateString("yyyy-MM-dd") + "'";
 		}
 
-		long start = System.currentTimeMillis();
 		List<Serializable[]> results = null;
 		try {
 			results = SimpleQuerier.executeQuery(query, 1);
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
-		} finally {
-			if (CoreUtil.isSQLMeasurementOn()) {
-				getLogger().info("Query '" + query + "' was executed in " + (System.currentTimeMillis() - start) + " ms");
-			}
 		}
 		if (ListUtil.isEmpty(results)) {
 			return null;
