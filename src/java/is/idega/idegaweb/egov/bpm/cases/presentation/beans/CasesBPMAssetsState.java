@@ -107,7 +107,8 @@ public class CasesBPMAssetsState implements Serializable {
 			showUserProfilePicture = Boolean.TRUE,
 			addExportContacts = Boolean.FALSE,
 			showUserCompany = Boolean.FALSE,
-			showLastLoginDate = Boolean.FALSE;
+			showLastLoginDate = Boolean.FALSE,
+			useXMLDataProvider = Boolean.TRUE;
 
 	public Long getViewSelected() {
 		if (viewSelected == null)
@@ -843,5 +844,13 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setShowLastLoginDate(Boolean showLastLoginDate) {
 		this.showLastLoginDate = showLastLoginDate;
+	}
+
+	public Boolean getUseXMLDataProvider() {
+		return useXMLDataProvider;
+	}
+
+	public void setUseXMLDataProvider(Boolean useXMLDataProvider) {
+		this.useXMLDataProvider = useXMLDataProvider;
 	}
 }
