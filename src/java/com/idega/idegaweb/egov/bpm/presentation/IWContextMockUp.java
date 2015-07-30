@@ -8,6 +8,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.security.Principal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -23,14 +24,22 @@ import javax.faces.application.Application;
 import javax.faces.component.UIViewRoot;
 import javax.faces.context.ExternalContext;
 import javax.faces.context.ResponseWriter;
+import javax.servlet.AsyncContext;
+import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
 import javax.servlet.ServletInputStream;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
+import javax.servlet.http.Part;
 
 import org.apache.myfaces.context.servlet.ServletExternalContextImpl;
 import org.apache.myfaces.el.unified.FacesELContext;
@@ -364,6 +373,36 @@ public class IWContextMockUp extends IWContext {
 
 
 				}
+
+				@Override
+				public void setContentLengthLong(long len) {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public int getStatus() {
+					// TODO Auto-generated method stub
+					return 0;
+				}
+
+				@Override
+				public String getHeader(String name) {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public Collection<String> getHeaders(String name) {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public Collection<String> getHeaderNames() {
+					// TODO Auto-generated method stub
+					return null;
+				}
 			};
 		}
 		return response;
@@ -461,14 +500,14 @@ public class IWContextMockUp extends IWContext {
 					return null;
 				}
 
-				private List<?> parameterNames = new ArrayList<Object>();
+				private List<String> parameterNames = new ArrayList<String>();
 				@Override
-				public Enumeration<?> getParameterNames() {
+				public Enumeration<String> getParameterNames() {
 					return Collections.enumeration(parameterNames);
 				}
 
 				@Override
-				public Map<?, ?> getParameterMap() {
+				public Map getParameterMap() {
 
 					return null;
 				}
@@ -480,7 +519,7 @@ public class IWContextMockUp extends IWContext {
 				}
 
 				@Override
-				public Enumeration<?> getLocales() {
+				public Enumeration<Locale> getLocales() {
 
 					return null;
 				}
@@ -534,7 +573,7 @@ public class IWContextMockUp extends IWContext {
 				}
 
 				@Override
-				public Enumeration<?> getAttributeNames() {
+				public Enumeration getAttributeNames() {
 
 					return null;
 				}
@@ -652,13 +691,13 @@ public class IWContextMockUp extends IWContext {
 				}
 
 				@Override
-				public Enumeration<?> getHeaders(String name) {
+				public Enumeration getHeaders(String name) {
 
 					return null;
 				}
 
 				@Override
-				public Enumeration<?> getHeaderNames() {
+				public Enumeration getHeaderNames() {
 
 					return null;
 				}
@@ -690,6 +729,104 @@ public class IWContextMockUp extends IWContext {
 				@Override
 				public String getAuthType() {
 
+					return null;
+				}
+
+				@Override
+				public long getContentLengthLong() {
+					// TODO Auto-generated method stub
+					return 0;
+				}
+
+				@Override
+				public ServletContext getServletContext() {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public AsyncContext startAsync() throws IllegalStateException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public AsyncContext startAsync(ServletRequest servletRequest,
+						ServletResponse servletResponse)
+						throws IllegalStateException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public boolean isAsyncStarted() {
+					// TODO Auto-generated method stub
+					return false;
+				}
+
+				@Override
+				public boolean isAsyncSupported() {
+					// TODO Auto-generated method stub
+					return false;
+				}
+
+				@Override
+				public AsyncContext getAsyncContext() {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public DispatcherType getDispatcherType() {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public String changeSessionId() {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public boolean authenticate(HttpServletResponse response)
+						throws IOException, ServletException {
+					// TODO Auto-generated method stub
+					return false;
+				}
+
+				@Override
+				public void login(String username, String password)
+						throws ServletException {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public void logout() throws ServletException {
+					// TODO Auto-generated method stub
+
+				}
+
+				@Override
+				public Collection<Part> getParts() throws IOException,
+						ServletException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public Part getPart(String name) throws IOException,
+						ServletException {
+					// TODO Auto-generated method stub
+					return null;
+				}
+
+				@Override
+				public <T extends HttpUpgradeHandler> T upgrade(
+						Class<T> handlerClass) throws IOException,
+						ServletException {
+					// TODO Auto-generated method stub
 					return null;
 				}
 			});
