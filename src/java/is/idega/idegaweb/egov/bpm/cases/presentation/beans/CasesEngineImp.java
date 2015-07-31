@@ -888,7 +888,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return getExportedSearchResults(id, false, false);
 	}
 
-	public AdvancedProperty getExportedSearchResults(String pageURI,boolean exportContacts, boolean showCompany) {
+	public AdvancedProperty getExportedSearchResults(String pageURI, boolean exportContacts, boolean showCompany) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -899,7 +899,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		CasesSearchResultsHolder resultsHolder = null;
 		try {
 			resultsHolder = getSearchResultsHolder();
-		} catch(NullPointerException e) {
+		} catch (NullPointerException e) {
 			result.setValue(getResourceBundle(iwc)
 					.getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
@@ -1053,7 +1053,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		BuilderLogic builder = BuilderLogic.getInstance();
 
-		@SuppressWarnings("unchecked")
 		List<Class<? extends CaseBlock>> classes = Arrays.asList(
 				OpenCases.class,
 				ClosedCases.class,

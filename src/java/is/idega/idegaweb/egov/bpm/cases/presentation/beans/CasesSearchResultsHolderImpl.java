@@ -423,7 +423,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			Long processInstanceId = null;
 			try {
 				processInstanceId = getCaseManagersProvider().getCaseManager().getProcessInstanceIdByCaseId(theCase.getId());
-			} catch(Exception e) {
+			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting process instance for case: " + theCase);
 			}
 			if (processInstanceId == null)
