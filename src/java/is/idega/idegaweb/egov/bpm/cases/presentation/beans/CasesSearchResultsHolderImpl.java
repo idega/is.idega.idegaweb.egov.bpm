@@ -1,11 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.cases.data.CaseCategory;
-import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
-import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -74,6 +68,12 @@ import com.idega.util.StringUtil;
 import com.idega.util.WebUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.util.text.TextSoap;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.cases.data.CaseCategory;
+import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
+import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 @Scope("session")
 @Service(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER)
@@ -340,6 +340,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				} else {
 					value = iwrb.getLocalizedString(column, column);
 				}
+			} else if (column.equalsIgnoreCase("date_range") || column.equalsIgnoreCase("dateRange")) {
+				value = localizeCases("date_range", "Date range");
 			} else {
 				value = variablesBean.getVariableLocalizedName(column, locale);
 			}
@@ -693,6 +695,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 								}
 							} else if ("string_caseStatus".equals(column)) {
 								value = theCase.getCaseStatusLocalized();
+							} else if (column.equalsIgnoreCase("date_range") || column.equalsIgnoreCase("dateRange")) {
+								CasesSearchCriteriaBean criteria = getSearchCriteria(id);
+								if (criteria != null && !StringUtil.isEmpty(criteria.getDateRange())) {
+									value = criteria.getDateRange();
+								}
 							} else
 								variable = getVariableByName(varsForCase, column);
 
