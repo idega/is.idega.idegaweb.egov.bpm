@@ -328,23 +328,25 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			HSSFCell cell = row.createCell(cellIndex++);
 
 			String value = null;
-			if (column.startsWith(CaseConstants.CASE_PREFIX)) {
-				if (CaseConstants.CASE_IDENTIFIER.equals(column)) {
-					value = iwrb.getLocalizedString("case_nr", "Case nr.");
-				} else if (CaseConstants.CASE_CREATION_DATE.equals(column)) {
-					value = iwrb.getLocalizedString("created_date", "Created date");
-				} else if (CaseConstants.CASE_STATUS.equals(column)) {
-					value = iwrb.getLocalizedString("status", "Status");
-				} else if (CaseConstants.CASE_BODY.equals(column)) {
-					value = iwrb.getLocalizedString(StringUtil.isEmpty(process) ? CaseConstants.CASE_BODY : process + CoreConstants.DOT + CaseConstants.CASE_BODY, "Message");
+			if (column != null) {
+				if (column.startsWith(CaseConstants.CASE_PREFIX)) {
+					if (CaseConstants.CASE_IDENTIFIER.equals(column)) {
+						value = iwrb.getLocalizedString("case_nr", "Case nr.");
+					} else if (CaseConstants.CASE_CREATION_DATE.equals(column)) {
+						value = iwrb.getLocalizedString("created_date", "Created date");
+					} else if (CaseConstants.CASE_STATUS.equals(column)) {
+						value = iwrb.getLocalizedString("status", "Status");
+					} else if (CaseConstants.CASE_BODY.equals(column)) {
+						value = iwrb.getLocalizedString(StringUtil.isEmpty(process) ? CaseConstants.CASE_BODY : process + CoreConstants.DOT + CaseConstants.CASE_BODY, "Message");
+					} else {
+						value = iwrb.getLocalizedString(column, column);
+					}
+				} else if (column.equalsIgnoreCase("date_range") || column.equalsIgnoreCase("dateRange")) {
+					value = localizeCases("date_range", "Date range");
 				} else {
-					value = iwrb.getLocalizedString(column, column);
+					value = variablesBean.getVariableLocalizedName(column, locale);
 				}
-			} else if (column.equalsIgnoreCase("date_range") || column.equalsIgnoreCase("dateRange")) {
-				value = localizeCases("date_range", "Date range");
-			} else {
-				value = variablesBean.getVariableLocalizedName(column, locale);
-			}
+				}
 			cell.setCellValue(value);
 
 			cell.setCellStyle(bigStyle);
