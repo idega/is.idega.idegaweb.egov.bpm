@@ -239,13 +239,13 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 
 	/**
 	 *
-	 * @param processDefinitionName is {@link ProcessDefinition#getName()},
-	 * not <code>null</code>;
+	 * @param processDefinitionNames is {@link Collection} of 
+	 * {@link ProcessDefinition#getName()}, not <code>null</code>;
 	 * @return all {@link ProcessDefinition}s by given name or
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<ProcessDefinition> getProcessDefinitions(String processDefinitionName);
+	public List<ProcessDefinition> getProcessDefinitions(Collection<String> processDefinitionNames);
 
 	/**
 	 *
@@ -266,7 +266,8 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<ProcessDefinition> getProcessDefinitions(Application application);
+	public List<ProcessDefinition> getProcessDefinitionsByApplications(
+			Collection<Application> applications);
 
 	/**
 	 *
@@ -287,7 +288,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
 	 */
-	public List<ProcessDefinition> getProcessDefinitions(Object applicationPrimaryKey);
+	public List<ProcessDefinition> getProcessDefinitions(Number applicationPrimaryKey);
 
 	/**
 	 *

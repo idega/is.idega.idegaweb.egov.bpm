@@ -483,8 +483,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitions(java.lang.String)
 	 */
 	@Override
-	public List<ProcessDefinition> getProcessDefinitions(String processDefinitionName) {
-		return getBpmFactory().getBPMDAO().getProcessDefinitions(processDefinitionName);
+	public List<ProcessDefinition> getProcessDefinitions(
+			Collection<String> processDefinitionNames) {
+		return getBpmFactory().getBPMDAO().getProcessDefinitions(processDefinitionNames);
 	}
 
 	/*
@@ -496,17 +497,33 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		return getBpmFactory().getBPMDAO().getProcessDefinitionIdsByName(processDefinitionName);
 	}
 
+	/**
+	 * 
+	 * @param applications to get {@link Application#getUrl()} from, 
+	 * not <code>null</code>;
+	 * @return {@link Collection} of {@link Application#getUrl()} or 
+	 * {@link Collections#emptyList()} on failure;
+	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
+	 */
+	protected List<String> getApplicationUrls(Collection<Application> applications) {
+		ArrayList<String> urls = new ArrayList<String>();
+		if (!ListUtil.isEmpty(applications)) {
+			for (Application application :applications) {
+				urls.add(application.getUrl());
+			}
+		}
+
+		return urls;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitions(is.idega.idegaweb.egov.application.data.Application)
 	 */
 	@Override
-	public List<ProcessDefinition> getProcessDefinitions(Application application) {
-		if (application == null) {
-			return Collections.emptyList();
-		}
-
-		return getProcessDefinitions(application.getUrl());
+	public List<ProcessDefinition> getProcessDefinitionsByApplications(
+			Collection<Application> applications) {
+		return getProcessDefinitions(getApplicationUrls(applications));
 	}
 
 	/*
@@ -527,13 +544,13 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	 * @see is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager#getProcessDefinitions(java.lang.Object)
 	 */
 	@Override
-	public List<ProcessDefinition> getProcessDefinitions(Object applicationPrimaryKey) {
+	public List<ProcessDefinition> getProcessDefinitions(java.lang.Number applicationPrimaryKey) {
 		Application application = getApplication(applicationPrimaryKey);
 		if (application == null) {
 			return Collections.emptyList();
 		}
 
-		return getProcessDefinitions(application.getUrl());
+		return getProcessDefinitions(Arrays.asList(application.getUrl()));
 	}
 
 	/*
