@@ -41,7 +41,7 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public abstract CaseProcInstBind getCaseProcInstBindByProcessInstanceId(Long processInstanceId);
 
-	public abstract List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(List<Integer> casesIds);
+	public abstract List<CaseProcInstBind> getCasesProcInstBindsByCasesIds(Collection<Integer> casesIds);
 
 	public abstract List<CaseProcInstBind> getCasesProcInstBindsByProcInstIds(List<Long> procInstIds);
 
