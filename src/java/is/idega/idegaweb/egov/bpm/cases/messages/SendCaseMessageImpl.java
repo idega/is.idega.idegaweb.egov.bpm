@@ -1,11 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.messages;
 
-import is.idega.idegaweb.egov.bpm.events.BPMNewMessageEvent;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
-import is.idega.idegaweb.egov.message.business.MessageValue;
-
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -44,6 +38,12 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.bpm.events.BPMNewMessageEvent;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
+import is.idega.idegaweb.egov.message.business.MessageValue;
+
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -64,13 +64,13 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 	@Override
 	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
-		final Integer caseId = (Integer)context;
+		final Integer caseId = context instanceof Integer ? (Integer) context : null;
 
 		final IWContext iwc = CoreUtil.getIWContext();
 		final IWMainApplication iwma = iwc == null ? IWMainApplication.getDefaultIWMainApplication() : iwc.getIWMainApplication();
 
 		final CommuneMessageBusiness messageBusiness = getCommuneMessageBusiness(iwc);
-		final UserBusiness userBusiness  = getUserBusiness(iwc);
+		final UserBusiness userBusiness = getUserBusiness(iwc);
 
 		Locale defaultLocale = iwma.getDefaultLocale();
 		//	Making sure default locale is not null
