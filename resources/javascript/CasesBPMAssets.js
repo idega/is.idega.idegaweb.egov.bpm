@@ -1042,8 +1042,15 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(
 					subGridOpener.empty().html('&nbsp;');
                     subGridOpener.unbind('click');
                 }
-            }, errorHandler: function(o1, o2) {
+            }, errorHandler: function(msg, ex) {
             	closeAllLoadingMessages();
+            	
+            	if (ex == null) {
+					ex = {};
+				}
+				ex.reloadPage = false;
+				ex.messageToClient = null;
+				IWCORE.sendExceptionNotification(msg, ex, null);
             },
             timeout: 300000
         });
