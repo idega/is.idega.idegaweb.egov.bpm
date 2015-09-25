@@ -1044,7 +1044,6 @@ CasesBPMAssets.initFilesSubGridForCasesListGrid = function(
                 }
             }, errorHandler: function(o1, o2) {
             	closeAllLoadingMessages();
-            	alert('Error loading attachments');
             },
             timeout: 300000
         });
