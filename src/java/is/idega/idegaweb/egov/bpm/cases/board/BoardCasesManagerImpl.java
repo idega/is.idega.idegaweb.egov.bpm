@@ -1,22 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.board;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.business.TaskViewerHelper;
-import is.idega.idegaweb.egov.bpm.cases.CaseProcessInstanceRelationImpl;
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
-import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariablesBean;
-import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
-import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.data.GeneralCaseBMPBean;
-import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewCustomizer;
-import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
-import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardBean;
-import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBean;
-import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBodyRowBean;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.rmi.RemoteException;
@@ -75,6 +58,23 @@ import com.idega.util.StringUtil;
 import com.idega.util.WebUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.business.TaskViewerHelper;
+import is.idega.idegaweb.egov.bpm.cases.CaseProcessInstanceRelationImpl;
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
+import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManager;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMProcessVariablesBean;
+import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
+import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.data.GeneralCaseBMPBean;
+import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewCustomizer;
+import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
+import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardBean;
+import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBean;
+import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardTableBodyRowBean;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 @Service(BoardCasesManager.BEAN_NAME)
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
@@ -457,8 +457,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					int index = 0;
 					for (Object infoItem: info) {
 						Map<String, String> cells = financing.get(index);
-						if (cells == null)
+						if (cells == null) {
 							continue;
+						}
 
 						cells.put(key, infoItem.toString());
 						index++;
@@ -520,8 +521,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	protected Long getNumberValue(String value, boolean dropThousands) {
-		if (StringUtil.isEmpty(getStringValue(value)))
+		if (StringUtil.isEmpty(getStringValue(value))) {
 			return Long.valueOf(0);
+		}
 
 		String originalValue = value;
 
@@ -532,8 +534,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		value = StringHandler.replace(value, "d", CoreConstants.EMPTY);
 		value = StringHandler.replace(value, CoreConstants.QOUTE_SINGLE_MARK, CoreConstants.EMPTY);
 
-		if (StringUtil.isEmpty(value))
+		if (StringUtil.isEmpty(value)) {
 			return Long.valueOf(0);
+		}
 
 		long total = 0;
 		String amounts[] = value.split(CoreConstants.HASH);
@@ -545,8 +548,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			try {
 				numberValue = Double.valueOf(amount);
 
-				if (dropThousands)
+				if (dropThousands) {
 					numberValue = Double.valueOf(numberValue.doubleValue() / 1000);
+				}
 
 				total += numberValue.longValue();
 			} catch (Exception e) {
@@ -564,16 +568,17 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@SuppressWarnings("unchecked")
 	private void sortBoardCases(List<CaseBoardBean> boardCases) {
-		if (ListUtil.isEmpty(boardCases))
+		if (ListUtil.isEmpty(boardCases)) {
 			return;
+		}
 
 		List<String> sortingPreferences = null;
 		Object o = CoreUtil.getIWContext().getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
-		if (o instanceof List)
+		if (o instanceof List) {
 			sortingPreferences = (List<String>) o;
+		}
 
-		Collections.sort(boardCases, new BoardCasesComparator(
-				CoreUtil.getCurrentLocale(), sortingPreferences));
+		Collections.sort(boardCases, new BoardCasesComparator(CoreUtil.getCurrentLocale(), sortingPreferences));
 	}
 
 	/**
@@ -596,7 +601,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boolean subscribedOnly,
 			String caseManagerType,
 			Date dateCreatedFrom,
-			Date dateCreatedTo) {
+			Date dateCreatedTo
+	) {
 		Collection<Case> allCases = getCaseManager().getCases(
 				Arrays.asList(processName),
 				null,
@@ -604,7 +610,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null,
 				Arrays.asList(caseManagerType),
 				dateCreatedFrom,
-				dateCreatedTo);
+				dateCreatedTo
+		);
 		if (ListUtil.isEmpty(allCases)) {
 			return null;
 		}
@@ -742,9 +749,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public boolean isEqual(String currentColumn, String columnOfDomain) {
-		return !StringUtil.isEmpty(currentColumn) &&
-				!StringUtil.isEmpty(columnOfDomain) &&
-				currentColumn.equals(columnOfDomain);
+		return !StringUtil.isEmpty(currentColumn) && !StringUtil.isEmpty(columnOfDomain) && currentColumn.equals(columnOfDomain);
 	}
 
 	@Override
@@ -812,11 +817,13 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				columnLabels = columns.get(key);
 
 				for (AdvancedProperty column: columnLabels) {
-					if (isEqual(column.getId(), ProcessConstants.CASE_IDENTIFIER)) {
-						// Link to grading task
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(column.getId(), caseBoard.getCaseIdentifier())));
+					String id = column.getId();
 
-					} else if (column.getId().equals(CaseHandlerAssignmentHandler.handlerUserIdVarName)) {
+					if (isEqual(id, ProcessConstants.CASE_IDENTIFIER)) {
+						// Link to grading task
+						rowValues.put(index, Arrays.asList(new AdvancedProperty(id, caseBoard.getCaseIdentifier())));
+
+					} else if (id.equals(CaseHandlerAssignmentHandler.handlerUserIdVarName)) {
 						//	Handler
 						rowValues.put(index,
 								Arrays.asList(
@@ -827,30 +834,34 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 								)
 						);
 
-					} else if (isEqual(column.getId(), CasesBoardViewer.WORK_ITEM)) {
+					} else if (isEqual(id, CasesBoardViewer.WORK_ITEM)) {
 						//	Financing table
 						financingTableAdded = true;
 						rowBean.setFinancingInfo(caseBoard.getFinancingOfTheTasks());
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(ProcessConstants.FINANCING_OF_THE_TASKS, CoreConstants.EMPTY)));
 
-					} else if (isEqual(column.getId(), CasesBoardViewer.ESTIMATED_COST)) {
-					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_SUGGESTION) && addBoardSuggestion) {
+					} else if (isEqual(id, CasesBoardViewer.ESTIMATED_COST)) {
+						//	Will be added with financing table (work item)
+
+					} else if (isEqual(id, CasesBoardViewer.BOARD_SUGGESTION) && addBoardSuggestion) {
 						indexOfSugesstion = index - 1;
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION))));
 
-					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_DECISION) && addBoardDecision) {
+					} else if (isEqual(id, CasesBoardViewer.BOARD_DECISION) && addBoardDecision) {
 						indexOfDesicion = index - 1;
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, caseBoard.getValue(CasesBoardViewer.BOARD_DECISION))));
 
-					} else if (isEqual(column.getId(), CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
-					} else if (isEqual(column.getId(), CaseBoardBean.CASE_OWNER_GENDER)) {
+					} else if (isEqual(id, CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
+						//	Will be added with financing table (work item)
+
+					} else if (isEqual(id, CaseBoardBean.CASE_OWNER_GENDER)) {
 						//	Gender
 						String value = caseBoard.getValue(CaseBoardBean.CASE_OWNER_GENDER);
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CaseBoardBean.CASE_OWNER_GENDER, localize(value, value))));
 
 					} else {
 						//	Other value
-						String columnKey = column.getId();
+						String columnKey = id;
 						String value = caseBoard.getValue(columnKey);
 						if (StringUtil.isEmpty(value)) {
 							if (CaseBoardBean.CASE_SUM_ALL_GRADES.equals(columnKey)) {
@@ -863,16 +874,16 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					}
 
 					//	Calculations
-					if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_DECISION)) {
+					if (isEqual(id, ProcessConstants.BOARD_FINANCING_DECISION)) {
 						// Calculating board amounts
 						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
-					} else if (isEqual(column.getId(), ProcessConstants.BOARD_FINANCING_SUGGESTION)) {
+					} else if (isEqual(id, ProcessConstants.BOARD_FINANCING_SUGGESTION)) {
 						// Calculating grant amount suggestions
 						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion());
 					}
-				}
 
-				index++;
+					index++;
+				}
 			}
 
 			rowBean.setValues(rowValues);
@@ -911,14 +922,16 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			String uuid,
 			boolean isSubscribedOnly,
 			boolean backPage,
-			String taskName) {
+			String taskName
+	) {
 		return getTableData(null, null, caseStatuses, processName, uuid, isSubscribedOnly, backPage, taskName);
 	}
 
 	@Override
 	public AdvancedProperty getHandlerInfo(IWContext iwc, User handler) {
-		if (handler == null)
+		if (handler == null) {
 			return null;
+		}
 
 		UserBusiness userBusiness = null;
 		try {
@@ -948,8 +961,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public List<String> getCustomColumns(String uuid) {
-		if (StringUtil.isEmpty(uuid))
+		if (StringUtil.isEmpty(uuid)) {
 			return Collections.emptyList();
+		}
 
 		IWContext iwc = CoreUtil.getIWContext();
 		Object customColumns = iwc.getSessionAttribute(CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid);
@@ -980,7 +994,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		if (ListUtil.isEmpty(customColumns)) {
 			for (AdvancedProperty header: CasesBoardViewer.CASE_FIELDS) {
 				if (ProcessConstants.FINANCING_OF_THE_TASKS.equals(header.getId())) {
-					columns.put(index, getFinancingTableHeaders());
+					List<AdvancedProperty> financingTableHeaders = getFinancingTableHeaders();
+					columns.put(index, financingTableHeaders);
+					index += financingTableHeaders.size();
 				} else {
 					columns.put(index, Arrays.asList(
 							new AdvancedProperty(
@@ -989,8 +1005,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 								)
 							)
 					);
+					index++;
 				}
-				index++;
 			}
 			columns.put(index, Arrays.asList(
 					new AdvancedProperty(CaseHandlerAssignmentHandler.handlerUserIdVarName, localize(LOCALIZATION_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName, "Case handler"))
@@ -1101,6 +1117,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	protected class CaseBoardView {
+
 		private String caseId;
 		private Long processInstanceId;
 		private ProcessInstance processInstance;
@@ -1341,4 +1358,15 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 		return this.webUtil;
 	}
+
+	@Override
+	public boolean hasCustomColumns(String uuid) {
+		if (StringUtil.isEmpty(uuid)) {
+			return false;
+		}
+
+		List<String> customColumns = getCustomColumns(uuid);
+		return !ListUtil.isEmpty(customColumns);
+	}
+
 }
