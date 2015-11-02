@@ -151,6 +151,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return this.caseHome;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Override
 	public List<CaseBoardBean> getAllSortedCases(
 			Collection<String> caseStatuses,
@@ -169,7 +170,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				isSubscribedOnly,
 				ProcessConstants.BPM_CASE,
 				dateFrom,
-				dateTo);
+				dateTo
+		);
 		if (ListUtil.isEmpty(cases)) {
 			return null;
 		}
@@ -185,7 +187,19 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return null;
 		}
 
-		sortBoardCases(boardCases);
+		List<String> sortingPreferences = null;
+		Object o = CoreUtil.getIWContext().getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
+		if (o instanceof List) {
+			sortingPreferences = (List<String>) o;
+		}
+		if (ListUtil.isEmpty(sortingPreferences)) {
+			IWContext iwc = CoreUtil.getIWContext();
+			if (iwc != null && iwc.isParameterSet("sorting")) {
+				sortingPreferences = Arrays.asList(iwc.getParameter("sorting").split(CoreConstants.HASH));
+			}
+		}
+
+		sortBoardCases(boardCases, sortingPreferences);
 
 		return boardCases;
 	}
@@ -567,15 +581,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	@SuppressWarnings("unchecked")
-	private void sortBoardCases(List<CaseBoardBean> boardCases) {
+	private void sortBoardCases(List<CaseBoardBean> boardCases, List<String> sortingPreferences) {
 		if (ListUtil.isEmpty(boardCases)) {
 			return;
-		}
-
-		List<String> sortingPreferences = null;
-		Object o = CoreUtil.getIWContext().getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
-		if (o instanceof List) {
-			sortingPreferences = (List<String>) o;
 		}
 
 		Collections.sort(boardCases, new BoardCasesComparator(CoreUtil.getCurrentLocale(), sortingPreferences));
@@ -795,7 +803,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 		boolean addBoardSuggestion = settings.getBoolean("cases_board_add_board_suggestion", false);
 		boolean addBoardDecision = settings.getBoolean("cases_board_add_board_descision", false);
-		Integer indexOfSugesstion = null, indexOfDesicion = null;
+		Integer indexOfSugesstion = null, indexOfDecision = null;
 
 		for (CaseBoardBean caseBoard: boardCases) {
 			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(
@@ -848,7 +856,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION))));
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_DECISION) && addBoardDecision) {
-						indexOfDesicion = index - 1;
+						indexOfDecision = index - 1;
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, caseBoard.getValue(CasesBoardViewer.BOARD_DECISION))));
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
@@ -898,7 +906,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? 3 : 0),
 						null,
 						indexOfSugesstion,
-						indexOfDesicion,
+						indexOfDecision,
 						grantAmountSuggestionTotal,
 						boardAmountTotal,
 						uuid
