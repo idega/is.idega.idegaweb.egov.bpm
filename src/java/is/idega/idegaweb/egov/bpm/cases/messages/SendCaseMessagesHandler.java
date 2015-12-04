@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.messages;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
-
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -30,6 +28,8 @@ import com.idega.jbpm.process.business.messages.TypeRef;
 import com.idega.util.CoreUtil;
 import com.idega.util.EmailValidator;
 import com.idega.util.IWTimestamp;
+
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
