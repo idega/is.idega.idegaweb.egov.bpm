@@ -160,19 +160,27 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 			public void run() {
 				try {
 					for (MessageValue messageValue: msgValsToSend) {
-						Message message = messageBusiness.createUserMessage(messageValue);
-						if (message == null) {
-							throw new RuntimeException("User message was not created: " + messageValue);
+						Message message = null;
+						try {
+							message = messageBusiness.createUserMessage(messageValue);
+							if (message == null) {
+								getLogger().warning("User message was not created: " + messageValue + ". Case ID: " + caseId);
+							} else {
+								message.store();
+							}
+						} catch (Exception e) {
+							getLogger().log(Level.WARNING, "Error while creating user message: " + messageValue + ". Case ID: " + caseId, e);
 						}
 
-						message.store();
-
-						/* Will inform notifications system */
-						ELUtil.getInstance().publishEvent(
-								new BPMNewMessageEvent(
-										message,
-										messageValue.getReceiver())
-						);
+						if (message != null) {
+							/* Will inform notifications system */
+							ELUtil.getInstance().publishEvent(
+									new BPMNewMessageEvent(
+											message,
+											messageValue.getReceiver()
+									)
+							);
+						}
 					}
 				} catch (Exception e) {
 					String message = "Exception while sending user messages (" + msgValsToSend + "), some messages might be not sent";
