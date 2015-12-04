@@ -17,6 +17,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.data.Case;
 import com.idega.block.process.message.data.Message;
 import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMailMessageImpl;
@@ -24,6 +25,7 @@ import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
+import com.idega.core.contact.data.Email;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -40,7 +42,6 @@ import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.bpm.events.BPMNewMessageEvent;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
 import is.idega.idegaweb.egov.message.business.MessageValue;
 
@@ -82,7 +83,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 		try {
 			CasesBusiness casesBusiness = getCasesBusiness(iwc);
 
-			final GeneralCase theCase = casesBusiness.getGeneralCase(caseId);
+			Case theCase = casesBusiness.getCase(caseId);
 			if (msgs.getRecipientUserId() != null) {
 				users = new ArrayList<User>();
 				users.add(getUserBusiness(iwc).getUser(msgs.getRecipientUserId()));
@@ -105,11 +106,12 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				mvCtx = new MessageValueContext(3);
 
 			for (User user: users) {
+				String bcc = null;
 				Locale preferredLocale = userBusiness.getUsersPreferredLocale(user);
 
-				if (preferredLocale == null)
+				if (preferredLocale == null) {
 					preferredLocale = defaultLocale;
-
+				}
 				CaseUserImpl caseUser = getCaseUserFactory().getCaseUser(user, piw);
 
 				mvCtx.setValue(MessageValueContext.userBean, user);
@@ -132,15 +134,24 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 					continue;
 				}
 
-				getLogger().info("Will create case user message with subject="+subject+", text="+text+" for user (id="+user.getPrimaryKey()+
-						") name="+user.getName());
+				getLogger().info("Will create case user message with subject=" + subject + ", text=" + text + " for user (id=" + user.getPrimaryKey() + ") name=" + user.getName());
 
-				//Hard coding of the death!
+				//	Hard coding of the death!
 				if (subject.equals("Vinsamlega endurnýjið veiðileyfi fyrir komandi fiskveiðiár")) {
-					//Don't add message...
+					//	Don't add message...
 				} else {
-					MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null,
-							false, true);
+					User owner = theCase.getOwner();
+					if (owner != null && owner.getId().equals(user.getId())) {
+						Email email = owner.getUsersEmail();
+						String ownerEmail = (String) pi.getContextInstance().getVariable("string_ownerEmailAddress");
+						if (com.idega.util.EmailValidator.getInstance().isValid(ownerEmail) && (email == null || !email.getEmailAddress().equals(ownerEmail))) {
+							getLogger().info("Resolved owner's email ('" + ownerEmail + "') from application, it was not main email of owner (" + owner + ") " +
+									email.getEmailAddress() + ". Proc. inst. ID: " + pi.getId());
+							bcc = ownerEmail;
+						}
+					}
+
+					MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true, bcc);
 					msgValsToSend.add(mv);
 				}
 			}
