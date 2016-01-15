@@ -119,7 +119,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 	@Override
 	@Transactional(readOnly=true)
 	public List<SelectItem> getProcessVariables() {
-		if (processVariables != null) {
+		if (!ListUtil.isEmpty(processVariables)) {
 			return processVariables;
 		}
 

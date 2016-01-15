@@ -30,7 +30,6 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.graphics.generator.business.PDFGenerator;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
-import com.idega.idegaweb.egov.bpm.presentation.IWContextMockUp;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -161,15 +160,21 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 				return null;
 			}
 
-			iwc = iwc == null ? getIWContext() : iwc;
-			HttpServletRequest request = iwc.getRequest();
+			HttpServletRequest request = null;
+			if (iwc != null) {
+				request = iwc.getRequest();
+			}
+
 			List<CasePDF> pdfs = new ArrayList<CasePDF>();
 			for (TaskInstanceW tiW: finishedTasks) {
 				String taskInstanceId = String.valueOf(tiW.getTaskInstanceId());
 				String taskEnd = new IWTimestamp(tiW.getTaskInstance().getEnd()).getDateString("yyyy-MM-dd_HH-mm-ss");
 				CasePDF casePDF = null;
 				try {
-					request.setAttribute(FormConverterToPDF.RENDERING_TASK_INSTANCE, taskInstanceId);
+
+					if (request != null) {
+						request.setAttribute(FormConverterToPDF.RENDERING_TASK_INSTANCE, taskInstanceId);
+					}
 
 					formConverter.addStyleSheetsForPDF(iwc);
 
@@ -203,7 +208,9 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 							bytes
 					);
 				} finally {
-					request.removeAttribute(FormConverterToPDF.RENDERING_TASK_INSTANCE);
+					if (request != null) {
+						request.removeAttribute(FormConverterToPDF.RENDERING_TASK_INSTANCE);
+					}
 				}
 
 				if (casePDF != null) {
@@ -259,13 +266,4 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 		}
 		iwc = null;
 	}
-
-	private IWContext getIWContext() {
-		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null)
-			iwc = new IWContextMockUp();
-
-		return iwc;
-	}
-
 }
