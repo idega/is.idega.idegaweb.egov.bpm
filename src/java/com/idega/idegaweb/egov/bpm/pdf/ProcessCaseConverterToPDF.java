@@ -250,7 +250,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 				iwc.setCurrentLocale(locale);
 			}
 
-			if (iwc != null && resetContext) {
+			if (resetContext || iwc instanceof IWContextMockUp) {
 				doResetContext(iwc);
 			}
 		}
@@ -264,6 +264,10 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 	}
 
 	private void doResetContext(IWContext iwc) {
+		if (iwc == null) {
+			return;
+		}
+
 		ResponseWriter rw = iwc.getResponseWriter();
 		if (rw != null) {
 			try {
