@@ -1,5 +1,7 @@
 package com.idega.idegaweb.egov.bpm.pdf;
 
+import is.idega.idegaweb.egov.bpm.presentation.IWContextMockUp;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -160,6 +162,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 				return null;
 			}
 
+			iwc = iwc == null ? getIWContext() : iwc;
 			HttpServletRequest request = null;
 			if (iwc != null) {
 				request = iwc.getRequest();
@@ -251,6 +254,13 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 				doResetContext(iwc);
 			}
 		}
+	}
+
+	private IWContext getIWContext() {
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null)
+			iwc = new IWContextMockUp();
+		return iwc;
 	}
 
 	private void doResetContext(IWContext iwc) {
