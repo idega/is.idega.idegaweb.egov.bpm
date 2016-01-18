@@ -1,8 +1,5 @@
 package com.idega.idegaweb.egov.bpm.pdf;
 
-import is.idega.idegaweb.egov.bpm.presentation.IWContextMockUp;
-
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +10,7 @@ import javax.faces.component.UIComponent;
 import javax.faces.context.ResponseWriter;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.myfaces.renderkit.html.util.HtmlBufferResponseWriterWrapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -47,6 +45,8 @@ import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
+
+import is.idega.idegaweb.egov.bpm.presentation.IWContextMockUp;
 
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
@@ -252,32 +252,59 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 
 			if (resetContext || iwc instanceof IWContextMockUp) {
 				doResetContext(iwc);
+			} else {
+				getLogger().info("Not reseting " + iwc.getClass().getName());
 			}
 		}
 	}
 
 	private IWContext getIWContext() {
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null)
+		if (iwc == null) {
+			getLogger().info("Creating IWContext mockup");
 			iwc = new IWContextMockUp();
+		}
+
 		return iwc;
 	}
 
 	private void doResetContext(IWContext iwc) {
 		if (iwc == null) {
+			getLogger().warning("IWContext is unknown");
 			return;
 		}
 
+		getLogger().info("Reseting " + iwc.getClass().getName());
+
 		ResponseWriter rw = iwc.getResponseWriter();
-		if (rw != null) {
-			try {
-				rw.flush();
-			} catch (IOException e) {
-				e.printStackTrace();
+		if (rw == null) {
+			getLogger().warning("Response writer is unknown");
+		} else {
+			if (rw instanceof HtmlBufferResponseWriterWrapper) {
+				ResponseWriter irw = ((HtmlBufferResponseWriterWrapper) rw).getInitialWriter();
+				doResetResponseWriter(irw);
+				irw = null;
 			}
-			IOUtil.close(rw);
+
+			doResetResponseWriter(rw);
 			rw = null;
 		}
+
+		iwc.setResponseWriter(null);
 		iwc = null;
+	}
+
+	private void doResetResponseWriter(ResponseWriter rw) {
+		if (rw == null) {
+			return;
+		}
+
+		try {
+			rw.flush();
+			rw.close();
+			rw = null;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error resetting response writer " + rw + ", class: " + rw.getClass().getName(), e);
+		}
 	}
 }
