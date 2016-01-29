@@ -23,6 +23,7 @@ import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -111,8 +112,9 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 
 	@Override
 	public String getPresentation(String value) {
-		if (StringUtil.isEmpty(value))
+		if (StringUtil.isEmpty(value)) {
 			return null;
+		}
 
 		String[] ids = value.split(CoreConstants.SEMICOLON);
 		return ArrayUtil.isEmpty(ids) ? CoreConstants.MINUS : getPresentation(Arrays.asList(ids));
@@ -124,16 +126,49 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 			return CoreConstants.MINUS;
 		}
 
-		Collection<Long> values = variable.getValue();
-		if (ListUtil.isEmpty(values)) {
+		Object value = variable.getValue();
+		if (value == null) {
 			return CoreConstants.MINUS;
 		}
 
+		boolean numeric = true;
 		Collection<String> usersIds = new ArrayList<>();
-		for (Long id: values) {
-			usersIds.add(String.valueOf(id));
+		if (value instanceof Number) {
+			usersIds.add(((Number) value).toString());
+		} else if (value instanceof Collection) {
+			Collection<?> values = (Collection<?>) value;
+			for (Object object: values) {
+				if (object == null) {
+					continue;
+				}
+
+				String id = object.toString();
+				if (StringUtil.isEmpty(id)) {
+					continue;
+				}
+
+				usersIds.add(id);
+				if (!StringHandler.isNumeric(id)) {
+					numeric = false;
+				}
+			}
 		}
-		return getUsers(usersIds);
+
+		return numeric ? getUsers(usersIds) : getPresentations(usersIds);
+	}
+
+	private String getPresentations(Collection<String> values) {
+		String presentations = CoreConstants.EMPTY;
+		for (Iterator<String> valuesIter = values.iterator(); valuesIter.hasNext();) {
+			String value = valuesIter.next();
+			if (!StringUtil.isEmpty(value)) {
+				presentations = presentations.concat(value);
+				if (valuesIter.hasNext()) {
+					presentations = presentations.concat(CoreConstants.COMMA).concat(CoreConstants.SPACE);
+				}
+			}
+		}
+		return presentations;
 	}
 
 	private String getUsers(Collection<String> usersIds) {
