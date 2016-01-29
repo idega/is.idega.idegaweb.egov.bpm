@@ -1,8 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.search;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,6 +25,9 @@ import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 
 @Scope("request")
 @Service(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName)
@@ -120,7 +120,26 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 
 	@Override
 	public String getPresentation(VariableInstanceInfo variable) {
-		return (variable == null || variable.getValue() == null) ? CoreConstants.MINUS : getPresentation(Arrays.asList(variable.getValue().toString()));
+		if (variable == null) {
+			return CoreConstants.MINUS;
+		}
+
+		Collection<String> values = variable.getValue();
+		if (ListUtil.isEmpty(values)) {
+			return CoreConstants.MINUS;
+		}
+
+		String presentations = CoreConstants.EMPTY;
+		for (Iterator<String> valuesIter = values.iterator(); valuesIter.hasNext();) {
+			String value = valuesIter.next();
+			if (!StringUtil.isEmpty(value)) {
+				presentations = presentations.concat(value);
+				if (valuesIter.hasNext()) {
+					presentations = presentations.concat(CoreConstants.COMMA).concat(CoreConstants.SPACE);
+				}
+			}
+		}
+		return presentations;
 	}
 
 	private String getPresentation(Collection<String> usersIds) {
