@@ -133,11 +133,10 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 		for (Long id: values) {
 			usersIds.add(String.valueOf(id));
 		}
-		return getPresentation(usersIds);
+		return getUsers(usersIds);
 	}
 
-	@Override
-	protected String getPresentation(Collection<String> usersIds) {
+	private String getUsers(Collection<String> usersIds) {
 		if (ListUtil.isEmpty(usersIds))
 			return CoreConstants.MINUS;
 
