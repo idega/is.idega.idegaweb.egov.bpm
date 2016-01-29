@@ -309,13 +309,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 		List<AdvancedProperty> results = variablesProvider.getAvailableVariables(variables, locale, isAdmin, useRealValue);
-		LOGGER.info("Available variables: " + results + ". All variables: " + variables + ", locale: " + locale);
 		return results;
 	}
 
 	private void doCreateHeaders(HSSFSheet sheet, HSSFCellStyle bigStyle, List<String> columns, Locale locale, String process) {
-		LOGGER.info("Will create headers for columns " + columns + ", process " + process);
-
 		IWResourceBundle iwrb = getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 		BPMProcessVariablesBean variablesBean = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 
@@ -368,8 +365,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			List<String> standardFieldsInfo,
 			List<AdvancedProperty> availableVariables
 	) {
-		LOGGER.info("Will create headers for process " + processName + ", standard fields " + standardFieldsInfo + ", available variables: " + availableVariables);
-
 		int cellRow = sheet.getLastRowNum() + 2;
 		if (cellRow == 2) {
 			cellRow = 0;
@@ -445,7 +440,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			vars = getAvailableVariablesByProcessInstanceId(locale, processInstanceId, isAdmin);
 		}
 
-		LOGGER.info("Variables " + vars + " for case " + theCase);
 		return vars;
 	}
 
@@ -584,7 +578,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			cases = casesByProcessDefinition.get(processName);
 
 			String sheetName = getSheetName(locale, processName);
-			LOGGER.info("Sheet name " + sheetName);
 			sheetName = TextSoap.encodeToValidExcelSheetName(StringHandler.shortenToLength(sheetName, 30));
 			HSSFSheet sheet = createdSheets.containsKey(sheetName) ? workBook.getSheet(sheetName) : workBook.createSheet(sheetName);
 			createdSheets.put(sheetName, Boolean.TRUE);
@@ -594,7 +587,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				if (!ListUtil.isEmpty(visibleVariables)) {
 					exportColumns = new ArrayList<String>(visibleVariables);
 				}
-				LOGGER.info("Visible variables: " + visibleVariables);
 			}
 
 			int lastCellNumber = 0;
@@ -1131,7 +1123,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	@Override
 	public Integer getNextCaseId(String id, Integer currentId, String processDefinitionName) {
 		if (currentId == null || !isSearchResultStored(id)) {
-			LOGGER.info("Unkown current case's id or no search results stored!");
+			LOGGER.warning("Unkown current case's id or no search results stored!");
 			return null;
 		}
 
