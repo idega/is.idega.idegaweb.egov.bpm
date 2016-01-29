@@ -305,10 +305,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return null;
 
 		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
-		return variablesProvider.getAvailableVariables(variables, locale, isAdmin, useRealValue);
+		List<AdvancedProperty> results = variablesProvider.getAvailableVariables(variables, locale, isAdmin, useRealValue);
+		LOGGER.info("Available variables: " + results + ". All variables: " + variables + ", locale: " + locale);
+		return results;
 	}
 
 	private void doCreateHeaders(HSSFSheet sheet, HSSFCellStyle bigStyle, List<String> columns, Locale locale, String process) {
+		LOGGER.info("Will create headers for columns " + columns + ", process " + process);
+
 		IWResourceBundle iwrb = getResourceBundle(CasesConstants.IW_BUNDLE_IDENTIFIER);
 		BPMProcessVariablesBean variablesBean = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 
@@ -361,6 +365,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			List<String> standardFieldsInfo,
 			List<AdvancedProperty> availableVariables
 	) {
+		LOGGER.info("Will create headers for process " + processName + ", standard fields " + standardFieldsInfo + ", available variables: " + availableVariables);
+
 		int cellRow = sheet.getLastRowNum() + 2;
 		if (cellRow == 2) {
 			cellRow = 0;
@@ -436,6 +442,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			vars = getAvailableVariablesByProcessInstanceId(locale, processInstanceId, isAdmin);
 		}
 
+		LOGGER.info("Variables " + vars + " for case " + theCase);
 		return vars;
 	}
 
@@ -566,8 +573,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		List<String> createdSheets = new ArrayList<String>();
 
 		for (String processName: casesByProcessDefinition.keySet()) {
-			if (processName == null)
+			if (processName == null) {
+				LOGGER.warning("Process name is unknown");
 				continue;
+			}
 
 			cases = casesByProcessDefinition.get(processName);
 
@@ -580,13 +589,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				if (!ListUtil.isEmpty(visibleVariables)) {
 					exportColumns = new ArrayList<String>(visibleVariables);
 				}
+				LOGGER.info("Visible variables: " + visibleVariables);
 			}
 
 			int lastCellNumber = 0;
 			if (ListUtil.isEmpty(exportColumns)) {
 				List<AdvancedProperty> availableVariables = getAvailableVariablesByProcessDefinition(locale, processName, isAdmin);
-				if(!exportContacts){
-					createHeaders(sheet, bigStyle, processName, isAdmin,standardFieldsLabels,availableVariables);
+				if (!exportContacts) {
+					createHeaders(sheet, bigStyle, processName, isAdmin, standardFieldsLabels, availableVariables);
 				}
 				List<Integer> fileCellsIndexes = null;
 				int rowNumber = 0;
