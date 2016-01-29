@@ -124,25 +124,20 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 			return CoreConstants.MINUS;
 		}
 
-		Collection<String> values = variable.getValue();
+		Collection<Long> values = variable.getValue();
 		if (ListUtil.isEmpty(values)) {
 			return CoreConstants.MINUS;
 		}
 
-		String presentations = CoreConstants.EMPTY;
-		for (Iterator<String> valuesIter = values.iterator(); valuesIter.hasNext();) {
-			String value = valuesIter.next();
-			if (!StringUtil.isEmpty(value)) {
-				presentations = presentations.concat(value);
-				if (valuesIter.hasNext()) {
-					presentations = presentations.concat(CoreConstants.COMMA).concat(CoreConstants.SPACE);
-				}
-			}
+		Collection<String> usersIds = new ArrayList<>();
+		for (Long id: values) {
+			usersIds.add(String.valueOf(id));
 		}
-		return presentations;
+		return getPresentation(usersIds);
 	}
 
-	private String getPresentation(Collection<String> usersIds) {
+	@Override
+	protected String getPresentation(Collection<String> usersIds) {
 		if (ListUtil.isEmpty(usersIds))
 			return CoreConstants.MINUS;
 
