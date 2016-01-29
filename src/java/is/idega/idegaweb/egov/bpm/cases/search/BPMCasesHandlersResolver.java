@@ -117,7 +117,7 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 		}
 
 		String[] ids = value.split(CoreConstants.SEMICOLON);
-		return ArrayUtil.isEmpty(ids) ? CoreConstants.MINUS : getPresentation(Arrays.asList(ids));
+		return ArrayUtil.isEmpty(ids) ? CoreConstants.MINUS : getUsers(Arrays.asList(ids));
 	}
 
 	@Override
@@ -177,7 +177,12 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 
 		try {
 			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
-			Collection<User> users = userBusiness.getUsers(ArrayUtil.convertListToArray(usersIds));
+			Collection<User> users = null;
+			try {
+				users = userBusiness.getUsers(ArrayUtil.convertListToArray(usersIds));
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error getting users by IDs: " + usersIds, e);
+			}
 			if (ListUtil.isEmpty(users))
 				return CoreConstants.MINUS;
 
