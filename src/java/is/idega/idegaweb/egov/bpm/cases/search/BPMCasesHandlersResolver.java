@@ -172,30 +172,57 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 	}
 
 	private String getUsers(Collection<String> usersIds) {
-		if (ListUtil.isEmpty(usersIds))
+		if (ListUtil.isEmpty(usersIds)) {
 			return CoreConstants.MINUS;
+		}
 
 		try {
-			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
-			Collection<User> users = null;
-			try {
-				users = userBusiness.getUsers(ArrayUtil.convertListToArray(usersIds));
-			} catch (Exception e) {
-				getLogger().log(Level.WARNING, "Error getting users by IDs: " + usersIds, e);
+			List<String> ids = new ArrayList<String>();
+			boolean numeric = true;
+			for (String id: usersIds) {
+				if (StringUtil.isEmpty(id)) {
+					continue;
+				}
+
+				ids.add(id);
+				if (!StringHandler.isNumeric(id)) {
+					numeric = false;
+				}
 			}
-			if (ListUtil.isEmpty(users))
+
+			Collection<?> results = null;
+			if (numeric) {
+				try {
+					UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
+					results = userBusiness.getUsers(ArrayUtil.convertListToArray(ids));
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error getting users by IDs: " + usersIds, e);
+				}
+			} else {
+				results = ids;
+			}
+
+			if (ListUtil.isEmpty(results)) {
 				return CoreConstants.MINUS;
+			}
 
 			StringBuilder presentation = new StringBuilder();
-			for (Iterator<User> usersIter = users.iterator(); usersIter.hasNext();) {
-				User user = usersIter.next();
-				String name = user == null ? null : user.getName();
-				if (StringUtil.isEmpty(name))
+			for (Iterator<?> resultsIter = results.iterator(); resultsIter.hasNext();) {
+				Object result = resultsIter.next();
+				String name = null;
+				if (result instanceof User) {
+					name = ((User) result).getName();
+				} else if (result != null) {
+					name = result.toString();
+				}
+				if (StringUtil.isEmpty(name)) {
 					continue;
+				}
 
 				presentation.append(name);
-				if (usersIter.hasNext())
+				if (resultsIter.hasNext()) {
 					presentation.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
 			}
 			String result = presentation.toString();
 			return StringUtil.isEmpty(result) ? CoreConstants.MINUS : result;
