@@ -191,15 +191,18 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	private String getSheetName(Locale locale, String processNameOrCategoryId) {
-		if (locale == null || StringUtil.isEmpty(processNameOrCategoryId))
+		if (locale == null || StringUtil.isEmpty(processNameOrCategoryId)) {
 			return CoreConstants.MINUS;
+		}
 
 		String sheetName = null;
 		Integer id = getNumber(processNameOrCategoryId);
-		if (id == null)
+		if (id == null) {
 			sheetName = getCaseManagersProvider().getCaseManager().getProcessName(processNameOrCategoryId, locale);
-
-		sheetName = getCategoryName(locale, processNameOrCategoryId.equals(CasesStatistics.UNKOWN_CATEGORY_ID) ? null : getCaseCategory(id));
+		}
+		if (sheetName == null) {
+			sheetName = getCategoryName(locale, processNameOrCategoryId.equals(CasesStatistics.UNKOWN_CATEGORY_ID) ? null : getCaseCategory(id));
+		}
 		return StringUtil.isEmpty(sheetName) ? CoreConstants.MINUS : sheetName;
 	}
 
@@ -570,7 +573,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		CasesSearchCriteriaBean searchCriteria = getSearchCriteria(id);
 		List<String> standardFieldsLabels = getStandardFieldsLabels(id);
-		List<String> createdSheets = new ArrayList<String>();
+		Map<String, Boolean> createdSheets = new HashMap<>();
 
 		for (String processName: casesByProcessDefinition.keySet()) {
 			if (processName == null) {
@@ -580,9 +583,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 			cases = casesByProcessDefinition.get(processName);
 
-			String sheetName = TextSoap.encodeToValidExcelSheetName(StringHandler.shortenToLength(getSheetName(locale, processName), 30));
-			HSSFSheet sheet = createdSheets.contains(sheetName) ? workBook.getSheet(sheetName) : workBook.createSheet(sheetName);
-			createdSheets.add(sheetName);
+			String sheetName = getSheetName(locale, processName);
+			LOGGER.info("Sheet name " + sheetName);
+			sheetName = TextSoap.encodeToValidExcelSheetName(StringHandler.shortenToLength(sheetName, 30));
+			HSSFSheet sheet = createdSheets.containsKey(sheetName) ? workBook.getSheet(sheetName) : workBook.createSheet(sheetName);
+			createdSheets.put(sheetName, Boolean.TRUE);
 
 			if (ListUtil.isEmpty(exportColumns) && searchCriteria != null) {
 				Collection<String> visibleVariables = getVisibleVariablesBean().getVariablesByComponentId(searchCriteria.getInstanceId().substring(5));
