@@ -1,0 +1,99 @@
+<html xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:t="http://myfaces.apache.org/tomahawk"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:fn="http://java.sun.com/jsp/jstl/functions"
+	xmlns:c="http://java.sun.com/jsp/jstl/core"
+	xmlns:up="http://xmlns.idega.com/com.idega.content">
+<ui:component>
+	<div class="kvarta-form-container">
+		<ui:fragment rendered="#{not empty caseStateConfig}">
+			<h1>Case state config</h1>
+			<ui:repeat value="#{caseStateConfig.processDefinitions}" var="item">
+				<ui:fragment>
+					<h2>${item}</h2>
+					<ui:repeat value="#{caseStateConfig.caseStates}" var="state">
+						<ui:fragment rendered="#{state.processDefinitionName == item}">
+						<form action="." method="post">
+							<div class="input inputElement">
+								<label>State name</label>
+								<input id="iw_state_name" name="iw_state_name" value="${state.stateName}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Process name</label>
+								<input id="iw_process_name" name="iw_process_name" value="${state.processDefinitionName}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Localization key name</label>
+								<input id="iw_localization_key_name" name="iw_localization_key_name" value="${state.stateLocalizationKey}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Default display name</label>
+								<input id="iw_default_Localized_name_name" name="iw_default_Localized_name_name" value="${state.stateDefaultLocalizedName}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>State SLA</label>
+								<input id="iw_state_sla" name="iw_state_sla" value="${state.stateSLA}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>State inactive reminder</label>
+								<input id="iw_inactive_sla_name" name="iw_inactive_sla_name" value="${state.stateInactiveSLA}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Reminder interval</label>
+								<input id="iw_state_sla_reminder_interval" name="iw_state_sla_reminder_interval" value="${state.stateSLABreachReminderInterval}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>State sequence number</label>
+								<input id="iw_state_sequence_id" name="iw_state_sequence_id" value="${state.stateSequenceId}"></input>
+							</div>
+							<input type="hidden" id="iw_save_case_state" name="iw_save_case_state" value="1"></input>
+							<INPUT type="submit" value="SAVE"></INPUT>
+						</form>
+						</ui:fragment>
+					</ui:repeat>
+					<div class="add_state">
+						<form action="." method="post">
+							<div class="input inputElement">
+								<label>State name</label>
+								<input id="iw_state_name" name="iw_state_name" value="${state.stateName}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Process name</label>
+								<input id="iw_process_name" name="iw_process_name" value="${state.processDefinitionName}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Localization key name</label>
+								<input id="iw_localization_key_name" name="iw_localization_key_name" value="${state.stateLocalizationKey}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Default display name</label>
+								<input id="iw_default_Localized_name_name" name="iw_default_Localized_name_name" value="${state.stateDefaultLocalizedName}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>State SLA</label>
+								<input id="iw_state_sla" name="iw_state_sla" value="${state.stateSLA}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>State inactive reminder</label>
+								<input id="iw_inactive_sla_name" name="iw_inactive_sla_name" value="${state.stateInactiveSLA}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>Reminder interval</label>
+								<input id="iw_state_sla_reminder_interval" name="iw_state_sla_reminder_interval" value="${state.stateSLABreachReminderInterval}"></input>
+							</div>
+														<div class="input inputElement">
+								<label>State sequence number</label>
+								<input id="iw_state_sequence_id" name="iw_state_sequence_id" value="${state.stateSequenceId}"></input>
+							</div>
+							<input type="hidden" id="iw_add_case_state" name="iw_add_case_state" value="1"></input>
+							<INPUT type="submit" value="SAVE"></INPUT>
+						</form>
+					</div>
+				</ui:fragment>
+			</ui:repeat>
+		</ui:fragment>
+	</div>
+</ui:component>
+
+</html>

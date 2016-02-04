@@ -3,6 +3,14 @@
 
 <dwr>
 	<allow>
+	  <create creator="jsf" javascript="UICaseStates">
+            <param name="managedBeanName" value="UICaseStates" />
+            <param name="class" value="is.idega.idegaweb.egov.bpm.cases.presentation.UICaseStates" />
+            <include method="getProcessStateList" />
+		</create>
+		
+		
+		
 		<create creator="spring" javascript="CasesEngine">
 	    	<param name="beanName" value="casesEngineDWR" />
 	    	<include method="isResolverExist" />

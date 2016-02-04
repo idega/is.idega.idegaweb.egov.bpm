@@ -18,6 +18,20 @@
 				</t:outputText>
 			</a>
 		</t:div>
+		<t:div styleClass="caseStatePart #{casesBPMAssetsState.tasksVisibilityProperty}" style="display: none;">
+			<t:div styleClass="header">
+				<t:div styleClass="caseStatePartHeaderLeftLayerStyle" style="float: left">
+					<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['states']}"/>
+				</t:div>
+				<t:div styleClass="caseStatePartHeaderRightLayerStyle" rendered="#{loginSession.loggedIn and caseManagerState.fullView}" style="float: right">
+					
+					
+				</t:div>
+				<div class="spacer" />
+				<t:div style="display: none;" rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}" />
+			</t:div>
+			<table class="caseState" border="0" />
+		</t:div>
 		<t:div styleClass="caseTasksPart #{casesBPMAssetsState.tasksVisibilityProperty}" style="display: none;">
 			<t:div styleClass="header">
 				<t:div styleClass="caseTasksPartHeaderLeftLayerStyle" style="float: left">

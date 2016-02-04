@@ -46,6 +46,8 @@ import com.idega.data.MetaDataBMPBean;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.CaseState;
+import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -2413,4 +2415,46 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		);
 	}
 
+	@Override
+	public List<CaseState> getCaseStatesByProcessDefinitionName(String name){
+		List<CaseState> caseStates = getResultList(CaseState.getSetByProcessName, CaseState.class, new Param(CaseState.processDefinitionNameProperty, name));
+		return caseStates;
+	}
+	
+	@Override
+	public List<CaseState> getCaseStates(){
+		List<CaseState> caseStates = getResultList(CaseState.getSet, CaseState.class);
+		return caseStates;
+	}
+	
+	@Override
+	public void saveCasesStateInstance(CaseStateInstance state){
+		if (state == null) return;
+		persist(state);
+	}
+	
+	@Override
+	public void saveCasesState(CaseState state){
+		if (state == null) return;
+		persist(state);
+	}
+
+	@Override
+	public List<CaseStateInstance> getStateInstancesForProcessByName(long id, List<String> stateList) {
+		List<CaseStateInstance> caseStates = getResultList(CaseStateInstance.getSetByProcessIdAndName, CaseStateInstance.class, new Param(CaseStateInstance.processIdProperty, id), new Param(CaseStateInstance.stateNameProperty, stateList));
+		return caseStates;
+	}
+	
+	@Override
+	public List<CaseStateInstance> getStateInstancesForProcess(long id) {
+		List<CaseStateInstance> caseStates = getResultList(CaseStateInstance.getSetByProcessId, CaseStateInstance.class, new Param(CaseStateInstance.processIdProperty, id));
+		return caseStates;
+	}
+
+	@Override
+	public CaseState getCaseStateByProcessDefinitionNameAndStateName(String processName, String stateName) {
+		CaseState caseState = getSingleResult(CaseState.getByProcessNameAndStateName, CaseState.class, new Param(CaseState.processDefinitionNameProperty, processName), new Param(CaseState.stateNameProperty, stateName));
+		return caseState;
+	}
+	
 }

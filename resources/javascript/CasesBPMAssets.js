@@ -22,7 +22,12 @@ if(CasesBPMAssets.Loc == null) CasesBPMAssets.Loc = {
     CASE_GRID_STRING_SUBMITTED_BY: 'Submitted by',
     CASE_GRID_STRING_GENERATING_PDF: 'Downloading PDF',
     CASE_GRID_STRING_LOADING: 'Loading...',
-    CASE_GRID_STRING_ARE_YOU_SURE: 'Are you sure?'
+    CASE_GRID_STRING_ARE_YOU_SURE: 'Are you sure?',
+    CASE_GRID_STRING_STATE_NAME: 'State name',
+    CASE_GRID_STRING_EX_START_DATE: 'Expected start date',
+	CASE_GRID_STRING_EX_END_DATE: 'Expected end date',
+	CASE_GRID_STRING_START_DATE: 'Start date',
+	CASE_GRID_STRING_END_DATE: 'End date'
 };
 
 CasesBPMAssets.processParams = {};
@@ -180,6 +185,12 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 						CasesBPMAssets.externalFunctionOnGridInited(identifier, needToShow, container);
 					}
 				}
+				
+				CasesBPMAssets.initStateGrid(caseId, piId, container, false, hideEmptySection,
+						function() {
+							onGridInitedFunction('caseStatePart', true);
+						}
+					);
 				
 				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection,
 					function() {
@@ -344,6 +355,69 @@ CasesBPMAssets.initTakeCaseSelector = function(container, piId, excludedHandlers
        	}
     });
 }
+
+
+
+CasesBPMAssets.initStateGrid = function(caseId, piId, customerView, hasRightChangeRights, hideEmptySection, onTasksInited) {
+	
+	LazyLoader.loadMultiple(['/dwr/engine.js', '/dwr/interface/UICaseStates.js'], function(){
+	
+	var identifier = 'caseState';
+    
+    var populatingFunction = function(params, callback) {
+        params.piId = piId;
+        
+        UICaseStates.getProcessStateList(params, {
+            callback: function(result) {
+                callback(result);
+                
+                CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
+                
+                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
+                
+                if (onTasksInited) {
+                	onTasksInited();
+                }
+            }
+        });
+    };
+    
+    var namesForColumns = new Array();
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_STATE_NAME);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_EX_START_DATE);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_EX_END_DATE);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_START_DATE);
+    namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_END_DATE);
+    //			TODO commented for future use. 'Taken by' column label isn't shown now
+    //namesForColumns.push(CasesBPMAssets.Loc.CASE_GRID_STRING_TAKEN_BY);
+    if (hasRightChangeRights) {
+        namesForColumns.push(''/*CasesBPMAssets.Loc.CASE_GRID_STRING_CHANGE_ACCESS_RIGHTS*/);
+    }
+    
+    var modelForColumns = new Array();
+    modelForColumns.push({name:'name',index:'name'});
+    modelForColumns.push({name:'createdDate',index:'createdDate'});
+    modelForColumns.push({name:'createdDate',index:'createdDate'});
+    modelForColumns.push({name:'createdDate',index:'createdDate'});
+    modelForColumns.push({name:'createdDate',index:'createdDate'});
+    //			TODO commented for future use. 'Taken by' column label isn't shown now
+    //modelForColumns.push({name:'takenBy',index:'takenBy'});
+    if (hasRightChangeRights) {
+        modelForColumns.push({name:'rightsForTaskResources',index:'rightsForTaskResources'});
+    }
+    
+    var onSelectRowFunction = function(rowId) {
+    	
+    };
+    
+    CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
+    							hasRightChangeRights, null);
+	});
+};
+
+
+
+
 
 CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights, hideEmptySection, onTasksInited) {
 	

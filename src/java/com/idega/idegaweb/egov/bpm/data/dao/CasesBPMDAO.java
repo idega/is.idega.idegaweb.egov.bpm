@@ -19,6 +19,8 @@ import com.idega.core.persistence.GenericDao;
 import com.idega.core.persistence.Param;
 import com.idega.core.user.data.User;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.CaseState;
+import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
 import com.idega.jbpm.bean.BPMProcessVariable;
@@ -472,4 +474,17 @@ public interface CasesBPMDAO extends GenericDao {
 	 */
 	void removeProcessUserBinds(long processInstanceId);
 
+	public List<CaseState> getCaseStatesByProcessDefinitionName(String name);
+	public CaseState getCaseStateByProcessDefinitionNameAndStateName(String processName, String stateName);
+
+	void saveCasesStateInstance(CaseStateInstance state);
+
+	void saveCasesState(CaseState state);
+
+	public abstract List<CaseStateInstance> getStateInstancesForProcessByName(long id, List<String> stateList);
+
+	List<CaseStateInstance> getStateInstancesForProcess(long id);
+
+	List<CaseState> getCaseStates();
+	
 }

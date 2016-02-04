@@ -8,5 +8,9 @@
     <entity class="com.idega.idegaweb.egov.bpm.data.ProcessUserBind" />
     <entity class="com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind" />
     <entity class="com.idega.idegaweb.egov.bpm.data.AppSupports" />
+    
+    <entity class="com.idega.idegaweb.egov.bpm.data.CaseState" />
+    <entity class="com.idega.idegaweb.egov.bpm.data.CaseStateInstance" />
+    <entity class="com.idega.idegaweb.egov.bpm.data.SLAReminders" />
         
 </entity-mappings>
