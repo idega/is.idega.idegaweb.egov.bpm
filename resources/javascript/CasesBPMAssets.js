@@ -188,7 +188,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 				
 				CasesBPMAssets.initStateGrid(caseId, piId, container, false, hideEmptySection,
 						function() {
-							onGridInitedFunction('caseStatePart', true);
+							onGridInitedFunction('caseStatePart', jQuery('div.caseStatePart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
 						}
 					);
 				
