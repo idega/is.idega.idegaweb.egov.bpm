@@ -80,6 +80,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 			if (!ListUtil.isEmpty(stateList)){
 				List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcessByName(ctx.getProcessInstance().getId(), stateList);
 				for (CaseStateInstance state : caseStates){
+					if (CaseStateInstance.State.RECEIVED.equals(state.getStateState())) continue;
 					state.setStateState(CaseStateInstance.State.RECEIVED);
 					getCasesBPMDAO().saveCasesStateInstance(state);
 				}
@@ -91,6 +92,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 			if (!ListUtil.isEmpty(stateList)){
 				List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcessByName(ctx.getProcessInstance().getId(), stateList);
 				for (CaseStateInstance state : caseStates){
+					if (CaseStateInstance.State.ACTIVE.equals(state.getStateState())) continue;
 					state.setStateState(CaseStateInstance.State.ACTIVE);
 					state.setStateStartDate(new Date(currentTime.getTime()));
 					getCasesBPMDAO().saveCasesStateInstance(state);
@@ -103,6 +105,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 			if (!ListUtil.isEmpty(stateList)){
 				List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcessByName(ctx.getProcessInstance().getId(), stateList);
 				for (CaseStateInstance state : caseStates){
+					if (CaseStateInstance.State.CANCELLED.equals(state.getStateState())) continue;
 					state.setStateState(CaseStateInstance.State.CANCELLED);
 					state.setStateEndDate(new Date(currentTime.getTime()));
 					getCasesBPMDAO().saveCasesStateInstance(state);
@@ -115,6 +118,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 			if (!ListUtil.isEmpty(stateList)){
 				List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcessByName(ctx.getProcessInstance().getId(), stateList);
 				for (CaseStateInstance state : caseStates){
+					if (CaseStateInstance.State.SUSPENDED.equals(state.getStateState())) continue;
 					state.setStateState(CaseStateInstance.State.SUSPENDED);
 					getCasesBPMDAO().saveCasesStateInstance(state);
 				}
@@ -126,6 +130,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 			if (!ListUtil.isEmpty(stateList)){
 				List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcessByName(ctx.getProcessInstance().getId(), stateList);
 				for (CaseStateInstance state : caseStates){
+					if (CaseStateInstance.State.INQUEUE.equals(state.getStateState())) continue;
 					state.setStateState(CaseStateInstance.State.INQUEUE);
 					getCasesBPMDAO().saveCasesStateInstance(state);
 				}
@@ -137,6 +142,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 			if (!ListUtil.isEmpty(stateList)){
 				List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcessByName(ctx.getProcessInstance().getId(), stateList);
 				for (CaseStateInstance state : caseStates){
+					if (CaseStateInstance.State.FINISHED.equals(state.getStateState())) continue;
 					state.setStateState(CaseStateInstance.State.FINISHED);
 					state.setStateEndDate(new Date(currentTime.getTime()));
 					getCasesBPMDAO().saveCasesStateInstance(state);
@@ -147,6 +153,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 		if (this.actionMap.containsKey(SET_ALL_STATES_CANCELLED_ACTION)){
 			List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcess(ctx.getProcessInstance().getId());
 			for (CaseStateInstance state : caseStates){
+				if (CaseStateInstance.State.CANCELLED.equals(state.getStateState())) continue;
 				state.setStateState(CaseStateInstance.State.CANCELLED);
 				state.setStateEndDate(new Date(currentTime.getTime()));
 				getCasesBPMDAO().saveCasesStateInstance(state);
@@ -156,6 +163,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 		if (this.actionMap.containsKey(SET_ALL_STATES_FINISHED_ACTION)){
 			List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcess(ctx.getProcessInstance().getId());
 			for (CaseStateInstance state : caseStates){
+				if (CaseStateInstance.State.FINISHED.equals(state.getStateState())) continue;
 				state.setStateState(CaseStateInstance.State.FINISHED);
 				state.setStateEndDate(new Date(currentTime.getTime()));
 				getCasesBPMDAO().saveCasesStateInstance(state);
