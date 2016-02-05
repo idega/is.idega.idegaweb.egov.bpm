@@ -373,7 +373,11 @@ CasesBPMAssets.initStateGrid = function(caseId, piId, customerView, hasRightChan
                 
                 CasesBPMAssets.setStyleClassesForGridColumns(jQuery('div.' + identifier + 'Part'));
                 
-                CasesBPMAssets.hideHeaderTableIfNoContent(jQuery('div.' + identifier + 'Part', jQuery(customerView)), hideEmptySection);
+                CasesBPMAssets.hideHeaderTableIfNoContent(
+                		jQuery('div.' + identifier + 'Part',
+                		jQuery(customerView)),
+                		hideEmptySection || (result == null || result.children == null || result.children.length == 0 || result.children[0].children == null || result.children[0].children.length < 3)
+                );
                 
                 if (onTasksInited) {
                 	onTasksInited();
