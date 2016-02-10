@@ -1,9 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.application.data.ApplicationHome;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-
 import java.util.Collection;
 import java.util.Iterator;
 
@@ -17,6 +13,7 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseCode;
+import com.idega.block.process.data.model.CaseCodeModel;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -30,6 +27,10 @@ import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.presentation.IWContext;
 import com.idega.util.ListUtil;
+
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 /**
  *
@@ -112,7 +113,12 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 
 		CaseCode code = null;
 		for (Iterator<Application> appsIter = applications.iterator(); (appsIter.hasNext() && code == null);) {
-			code = appsIter.next().getCaseCode();
+			CaseCodeModel caseCodeModel = appsIter.next().getCaseCode();
+			if (caseCodeModel instanceof CaseCode) {
+				code = (CaseCode) caseCodeModel;
+			} else {
+				getLogger().warning("Incorrect type of " + caseCodeModel + ". Expected " + CaseCode.class.getName() + ", got " + (caseCodeModel == null ? "null" : caseCodeModel.getClass().getName()));
+			}
 		}
 		if (code != null) {
 			theCase.setCaseCode(code);

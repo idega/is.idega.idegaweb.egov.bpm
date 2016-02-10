@@ -1,8 +1,5 @@
 package is.idega.idegaweb.egov.bpm.application;
 
-import is.idega.idegaweb.egov.application.business.ApplicationType;
-import is.idega.idegaweb.egov.application.data.Application;
-
 import java.rmi.RemoteException;
 import java.security.AccessControlException;
 import java.security.Permission;
@@ -44,6 +41,10 @@ import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
+
+import is.idega.idegaweb.egov.application.business.ApplicationType;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.model.ApplicationModel;
 
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
@@ -157,7 +158,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 		}
 	}
 
-	public String getSelectedElement(Application app) {
+	public String getSelectedElement(ApplicationModel app) {
 		try {
 			final String pdName = app.getUrl();
 			if (StringUtil.isEmpty(pdName))
@@ -264,7 +265,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 	 * then that user will be able to open the form (and submit)
 	 */
 	@Override
-	public boolean isVisible(Application app) {
+	public boolean isVisible(ApplicationModel app) {
 		try {
 			IWContext iwc = IWContext.getCurrentInstance();
 
