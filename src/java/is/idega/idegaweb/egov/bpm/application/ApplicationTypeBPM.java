@@ -198,7 +198,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 	}
 
 	@Override
-	public String getUrl(IWContext iwc, Application app) {
+	public String getUrl(IWContext iwc, ApplicationModel app) {
 		String url = CoreConstants.HASH;
 		try {
 			String pdName = app.getUrl();
