@@ -2457,4 +2457,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return caseState;
 	}
 	
+	@Override
+	public Long getProcessIdByCaseId(Integer caseId) {
+		CaseProcInstBind caseProcInstBind = getSingleResult(CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, CaseProcInstBind.class, new Param(CaseProcInstBind.caseIdParam, caseId));
+		if (caseProcInstBind!=null)
+			return caseProcInstBind.getProcInstId();
+		return null;
+	}
+	
+	
 }

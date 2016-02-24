@@ -110,6 +110,8 @@ public class CasesBPMAssetsState implements Serializable {
 			showLastLoginDate = Boolean.FALSE,
 			useXMLDataProvider = Boolean.TRUE;
 
+	private List<List<String>> stateTable;
+	
 	public Long getViewSelected() {
 		if (viewSelected == null)
 			viewSelected = getResolvedTaskInstanceId();
@@ -852,5 +854,13 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setUseXMLDataProvider(Boolean useXMLDataProvider) {
 		this.useXMLDataProvider = useXMLDataProvider;
+	}
+
+	public List<List<String>> getStateTable() {
+		return stateTable;
+	}
+
+	public void setStateTable(List<List<String>> stateTable) {
+		this.stateTable = stateTable;
 	}
 }

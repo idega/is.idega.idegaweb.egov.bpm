@@ -18,7 +18,7 @@
 				</t:outputText>
 			</a>
 		</t:div>
-		<t:div styleClass="caseStatePart #{casesBPMAssetsState.tasksVisibilityProperty}" style="display: none;">
+		<t:div styleClass="caseStatePart #{casesBPMAssetsState.tasksVisibilityProperty}"  rendered="#{not empty casesBPMAssetsState.stateTable}">
 			<t:div styleClass="header">
 				<t:div styleClass="caseStatePartHeaderLeftLayerStyle" style="float: left">
 					<t:outputText value="#{localizedStrings['is.idega.idegaweb.egov.bpm']['states']}"/>
@@ -30,7 +30,39 @@
 				<div class="spacer" />
 				<t:div style="display: none;" rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}" />
 			</t:div>
-			<table class="caseState" border="0" />
+			<table class="caseState" border="0">
+			<thead>
+			<tr>
+				<th></th>
+				<ui:repeat value="#{casesBPMAssetsState.stateTable[0]}" var="colData" varStatus="status">
+					<th class="state">${colData}</th>
+					 <ui:fragment rendered="#{not status.last}">
+					 	<th class="state-separator"></th>
+					 </ui:fragment>
+				</ui:repeat>
+			</tr>
+			</thead>
+			<tbody>
+			<tr>
+				<td>Áætlun</td>
+				<ui:repeat value="#{casesBPMAssetsState.stateTable[1]}" var="colData" varStatus="status">
+					<td>${colData}</td>
+					<ui:fragment rendered="#{not status.last}">
+					 	<td class="state-separator"></td>
+					 </ui:fragment>
+				</ui:repeat>
+			</tr>
+			<tr>
+				<td>Raun</td>
+				<ui:repeat value="#{casesBPMAssetsState.stateTable[2]}" var="colData" varStatus="status">
+					<td>${colData}</td>
+					<ui:fragment rendered="#{not status.last}">
+					 	<td class="state-separator"></td>
+					 </ui:fragment>
+				</ui:repeat>
+			</tr>
+			</tbody>
+			</table>
 		</t:div>
 		<t:div styleClass="caseTasksPart #{casesBPMAssetsState.tasksVisibilityProperty}" style="display: none;">
 			<t:div styleClass="header">

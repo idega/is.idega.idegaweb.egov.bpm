@@ -186,11 +186,11 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 					}
 				}
 				
-				CasesBPMAssets.initStateGrid(caseId, piId, container, false, hideEmptySection,
-						function() {
-							onGridInitedFunction('caseStatePart', jQuery('div.caseStatePart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
-						}
-					);
+//				CasesBPMAssets.initStateGrid(caseId, piId, container, false, hideEmptySection,
+//						function() {
+//							onGridInitedFunction('caseStatePart', jQuery('div.caseStatePart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
+//						}
+//					);
 				
 				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection,
 					function() {

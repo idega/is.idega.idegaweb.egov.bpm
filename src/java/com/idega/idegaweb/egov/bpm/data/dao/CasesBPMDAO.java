@@ -486,5 +486,7 @@ public interface CasesBPMDAO extends GenericDao {
 	List<CaseStateInstance> getStateInstancesForProcess(long id);
 
 	List<CaseState> getCaseStates();
+
+	Long getProcessIdByCaseId(Integer caseId);
 	
 }

@@ -36,14 +36,21 @@ import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
+import com.idega.idegaweb.egov.bpm.data.CaseState;
+import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.jbpm.data.ProcessManagerBind;
+import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessInstanceW;
+import com.idega.jbpm.presentation.xml.ProcessArtifactsListRow;
+import com.idega.jbpm.presentation.xml.ProcessArtifactsListRows;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.text.DownloadLink;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
+import com.idega.util.ListUtil;
 import com.idega.util.PresentationUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
@@ -82,6 +89,9 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	private Long processInstanceId;
 	private Integer caseId;
+
+	@Autowired
+	private BPMFactory bpmFactory;
 
 	@Autowired
 	private JQuery jQuery;
@@ -147,6 +157,33 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		CasesBPMAssetsState stateBean = ELUtil.getInstance().getBean(CasesBPMAssetsState.beanIdentifier);
 		stateBean.setCaseId(getCaseId());
 
+		if (getCaseId()!=null){
+			Long pId = getCasesBPMDAO().getProcessIdByCaseId(getCaseId());
+			if (pId!=null){
+				ProcessInstanceW pi = getBpmFactory().getProcessManagerByProcessInstanceId(pId)
+						.getProcessInstance(pId);
+				List<CaseStateInstance> states = getCasesBPMDAO().getStateInstancesForProcess(pId);
+				if (!ListUtil.isEmpty(states)) {
+					List<List<String>> stateTable = new ArrayList<List<String>>(3);
+					stateTable.add(new ArrayList<String>());
+					stateTable.add(new ArrayList<String>());
+					stateTable.add(new ArrayList<String>());
+					for (int i = 0; i < states.size(); i++){
+						CaseStateInstance state = states.get(i);
+						CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinition().getName(),state.getStateName());
+						stateTable.get(0).add(stateDef.getStateDefaultLocalizedName());
+						
+						if (state.getStateExpectedEndDate() != null ) stateTable.get(1).add(state.getStateExpectedEndDate().toString());
+						else stateTable.get(1).add("");
+		
+						if (state.getStateEndDate() != null ) stateTable.get(2).add(state.getStateEndDate().toString());
+						else stateTable.get(2).add("");
+					}
+					stateBean.setStateTable(stateTable);
+				}
+			}
+		}
+		
 		IWContext iwc = IWContext.getIWContext(context);
 
 		if (isShowComments()) {
@@ -520,5 +557,10 @@ public class UICasesBPMAssets extends IWBaseComponent {
 
 	public void setShowLastLoginDate(boolean showLastLoginDate) {
 		this.showLastLoginDate = showLastLoginDate;
+	}
+	
+	public BPMFactory getBpmFactory() {
+		if (bpmFactory==null) ELUtil.getInstance().autowire(this);
+		return bpmFactory;
 	}
 }
