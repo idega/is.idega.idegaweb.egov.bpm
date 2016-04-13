@@ -26,6 +26,7 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
@@ -38,6 +39,8 @@ import com.idega.jbpm.identity.Role;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
+import com.idega.util.StringUtil;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -82,6 +85,18 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	public static final String handlerUserIdVarName = ProcessConstants.HANDLER_IDENTIFIER;
 	public static final String performerUserIdVarName = "performerUserId";
 	public static final String recipientUserIdVarName = "recipientUserId";
+
+	private String getApplicationProperty(String key) {
+		IWMainApplication application = IWMainApplication.getDefaultIWMainApplication();
+		if (application != null) {
+			IWMainApplicationSettings settings = application.getSettings();
+			if (settings != null) {
+				return settings.getProperty(key);
+			}
+		}
+
+		return null;
+	}
 
 	protected ProcessInstance getProcessInstance(ExecutionContext ectx) {
 		return ectx.getProcessInstance();
@@ -217,6 +232,17 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 	}
 
 	protected void sendMessages(ExecutionContext ectx) throws Exception {
+		
+		String excludedRoles = getApplicationProperty("roles_to_exclude_from_sending_message");
+		if (!StringUtil.isEmpty(excludedRoles) && !StringUtil.isEmpty(getSendToRoles())) {
+			String[] excludedRolesArray = excludedRoles.split(CoreConstants.COMMA);
+			for (String excludedRole : excludedRolesArray) {
+				if (getSendToRoles().contains(excludedRole)) {
+					return;
+				}
+			}
+		}
+
 		SendCaseMessagesHandler msgHan = getSendCaseMessagesHandler();
 		msgHan.setMessageKey(getMessageKey());
 		msgHan.setMessagesBundle(getMessagesBundle());
