@@ -233,7 +233,7 @@ public class CaseHandlerAssignmentHandler implements ActionHandler {
 
 	protected void sendMessages(ExecutionContext ectx) throws Exception {
 		
-		String excludedRoles = getApplicationProperty("roles_to_exclude_from_sending_message");
+		String excludedRoles = getApplicationProperty("excluded_message_roles");
 		if (!StringUtil.isEmpty(excludedRoles) && !StringUtil.isEmpty(getSendToRoles())) {
 			String[] excludedRolesArray = excludedRoles.split(CoreConstants.COMMA);
 			for (String excludedRole : excludedRolesArray) {
