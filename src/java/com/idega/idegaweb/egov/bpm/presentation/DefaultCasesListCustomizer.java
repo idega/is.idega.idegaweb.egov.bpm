@@ -11,6 +11,7 @@ import java.util.Locale;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasesListCustomizer;
@@ -31,6 +32,7 @@ import com.idega.util.expression.ELUtil;
 public abstract class DefaultCasesListCustomizer extends DefaultSpringBean implements CasesListCustomizer {
 
 	@Autowired
+	@Lazy
 	private CasesBPMDAO casesBPMDAO;
 
 	@Autowired

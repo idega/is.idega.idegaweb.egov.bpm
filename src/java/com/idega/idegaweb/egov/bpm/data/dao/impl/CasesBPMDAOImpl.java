@@ -86,10 +86,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	@Autowired(required = false)
 	private VariableInstanceQuerier querier;
 
-	@Autowired
+	@Autowired(required = false)
 	private BPMContext bpmContext;
 
-	@Autowired
+	@Autowired(required = false)
 	private BPMFactory bpmFactory;
 
 	@Override
