@@ -1,16 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
-import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.application.data.ApplicationHome;
-import is.idega.idegaweb.egov.bpm.application.AppSupportsManager;
-import is.idega.idegaweb.egov.bpm.application.AppSupportsManagerFactory;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
-import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
-import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -72,6 +61,20 @@ import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.application.ApplicationUtil;
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.business.ApplicationTypesManager;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.application.data.dao.ApplicationDAO;
+import is.idega.idegaweb.egov.bpm.application.AppSupportsManager;
+import is.idega.idegaweb.egov.bpm.application.AppSupportsManagerFactory;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
+import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
+import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.52 $ Last modified: $Date: 2009/06/30 13:17:35 $ by $Author: valdas $
@@ -98,10 +101,26 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Autowired
 	private BPMDAO bpmDAO;
 
+	@Autowired(required = false)
+	private ApplicationDAO applicationDAO;
+
+	@Autowired(required = false)
+	private ApplicationTypesManager applicationTypesManager;
+
 	private BPMDAO getBPMDAO() {
-		if (bpmDAO == null)
+		if (bpmDAO == null) {
 			ELUtil.getInstance().autowire(this);
+		}
+
 		return bpmDAO;
+	}
+
+	private ApplicationDAO getApplicationDAO() {
+		if (applicationDAO == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return applicationDAO;
 	}
 
 	@Override
@@ -621,7 +640,6 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return applicationBusiness.getApplicationName(apps.iterator().next(), locale);
 	}
 
-	//	TODO: make caching?
 	@Transactional(readOnly = true)
 	public String getProcessName(String processName, Locale locale) {
 		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(processName);
@@ -645,4 +663,49 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	AppSupportsManagerFactory getAppSupportsManagerFactory() {
 		return appSupportsManagerFactory;
 	}
+
+	private ApplicationTypesManager getApplicationTypesManager() {
+		if (applicationTypesManager == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return applicationTypesManager;
+	}
+
+	private Boolean available = null;
+
+	@Override
+	public boolean isAvailable(IWContext iwc) {
+		if (available != null) {
+			return available;
+		}
+
+		String name = null;
+		try {
+			name = getProcessDefinition().getName();
+			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getApplicationDAO().findByUri(name);
+			available = ApplicationUtil.isAvailabe(iwc, egovApp);
+			return available;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error checking if BPM process (name: " + name + ", ID: " + getProcessDefinitionId() + ") is available", e);
+		}
+		return true;
+	}
+
+	@Override
+	public String getNotAvailableLink(IWContext iwc) {
+		if (isAvailable(iwc)) {
+			return null;
+		}
+
+		String name = null;
+		try {
+			name = getProcessDefinition().getName();
+			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getApplicationDAO().findByUri(name);
+			return ApplicationUtil.getRedirectUrl(iwc.getIWMainApplication(), iwc, iwc.getRequest(), getApplicationTypesManager(), egovApp, egovApp.getId().toString(), iwc.isLoggedOn());
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting redirect URL for unavailable BPM process (name: " + name + ", ID: " + getProcessDefinitionId() + ")", e);
+		}
+		return null;
+	}
+
 }
