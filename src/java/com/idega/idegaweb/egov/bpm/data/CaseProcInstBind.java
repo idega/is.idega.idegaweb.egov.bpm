@@ -1,8 +1,6 @@
 package com.idega.idegaweb.egov.bpm.data;
 
 
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -12,6 +10,7 @@ import javax.persistence.ColumnResult;
 import javax.persistence.Entity;
 import javax.persistence.EntityResult;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.NamedNativeQueries;
 import javax.persistence.NamedNativeQuery;
 import javax.persistence.NamedQueries;
@@ -24,12 +23,13 @@ import javax.persistence.TemporalType;
 
 import org.hibernate.annotations.Cache;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Index;
 
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.CaseBMPBean;
 import com.idega.block.process.data.bean.Case;
 import com.idega.jbpm.data.BPMVariableData;
+
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -38,7 +38,10 @@ import com.idega.jbpm.data.BPMVariableData;
  * Last modified: $Date: 2009/07/09 15:09:11 $ by $Author: valdas $
  */
 @Entity
-@Table(name=CaseProcInstBind.TABLE_NAME)
+@Table(name = CaseProcInstBind.TABLE_NAME, indexes = {
+		@Index(name = "procInstIdIndex", columnList = CaseProcInstBind.procInstIdColumnName),
+		@Index(name = "caseIdIndex", columnList = CaseProcInstBind.caseIdColumnName)
+})
 @NamedQueries({
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId = :"+CaseProcInstBind.caseIdParam),
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_CASES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.caseId in (:"+CaseProcInstBind.casesIdsParam + ")"),
@@ -50,7 +53,19 @@ import com.idega.jbpm.data.BPMVariableData;
 	@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getCaseIdByProcessInstanceId, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp."+ CaseProcInstBind.procInstIdProp + " = :" + CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIds, query = "select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp." + CaseProcInstBind.procInstIdProp + " in (:" + CaseProcInstBind.processInstanceIdsProp + ") group by cp." + CaseProcInstBind.caseIdProp + " order by cp." + CaseProcInstBind.dateCreatedProp + " desc"),
-	@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null")
+	@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null"),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_FIND_PROC_INST_IDS_BY_PROC_DEF_NAMES_AND_CASE_STATUSES,
+			query = "select cp.procInstId from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc, org.jbpm.graph.exe.ProcessInstance pi," +
+					"org.jbpm.graph.def.ProcessDefinition pd where pd.name in (:procDefNames) and pd.id = pi.processDefinition.id and pi.id = cp.procInstId and pc.caseStatus in (:statuses) and pc.id = cp.caseId" +
+					" order by pc.created desc"
+	),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_FIND_CASE_IDS_BY_PROC_DEF_NAMES_AND_CASE_STATUSES,
+			query = "select cp.caseId from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc, org.jbpm.graph.exe.ProcessInstance pi," +
+					"org.jbpm.graph.def.ProcessDefinition pd where pd.name in (:procDefNames) and pd.id = pi.processDefinition.id and pi.id = cp.procInstId and pc.caseStatus in (:statuses) and pc.id = cp.caseId" +
+					" order by pc.created desc"
+	)
 })
 
 @SqlResultSetMappings({
@@ -206,8 +221,7 @@ import com.idega.jbpm.data.BPMVariableData;
 				CaseProcInstBind.procInstIdColumnName + " = pi.id_ where pi.start_ between :" + CaseProcInstBind.caseStartDateProp + " and :" +
 				CaseProcInstBind.caseEndDateProp
 			)
-
-		}
+	}
 )
 @Cacheable
 @Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
@@ -225,6 +239,8 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByProcessInstanceIds = "CaseProcInstBind.getCaseIdsByPIIDs";
 	public static final String getByDateCreatedAndCaseIdentifierId = "CaseProcInstBind.getByDateCreatedAndCaseIdentifierId";
 	public static final String getSubprocessTokensByPI = "CaseProcInstBind.getSubprocessTokensByPI";
+	public static final String QUERY_FIND_PROC_INST_IDS_BY_PROC_DEF_NAMES_AND_CASE_STATUSES = "CaseProcInstBind.findProcInstIdsByProcDefNamesAndCaseStatuses";
+	public static final String QUERY_FIND_CASE_IDS_BY_PROC_DEF_NAMES_AND_CASE_STATUSES = "CaseProcInstBind.findCaseIdsByProcDefNamesAndCaseStatuses";
 	public static final String getCaseIdsByProcessInstanceIdsProcessInstanceEnded = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceEnded";
 	public static final String getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsProcessInstanceNotEnded";
 	public static final String getCaseIdsByProcessInstanceIdsAndProcessUserStatus = "CaseProcInstBind.getCaseIdsByProcessInstanceIdsAndProcessUserStatus";
@@ -260,12 +276,10 @@ public class CaseProcInstBind implements Serializable {
 
 	public static final String procInstIdProp = "procInstId";
 	@Id
-	@Index(columnNames={procInstIdColumnName}, name="procInstIdIndex")
 	@Column(name=procInstIdColumnName)
     private Long procInstId;
 
 	public static final String caseIdProp = "caseId";
-	@Index(columnNames={caseIdColumnName}, name="caseIdIndex")
 	@Column(name=caseIdColumnName, nullable=false, unique=true)
 	private Integer caseId;
 
