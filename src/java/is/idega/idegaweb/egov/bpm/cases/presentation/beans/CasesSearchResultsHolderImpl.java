@@ -1,5 +1,11 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.cases.data.CaseCategory;
+import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
+import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
+
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -68,12 +74,6 @@ import com.idega.util.StringUtil;
 import com.idega.util.WebUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.util.text.TextSoap;
-
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.cases.data.CaseCategory;
-import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
-import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 @Scope("session")
 @Service(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER)
@@ -530,8 +530,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			String id,
 			List<String> exportColumns,
 			boolean exportContacts,
-			boolean showCompany
-	) {
+			boolean showCompany) {
 		if (casesByProcessDefinition == null || ListUtil.isEmpty(casesByProcessDefinition.values())) {
 			return null;
 		}
@@ -690,7 +689,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 							AdvancedProperty variable = null;
 							if (column.equals("string_violatorPostalCode"))
 								variable = getVariableByName(varsForCase, "string_ticketStreetAddress");
-							else if (column.equals("string_ticketType")) {
+							else if (column.equals("string_ticketType") || column.equals("string_industryMainGroup") || column.equals("string_industry")) {
 								variable = getVariableByName(varsForCase, column);
 								if (variable == null)
 									value = getResolver(column).getPresentation(column, theCase.getId());

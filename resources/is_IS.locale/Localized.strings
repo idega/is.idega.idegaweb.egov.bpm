@@ -179,5 +179,7 @@ bpm_variable.string_userPhone=Símanúmer
 bpm_variable.string_stp_options_check=Tegund leyfis
 bpm_variable.string_salesAreaTypeOfLicenseInnerOption=Sölusvæði
 bpm_variable.string_caseStatus=Staða
+bpm_variable.string_industry=Atvinnugrein
+bpm_variable.string_industryMainGroup=Atvinnugrein, Yfirflokkur
 
 states=Tímalína
