@@ -63,7 +63,7 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 		);
 
 		String processDescription = getDescription() == null ? piw.getProcessDescription() : getDescription();
-		String procDefName = piw.getProcessDefinitionW(ctx.getJbpmContext()).getProcessDefinition().getName();
+		String procDefName = piw.getProcessDefinitionW(ctx.getJbpmContext()).getName();
 		setCaseSubject(pi.getId(), processDescription, procDefName);
 	}
 

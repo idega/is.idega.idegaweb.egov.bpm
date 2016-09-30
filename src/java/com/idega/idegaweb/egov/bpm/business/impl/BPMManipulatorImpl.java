@@ -334,7 +334,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 		try {
 			List<BinaryVariable> attachments = startTiW.getAttachments();
 
-			String procDefName = piW.getProcessDefinitionW(context).getProcessDefinition().getName();
+			String procDefName = piW.getProcessDefinitionW(context).getName();
 
 			String actoriId = startTiW.getTaskInstance().getActorId();
 			User creator = getActor(actoriId);

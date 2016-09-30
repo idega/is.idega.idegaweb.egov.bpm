@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -40,6 +38,8 @@ import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 
 @Scope("request")
 @Service(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER)
@@ -139,7 +139,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 
 		Collection<VariableInstanceInfo> variables = null;
 		try {
-			String procDefName = procDef.getProcessDefinition().getName();
+			String procDefName = procDef.getName();
 			variables = getVariablesQuerier().getVariablesByProcessDefinition(procDefName);
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error getting variables for process: " + processDefinitionId, e);
@@ -157,7 +157,7 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 		boolean isAdmin = iwc.isSuperAdmin();
 		List<AdvancedProperty> availableVariables = getAvailableVariables(variables, iwrb, iwc.getCurrentLocale(), isAdmin, false);
 		if (ListUtil.isEmpty(availableVariables)) {
-			LOGGER.info("No variables found for process: " + procDef.getProcessDefinition().getName());
+			LOGGER.info("No variables found for process: " + procDef.getName());
 			processVariables = new ArrayList<SelectItem>();
 			return null;
 		}
