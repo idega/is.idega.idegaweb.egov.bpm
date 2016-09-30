@@ -1,25 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
-import is.idega.idegaweb.egov.application.business.ApplicationType;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
-import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UIProcessVariables;
-import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
-import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
-import is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter;
-import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
-import is.idega.idegaweb.egov.cases.bean.CasesExportParams;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
-import is.idega.idegaweb.egov.cases.presentation.MyCases;
-import is.idega.idegaweb.egov.cases.presentation.OpenCases;
-import is.idega.idegaweb.egov.cases.presentation.PublicCases;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
@@ -122,6 +102,26 @@ import com.idega.util.URIUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.business.ApplicationType;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
+import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
+import is.idega.idegaweb.egov.bpm.cases.presentation.UIProcessVariables;
+import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
+import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
+import is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter;
+import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
+import is.idega.idegaweb.egov.cases.bean.CasesExportParams;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
+import is.idega.idegaweb.egov.cases.presentation.MyCases;
+import is.idega.idegaweb.egov.cases.presentation.OpenCases;
+import is.idega.idegaweb.egov.cases.presentation.PublicCases;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
+
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service("casesEngineDWR")
 public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine, ApplicationListener<ApplicationEvent> {
@@ -213,6 +213,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				stateBean.setAddExportContacts(properties.isAddExportContacts());
 				stateBean.setShowUserCompany(properties.isShowUserCompany());
 				stateBean.setShowLastLoginDate(properties.isShowLastLoginDate());
+				stateBean.setAllowToReloadCaseView(properties.isAllowToReloadCaseView());
+				stateBean.setShowSettingsButton(properties.isShowSettingsButton());
 			}
 
 			Integer caseId = new Integer(caseIdStr);
@@ -572,6 +574,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					criterias.isOnlySubscribedCases(),
 					criterias.isShowAllCases(),
 					criterias.getProcInstIds(),
+					criterias.getCasesIds(),
 					criterias.getRoles(),
 					handlerCategoryIDs,
 					true

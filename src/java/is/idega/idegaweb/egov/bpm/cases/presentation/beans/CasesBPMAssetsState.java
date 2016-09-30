@@ -1,12 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMProcessViewBean;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean;
-import is.idega.idegaweb.egov.bpm.media.ProcessUsersExporter;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
-
 import java.io.Serializable;
 import java.net.URLDecoder;
 import java.util.Iterator;
@@ -43,6 +36,13 @@ import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMProcessViewBean;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean;
+import is.idega.idegaweb.egov.bpm.media.ProcessUsersExporter;
+import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
+
 /**
  *
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
@@ -78,28 +78,28 @@ public class CasesBPMAssetsState implements Serializable {
 
 	private Integer caseId, nextCaseId;
 
-	private Long processInstanceId, 
-			viewSelected, 
-			nextProcessInstanceId, 
+	private Long processInstanceId,
+			viewSelected,
+			nextProcessInstanceId,
 			nextTaskId;
 
-	private String displayPropertyForStyleAttribute = "block", 
-			specialBackPage, 
-			commentsPersistenceManagerIdentifier, 
+	private String displayPropertyForStyleAttribute = "block",
+			specialBackPage,
+			commentsPersistenceManagerIdentifier,
 			currentTaskInstanceName,
 			systemEmailAddress;
 
-	private Boolean isWatched, 
+	private Boolean isWatched,
 			usePDFDownloadColumn = Boolean.TRUE,
-			allowPDFSigning = Boolean.TRUE, 
+			allowPDFSigning = Boolean.TRUE,
 			standAloneComponent = Boolean.TRUE,
 			hideEmptySection = Boolean.FALSE,
 			showAttachmentStatistics = Boolean.FALSE,
-			showOnlyCreatorInContacts = Boolean.FALSE, 
+			showOnlyCreatorInContacts = Boolean.FALSE,
 			showBackButton,
-			showLogExportButton = Boolean.FALSE, 
+			showLogExportButton = Boolean.FALSE,
 			showComments = Boolean.TRUE,
-			showContacts = Boolean.TRUE, 
+			showContacts = Boolean.TRUE,
 			showNextTask,
 			specialBackPageDecoded = Boolean.FALSE,
 			autoShowComments = Boolean.FALSE,
@@ -108,10 +108,12 @@ public class CasesBPMAssetsState implements Serializable {
 			addExportContacts = Boolean.FALSE,
 			showUserCompany = Boolean.FALSE,
 			showLastLoginDate = Boolean.FALSE,
-			useXMLDataProvider = Boolean.TRUE;
+			useXMLDataProvider = Boolean.TRUE,
+			allowToReloadCaseView = Boolean.TRUE,
+			showSettingsButton = Boolean.TRUE;
 
 	private List<List<String>> stateTable;
-	
+
 	public Long getViewSelected() {
 		if (viewSelected == null)
 			viewSelected = getResolvedTaskInstanceId();
@@ -388,30 +390,23 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public void startTask() {
-
-		if(getViewSelected() != null) {
-
+		if (getViewSelected() != null) {
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 			getCasesBPMProcessView().startTask(getViewSelected(), iwc.getCurrentUserId());
-
 		} else
 			throw new RuntimeException("No view selected");
 	}
 
 	public void assignTask() {
-
-		if(getViewSelected() != null) {
-
+		if (getViewSelected() != null) {
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 			getCasesBPMProcessView().assignTask(getViewSelected(), iwc.getCurrentUserId());
-
 		} else
 			throw new RuntimeException("No view selected");
 	}
 
 	public boolean isWatched() {
-
-		if(isWatched == null) {
+		if (isWatched == null) {
 			isWatched = getProcessWatch().isWatching(getProcessInstanceId());
 		}
 
@@ -419,16 +414,11 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public boolean getCanStartTask() {
-
-		if(getViewSelected() != null) {
-
+		if (getViewSelected() != null) {
 			Integer userId = getCurrentBPMUser().getIdToUse();
-
-			if(userId != null) {
-
+			if (userId != null) {
 				String errMsg = getCasesBPMProcessView().getCanStartTask(getViewSelected(), userId);
-
-				if(errMsg == null)
+				if (errMsg == null)
 					return true;
 			}
 		}
@@ -437,40 +427,17 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public boolean getCanTakeTask() {
-
-		if(getViewSelected() != null) {
-
+		if (getViewSelected() != null) {
 			Integer userId = getCurrentBPMUser().getIdToUse();
-
-			if(userId != null) {
-
+			if (userId != null) {
 				String errMsg = getCasesBPMProcessView().getCanTakeTask(getViewSelected(), userId);
-
-				if(errMsg == null)
+				if (errMsg == null)
 					return true;
 			}
 		}
 
 		return false;
 	}
-
-//	protected CasesBusiness getCaseBusiness(IWContext iwc) {
-//
-//		try {
-//			return (CasesBusiness)IBOLookup.getServiceInstance(iwc, CasesBusiness.class);
-//		}
-//		catch (IBOLookupException ile) {
-//			throw new IBORuntimeException(ile);
-//		}
-//	}
-
-//	public Integer getTabSelected() {
-//		return tabSelected == null ? 0 : tabSelected;
-//	}
-//
-//	public void setTabSelected(Integer tabSelected) {
-//		this.tabSelected = tabSelected;
-//	}
 
 	public BPMUser getCurrentBPMUser() {
 
@@ -824,7 +791,7 @@ public class CasesBPMAssetsState implements Serializable {
 		this.addExportContacts = addExportContacts;
 	}
 
-	public String getExportUsersUrl(){
+	public String getExportUsersUrl() {
 		URIUtil uriUtil = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
 		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(ProcessUsersExporter.class));
 		uriUtil.setParameter(ProcessUsersExporter.PROCESS_INSTANCE_ID, String.valueOf(getProcessInstanceId()));
@@ -863,4 +830,21 @@ public class CasesBPMAssetsState implements Serializable {
 	public void setStateTable(List<List<String>> stateTable) {
 		this.stateTable = stateTable;
 	}
+
+	public Boolean getAllowToReloadCaseView() {
+		return allowToReloadCaseView;
+	}
+
+	public void setAllowToReloadCaseView(Boolean allowToReloadCaseView) {
+		this.allowToReloadCaseView = allowToReloadCaseView;
+	}
+
+	public Boolean getShowSettingsButton() {
+		return showSettingsButton;
+	}
+
+	public void setShowSettingsButton(Boolean showSettingsButton) {
+		this.showSettingsButton = showSettingsButton;
+	}
+
 }

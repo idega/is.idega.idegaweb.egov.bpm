@@ -1,7 +1,5 @@
 package com.idega.idegaweb.egov.bpm.data.dao;
 
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +26,8 @@ import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.Actor;
 import com.idega.user.data.Group;
 import com.idega.util.IWTimestamp;
+
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -99,6 +99,7 @@ public interface CasesBPMDAO extends GenericDao {
 	        boolean onlySubscribedCases,
 	        Integer caseId,
 	        List<Long> procInstIds,
+	        List<Integer> casesIds,
 	        Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
 	        Timestamp to
@@ -113,6 +114,7 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
 	        Timestamp to
@@ -132,6 +134,7 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
 	        Timestamp to
@@ -146,6 +149,7 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
 	        Timestamp to
@@ -191,6 +195,7 @@ public interface CasesBPMDAO extends GenericDao {
 			List<String> caseStatusesToHide,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Collection<? extends Number> subscriberGroupIDs,
 			Timestamp from,
 			Timestamp to
@@ -201,6 +206,7 @@ public interface CasesBPMDAO extends GenericDao {
 			List<String> caseStatusesToHide,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
 	        Timestamp to
@@ -209,6 +215,7 @@ public interface CasesBPMDAO extends GenericDao {
 	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Integer firstResult, Integer maxResults, boolean newestOnTop);
+	public List<Integer> getCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Integer firstResult, Integer maxResults, boolean newestOnTop);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
 			List<String> procDefNames);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
@@ -260,6 +267,7 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 	        Date from,
 	        Date to
 	);
@@ -448,6 +456,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<String> processDefinitionNames,
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
+			List<Integer> casesIds,
 			Set<String> roles,
 			Collection<? extends Number> handlerCategoryIDs,
 			Date from,
@@ -488,5 +497,5 @@ public interface CasesBPMDAO extends GenericDao {
 	List<CaseState> getCaseStates();
 
 	Long getProcessIdByCaseId(Integer caseId);
-	
+
 }

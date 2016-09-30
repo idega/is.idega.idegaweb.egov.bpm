@@ -1,18 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
-import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.application.data.ApplicationHome;
-import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
-import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.CaseCategory;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -104,6 +91,19 @@ import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
+
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
+import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
+import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.CaseCategory;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -498,10 +498,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	/**
-	 * 
-	 * @param applications to get {@link Application#getUrl()} from, 
+	 *
+	 * @param applications to get {@link Application#getUrl()} from,
 	 * not <code>null</code>;
-	 * @return {@link Collection} of {@link Application#getUrl()} or 
+	 * @return {@link Collection} of {@link Application#getUrl()} or
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
@@ -656,6 +656,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				showAllCases,
 				null,
 				null,
+				null,
 				false
 		);
 	}
@@ -673,6 +674,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean onlySubscribedCases,
 			boolean showAllCases,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Set<String> roles,
 			boolean searchQuery
 	) {
@@ -683,19 +685,24 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				roles = getApplication().getAccessController().getAllRolesForUser(user);
 			}
 
-			List<Integer> casesIds = getCasePrimaryKeys(
-					user,
-					type,
-					caseCodes,
-					caseStatusesToHide,
-					caseStatusesToShow,
-					onlySubscribedCases,
-					showAllCases,
-					procInstIds,
-					roles,
-					null,
-					searchQuery
-			);
+			if (casesIds == null) {
+				casesIds = getCasePrimaryKeys(
+						user,
+						type,
+						caseCodes,
+						caseStatusesToHide,
+						caseStatusesToShow,
+						onlySubscribedCases,
+						showAllCases,
+						procInstIds,
+						null,
+						roles,
+						null,
+						searchQuery
+				);
+			} else {
+				casesIds = new ArrayList<Integer>(casesIds);
+			}
 			long duration = System.currentTimeMillis() - start;
 			if (duration > 1000) {
 				getLogger().info("It took " + duration + " ms to resolve cases IDs for " + user + ", type: " + type + ", locale: " + locale +
@@ -731,9 +738,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			List<CasePresentation> casesPresentation = convertToPresentationBeans(cases, locale);
-			if (!ListUtil.isEmpty(casesPresentation) &&
-					IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE))
+			if (!ListUtil.isEmpty(casesPresentation) && IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE)) {
 				Collections.sort(casesPresentation, new CasePresentationComparator());
+			}
 
 			duration = System.currentTimeMillis() - start;
 			if (duration > 1000) {
@@ -760,6 +767,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean onlySubscribedCases,
 			boolean showAllCases,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Set<String> roles,
 			Collection<Long> handlerCategoryIDs,
 			boolean searchQuery
@@ -774,6 +782,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				showAllCases,
 				null,
 				procInstIds,
+				casesIds,
 				roles,
 				handlerCategoryIDs,
 				searchQuery
@@ -790,7 +799,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean onlySubscribedCases,
 			boolean showAllCases
 	) throws Exception {
-		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false);
+		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, null, false);
 	}
 
 	@Override
@@ -803,6 +812,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean onlySubscribedCases,
 			boolean showAllCases,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Set<String> roles
 	) throws Exception {
 		return getCasesIds(
@@ -815,6 +825,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				showAllCases,
 				null,
 				procInstIds,
+				casesIds,
 				roles,
 				null,
 				false
@@ -848,6 +859,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean showAllCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> casesIds,
 			Set<String> roles,
 			Collection<Long> handlerCategoryIDs,
 			Timestamp from,
@@ -866,6 +878,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 								statusesToHide,
 								caseId,
 								procInstIds,
+								casesIds,
 								handlerCategoryIDs,
 								from,
 								to
@@ -880,6 +893,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 								onlySubscribedCases,
 								caseId,
 								procInstIds,
+								casesIds,
 								handlerCategoryIDs,
 								from,
 								to
@@ -891,6 +905,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 								statusesToHide,
 								caseId,
 								procInstIds,
+								casesIds,
 								handlerCategoryIDs,
 								from,
 								to
@@ -904,6 +919,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 								onlySubscribedCases,
 								caseId,
 								procInstIds,
+								casesIds,
 								handlerCategoryIDs,
 								from,
 								to
@@ -916,6 +932,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					onlySubscribedCases,
 					caseId,
 					procInstIds,
+					casesIds,
 					handlerCategoryIDs,
 					from,
 					to
@@ -930,6 +947,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					onlySubscribedCases,
 					caseId,
 					procInstIds,
+					casesIds,
 					handlerCategoryIDs,
 					from,
 					to
@@ -939,7 +957,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					statusesToShow,
 					statusesToHide,
 					caseCodes,
-					caseId != null ? Arrays.asList(caseId) : null,
+					casesIds == null ?
+							caseId != null ? Arrays.asList(caseId) : null :
+							casesIds,
 					procInstIds,
 					handlerCategoryIDs,
 					from,
@@ -953,6 +973,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					casecodes,
 					caseId != null ? Arrays.asList(caseId) : null,
 					procInstIds,
+					casesIds,
 					roles,
 					handlerCategoryIDs,
 					from,
@@ -999,10 +1020,15 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean showAllCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> providedCasesIds,
 			Set<String> roles,
 			Collection<Long> handlerCategoryIDs,
 			boolean searchQuery
 	) throws Exception {
+		if (providedCasesIds != null) {
+			return providedCasesIds;
+		}
+
 		Map<Integer, Date> casesIds = null;
 
 		List<String> statusesToShow = caseStatusesToShow == null ? new ArrayList<String>() : new ArrayList<String>(caseStatusesToShow);
@@ -1061,6 +1087,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 						casecodes,
 						showAllCases,
 						procInstIds,
+						null,
 						handlerCategoryIDs
 				);
 
@@ -1085,6 +1112,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 								showAllCases,
 								caseId,
 								procInstIds,
+								null,
 								roles,
 								handlerCategoryIDs,
 								from.getTimestamp(),
@@ -1136,6 +1164,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					showAllCases,
 					caseId,
 					procInstIds,
+					null,
 					roles,
 					handlerCategoryIDs,
 					null,	//	from
@@ -1172,6 +1201,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							casecodes,
 							showAllCases,
 							procInstIds,
+							null,
 							handlerCategoryIDs
 					);
 				}
@@ -1847,6 +1877,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 										criteria.isShowAllCases(),
 										caseId,
 										criteria.getProcInstIds(),
+										criteria.getCasesIds(),
 										criteria.getRoles(),
 										criteria.getHandlercategoryIds(),
 										false
