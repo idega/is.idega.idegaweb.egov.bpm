@@ -9,17 +9,17 @@
 	<div class="kvarta-form-container">
 		<ui:fragment rendered="#{not empty caseStateConfig}">
 			<h1>Case state config</h1>
-			<select	class="processType" name="processType" value="#{caseStateConfig.processDefinitions[0]}" onchange="CaseStateConfig.processChanged(jQuery(this).val());">
+			<select	class="processType" name="processType" value="#{caseStateConfig.processDefinitions[0][0]}" onchange="CaseStateConfig.processChanged(jQuery(this).val());">
 					<ui:repeat value="#{caseStateConfig.processDefinitions}" var="item">
-						<option value="${item}">${item}</option>
+						<option value="${item[0]}">${item[1]}</option>
 					</ui:repeat>
 			</select>
 			<ui:repeat value="#{caseStateConfig.processDefinitions}" var="item">
 				<ui:fragment>
-				<div class="iw_single_process ${item}">
-					<h2>States for ${item}</h2>
+				<div class="iw_single_process ${item[0]}">
+					<h2>States for ${item[1]}</h2>
 					<ui:repeat value="#{caseStateConfig.caseStates}" var="state">
-						<ui:fragment rendered="#{state.processDefinitionName == item}">
+						<ui:fragment rendered="#{state.processDefinitionName == item[0]}">
 							<div class="iw_single_state">
 								<div class="iw_state_div">
 									<div class="stateName">
@@ -80,10 +80,16 @@
 						<label>State name</label>
 						<input id="iw_state_name" name="iw_state_name" value="${state.stateName}"></input>
 					</div>
-												<div class="input inputElement">
+					
+					<div class="input inputElement">
 						<label>Process name</label>
-						<input id="iw_process_name" name="iw_process_name" value="${state.processDefinitionName}"></input>
+						<select	class="processType_add" id="iw_process_name" name="iw_process_name" value="#{caseStateConfig.processDefinitions[0][0]}">
+							<ui:repeat value="#{caseStateConfig.processDefinitions}" var="item">
+								<option value="${item[0]}">${item[1]}</option>
+							</ui:repeat>
+						</select>
 					</div>
+					
 												<div class="input inputElement">
 						<label>Localization key name</label>
 						<input id="iw_localization_key_name" name="iw_localization_key_name" value="${state.stateLocalizationKey}"></input>
