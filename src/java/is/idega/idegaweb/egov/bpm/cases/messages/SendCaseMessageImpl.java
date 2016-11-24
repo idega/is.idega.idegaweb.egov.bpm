@@ -17,6 +17,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.data.Case;
+import com.idega.block.process.message.data.Message;
 import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMailMessageImpl;
 import com.idega.bpm.process.messages.SendMessageType;
@@ -31,21 +33,17 @@ import com.idega.jbpm.process.business.messages.MessageValueContext;
 import com.idega.jbpm.process.business.messages.TypeRef;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
-import com.idega.xroad.service.target.generated-sources.axis2.wsdl2code.src.net.x_rd.ee.ehubservice.producer.Case;
-import com.idega.xroad.service.target.generated-sources.axis2.wsdl2code.src.net.x_rd.ee.ehubservice.producer.Message;
-import com.idega.xroad.service.target.generated-sources.axis2.wsdl2code.src.net.x_rd.ee.ehubservice.producer.User;
 
-import is.idega.idegaweb.egov.bpm.src.java.is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
-import is.idega.idegaweb.egov.bpm.src.java.is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
-import is.idega.idegaweb.egov.bpm.src.java.is.idega.idegaweb.egov.bpm.events.BPMNewMessageEvent;
-import is.idega.idegaweb.egov.cases.src.java.is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.message.src.java.is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
-import is.idega.idegaweb.egov.message.src.java.is.idega.idegaweb.egov.message.business.MessageValue;
+import is.idega.idegaweb.egov.bpm.events.BPMNewMessageEvent;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.message.business.CommuneMessageBusiness;
+import is.idega.idegaweb.egov.message.business.MessageValue;
 
 
 /**
