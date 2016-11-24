@@ -6,6 +6,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.jbpm.graph.exe.ExecutionContext;
@@ -178,6 +180,12 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 			}
 
 			getEmailSender().send(mvCtx, ectx, pi, msgs, tkn);
+			try {
+				Map<String, String> sentMailsToCase = getCache(SendCaseMessagesHandler.class.getName(), 86400);
+				sentMailsToCase.put(getSendToEmail(), caseIdStr);
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error putting into cache " + getSendToEmail(), e);
+			}
 		}
 	}
 
