@@ -182,7 +182,13 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 			getEmailSender().send(mvCtx, ectx, pi, msgs, tkn);
 			try {
 				Map<String, String> sentMailsToCase = getCache(SendCaseMessagesHandler.class.getName(), 86400);
-				sentMailsToCase.put(getSendToEmail(), caseIdStr);
+				String to = getSendToEmail();
+				sentMailsToCase.put(to, theCase == null ?
+						caseIdStr == null ?
+								to :
+								caseIdStr :
+						theCase.getCaseIdentifier()
+				);
 			} catch (Exception e) {
 				getLogger().log(Level.WARNING, "Error putting into cache " + getSendToEmail(), e);
 			}
