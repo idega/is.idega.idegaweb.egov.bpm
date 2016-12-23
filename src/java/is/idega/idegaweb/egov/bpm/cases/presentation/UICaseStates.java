@@ -1,8 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Locale;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,21 +16,18 @@ import com.idega.idegaweb.egov.bpm.data.CaseState;
 import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.artifacts.presentation.GridEntriesBean;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifactsParamsBean;
 import com.idega.jbpm.data.VariableInstanceQuerier;
-import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.identity.permission.PermissionsFactory;
 import com.idega.jbpm.presentation.xml.ProcessArtifactsListRow;
 import com.idega.jbpm.presentation.xml.ProcessArtifactsListRows;
 import com.idega.jbpm.signing.SigningHandler;
-import com.idega.jbpm.utils.JBPMUtil;
 import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.presentation.IWContext;
-import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -41,10 +36,10 @@ import com.idega.util.expression.ELUtil;
 public class UICaseStates {
 
 	public static final String SPRING_BEAN_NAME = "UICaseStates";
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -68,11 +63,11 @@ public class UICaseStates {
 
 	@Autowired(required = false)
 	private GeneralCompanyBusiness generalCompanyBusiness;
-	
+
 	private static final Logger LOGGER = Logger.getLogger(ProcessArtifacts.class.getName());
-	
+
 	public Document getProcessStateList(ProcessArtifactsParamsBean params) {
-		
+
 
 			Long processInstanceId = params.getPiId();
 
@@ -93,43 +88,35 @@ public class UICaseStates {
 				return null;
 			}
 
-			User loggedInUser = getBpmFactory().getBpmUserFactory().getCurrentBPMUser().getUserToUse();
-			Locale userLocale = iwc.getCurrentLocale();
-
-			ProcessInstanceW pi = getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId)
-					.getProcessInstance(processInstanceId);
+			ProcessInstanceW pi = getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).getProcessInstance(processInstanceId);
 
 			List<CaseStateInstance> states = getCasesBPMDAO().getStateInstancesForProcess(pi.getProcessInstanceId());
 			if (states==null) return null;
-			
+
 			ProcessArtifactsListRows rows = new ProcessArtifactsListRows();
 			rows.setTotal(states.size());
-			
+
 			for (CaseStateInstance state: states){
 				ProcessArtifactsListRow row = new ProcessArtifactsListRow();
 				rows.addRow(row);
 				row.setId(state.getId().toString());
-				
-				CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinition().getName(),state.getStateName());
+
+				CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getName(),state.getStateName());
 				row.addCell(stateDef.getStateDefaultLocalizedName());
-				
-				
-				
+
 				if (state.getStateExpectedStartDate() != null ) row.addCell(state.getStateExpectedStartDate().toString());
-				else row.addCell("");
-				
+				else row.addCell(CoreConstants.EMPTY);
+
 				if (state.getStateExpectedEndDate() != null ) row.addCell(state.getStateExpectedEndDate().toString());
-				else row.addCell("");
-				
+				else row.addCell(CoreConstants.EMPTY);
+
 				if (state.getStateStartDate() != null ) row.addCell(state.getStateStartDate().toString());
-				else row.addCell("");
-				
+				else row.addCell(CoreConstants.EMPTY);
+
 				if (state.getStateEndDate() != null ) row.addCell(state.getStateEndDate().toString());
-				else row.addCell("");
-				
+				else row.addCell(CoreConstants.EMPTY);
 			}
 
-			
 			try {
 				return rows.getDocument();
 			} catch (Exception e) {
@@ -227,5 +214,5 @@ public class UICaseStates {
 		}
 		return iwc;
 	}
-	
+
 }

@@ -96,7 +96,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 
 		try {
 			Long pdId = new Long(procDef);
-			String processName = getBpmFactory().getProcessManager(pdId).getProcessDefinition(pdId).getProcessDefinition().getName();
+			String processName = getBpmFactory().getProcessManager(pdId).getProcessDefinition(pdId).getName();
 			app.setUrl(processName);
 		} catch (Exception exp) {
 			exp.printStackTrace();
