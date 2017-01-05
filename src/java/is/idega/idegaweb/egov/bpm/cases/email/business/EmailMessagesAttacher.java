@@ -7,13 +7,13 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.email.client.business.ApplicationEmailEvent;
-import com.idega.bpm.exe.DefaultBPMProcessInstanceW;
-import com.idega.bpm.xformsview.IXFormViewFactory;
 import com.idega.core.file.tmp.TmpFileResolver;
 import com.idega.core.file.tmp.TmpFileResolverType;
 import com.idega.core.file.tmp.TmpFilesManager;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.dao.IXFormViewFactory;
+import com.idega.jbpm.data.impl.DefaultBPMProcessInstanceW;
 import com.idega.jbpm.exe.BPMFactory;
 
 /**

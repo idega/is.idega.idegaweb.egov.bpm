@@ -1,9 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMProcessViewBean;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean;
 import is.idega.idegaweb.egov.bpm.media.ProcessUsersExporter;
 import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
@@ -25,10 +22,13 @@ import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MediaWritable;
+import com.idega.jbpm.business.CasesBPMProcessView;
+import com.idega.jbpm.business.CasesBPMProcessView.CasesBPMProcessViewBean;
+import com.idega.jbpm.business.CasesBPMProcessView.CasesBPMTaskViewBean;
+import com.idega.jbpm.data.CaseProcInstBind;
 import com.idega.jbpm.data.ProcessManagerBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessWatch;

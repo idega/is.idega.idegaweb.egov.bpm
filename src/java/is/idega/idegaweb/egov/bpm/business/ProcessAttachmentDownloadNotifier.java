@@ -94,8 +94,7 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 		
 			Integer fileHash = realProperties.getHash();
 			if (file == null && fileHash != null) {
-				ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
-				TaskInstanceW tiw = processManager.getTaskInstance(realProperties.getTaskId());
+				TaskInstanceW tiw = bpmFactory.getTaskInstanceW(realProperties.getTaskId());
 				List<BinaryVariable> attachments = tiw.getAttachments();
 				if (!ListUtil.isEmpty(attachments)) {
 					for (Iterator<BinaryVariable> variablesIter = attachments.iterator(); (variablesIter.hasNext() && file == null);) {
@@ -123,8 +122,7 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 		
 		ProcessInstanceW piw = null;
 		try {
-			ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
-			TaskInstanceW tiw = processManager.getTaskInstance(realProperties.getTaskId());
+			TaskInstanceW tiw = bpmFactory.getTaskInstanceW(realProperties.getTaskId());
 			piw = tiw.getProcessInstanceW();
 		} catch (Exception e) {
 			e.printStackTrace();

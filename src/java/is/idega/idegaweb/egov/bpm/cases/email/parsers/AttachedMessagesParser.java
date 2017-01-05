@@ -26,8 +26,8 @@ import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.parser.DefaultMessageParser;
 import com.idega.block.email.parser.EmailParser;
 import com.idega.core.messaging.EmailMessage;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.CaseProcInstBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 

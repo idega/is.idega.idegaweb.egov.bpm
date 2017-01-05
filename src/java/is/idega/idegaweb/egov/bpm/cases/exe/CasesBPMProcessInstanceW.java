@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
@@ -32,20 +31,21 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
-import com.idega.bpm.exe.DefaultBPMProcessInstanceW;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.CaseProcInstBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.impl.DefaultBPMProcessInstanceW;
 import com.idega.jbpm.event.VariableCreatedEvent;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
+import com.idega.jbpm.handler.CaseHandlerAssignmentHandler;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.ListUtil;

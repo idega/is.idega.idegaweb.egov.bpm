@@ -4,10 +4,8 @@ import java.net.URL;
 import java.util.Collections;
 import java.util.Map;
 
-import org.jbpm.graph.exe.ProcessInstance;
-import org.jbpm.taskmgmt.def.Task;
-
 import com.idega.block.process.data.Case;
+import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.presentation.IWContext;
 
 public interface TaskViewerHelper {
@@ -32,9 +30,8 @@ public interface TaskViewerHelper {
 	 * Not <code>null</code>;
 	 * @return {@link Map} of {@link Case#getPrimaryKey()} and {@link URL} 
 	 * to preview or {@link Collections#emptyList()} on failure;
-	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	public Map<Long, String> getLinksToTheTaskRedirector(IWContext iwc,
-			Map<Long, ProcessInstance> relations, boolean backPage,
+			Map<Long, ProcessInstanceW> relations, boolean backPage,
 			String taskName);
 }

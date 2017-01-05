@@ -19,15 +19,15 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
 import com.idega.block.process.message.data.Message;
-import com.idega.bpm.process.messages.LocalizedMessages;
-import com.idega.bpm.process.messages.SendMailMessageImpl;
-import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.core.contact.data.Email;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.jbpm.annotations.SendMessageType;
+import com.idega.jbpm.business.impl.SendMailMessageImpl;
+import com.idega.jbpm.data.LocalizedMessages;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
 import com.idega.jbpm.process.business.messages.TypeRef;

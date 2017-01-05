@@ -14,10 +14,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.data.CaseProcInstBind;
 import com.idega.jbpm.data.VariableInstanceQuerier;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 

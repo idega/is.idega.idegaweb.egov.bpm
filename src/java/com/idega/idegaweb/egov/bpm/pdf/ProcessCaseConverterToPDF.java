@@ -31,8 +31,8 @@ import com.idega.core.accesscontrol.business.LoginBusinessBean;
 import com.idega.core.accesscontrol.business.LoginSession;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.graphics.generator.business.PDFGenerator;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.CaseProcInstBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -173,7 +173,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			List<CasePDF> pdfs = new ArrayList<CasePDF>();
 			for (TaskInstanceW tiW: finishedTasks) {
 				String taskInstanceId = String.valueOf(tiW.getTaskInstanceId());
-				String taskEnd = new IWTimestamp(tiW.getTaskInstance().getEnd()).getDateString("yyyy-MM-dd_HH-mm-ss");
+				String taskEnd = new IWTimestamp(tiW.getEnd()).getDateString("yyyy-MM-dd_HH-mm-ss");
 				CasePDF casePDF = null;
 				try {
 

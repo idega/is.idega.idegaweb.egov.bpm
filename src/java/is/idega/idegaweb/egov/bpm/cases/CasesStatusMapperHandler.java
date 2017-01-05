@@ -5,6 +5,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.CaseBMPBean;
+import com.idega.jbpm.CasesBPMProcessConstants;
 import com.idega.util.CoreConstants;
 
 /**

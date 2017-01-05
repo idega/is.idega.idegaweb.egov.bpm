@@ -16,6 +16,7 @@ import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
+import com.idega.jbpm.handler.CaseHandlerAssignmentHandler;
 import com.idega.jbpm.identity.BPMUserFactory;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.user.business.UserBusiness;
@@ -28,7 +29,6 @@ import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 
 @Scope("request")
 @Service(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + CaseHandlerAssignmentHandler.handlerUserIdVarName)

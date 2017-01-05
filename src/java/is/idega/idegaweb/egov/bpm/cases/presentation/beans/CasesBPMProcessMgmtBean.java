@@ -26,12 +26,12 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.bundle.ProcessBundle;
 import com.idega.jbpm.bundle.ProcessBundleManager;
+import com.idega.jbpm.data.CaseTypesProcDefBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.util.CoreConstants;
 
 /**

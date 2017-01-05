@@ -12,7 +12,6 @@ import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 
-import org.jbpm.graph.def.ProcessDefinition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -24,10 +23,10 @@ import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
-import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
+import com.idega.jbpm.data.CaseTypesProcDefBind;
 import com.idega.jbpm.data.dao.BPMDAO;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.identity.permission.BPMTypedPermission;
@@ -145,7 +144,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 		List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
 		BPMDAO bpmDAO = getBpmFactory().getBPMDAO();
 		for (CaseTypesProcDefBind caseTypesProcDefBind : casesProcesses) {
-			ProcessDefinition pd = null;
+			ProcessDefinitionW pd = null;
 			try {
 				pd = bpmDAO.findLatestProcessDefinition(caseTypesProcDefBind.getProcessDefinitionName());
 			} catch (Exception e) {
@@ -166,7 +165,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 
 			BPMFactory bpmFactory = getBpmFactory();
 			BPMDAO bpmDAO = bpmFactory.getBPMDAO();
-			ProcessDefinition pd = bpmDAO.findLatestProcessDefinition(pdName);
+			ProcessDefinitionW pd = bpmDAO.findLatestProcessDefinition(pdName);
 			Long latestPDId = pd == null ? null : pd.getId();
 			return latestPDId == null ? String.valueOf(-1) : String.valueOf(latestPDId);
 		} catch (Exception e) {

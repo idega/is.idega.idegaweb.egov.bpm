@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -56,7 +55,7 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 	@Override
 	public Map<Long, String> getLinksToTheTaskRedirector(
 			IWContext iwc, 
-			Map<Long, ProcessInstance> relations, 
+			Map<Long, ProcessInstanceW> relations, 
 			boolean backPage, 
 			String taskName) {
 
@@ -74,7 +73,7 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 		}
 
 		for (Long theCase: relations.keySet()) {
-			ProcessInstance piw = relations.get(theCase);
+			ProcessInstanceW piw = relations.get(theCase);
 			URIUtil uriUtil = null;
 			if (piw.hasEnded()) {
 				uriUtil = new URIUtil(pageURIToAssetsView);

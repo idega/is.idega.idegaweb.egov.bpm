@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.core.persistence.Param;
 import com.idega.idegaweb.egov.bpm.data.AppSupports;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.util.ListUtil;
 

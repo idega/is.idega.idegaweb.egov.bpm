@@ -1,6 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 import java.io.Serializable;
@@ -19,10 +18,11 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.CasesRetrievalManager;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.handler.CaseHandlerAssignmentHandler;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;

@@ -7,8 +7,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.business.file.CaseAttachmentStatisticsProvider;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.CaseProcInstBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.user.data.User;
 import com.idega.util.StringUtil;
 

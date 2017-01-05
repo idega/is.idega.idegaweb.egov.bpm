@@ -7,8 +7,8 @@ import junit.framework.AssertionFailedError;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 
-import com.idega.bpm.process.messages.LocalizedMessages;
-import com.idega.bpm.process.messages.SendMessage;
+import com.idega.jbpm.data.LocalizedMessages;
+import com.idega.jbpm.data.SendMessage;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
 
 

@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-import com.idega.idegaweb.egov.bpm.data.CaseState;
+import com.idega.jbpm.data.CaseState;
 
 @Scope("request")
 @Service(CaseStateConfigBean.NAME)

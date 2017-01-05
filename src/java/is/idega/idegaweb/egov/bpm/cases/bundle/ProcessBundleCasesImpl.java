@@ -20,9 +20,9 @@ import com.idega.business.IBORuntimeException;
 import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bundle.ProcessBundleDefaultImpl;
+import com.idega.jbpm.data.CaseTypesProcDefBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.user.business.GroupBusiness;
 import com.idega.user.data.Group;
 

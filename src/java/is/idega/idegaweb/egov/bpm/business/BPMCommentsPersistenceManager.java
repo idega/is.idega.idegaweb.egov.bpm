@@ -14,9 +14,6 @@ import java.util.logging.Logger;
 
 import javax.jcr.security.Privilege;
 
-import org.jbpm.JbpmContext;
-import org.jbpm.JbpmException;
-import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -49,12 +46,12 @@ import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jackrabbit.repository.access.JackrabbitAccessControlEntry;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.data.CaseProcInstBind;
 import com.idega.jbpm.data.ProcessManagerBind;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -117,18 +114,10 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		}
 
 		final Long processInstanceId = Long.valueOf(prcInstId);
-		final String storePath = getBpmContext().execute(new JbpmCallback<String>() {
-			@Override
-			public String doInJbpm(JbpmContext context) throws JbpmException {
-
-				String processName = context.getProcessInstance(processInstanceId).getProcessDefinition().getName();
-				String storePath = new StringBuilder(JBPMConstants.BPM_PATH).append(CoreConstants.SLASH).append(processName).append("/processComments/")
-					.append(prcInstId).append(CoreConstants.SLASH).toString();
-
-				return storePath;
-			}
-
-		});
+		ProcessInstanceW piw = bpmFactory.getProcessInstanceW(processInstanceId);
+		String processName = piw.getProcessDefinitionW().getName();
+		String storePath = new StringBuilder(JBPMConstants.BPM_PATH).append(CoreConstants.SLASH).append(processName).append("/processComments/")
+			.append(prcInstId).append(CoreConstants.SLASH).toString();
 
 		return storePath;
 	}
@@ -799,13 +788,12 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 		TaskInstanceW latestTask = null;
 		for (TaskInstanceW taskInstance: submittedTasks) {
-			TaskInstance ti = taskInstance.getTaskInstance();
-			java.util.Date created = ti.getCreate();
+			java.util.Date created = taskInstance.getCreate();
 
-			if (taskName.equals(ti.getName())) {
+			if (taskName.equals(taskInstance.getName())) {
 				if (latestTask == null) {
 					latestTask = taskInstance;
-				} else if (created.after(latestTask.getTaskInstance().getCreate())) {
+				} else if (created.after(latestTask.getCreate())) {
 					latestTask = taskInstance;
 				}
 			}

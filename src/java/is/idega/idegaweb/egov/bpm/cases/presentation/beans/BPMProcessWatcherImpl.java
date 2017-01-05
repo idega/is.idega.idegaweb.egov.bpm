@@ -1,7 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -11,9 +10,10 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.idegaweb.egov.bpm.data.ProcessUserBind;
-import com.idega.idegaweb.egov.bpm.data.ProcessUserBind.Status;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.business.CasesBPMProcessView;
+import com.idega.jbpm.data.ProcessUserBind;
+import com.idega.jbpm.data.ProcessUserBind.Status;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.ProcessWatch;
 import com.idega.jbpm.exe.ProcessWatchType;
 import com.idega.presentation.IWContext;

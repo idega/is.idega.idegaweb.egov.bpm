@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWResourceBundle;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
@@ -130,7 +130,7 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 
 			Long viewTaskInstanceId = view.getTaskInstanceId();
 
-			TaskInstanceW viewTIW = bpmFactory.getProcessManagerByTaskInstanceId(viewTaskInstanceId).getTaskInstance(viewTaskInstanceId);
+			TaskInstanceW viewTIW = bpmFactory.getTaskInstanceW(viewTaskInstanceId);
 
 			viewTIW.submit(viewSubmission);
 

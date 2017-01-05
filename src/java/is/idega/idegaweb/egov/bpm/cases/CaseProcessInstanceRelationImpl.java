@@ -10,16 +10,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.data.CaseProcInstBind;
 import com.idega.jbpm.data.dao.BPMDAO;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
+import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.util.ListUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
@@ -85,9 +85,8 @@ public class CaseProcessInstanceRelationImpl {
 	 * @param cases to get {@link ProcessInstance}s for, not <code>null</code>;
 	 * @return values from {@link CaseProcInstBind} table or 
 	 * {@link Collections#emptyMap()} on failure;
-	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
-	public Map<ProcessInstance, Case> getCasesAndProcessInstances(Collection<? extends Case> cases) {
+	public Map<ProcessInstanceW, Case> getCasesAndProcessInstances(Collection<? extends Case> cases) {
 		if (ListUtil.isEmpty(cases)) {
 			return Collections.emptyMap();
 		}
@@ -105,14 +104,14 @@ public class CaseProcessInstanceRelationImpl {
 		}
 
 		/* Collecting process instances */
-		List<ProcessInstance> processInstances = getBPMDAO().getProcessInstancesByIDs(ids.values());
-		Map<Long, ProcessInstance> processInstancesMap = new HashMap<Long, ProcessInstance>(processInstances.size());
-		for (ProcessInstance pi : processInstances) {
+		List<ProcessInstanceW> processInstances = getBPMDAO().getProcessInstancesByIDs(ids.values());
+		Map<Long, ProcessInstanceW> processInstancesMap = new HashMap<Long, ProcessInstanceW>(processInstances.size());
+		for (ProcessInstanceW pi : processInstances) {
 			processInstancesMap.put(pi.getId(), pi);
 		}
 
 		/* Creating map of relations */
-		Map<ProcessInstance, Case> casesProcessInstances = new HashMap<ProcessInstance, Case>(ids.size());
+		Map<ProcessInstanceW, Case> casesProcessInstances = new HashMap<ProcessInstanceW, Case>(ids.size());
 		for (Integer caseId : ids.keySet()) {
 			Long processInstanceId = ids.get(caseId);
 			if (processInstanceId == null) {
@@ -141,13 +140,13 @@ public class CaseProcessInstanceRelationImpl {
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	public GeneralCase getCase(
-			Map<ProcessInstance, Case> relationMap, 
+			Map<ProcessInstanceW, Case> relationMap, 
 			Long processInstanceId) {
 		if (MapUtil.isEmpty(relationMap) || processInstanceId == null) {
 			return null;
 		}
 
-		ProcessInstance processInstance = getProcessInstance(relationMap, processInstanceId);
+		ProcessInstanceW processInstance = getProcessInstance(relationMap, processInstanceId);
 		if (processInstance == null) {
 			return null;
 		}
@@ -171,16 +170,15 @@ public class CaseProcessInstanceRelationImpl {
 	 * not <code>null</code>;
 	 * @return {@link ProcessInstance} exiting on {@link Map} or <code>null</code>
 	 * on failure;
-	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
-	public ProcessInstance getProcessInstance(
-			Map<ProcessInstance, Case> relationMap, 
+	public ProcessInstanceW getProcessInstance(
+			Map<ProcessInstanceW, Case> relationMap, 
 			Long processInstanceId) {
 		if (MapUtil.isEmpty(relationMap) || processInstanceId == null) {
 			return null;
 		}
 
-		for (ProcessInstance pi : relationMap.keySet()) {
+		for (ProcessInstanceW pi : relationMap.keySet()) {
 			if (processInstanceId.longValue() == pi.getId()) {
 				return pi;
 			}

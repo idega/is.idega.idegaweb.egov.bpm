@@ -12,13 +12,13 @@ import org.w3c.dom.Document;
 
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.core.business.GeneralCompanyBusiness;
-import com.idega.idegaweb.egov.bpm.data.CaseState;
-import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
-import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifactsParamsBean;
+import com.idega.jbpm.data.CaseState;
+import com.idega.jbpm.data.CaseStateInstance;
 import com.idega.jbpm.data.VariableInstanceQuerier;
+import com.idega.jbpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.identity.permission.PermissionsFactory;
