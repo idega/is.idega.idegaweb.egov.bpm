@@ -1,12 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMProcessViewBean;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean;
-import is.idega.idegaweb.egov.bpm.media.ProcessUsersExporter;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
-
 import java.io.Serializable;
 import java.net.URLDecoder;
 import java.util.Iterator;
@@ -23,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
+import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -42,6 +36,13 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMProcessViewBean;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView.CasesBPMTaskViewBean;
+import is.idega.idegaweb.egov.bpm.media.ProcessUsersExporter;
+import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
 
 /**
  *
@@ -78,28 +79,29 @@ public class CasesBPMAssetsState implements Serializable {
 
 	private Integer caseId, nextCaseId;
 
-	private Long processInstanceId, 
-			viewSelected, 
-			nextProcessInstanceId, 
+	private Long processInstanceId,
+			viewSelected,
+			nextProcessInstanceId,
 			nextTaskId;
 
-	private String displayPropertyForStyleAttribute = "block", 
-			specialBackPage, 
-			commentsPersistenceManagerIdentifier, 
+	private String displayPropertyForStyleAttribute = "block",
+			specialBackPage,
+			commentsPersistenceManagerIdentifier,
 			currentTaskInstanceName,
-			systemEmailAddress;
+			systemEmailAddress,
+			inactiveTasksToShow;
 
-	private Boolean isWatched, 
+	private Boolean isWatched,
 			usePDFDownloadColumn = Boolean.TRUE,
-			allowPDFSigning = Boolean.TRUE, 
+			allowPDFSigning = Boolean.TRUE,
 			standAloneComponent = Boolean.TRUE,
 			hideEmptySection = Boolean.FALSE,
 			showAttachmentStatistics = Boolean.FALSE,
-			showOnlyCreatorInContacts = Boolean.FALSE, 
+			showOnlyCreatorInContacts = Boolean.FALSE,
 			showBackButton,
-			showLogExportButton = Boolean.FALSE, 
+			showLogExportButton = Boolean.FALSE,
 			showComments = Boolean.TRUE,
-			showContacts = Boolean.TRUE, 
+			showContacts = Boolean.TRUE,
 			showNextTask,
 			specialBackPageDecoded = Boolean.FALSE,
 			autoShowComments = Boolean.FALSE,
@@ -110,8 +112,8 @@ public class CasesBPMAssetsState implements Serializable {
 			showLastLoginDate = Boolean.FALSE,
 			useXMLDataProvider = Boolean.TRUE;
 
-	private List<List<String>> stateTable;
-	
+	private List<CaseStatePresentation> stateTable;
+
 	public Long getViewSelected() {
 		if (viewSelected == null)
 			viewSelected = getResolvedTaskInstanceId();
@@ -475,6 +477,11 @@ public class CasesBPMAssetsState implements Serializable {
 	public BPMUser getCurrentBPMUser() {
 
 		return getCasesBPMProcessView().getCurrentBPMUser();
+	}
+
+	public Boolean getCanChangeStateEndDate() {
+		AccessController accessController = IWContext.getCurrentInstance().getAccessController();
+		return accessController.hasRole(getCasesBPMProcessView().getCurrentBPMUser().getUserToUse(), "bpm_committee_handler");
 	}
 
 	public String getDisplayPropertyForStyleAttribute() {
@@ -856,11 +863,19 @@ public class CasesBPMAssetsState implements Serializable {
 		this.useXMLDataProvider = useXMLDataProvider;
 	}
 
-	public List<List<String>> getStateTable() {
+	public List<CaseStatePresentation> getStateTable() {
 		return stateTable;
 	}
 
-	public void setStateTable(List<List<String>> stateTable) {
+	public void setStateTable(List<CaseStatePresentation> stateTable) {
 		this.stateTable = stateTable;
+	}
+
+	public String getInactiveTasksToShow() {
+		return inactiveTasksToShow;
+	}
+
+	public void setInactiveTasksToShow(String inactiveTasksToShow) {
+		this.inactiveTasksToShow = inactiveTasksToShow;
 	}
 }

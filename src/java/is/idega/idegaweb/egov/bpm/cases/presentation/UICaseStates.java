@@ -1,6 +1,8 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
-import java.util.Collection;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Level;
@@ -13,23 +15,21 @@ import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 
 import com.idega.builder.business.BuilderLogicWrapper;
+import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.business.GeneralCompanyBusiness;
 import com.idega.idegaweb.egov.bpm.data.CaseState;
 import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.artifacts.presentation.GridEntriesBean;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifactsParamsBean;
 import com.idega.jbpm.data.VariableInstanceQuerier;
-import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.identity.permission.PermissionsFactory;
 import com.idega.jbpm.presentation.xml.ProcessArtifactsListRow;
 import com.idega.jbpm.presentation.xml.ProcessArtifactsListRows;
 import com.idega.jbpm.signing.SigningHandler;
-import com.idega.jbpm.utils.JBPMUtil;
 import com.idega.jbpm.variables.VariablesHandler;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
@@ -41,10 +41,10 @@ import com.idega.util.expression.ELUtil;
 public class UICaseStates {
 
 	public static final String SPRING_BEAN_NAME = "UICaseStates";
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -68,11 +68,11 @@ public class UICaseStates {
 
 	@Autowired(required = false)
 	private GeneralCompanyBusiness generalCompanyBusiness;
-	
+
 	private static final Logger LOGGER = Logger.getLogger(ProcessArtifacts.class.getName());
-	
+
 	public Document getProcessStateList(ProcessArtifactsParamsBean params) {
-		
+
 
 			Long processInstanceId = params.getPiId();
 
@@ -101,35 +101,35 @@ public class UICaseStates {
 
 			List<CaseStateInstance> states = getCasesBPMDAO().getStateInstancesForProcess(pi.getProcessInstanceId());
 			if (states==null) return null;
-			
+
 			ProcessArtifactsListRows rows = new ProcessArtifactsListRows();
 			rows.setTotal(states.size());
-			
+
 			for (CaseStateInstance state: states){
 				ProcessArtifactsListRow row = new ProcessArtifactsListRow();
 				rows.addRow(row);
 				row.setId(state.getId().toString());
-				
+
 				CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinition().getName(),state.getStateName());
 				row.addCell(stateDef.getStateDefaultLocalizedName());
-				
-				
-				
+
+
+
 				if (state.getStateExpectedStartDate() != null ) row.addCell(state.getStateExpectedStartDate().toString());
 				else row.addCell("");
-				
+
 				if (state.getStateExpectedEndDate() != null ) row.addCell(state.getStateExpectedEndDate().toString());
 				else row.addCell("");
-				
+
 				if (state.getStateStartDate() != null ) row.addCell(state.getStateStartDate().toString());
 				else row.addCell("");
-				
+
 				if (state.getStateEndDate() != null ) row.addCell(state.getStateEndDate().toString());
 				else row.addCell("");
-				
+
 			}
 
-			
+
 			try {
 				return rows.getDocument();
 			} catch (Exception e) {
@@ -137,6 +137,23 @@ public class UICaseStates {
 			}
 			return null;
 
+	}
+
+	public Boolean updateStateDate(Long id, String date){
+		AccessController accessController = IWContext.getCurrentInstance().getAccessController();
+		if (!accessController.hasRole(IWContext.getCurrentInstance().getCurrentUser(), "bpm_committee_handler")) return Boolean.FALSE;
+		CaseStateInstance state = getCasesBPMDAO().getStateInstanceById(id);
+		if (state==null) return Boolean.FALSE;
+		SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        Date parsed;
+		try {
+			parsed = format.parse(date);
+			state.setStateExpectedEndDate(new java.sql.Date(parsed.getTime()));
+			getCasesBPMDAO().saveCasesStateInstance(state);
+		} catch (ParseException e) {
+			return Boolean.FALSE;
+		}
+		return Boolean.TRUE;
 	}
 
 	public CasesBPMDAO getCasesBPMDAO() {
@@ -227,5 +244,5 @@ public class UICaseStates {
 		}
 		return iwc;
 	}
-	
+
 }

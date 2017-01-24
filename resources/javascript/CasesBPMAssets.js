@@ -102,11 +102,55 @@ CasesBPMAssets.initGridsContainer = function(container, piId, caseId,
 
 CasesBPMAssets.externalFunctionOnGridInited = null;
 
+CasesBPMAssets.updateStatusEndDate = function(e){
+	LazyLoader.loadMultiple(['/dwr/engine.js', '/dwr/interface/UICaseStates.js'], function(){
+		jQuery(e).hide();
+		jQuery(e).next().off().show().attr('class', '').datepicker({
+			rangeSelect : false,
+			dateFormat: "yy-mm-dd",
+			rangeSeparator : ' - ',
+			defaultDate : null,
+			changeMonth : false,
+			changeYear : false,
+			showOn : "focus",
+			beforeShow: function(input, inst) {
+		        var calendar = inst.dpDiv;
+		        setTimeout(function() {
+		            calendar.position({
+		                my: 'left top',
+		                at: 'left bottom',
+		                collision: 'none',
+		                of: input
+		            });
+		        }, 1);
+		    },
+		    onSelect: function(dateText, inst) {
+		    	var elm = this;
+				if (jQuery(e).text() === jQuery(elm).val()){
+				} else {
+					UICaseStates.updateStateDate(jQuery(e).attr("id"), jQuery(this).val(), {callback: function(result){
+						if (result){
+							jQuery(e).text(jQuery(elm).val());
+							jQuery(elm).val("");
+							jQuery(elm).hide();
+							jQuery(e).show();
+						} else {
+							jQuery(elm).val("");
+							jQuery(elm).hide();
+							jQuery(e).show();
+						}
+					}});
+				}
+		    }
+		}).focus();
+	});
+};
+
 CasesBPMAssets.initGrid = function(container, piId, caseId, 
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
 		showComments, showContacts, specialBackPage, nameFromExternalEntity,
-		showUserProfilePicture,showUserCompany,showLastLoginDate,showPDFName) {
+		showUserProfilePicture,showUserCompany,showLastLoginDate,showPDFName, inactiveTasksToShow) {
 	
 	if (container == null) {
 		return false;
@@ -192,10 +236,22 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 //						}
 //					);
 				
+				jQuery("p.changeable-state-date").each(function(el){
+					jQuery(el).click(function(){
+						jQuery(el).hide();
+						jQuery(el).next().blur(function(elm) {
+						    jQuery(el).text(jQuery(this).val());
+						    JQuery(this).val("");
+						    JQuery(this).hide();
+						    JQuery(el).show();
+						}).show().focus();
+					});
+				});
+				
 				CasesBPMAssets.initTasksGrid(caseId, piId, container, false, hideEmptySection,
 					function() {
 						onGridInitedFunction('caseTasksPart', jQuery('div.caseTasksPart', container).hasClass('caseListTasksSectionVisibleStyleClass'));
-					}
+					}, inactiveTasksToShow
 				);
 				CasesBPMAssets.initFormsGrid(
 					caseId,
@@ -415,7 +471,7 @@ CasesBPMAssets.initStateGrid = function(caseId, piId, customerView, hasRightChan
     };
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights, null);
+    							hasRightChangeRights, null, null);
 	});
 };
 
@@ -423,13 +479,13 @@ CasesBPMAssets.initStateGrid = function(caseId, piId, customerView, hasRightChan
 
 
 
-CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights, hideEmptySection, onTasksInited) {
+CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChangeRights, hideEmptySection, onTasksInited, inactiveTasksToShow) {
 	
 	var identifier = 'caseTasks';
     
     var populatingFunction = function(params, callback) {
         params.piId = piId;
-        
+        params.inactiveTasksToShow = inactiveTasksToShow;
         BPMProcessAssets.getProcessTasksList(params, {
             callback: function(result) {
                 callback(result);
@@ -464,7 +520,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     }
     
     var onSelectRowFunction = function(rowId) {
-    	if (CasesBPMAssets.rowInAction == rowId) {
+    	if ((CasesBPMAssets.rowInAction == rowId) || (rowId <= 0)) {
     		return false;
     	}
     	
@@ -474,7 +530,7 @@ CasesBPMAssets.initTasksGrid = function(caseId, piId, customerView, hasRightChan
     };
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights, null);
+    							hasRightChangeRights, null, inactiveTasksToShow);
 };
 
 CasesBPMAssets.pushRowsParams = function(gridEntriesBean) {
@@ -641,6 +697,7 @@ CasesBPMAssets.initFormsGrid = function(
     	modelForColumns,
     	onSelectRowFunction,
     	hasRightChangeRights,
+    	null,
     	null
     );
 };
@@ -817,7 +874,7 @@ CasesBPMAssets.initEmailsGrid = function(
     };
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, subGridFunction, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights, null);
+    							hasRightChangeRights, null, null);
 };
 
 CasesBPMAssets.initContactsGrid = function(piId, customerView, 
@@ -907,12 +964,12 @@ CasesBPMAssets.initContactsGrid = function(piId, customerView,
     }
     
     CasesBPMAssets.initGridBase(piId, customerView, identifier, populatingFunction, null, namesForColumns, modelForColumns, onSelectRowFunction,
-    							hasRightChangeRights, null);
+    							hasRightChangeRights, null, null);
     
 };
 
 CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, populatingFunction, subGridForThisGrid, namesForColumns, modelForColumns,
-										onSelectRowFunction, rightsChanger, callbackAfterInserted) {
+										onSelectRowFunction, rightsChanger, callbackAfterInserted, inactiveTasksToShow) {
     var params = new JQGridParams();
     
     params.identifier = tableClassName;
@@ -922,6 +979,8 @@ CasesBPMAssets.initGridBase = function(piId, customerView, tableClassName, popul
     
     params.colNames = namesForColumns;
     params.colModel = modelForColumns;
+    
+    params.inactiveTasksToShow = inactiveTasksToShow;
     
     if (onSelectRowFunction != null) {
         params.onSelectRow = onSelectRowFunction;

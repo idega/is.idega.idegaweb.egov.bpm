@@ -2420,23 +2420,25 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		List<CaseState> caseStates = getResultList(CaseState.getSetByProcessName, CaseState.class, new Param(CaseState.processDefinitionNameProperty, name));
 		return caseStates;
 	}
-	
+
 	@Override
 	public List<CaseState> getCaseStates(){
 		List<CaseState> caseStates = getResultList(CaseState.getSet, CaseState.class);
 		return caseStates;
 	}
-	
+
 	@Override
 	public void saveCasesStateInstance(CaseStateInstance state){
 		if (state == null) return;
-		persist(state);
+		if (state.getId()!= null) merge(state);
+		else persist(state);
 	}
-	
+
 	@Override
 	public void saveCasesState(CaseState state){
 		if (state == null) return;
-		persist(state);
+		if (state.getId()!= null) merge(state);
+		else persist(state);
 	}
 
 	@Override
@@ -2444,7 +2446,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		List<CaseStateInstance> caseStates = getResultList(CaseStateInstance.getSetByProcessIdAndName, CaseStateInstance.class, new Param(CaseStateInstance.processIdProperty, id), new Param(CaseStateInstance.stateNameProperty, stateList));
 		return caseStates;
 	}
-	
+
 	@Override
 	public List<CaseStateInstance> getStateInstancesForProcess(long id) {
 		List<CaseStateInstance> caseStates = getResultList(CaseStateInstance.getSetByProcessId, CaseStateInstance.class, new Param(CaseStateInstance.processIdProperty, id));
@@ -2456,7 +2458,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		CaseState caseState = getSingleResult(CaseState.getByProcessNameAndStateName, CaseState.class, new Param(CaseState.processDefinitionNameProperty, processName), new Param(CaseState.stateNameProperty, stateName));
 		return caseState;
 	}
-	
+
 	@Override
 	public Long getProcessIdByCaseId(Integer caseId) {
 		CaseProcInstBind caseProcInstBind = getSingleResult(CaseProcInstBind.BIND_BY_CASEID_QUERY_NAME, CaseProcInstBind.class, new Param(CaseProcInstBind.caseIdParam, caseId));
@@ -2464,6 +2466,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return caseProcInstBind.getProcInstId();
 		return null;
 	}
-	
-	
+
+	@Override
+	public CaseStateInstance getStateInstanceById(Long id) {
+		return getSingleResultByInlineQuery("from " + CaseStateInstance.class.getName() + " where id = :id", CaseStateInstance.class, new Param("id", id));
+	}
+
+
 }
