@@ -1,18 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
-import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.application.data.ApplicationHome;
-import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
-import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
-import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.CaseCategory;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -104,6 +91,19 @@ import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
+
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
+import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
+import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.CaseCategory;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -498,10 +498,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	/**
-	 * 
-	 * @param applications to get {@link Application#getUrl()} from, 
+	 *
+	 * @param applications to get {@link Application#getUrl()} from,
 	 * not <code>null</code>;
-	 * @return {@link Collection} of {@link Application#getUrl()} or 
+	 * @return {@link Collection} of {@link Application#getUrl()} or
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
@@ -623,6 +623,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		casesAssets.setShowUserProfilePicture(stateBean.getShowUserProfilePicture());
 		casesAssets.setShowUserCompany(stateBean.getShowUserCompany());
 		casesAssets.setShowLastLoginDate(stateBean.getShowLastLoginDate());
+		casesAssets.setInactiveTasksToShow(stateBean.getInactiveTasksToShow());
 
 		if (caseId != null)
 			casesAssets.setCaseId(caseId);

@@ -1,7 +1,5 @@
 package com.idega.idegaweb.egov.bpm.data.dao;
 
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
@@ -28,6 +26,8 @@ import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.Actor;
 import com.idega.user.data.Group;
 import com.idega.util.IWTimestamp;
+
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -488,5 +488,6 @@ public interface CasesBPMDAO extends GenericDao {
 	List<CaseState> getCaseStates();
 
 	Long getProcessIdByCaseId(Integer caseId);
-	
+
+	CaseStateInstance getStateInstanceById(Long id);
 }

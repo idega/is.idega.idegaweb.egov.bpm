@@ -1,13 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.business.BPMCommentsPersistenceManager;
-import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngineImp;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +35,6 @@ import com.idega.jbpm.artifacts.presentation.AttachmentWriter;
 import com.idega.jbpm.data.ProcessManagerBind;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
-import com.idega.jbpm.presentation.xml.ProcessArtifactsListRow;
-import com.idega.jbpm.presentation.xml.ProcessArtifactsListRows;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.text.DownloadLink;
@@ -55,6 +45,15 @@ import com.idega.util.PresentationUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.business.BPMCommentsPersistenceManager;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CaseStatePresentation;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesEngineImp;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 /**
  *
@@ -85,7 +84,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 			showUserCompany = Boolean.FALSE,
 			showLastLoginDate = Boolean.FALSE;
 
-	private String commentsPersistenceManagerIdentifier, specialBackPage;
+	private String commentsPersistenceManagerIdentifier, specialBackPage, inactiveTasksToShow;
 
 	private Long processInstanceId;
 	private Integer caseId;
@@ -164,26 +163,20 @@ public class UICasesBPMAssets extends IWBaseComponent {
 						.getProcessInstance(pId);
 				List<CaseStateInstance> states = getCasesBPMDAO().getStateInstancesForProcess(pId);
 				if (!ListUtil.isEmpty(states)) {
-					List<List<String>> stateTable = new ArrayList<List<String>>(3);
-					stateTable.add(new ArrayList<String>());
-					stateTable.add(new ArrayList<String>());
-					stateTable.add(new ArrayList<String>());
+					List<CaseStatePresentation> stateTable = new ArrayList<CaseStatePresentation>();
 					for (int i = 0; i < states.size(); i++){
+						CaseStatePresentation statePrsnt = new CaseStatePresentation();
 						CaseStateInstance state = states.get(i);
 						CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinition().getName(),state.getStateName());
-						stateTable.get(0).add(stateDef.getStateDefaultLocalizedName());
-						
-						if (state.getStateExpectedEndDate() != null ) stateTable.get(1).add(state.getStateExpectedEndDate().toString());
-						else stateTable.get(1).add("");
-		
-						if (state.getStateEndDate() != null ) stateTable.get(2).add(state.getStateEndDate().toString());
-						else stateTable.get(2).add("");
+						statePrsnt.setStateDefinition(stateDef);
+						statePrsnt.setStateInstance(state);
+						stateTable.add(statePrsnt);
 					}
 					stateBean.setStateTable(stateTable);
 				}
 			}
 		}
-		
+
 		IWContext iwc = IWContext.getIWContext(context);
 
 		if (isShowComments()) {
@@ -456,7 +449,11 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		mainAction.append(CoreConstants.COMMA);
 		mainAction.append(isNameFromExternalEntity()).append(CoreConstants.COMMA)
 		.append(isShowUserProfilePicture()).append(", ").append(isShowUserCompany())
-		.append(", ").append(isShowLastLoginDate()).append(", ").append(iwc.getIWMainApplication().getSettings().getBoolean("bpm.show_pdf_name_in_list", Boolean.FALSE)).append(");").toString();
+		.append(", ").append(isShowLastLoginDate()).append(", ").append(iwc.getIWMainApplication().getSettings().getBoolean("bpm.show_pdf_name_in_list", Boolean.FALSE));
+		if (StringUtil.isEmpty(getInactiveTasksToShow()))
+			mainAction.append(CoreConstants.COMMA).append("null").append(");");
+		else
+			mainAction.append(CoreConstants.COMMA).append("'").append(getInactiveTasksToShow()).append("'").append(");");
 
 		if (!isSingle)
 			mainAction = new StringBuffer("jQuery(document).ready(function() {\n").append(mainAction.toString()).append("\n});");
@@ -558,9 +555,17 @@ public class UICasesBPMAssets extends IWBaseComponent {
 	public void setShowLastLoginDate(boolean showLastLoginDate) {
 		this.showLastLoginDate = showLastLoginDate;
 	}
-	
+
 	public BPMFactory getBpmFactory() {
 		if (bpmFactory==null) ELUtil.getInstance().autowire(this);
 		return bpmFactory;
+	}
+
+	public String getInactiveTasksToShow() {
+		return inactiveTasksToShow;
+	}
+
+	public void setInactiveTasksToShow(String inactiveTasksToShow) {
+		this.inactiveTasksToShow = inactiveTasksToShow;
 	}
 }

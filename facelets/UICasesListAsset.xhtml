@@ -5,6 +5,7 @@
 		xmlns:h="http://java.sun.com/jsf/html"
 		xmlns:t="http://myfaces.apache.org/tomahawk"
 		xmlns:f="http://java.sun.com/jsf/core"
+		xmlns:iwc="http://xmlns.idega.com/com.idega.core"
 >
 	<t:div styleClass="#{casesBPMAssetsState.gridStyleClasses}">
 		<t:div style="display: none;" styleClass="processInstanceIdValueHolderContainer">
@@ -30,36 +31,53 @@
 				<div class="spacer" />
 				<t:div style="display: none;" rendered="#{casesBPMAssetsState.currentBPMUser.isAssociated}" />
 			</t:div>
+			<div style="display:none"><iwc:datePicker version="1.8.17" dateRange="false" showCalendarImage="false" style="display:none;float:right;border: 0;text-align: center;line-height: 1.2em;margin: 1em 0;width: 100%;"></iwc:datePicker></div>
 			<table class="caseState" border="0">
 			<thead>
 			<tr>
 				<th></th>
-				<ui:repeat value="#{casesBPMAssetsState.stateTable[0]}" var="colData" varStatus="status">
-					<th class="state">${colData}</th>
-					 <ui:fragment rendered="#{not status.last}">
+				<t:dataList value="#{casesBPMAssetsState.stateTable}" var="colData" rowCountVar="count" rowIndexVar="index">
+					<th class="state">#{localizedStrings['is.idega.idegaweb.egov.bpm'][colData.stateDefinition.stateLocalizationKey]}</th>
+					 <ui:fragment rendered="#{index + 1 != count}">
 					 	<th class="state-separator"></th>
 					 </ui:fragment>
-				</ui:repeat>
+				</t:dataList>
 			</tr>
 			</thead>
 			<tbody>
 			<tr>
 				<td>Áætlun</td>
-				<ui:repeat value="#{casesBPMAssetsState.stateTable[1]}" var="colData" varStatus="status">
-					<td>${colData}</td>
-					<ui:fragment rendered="#{not status.last}">
+				<t:dataList value="#{casesBPMAssetsState.stateTable}" var="colData" rowCountVar="count" rowIndexVar="index">
+					<ui:fragment rendered="#{colData.stateInstance.stateEndDate != null}">
+						<ui:fragment rendered="#{index == 0}">
+							<td></td>
+						</ui:fragment>
+						<ui:fragment rendered="#{index != 0}">
+							<td>#{colData.stateInstance.stateExpectedEndDate}</td>
+						</ui:fragment>
+					</ui:fragment>
+					<ui:fragment rendered="#{colData.stateInstance.stateEndDate == null and casesBPMAssetsState.canChangeStateEndDate}">
+						<td>
+							<p class="changeable-state-date" id="#{colData.stateInstance.id}" onclick="CasesBPMAssets.updateStatusEndDate(this);">#{colData.stateInstance.stateExpectedEndDate == colData.stateInstance.stateEndDate ? '' : colData.stateInstance.stateExpectedEndDate}</p>
+							<input id="in_#{colData.stateInstance.id}" class="date-selector" placeholder="YYYY-MM-DD" style="display:none;float:right;border: 0;text-align: center;line-height: 1.2em;margin: 1em 0;width: 100%;"></input>
+						</td>
+					</ui:fragment>
+					<ui:fragment rendered="#{colData.stateInstance.stateEndDate == null and not casesBPMAssetsState.canChangeStateEndDate}">
+						<td>#{colData.stateInstance.stateExpectedEndDate}</td>
+					</ui:fragment>
+					<ui:fragment rendered="#{index + 1 != count}">
 					 	<td class="state-separator"></td>
 					 </ui:fragment>
-				</ui:repeat>
+				</t:dataList>
 			</tr>
 			<tr>
 				<td>Raun</td>
-				<ui:repeat value="#{casesBPMAssetsState.stateTable[2]}" var="colData" varStatus="status">
-					<td>${colData}</td>
-					<ui:fragment rendered="#{not status.last}">
+				<t:dataList value="#{casesBPMAssetsState.stateTable}" var="colData" rowCountVar="count" rowIndexVar="index">
+					<td>${colData.stateInstance.stateEndDate}</td>
+					<ui:fragment rendered="#{index + 1 != count}">
 					 	<td class="state-separator"></td>
 					 </ui:fragment>
-				</ui:repeat>
+				</t:dataList>
 			</tr>
 			</tbody>
 			</table>
