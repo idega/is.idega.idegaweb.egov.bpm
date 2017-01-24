@@ -13,13 +13,13 @@ public class CaseStateConfigBean {
 	
 	public static final String NAME = "caseStateConfig";
 	
-	private List<String> processDefinitions;
+	private List<List<String>> processDefinitions;
 	private List<CaseState> caseStates;
 	
-	public List<String> getProcessDefinitions() {
+	public List<List<String>> getProcessDefinitions() {
 		return processDefinitions;
 	}
-	public void setProcessDefinitions(List<String> processDefinitions) {
+	public void setProcessDefinitions(List<List<String>> processDefinitions) {
 		this.processDefinitions = processDefinitions;
 	}
 	public List<CaseState> getCaseStates() {

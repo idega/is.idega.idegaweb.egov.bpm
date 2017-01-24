@@ -6,8 +6,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
@@ -22,12 +25,19 @@ import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMessage;
 import com.idega.bpm.process.messages.SendMessageType;
 import com.idega.bpm.process.messages.SendMessagesHandler;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.core.contact.data.Email;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
 import com.idega.jbpm.process.business.messages.TypeRef;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.data.User;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.EmailValidator;
 import com.idega.util.IWTimestamp;
+import com.idega.util.StringUtil;
 
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 
@@ -51,6 +61,8 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 	private SendMessage emailSender;
 
+	private UserBusiness userBusiness;
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -63,6 +75,18 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	private Token token;
 
 	private String sendToEmail, sendToCCEmail;
+
+	private UserBusiness getUserBusiness() {
+		if (this.userBusiness == null) {
+			try {
+				this.userBusiness = IBOLookup.getServiceInstance(getIWApplicationContext(), UserBusiness.class);
+			} catch (IBOLookupException e) {
+				getLogger().log(Level.WARNING, "Failed to get " + UserBusiness.class + " cause of: ", e);
+			}
+		}
+
+		return this.userBusiness;
+	}
 
 	public void setToken(Token token) {
 		this.token = token;
@@ -152,6 +176,17 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 
 		msgs.setSendToRoles(sendToRoles);
 		msgs.setRecipientUserId(recipientUserId);
+
+		if (isEMailSendingForced(pi.getProcessDefinition().getName()) && StringUtil.isEmpty(getSendToEmail())) {
+			User user = getUserBusiness().getUser(recipientUserId);
+			if (user != null) {
+				Email email = getUserBusiness().getUsersMainEmail(user);
+				if (email != null) {
+					setSendToEmail(email.getEmailAddress());
+				}
+			}
+		}
+
 		boolean validSendToEmail = EmailValidator.getInstance().validateEmail(getSendToEmail());
 		if (validSendToEmail) {
 			msgs.setSendToEmails(Arrays.asList(getSendToEmail()));
@@ -178,6 +213,18 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 			}
 
 			getEmailSender().send(mvCtx, ectx, pi, msgs, tkn);
+			try {
+				Map<String, String> sentMailsToCase = getCache(SendCaseMessagesHandler.class.getName(), 86400);
+				String to = getSendToEmail();
+				sentMailsToCase.put(to, theCase == null ?
+						caseIdStr == null ?
+								to :
+								caseIdStr :
+						theCase.getCaseIdentifier()
+				);
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error putting into cache " + getSendToEmail(), e);
+			}
 		}
 	}
 
@@ -226,4 +273,23 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		this.sendToCCEmail = sendToCCEmail;
 	}
 
+	/**
+	 * 
+	 * @param processDefinitionId is {@link ProcessDefinition#getId()}, not <code>null</code>
+	 * @return <code>true</code> if {@link ProcessDefinition#getId()} is in the list 
+	 * of "forced_handler_notification_proc_def_id" property
+	 */
+	boolean isEMailSendingForced(String processDefinitionName) {
+		String value = getSettings().getProperty("forced_handler_notification_proc_def_name", "");
+		if (!StringUtil.isEmpty(value)) {
+			String[] names = value.split(CoreConstants.COMMA);
+			for (String name : names) {
+				if (processDefinitionName.equals(name)) {
+					return Boolean.TRUE;
+				}
+			}
+		}
+
+		return Boolean.FALSE;
+	}
 }

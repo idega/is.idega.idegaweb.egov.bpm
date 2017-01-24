@@ -1,7 +1,9 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import javax.faces.context.FacesContext;
 
@@ -9,6 +11,9 @@ import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
 import com.idega.facelets.ui.FaceletComponent;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWResourceBundle;
@@ -21,6 +26,8 @@ import com.idega.presentation.IWContext;
 import com.idega.util.PresentationUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CaseStateConfigBean;
 
@@ -73,18 +80,18 @@ public class UICaseStateConfig  extends IWBaseComponent {
 		
 		this.caseStateConfigBean = ELUtil.getInstance().getBean(CaseStateConfigBean.NAME);
 		
-		List<ProcessDefinition> processDefinitions = getBpmContext()
-				.execute(new JbpmCallback<List<ProcessDefinition>>() {
-					@SuppressWarnings("unchecked")
-					@Override
-					public List<ProcessDefinition> doInJbpm(JbpmContext context) throws JbpmException {
-						return (List<ProcessDefinition>) context.getGraphSession().findAllProcessDefinitions();
-					}
-				});
+		ApplicationBusiness appBusiness = getApplicationBusiness(iwc);
+		Collection<Application> processDefinitions = appBusiness.getAvailableApplications(iwc, null);
 		
-		List<String> procDefNames = new ArrayList<String>();
-		for (ProcessDefinition processDefinition: processDefinitions){
-			if (!procDefNames.contains(processDefinition.getName())) procDefNames.add(processDefinition.getName());
+		List<List<String>> procDefNames = new ArrayList<List<String>>();
+		Locale locale = iwc.getCurrentLocale();
+		for (Application processDefinition: processDefinitions){
+			
+				List<String> values = new ArrayList<String>();
+				procDefNames.add(values);
+				values.add(processDefinition.getUrl());
+				values.add(appBusiness.getApplicationName(processDefinition, locale));
+		
 		}
 		
 		List<CaseState> caseStates = getCasesBPMDAO().getCaseStates();
@@ -167,4 +174,12 @@ public class UICaseStateConfig  extends IWBaseComponent {
 		this.error = error;
 	}
 	
+	private ApplicationBusiness getApplicationBusiness(IWContext iwc) {
+		try {
+			return IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
+		}
+		catch (IBOLookupException e) {
+			throw new IBORuntimeException(e);
+		}
+	}
 }

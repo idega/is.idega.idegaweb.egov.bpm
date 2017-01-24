@@ -143,7 +143,7 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 					User owner = theCase.getOwner();
 					if (owner != null && owner.getId().equals(user.getId())) {
 						Email email = owner.getUsersEmail();
-						String ownerEmail = (String) pi.getContextInstance().getVariable("string_ownerEmailAddress");
+						String ownerEmail = (String) pi.getContextInstance().getVariable(com.idega.jbpm.exe.ProcessConstants.OWNER_EMAIL_ADDRESS);
 						if (com.idega.util.EmailValidator.getInstance().isValid(ownerEmail) && (email == null || !email.getEmailAddress().equals(ownerEmail))) {
 							getLogger().info("Resolved owner's email ('" + ownerEmail + "') from application, it was not main email of owner (" + owner + "): " +
 									(email == null ? "email unknown" : email.getEmailAddress()) + ". Proc. inst. ID: " + pi.getId());
