@@ -1324,9 +1324,7 @@ CasesBPMAssets.getGridCellStyle = function(index, params) {
 	return null;
 }
 
-
 CasesBPMAssets.setTableProperties = function(component) {
-	return;
 	if (component == null) {
 		return false;
 	}
