@@ -1611,13 +1611,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public Boolean startWorkingOnCase(Integer caseId){
-		if (caseId==null) return false;
+	public Long startWorkingOnCase(Integer caseId){
+		if (caseId==null) return -1L;
 		TSOCManager tsocManager = ELUtil.getInstance().getBean(TimeSpentOnCaseManager.BEAN_NAME);
 		Integer userId = IWContext.getInstance().getCurrentUserId();
-		if (userId < 1) return false;
-		tsocManager.startWorkingOnCase(userId, caseId);
-		return true;
+		if (userId < 1) return -1L;
+		return tsocManager.startWorkingOnCase(userId, caseId);
 	}
 
 	@Override
