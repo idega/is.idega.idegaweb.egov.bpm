@@ -31,6 +31,8 @@
 	    	<include method="getLinkForZippedCases"/>
 	    	<include method="doActualExport"/>
 	    	<include method="doRemoveFromMemory"/>
+	    	<include method="stopWorkingOnCase"/>
+	    	<include method="startWorkingOnCase"/>
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">

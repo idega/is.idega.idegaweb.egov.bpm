@@ -116,6 +116,8 @@ import is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter
 import is.idega.idegaweb.egov.bpm.media.CasesSearchResultsExporter;
 import is.idega.idegaweb.egov.cases.bean.CasesExportParams;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.business.TSOCManager;
+import is.idega.idegaweb.egov.cases.business.TimeSpentOnCaseManager;
 import is.idega.idegaweb.egov.cases.presentation.ClosedCases;
 import is.idega.idegaweb.egov.cases.presentation.MyCases;
 import is.idega.idegaweb.egov.cases.presentation.OpenCases;
@@ -1608,4 +1610,23 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return result;
 	}
 
+	@Override
+	public Boolean startWorkingOnCase(Integer caseId){
+		if (caseId==null) return false;
+		TSOCManager tsocManager = ELUtil.getInstance().getBean(TimeSpentOnCaseManager.BEAN_NAME);
+		Integer userId = IWContext.getInstance().getCurrentUserId();
+		if (userId < 1) return false;
+		tsocManager.startWorkingOnCase(userId, caseId);
+		return true;
+	}
+
+	@Override
+	public Boolean stopWorkingOnCase(Integer caseId){
+		if (caseId==null) return false;
+		TSOCManager tsocManager = ELUtil.getInstance().getBean(TimeSpentOnCaseManager.BEAN_NAME);
+		Integer userId = IWContext.getInstance().getCurrentUserId();
+		if (userId < 1) return false;
+		tsocManager.stopWorkingOnCase(userId, caseId);
+		return true;
+	}
 }

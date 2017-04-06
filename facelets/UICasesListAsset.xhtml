@@ -35,45 +35,46 @@
 			<table class="caseState" border="0">
 			<thead>
 			<tr>
-				<th></th>
 				<t:dataList value="#{casesBPMAssetsState.stateTable}" var="colData" rowCountVar="count" rowIndexVar="index">
-					<th class="state">#{localizedStrings['is.idega.idegaweb.egov.bpm'][colData.stateDefinition.stateLocalizationKey]}</th>
-					 <ui:fragment rendered="#{index + 1 != count}">
+					<ui:fragment rendered="#{index == 0}">
+						<th class="state">#{localizedStrings['is.idega.idegaweb.egov.bpm'][colData.stateDefinition.stateLocalizationKey]}</th>
+					</ui:fragment>
+					<ui:fragment rendered="#{index == 1}">
+						<th class="state">#{localizedStrings['is.idega.idegaweb.egov.bpm'][colData.stateDefinition.stateLocalizationKey]} hefst</th>
+						<th class="state-separator"></th>
+						<th class="state">#{localizedStrings['is.idega.idegaweb.egov.bpm'][colData.stateDefinition.stateLocalizationKey]} lokið</th>
+					</ui:fragment>
+					<ui:fragment rendered="#{index == 2}">
+						<th class="state">#{localizedStrings['is.idega.idegaweb.egov.bpm'][colData.stateDefinition.stateLocalizationKey]}</th>
+					</ui:fragment>
+					<ui:fragment rendered="#{index + 1 != count}">
 					 	<th class="state-separator"></th>
-					 </ui:fragment>
+					</ui:fragment>
 				</t:dataList>
 			</tr>
 			</thead>
 			<tbody>
 			<tr>
-				<td>Áætlun</td>
 				<t:dataList value="#{casesBPMAssetsState.stateTable}" var="colData" rowCountVar="count" rowIndexVar="index">
-					<ui:fragment rendered="#{colData.stateInstance.stateEndDate != null}">
 						<ui:fragment rendered="#{index == 0}">
-							<td></td>
+							<td>#{colData.stateInstance.stateEndDate}</td>
 						</ui:fragment>
-						<ui:fragment rendered="#{index != 0}">
+						<ui:fragment rendered="#{index == 1}">
 							<td>#{colData.stateInstance.stateExpectedEndDate}</td>
+							<td class="state-separator"></td>
+							<td>#{colData.stateInstance.stateEndDate}</td>
 						</ui:fragment>
-					</ui:fragment>
-					<ui:fragment rendered="#{colData.stateInstance.stateEndDate == null and casesBPMAssetsState.canChangeStateEndDate}">
-						<td>
-							<p class="changeable-state-date" id="#{colData.stateInstance.id}" onclick="CasesBPMAssets.updateStatusEndDate(this);">#{colData.stateInstance.stateExpectedEndDate == colData.stateInstance.stateEndDate ? '' : colData.stateInstance.stateExpectedEndDate}</p>
-							<input id="in_#{colData.stateInstance.id}" class="date-selector" placeholder="YYYY-MM-DD" style="display:none;float:right;border: 0;text-align: center;line-height: 1.2em;margin: 1em 0;width: 100%;"></input>
-						</td>
-					</ui:fragment>
-					<ui:fragment rendered="#{colData.stateInstance.stateEndDate == null and not casesBPMAssetsState.canChangeStateEndDate}">
-						<td>#{colData.stateInstance.stateExpectedEndDate}</td>
-					</ui:fragment>
-					<ui:fragment rendered="#{index + 1 != count}">
-					 	<td class="state-separator"></td>
-					 </ui:fragment>
-				</t:dataList>
-			</tr>
-			<tr>
-				<td>Raun</td>
-				<t:dataList value="#{casesBPMAssetsState.stateTable}" var="colData" rowCountVar="count" rowIndexVar="index">
-					<td>${colData.stateInstance.stateEndDate}</td>
+						<ui:fragment rendered="#{index == 2}">
+							<ui:fragment rendered="#{casesBPMAssetsState.stateTable[1].stateInstance.stateEndDate == null and colData.stateInstance.stateEndDate == null}">
+								<td></td>
+							</ui:fragment>
+							<ui:fragment rendered="#{casesBPMAssetsState.stateTable[1].stateInstance.stateEndDate != null and colData.stateInstance.stateEndDate == null}">
+								<td>#{casesBPMAssetsState.stateTable[1].stateInstance.stateEndDate + 90} áætlun</td>
+							</ui:fragment>
+							<ui:fragment rendered="#{colData.stateInstance.stateEndDate != null}">
+								<td>#{colData.stateInstance.stateEndDate}</td>
+							</ui:fragment>
+						</ui:fragment>
 					<ui:fragment rendered="#{index + 1 != count}">
 					 	<td class="state-separator"></td>
 					 </ui:fragment>

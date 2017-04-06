@@ -2471,6 +2471,4 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	public CaseStateInstance getStateInstanceById(Long id) {
 		return getSingleResultByInlineQuery("from " + CaseStateInstance.class.getName() + " where id = :id", CaseStateInstance.class, new Param("id", id));
 	}
-
-
 }
