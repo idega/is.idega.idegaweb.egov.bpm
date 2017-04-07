@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -22,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
@@ -41,9 +40,11 @@ import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+
 @Scope("request")
 @Service(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER)
-public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
+public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BPMProcessVariablesBean {
 
 	private static final long serialVersionUID = 5469235199056822371L;
 
@@ -74,6 +75,8 @@ public class BPMProcessVariablesBeanImpl implements BPMProcessVariablesBean {
 
 		if (ListUtil.isEmpty(variables))
 			return null;
+
+		isAdmin = isAdmin ? isAdmin : getSettings().getBoolean("bpm_variables_all", false);
 
 		String at = "@";
 		String name = null;
