@@ -1,8 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-
 import java.io.Serializable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -16,6 +13,7 @@ import org.jbpm.context.exe.ContextInstance;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -44,11 +42,14 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.24 $ Last modified: $Date: 2009/03/17 20:53:23 $ by $Author: civilis $
  */
-@Scope("singleton")
+@Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(CasesBPMProcessView.BEAN_IDENTIFIER)
 public class CasesBPMProcessView {
 
@@ -502,7 +503,7 @@ public class CasesBPMProcessView {
 	protected CasesBusiness getCaseBusiness(IWContext iwc) {
 
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwc,
+			return IBOLookup.getServiceInstance(iwc,
 			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -511,7 +512,7 @@ public class CasesBPMProcessView {
 
 	protected UserBusiness getUserBusiness() {
 		try {
-			return (UserBusiness) IBOLookup.getServiceInstance(CoreUtil
+			return IBOLookup.getServiceInstance(CoreUtil
 			        .getIWContext(), UserBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
@@ -538,7 +539,7 @@ public class CasesBPMProcessView {
 
 	protected CasesBusiness getCasesBusiness(IWApplicationContext iwac) {
 		try {
-			return (CasesBusiness) IBOLookup.getServiceInstance(iwac,
+			return IBOLookup.getServiceInstance(iwac,
 			    CasesBusiness.class);
 		} catch (IBOLookupException ile) {
 			throw new IBORuntimeException(ile);
