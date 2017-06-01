@@ -97,6 +97,7 @@ import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
 import is.idega.idegaweb.egov.bpm.cases.bundle.ProcessBundleCasesImpl;
+import is.idega.idegaweb.egov.bpm.cases.presentation.AbstractCasesBPMAssets;
 import is.idega.idegaweb.egov.bpm.cases.presentation.UICasesBPMAssets;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.BPMCasesEngine;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
@@ -604,31 +605,43 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		CaseManagerState managerState = ELUtil.getInstance().getBean(CaseManagerState.beanIdentifier);
 		managerState.setFullView(!CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type));
 
-		UICasesBPMAssets casesAssets = (UICasesBPMAssets)iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
-		UIViewRoot viewRoot = iwc.getViewRoot();
-		if (viewRoot != null)
-			casesAssets.setId(viewRoot.createUniqueId());
+		if (stateBean.getCustomView() == null) {
+			UICasesBPMAssets casesAssets = (UICasesBPMAssets)iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
+			UIViewRoot viewRoot = iwc.getViewRoot();
+			if (viewRoot != null)
+				casesAssets.setId(viewRoot.createUniqueId());
 
-		casesAssets.setUsePdfDownloadColumn(stateBean.getUsePDFDownloadColumn() == null ? false : stateBean.getUsePDFDownloadColumn());
-		casesAssets.setAllowPDFSigning(stateBean.getAllowPDFSigning() == null ? false : stateBean.getAllowPDFSigning());
-		casesAssets.setHideEmptySection(stateBean.getHideEmptySection() == null ? false : stateBean.getHideEmptySection());
-		casesAssets.setCommentsPersistenceManagerIdentifier(stateBean.getCommentsPersistenceManagerIdentifier());
-		casesAssets.setShowAttachmentStatistics(stateBean.getShowAttachmentStatistics() == null ? false : stateBean.getShowAttachmentStatistics());
-		casesAssets.setShowOnlyCreatorInContacts(stateBean.getShowOnlyCreatorInContacts() == null ? false : stateBean.getShowOnlyCreatorInContacts());
-		casesAssets.setShowLogExportButton(stateBean.isShowLogExportButton());
-		casesAssets.setShowComments(stateBean.getShowComments() == null ? Boolean.TRUE : stateBean.getShowComments());
-		casesAssets.setShowContacts(stateBean.getShowContacts() == null ? Boolean.TRUE : stateBean.getShowContacts());
-		casesAssets.setSpecialBackPage(stateBean.getSpecialBackPage());
-		casesAssets.setNameFromExternalEntity(stateBean.isNameFromExternalEntity());
-		casesAssets.setShowUserProfilePicture(stateBean.getShowUserProfilePicture());
-		casesAssets.setShowUserCompany(stateBean.getShowUserCompany());
-		casesAssets.setShowLastLoginDate(stateBean.getShowLastLoginDate());
-		casesAssets.setInactiveTasksToShow(stateBean.getInactiveTasksToShow());
+			casesAssets.setUsePdfDownloadColumn(stateBean.getUsePDFDownloadColumn() == null ? false : stateBean.getUsePDFDownloadColumn());
+			casesAssets.setAllowPDFSigning(stateBean.getAllowPDFSigning() == null ? false : stateBean.getAllowPDFSigning());
+			casesAssets.setHideEmptySection(stateBean.getHideEmptySection() == null ? false : stateBean.getHideEmptySection());
+			casesAssets.setCommentsPersistenceManagerIdentifier(stateBean.getCommentsPersistenceManagerIdentifier());
+			casesAssets.setShowAttachmentStatistics(stateBean.getShowAttachmentStatistics() == null ? false : stateBean.getShowAttachmentStatistics());
+			casesAssets.setShowOnlyCreatorInContacts(stateBean.getShowOnlyCreatorInContacts() == null ? false : stateBean.getShowOnlyCreatorInContacts());
+			casesAssets.setShowLogExportButton(stateBean.isShowLogExportButton());
+			casesAssets.setShowComments(stateBean.getShowComments() == null ? Boolean.TRUE : stateBean.getShowComments());
+			casesAssets.setShowContacts(stateBean.getShowContacts() == null ? Boolean.TRUE : stateBean.getShowContacts());
+			casesAssets.setSpecialBackPage(stateBean.getSpecialBackPage());
+			casesAssets.setNameFromExternalEntity(stateBean.isNameFromExternalEntity());
+			casesAssets.setShowUserProfilePicture(stateBean.getShowUserProfilePicture());
+			casesAssets.setShowUserCompany(stateBean.getShowUserCompany());
+			casesAssets.setShowLastLoginDate(stateBean.getShowLastLoginDate());
+			casesAssets.setInactiveTasksToShow(stateBean.getInactiveTasksToShow());
 
-		if (caseId != null)
-			casesAssets.setCaseId(caseId);
+			if (caseId != null)
+				casesAssets.setCaseId(caseId);
+			return casesAssets;
+		} else {
+			AbstractCasesBPMAssets casesAssets =  (AbstractCasesBPMAssets)iwc.getApplication().createComponent(stateBean.getCustomView());
 
-		return casesAssets;
+			UIViewRoot viewRoot = iwc.getViewRoot();
+			if (viewRoot != null)
+				casesAssets.setId(viewRoot.createUniqueId());
+
+			casesAssets.setCaseState(stateBean);
+			if (caseId != null)
+				casesAssets.setCaseId(caseId);
+			return casesAssets;
+		}
 	}
 
 	@Override

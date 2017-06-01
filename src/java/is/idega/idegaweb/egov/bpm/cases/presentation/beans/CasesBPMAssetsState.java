@@ -89,7 +89,8 @@ public class CasesBPMAssetsState implements Serializable {
 			commentsPersistenceManagerIdentifier,
 			currentTaskInstanceName,
 			systemEmailAddress,
-			inactiveTasksToShow;
+			inactiveTasksToShow,
+			customView = null;
 
 	private Boolean isWatched,
 			usePDFDownloadColumn = Boolean.TRUE,
@@ -877,5 +878,13 @@ public class CasesBPMAssetsState implements Serializable {
 
 	public void setInactiveTasksToShow(String inactiveTasksToShow) {
 		this.inactiveTasksToShow = inactiveTasksToShow;
+	}
+
+	public String getCustomView() {
+		return customView;
+	}
+
+	public void setCustomView(String customView) {
+		this.customView = customView;
 	}
 }

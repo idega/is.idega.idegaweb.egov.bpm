@@ -216,6 +216,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				stateBean.setShowUserCompany(properties.isShowUserCompany());
 				stateBean.setShowLastLoginDate(properties.isShowLastLoginDate());
 				stateBean.setInactiveTasksToShow(properties.getInactiveTasksToShow());
+				stateBean.setCustomView(properties.getCustomView());
 			}
 
 			Integer caseId = new Integer(caseIdStr);
