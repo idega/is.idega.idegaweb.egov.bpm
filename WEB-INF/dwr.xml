@@ -33,6 +33,7 @@
 	    	<include method="doRemoveFromMemory"/>
 	    	<include method="stopWorkingOnCase"/>
 	    	<include method="startWorkingOnCase"/>
+	    	<include method="getCaseTaskView"/>
     	</create>
     	
     	<create creator="jsf" javascript="ApplicationTypeBPM">

@@ -19,6 +19,7 @@ import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
+import javax.faces.component.UIViewRoot;
 import javax.servlet.ServletContext;
 
 import org.jdom2.Document;
@@ -81,6 +82,7 @@ import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.jbpm.exe.ProcessDefinitionW;
+import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
@@ -178,6 +180,33 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		Long processInstanceId = getCasesBPMProcessView().getProcessInstanceId(caseId);
 		return processInstanceId;
+	}
+
+	@Override
+	public Document getCaseTaskView(Long taskId) {
+		if (taskId == null)
+			return null;
+
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null)
+			return null;
+
+		Document taskView = null;
+		try {
+
+			BPMTaskViewer taskViewer =  (BPMTaskViewer)iwc.getApplication().createComponent(BPMTaskViewer.COMPONENT_TYPE);
+			taskViewer.setTaskInstanceId(taskId);
+			UIViewRoot viewRoot = iwc.getViewRoot();
+			if (viewRoot != null)
+				taskViewer.setId(viewRoot.createUniqueId());
+
+			taskView = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, taskViewer, true);
+			return taskView;
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "Exception while rendering component for task (ID: " + taskId + ") view", e);
+		}
+
+		return null;
 	}
 
 	@Override
