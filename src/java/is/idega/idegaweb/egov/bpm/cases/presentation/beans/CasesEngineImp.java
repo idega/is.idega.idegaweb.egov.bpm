@@ -182,6 +182,31 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return processInstanceId;
 	}
 
+	public RenderedComponent getRenderedCaseTaskView(Long taskId, List<AdvancedProperty> properties) {
+		if (taskId == null)
+			return null;
+
+		IWContext iwc = CoreUtil.getIWContext();
+		if (iwc == null)
+			return null;
+
+		RenderedComponent taskView = null;
+		try {
+			BPMTaskViewer taskViewer =  (BPMTaskViewer)iwc.getApplication().createComponent(BPMTaskViewer.COMPONENT_TYPE);
+			taskViewer.setTaskInstanceId(taskId);
+			UIViewRoot viewRoot = iwc.getViewRoot();
+			if (viewRoot != null)
+				taskViewer.setId(viewRoot.createUniqueId());
+
+			taskView = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(taskViewer, properties);
+			return taskView;
+		} catch (Exception e) {
+			LOGGER.log(Level.SEVERE, "Exception while rendering component for task (ID: " + taskId + ") view", e);
+		}
+
+		return null;
+	}
+
 	@Override
 	public Document getCaseTaskView(Long taskId) {
 		if (taskId == null)
