@@ -182,22 +182,25 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return processInstanceId;
 	}
 
+	@Override
 	public RenderedComponent getRenderedCaseTaskView(Long taskId, List<AdvancedProperty> properties) {
-		if (taskId == null)
+		if (taskId == null) {
 			return null;
+		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null)
+		if (iwc == null) {
 			return null;
+		}
 
 		RenderedComponent taskView = null;
 		try {
-			BPMTaskViewer taskViewer =  (BPMTaskViewer)iwc.getApplication().createComponent(BPMTaskViewer.COMPONENT_TYPE);
+			BPMTaskViewer taskViewer =  (BPMTaskViewer) iwc.getApplication().createComponent(BPMTaskViewer.COMPONENT_TYPE);
 			taskViewer.setTaskInstanceId(taskId);
 			UIViewRoot viewRoot = iwc.getViewRoot();
-			if (viewRoot != null)
+			if (viewRoot != null) {
 				taskViewer.setId(viewRoot.createUniqueId());
-
+			}
 			taskView = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(taskViewer, properties);
 			return taskView;
 		} catch (Exception e) {
@@ -209,22 +212,23 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public Document getCaseTaskView(Long taskId) {
-		if (taskId == null)
+		if (taskId == null) {
 			return null;
+		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null)
+		if (iwc == null) {
 			return null;
+		}
 
 		Document taskView = null;
 		try {
-
-			BPMTaskViewer taskViewer =  (BPMTaskViewer)iwc.getApplication().createComponent(BPMTaskViewer.COMPONENT_TYPE);
+			BPMTaskViewer taskViewer =  (BPMTaskViewer) iwc.getApplication().createComponent(BPMTaskViewer.COMPONENT_TYPE);
 			taskViewer.setTaskInstanceId(taskId);
 			UIViewRoot viewRoot = iwc.getViewRoot();
-			if (viewRoot != null)
+			if (viewRoot != null) {
 				taskViewer.setId(viewRoot.createUniqueId());
-
+			}
 			taskView = getBuilderLogic().getBuilderService(iwc).getRenderedComponent(iwc, taskViewer, true);
 			return taskView;
 		} catch (Exception e) {

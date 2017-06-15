@@ -10,8 +10,6 @@
             <include method="updateStateDate" />
 		</create>
 		
-		
-		
 		<create creator="spring" javascript="CasesEngine">
 	    	<param name="beanName" value="casesEngineDWR" />
 	    	<include method="isResolverExist" />
