@@ -20,7 +20,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					caseCodes,
 					statusesToShow,
 					statusesToHide,
-					roles;
+					roles,
+					customView;
 
 	private List<BPMProcessVariable> processVariables;
 
@@ -36,6 +37,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					showUserProfilePicture = true,
 					addExportContacts = false,
 					showUserCompany = false,
+					showTimeSpentOnCase = false,
 					search = false;
 
 	public String getProcessId() {
@@ -252,6 +254,22 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setSearch(boolean search) {
 		this.search = search;
+	}
+
+	public String getCustomView() {
+		return customView;
+	}
+
+	public void setCustomView(String customView) {
+		this.customView = customView;
+	}
+
+	public boolean isShowTimeSpentOnCase() {
+		return showTimeSpentOnCase;
+	}
+
+	public void setShowTimeSpentOnCase(boolean showTimeSpentOnCase) {
+		this.showTimeSpentOnCase = showTimeSpentOnCase;
 	}
 
 }
