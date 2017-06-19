@@ -40,11 +40,13 @@ import is.idega.idegaweb.egov.cases.business.CasesBusiness;
  *          Last modified: Jun 27, 2008 by Author: Anton
  *
  */
-@Service("setProcessDescriptionHandler")
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
+@Service(SetProcessDescriptionHandler.BEAN_NAME)
 public class SetProcessDescriptionHandler extends DefaultSpringBean implements ActionHandler {
 
 	private static final long serialVersionUID = -4735864635886588195L;
+
+	public static final String BEAN_NAME = "setProcessDescriptionHandler";
 
 	private String description;
 
@@ -90,7 +92,7 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 		}
 	}
 
-	private void setCaseCode(Case theCase, String processDefinitionName) {
+	public void setCaseCode(Case theCase, String processDefinitionName) {
 		ApplicationHome applicationHome = null;
 		try {
 			applicationHome = (ApplicationHome) IDOLookup.getHome(Application.class);
