@@ -299,6 +299,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		Long piId = getBpmContext().execute(new JbpmCallback<Long>() {
 			@Override
 			public Long doInJbpm(JbpmContext context) throws JbpmException {
+				Long piId = null;
+				boolean error = false;
 				try {
 					final ProcessDefinition pd = getProcessDefinition(context);
 					String procDefName = pd.getName();
@@ -306,7 +308,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					ProcessInstance pi = new ProcessInstance(pd);
 					TaskInstance ti = pi.getTaskMgmtInstance().createStartTaskInstance();
-					Long piId = pi.getId();
+					piId = pi.getId();
 					if (ti == null || ti.getId() <= 0) {
 						throw new JbpmException("Task instance for proc. def. (ID: " + processDefinitionId + ") and proc. inst. (ID: "
 								+ piId + ") was not created!");
@@ -388,11 +390,18 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					return piId;
 				} catch (JbpmException e) {
+					error = true;
 					throw e;
 				} catch (RuntimeException e) {
+					error = true;
 					throw e;
 				} catch (Exception e) {
+					error = true;
 					throw new RuntimeException(e);
+				} finally {
+					if (error) {
+						removeBind(piId);
+					}
 				}
 			}
 		});
@@ -407,6 +416,20 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			if (piId != null) {
 				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(getProcessDefinitionId()), piId, variables);
 			}
+		}
+	}
+
+	@Transactional(readOnly = false)
+	private void removeBind(Long piId) {
+		if (piId == null) {
+			return;
+		}
+
+		try {
+			CaseProcInstBind bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+			getCasesBPMDAO().remove(bind);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error deleting " + CaseProcInstBind.class.getSimpleName() + " by proc. inst. ID: " + piId, e);
 		}
 	}
 
