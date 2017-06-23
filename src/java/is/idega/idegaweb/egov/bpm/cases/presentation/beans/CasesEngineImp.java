@@ -948,10 +948,15 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public AdvancedProperty getExportedSearchResults(String id) {
-		return getExportedSearchResults(id, false, false);
+		return getExportedSearchResults(id, false, false, null);
 	}
 
-	public AdvancedProperty getExportedSearchResults(String pageURI, boolean exportContacts, boolean showCompany) {
+	@Override
+	public <T extends MediaWritable> AdvancedProperty getSearchResultsWithExporter(String id, Class<T> exporter) {
+		return getExportedSearchResults(id, false, false, exporter);
+	}
+
+	private <T extends MediaWritable> AdvancedProperty getExportedSearchResults(String pageURI, boolean exportContacts, boolean showCompany, Class<T> exporter) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -963,8 +968,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		try {
 			resultsHolder = getSearchResultsHolder();
 		} catch (NullPointerException e) {
-			result.setValue(getResourceBundle(iwc)
-					.getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
+			result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 			return result;
 		}
 
@@ -992,7 +996,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		result.setId(Boolean.TRUE.toString());
 		URIUtil uriUtil = new URIUtil(iwc.getIWMainApplication().getMediaServletURI());
-		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(CasesSearchResultsExporter.class));
+		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(exporter == null ? CasesSearchResultsExporter.class : exporter));
 		uriUtil.setParameter(CasesSearchResultsExporter.ID_PARAMETER, pageURI);
 		result.setValue(uriUtil.getUri());
 
