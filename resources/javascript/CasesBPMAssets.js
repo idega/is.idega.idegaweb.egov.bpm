@@ -150,7 +150,11 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 		usePdfDownloadColumn, allowPDFSigning, hideEmptySection, 
 		showAttachmentStatistics, showOnlyCreatorInContacts, showLogExportButton, 
 		showComments, showContacts, specialBackPage, nameFromExternalEntity,
-		showUserProfilePicture,showUserCompany,showLastLoginDate,showPDFName, inactiveTasksToShow) {
+		showUserProfilePicture,showUserCompany,showLastLoginDate,showPDFName, inactiveTasksToShow
+) {
+	if (JQGridInclude == null) {
+		return false;
+	}
 	
 	if (container == null) {
 		return false;
