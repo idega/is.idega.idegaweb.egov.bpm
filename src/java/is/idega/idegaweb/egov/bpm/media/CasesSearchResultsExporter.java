@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.media;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,9 +17,11 @@ import com.idega.presentation.IWContext;
 import com.idega.util.FileUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+
 public class CasesSearchResultsExporter extends DownloadWriter implements MediaWritable {
 
-	public static final String ID_PARAMETER = "casesSearchResultsExportId",
+	public static final String	ID_PARAMETER = "casesSearchResultsExportId",
 								ALL_CASES_DATA = "allCasesExportedId",
 								EXPORT_CONTACTS = "is-export-contacts",
 								SHOW_USER_COMPANY = "show-company";
@@ -38,8 +38,7 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 		String fileName = null;
 		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 
-		CasesSearchResultsHolder searchResultHolder = ELUtil.getInstance().getBean(
-				CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
+		CasesSearchResultsHolder searchResultHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
 		boolean exportContacts = "y".equals(iwc.getParameter(EXPORT_CONTACTS));
 		boolean showCompany = "y".equals(iwc.getParameter(SHOW_USER_COMPANY));
 

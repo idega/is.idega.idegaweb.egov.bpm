@@ -1,11 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.cases.data.CaseCategory;
-import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
-import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.io.OutputStream;
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -74,6 +68,12 @@ import com.idega.util.StringUtil;
 import com.idega.util.WebUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.util.text.TextSoap;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.cases.data.CaseCategory;
+import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
+import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 @Scope("session")
 @Service(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER)
@@ -180,12 +180,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public boolean doExport(String id,boolean exportContacts, boolean showCompany) {
+	public boolean doExport(String id, boolean exportContacts, boolean showCompany) {
 		Collection<CasePresentation> cases = getCases(id, true);
-		if (ListUtil.isEmpty(cases))
+		if (ListUtil.isEmpty(cases)) {
 			return false;
+		}
 
-		memory = getExportedData(id,exportContacts,showCompany);
+		memory = getExportedData(id, exportContacts, showCompany);
 
 		return memory == null ? false : true;
 	}
@@ -1017,12 +1018,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public MemoryFileBuffer getExportedSearchResults(String id,boolean exportContacts, boolean showCompany) {
+	public MemoryFileBuffer getExportedSearchResults(String id, boolean exportContacts, boolean showCompany) {
 		if (memory != null)
 			return memory;
 
-		if (doExport(id,exportContacts,showCompany))
+		if (doExport(id, exportContacts, showCompany)) {
 			return memory;
+		}
 
 		return null;
 	}
@@ -1041,13 +1043,23 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
+	public List<CasePresentation> getAllCases(String id) {
+		if (StringUtil.isEmpty(id)) {
+			LOGGER.warning("Key is not provided");
+			return null;
+		}
+
+		return externalData.remove(id);
+	}
+
+	@Override
 	public MemoryFileBuffer getExportedCases(String id, boolean exportContacts, boolean showCompany) {
 		if (StringUtil.isEmpty(id)) {
 			LOGGER.warning("Key is not provided");
 			return null;
 		}
 
-		List<CasePresentation> cases = externalData.remove(id);
+		List<CasePresentation> cases = getAllCases(id);
 		if (ListUtil.isEmpty(cases)) {
 			LOGGER.warning("No cases found by key: " + id);
 			return null;
