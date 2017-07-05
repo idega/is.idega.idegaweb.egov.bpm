@@ -1692,4 +1692,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		tsocManager.stopWorkingOnCase(userId, caseId);
 		return true;
 	}
+
+	@Override
+	public void stopWorkingOnAllCases(Integer userId){
+		TSOCManager tsocManager = ELUtil.getInstance().getBean(TimeSpentOnCaseManager.BEAN_NAME);
+		tsocManager.stopWorkingOnAllCases(userId);
+	}
 }
