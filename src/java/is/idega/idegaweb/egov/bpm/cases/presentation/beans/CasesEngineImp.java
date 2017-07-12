@@ -53,6 +53,7 @@ import com.idega.block.process.presentation.beans.CasesSearchResults;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.presentation.beans.GeneralCasesListBuilder;
 import com.idega.block.web2.business.JQuery;
+import com.idega.block.web2.business.JQueryUIType;
 import com.idega.block.web2.business.Web2Business;
 import com.idega.bpm.bean.CasesBPMAssetProperties;
 import com.idega.builder.bean.AdvancedProperty;
@@ -782,6 +783,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		resources.add(web2.getBundleUriToHumanizedMessagesStyleSheet());
 		resources.add(jQuery.getBundleURIToJQueryLib());
 		resources.add(web2.getBundleUriToHumanizedMessagesScript());
+
+		resources.add(getJQuery().getBundleURIToJQueryUILib(JQueryUIType.UI_CORE));
+		resources.add(getJQuery().getBundleURIToJQueryUILib(JQueryUIType.UI_WIDGET));
+		resources.add(getJQuery().getBundleURIToJQueryUILib(JQueryUIType.UI_MOUSE));
+		resources.add(getJQuery().getBundleURIToJQueryUILib(JQueryUIType.UI_SORTABLE));
+
 		fake.setResources(resources);
 
 		IWResourceBundle iwrb = getResourceBundle(iwc);
@@ -1696,8 +1703,20 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
+	public void stopWorkingOnAllCases(){
+		IWContext iwc = IWContext.getCurrentInstance();
+		if (iwc.isLoggedOn()) stopWorkingOnAllCases(iwc.getCurrentUserId());
+	}
+
+	@Override
 	public void stopWorkingOnAllCases(Integer userId){
 		TSOCManager tsocManager = ELUtil.getInstance().getBean(TimeSpentOnCaseManager.BEAN_NAME);
 		tsocManager.stopWorkingOnAllCases(userId);
+	}
+
+	private JQuery getJQuery() {
+		if (jQuery == null)
+			ELUtil.getInstance().autowire(this);
+		return jQuery;
 	}
 }

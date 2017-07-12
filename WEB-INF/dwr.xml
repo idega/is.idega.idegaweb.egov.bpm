@@ -30,6 +30,7 @@
 	    	<include method="doActualExport"/>
 	    	<include method="doRemoveFromMemory"/>
 	    	<include method="stopWorkingOnCase"/>
+	    	<include method="stopWorkingOnAllCases"/>
 	    	<include method="startWorkingOnCase"/>
 	    	<include method="getCaseTaskView"/>
 	    	<include method="getRenderedCaseTaskView"/>
