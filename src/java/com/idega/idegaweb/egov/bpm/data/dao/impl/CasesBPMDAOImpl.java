@@ -478,6 +478,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
 	}
 
+	@Override
+	public List<Integer> getCaseIdsByProcessDef(String processDefinitionName) {
+		if (StringUtil.isEmpty(processDefinitionName))
+			return null;
+
+		return getResultList(CaseProcInstBind.getCaseIdsByProcessDefinitionName, Integer.class,
+				new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName));
+	}
+
 	private List<Long> getCaseIdsByVariable(String queryName, String processDefinitionName, String variableName, Object value,
 			List<String> types) {
 

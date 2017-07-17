@@ -493,4 +493,6 @@ public interface CasesBPMDAO extends GenericDao {
 
 	Integer getCaseIdByProcessId(Long procInstId);
 
+	List<Integer> getCaseIdsByProcessDef(String processDefinitionName);
+
 }

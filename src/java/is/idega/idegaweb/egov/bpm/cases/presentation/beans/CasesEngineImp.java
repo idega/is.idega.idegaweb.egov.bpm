@@ -86,6 +86,7 @@ import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
+import com.idega.jbpm.variables.VariablesPreloader;
 import com.idega.presentation.IWContext;
 import com.idega.presentation.ListNavigator;
 import com.idega.presentation.paging.PagedDataCollection;
@@ -712,6 +713,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				casesIds = getSubList(casesIds, startIndex, count, totalCount);
 			}
 
+			for (AdvancedProperty sortingOption: criterias.getSortingOptions()) {
+				String variableName = sortingOption.getId();
+				VariablesPreloader preloader = ELUtil.getInstance().getBean(VariablesPreloader.BEAN_NAME_PREFIX + variableName);
+				if (preloader != null){
+					preloader.preloadForCaseIds(casesIds);
+				}
+			}
 			//	Loading cases by IDs
 			cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
 		}
