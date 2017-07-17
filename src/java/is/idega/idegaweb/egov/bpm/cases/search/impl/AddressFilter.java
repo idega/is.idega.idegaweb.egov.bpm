@@ -80,9 +80,9 @@ public class AddressFilter extends DefaultCasesListSearchFilter {
 							casesByAddressIds.add(bind.getCaseId());
 						}
 
-						streetCol.clear();
-						houseNumberCol.clear();
-						appartmentNumberCol.clear();
+						if (streetCol != null) streetCol.clear();
+						if (houseNumberCol != null) houseNumberCol.clear();
+						if (appartmentNumberCol != null) appartmentNumberCol.clear();
 					}
 				}
 			}

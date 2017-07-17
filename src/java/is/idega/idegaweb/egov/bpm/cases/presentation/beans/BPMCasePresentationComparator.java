@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
-import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
-
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.text.Collator;
@@ -25,11 +23,14 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
+import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.util.reflect.MethodInvoker;
+
+import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 
 public class BPMCasePresentationComparator extends CasePresentationComparator {
 
@@ -128,6 +129,11 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 	@Transactional(readOnly=true)
 	private String getVariableValue(CasePresentation theCase, String variableName) {
 		try {
+
+			if (theCase.getCaseVariables() != null && theCase.getCaseVariables().containsKey(variableName)) return theCase.getCaseVariables().get(variableName);
+
+			if (theCase.getCaseVariables() == null) theCase.setCaseVariables(new HashMap<String, String>());
+
 			List<VariableInstanceInfo> variables = getCaseVariables(theCase.getId());
 			if (ListUtil.isEmpty(variables)) {
 				return CoreConstants.EMPTY;
@@ -139,18 +145,33 @@ public class BPMCasePresentationComparator extends CasePresentationComparator {
 
 				String name = variable.getName();
 				if (variableName.equals(name)) {
-					Serializable tmpValue = variable.getValue();
-					if (tmpValue != null) {
-						value = tmpValue.toString();
+					MultipleSelectionVariablesResolver resolver = getResolver(variableName);
+					if (resolver != null){
+						value = resolver.getPresentation(variable);
+					} else {
+						Serializable tmpValue = variable.getValue();
+						if (tmpValue != null) {
+							value = tmpValue.toString();
+						}
 					}
 				}
 			}
+
+			theCase.getCaseVariables().put(variableName, StringUtil.isEmpty(value) ? CoreConstants.EMPTY : value.toString());
 
 			return StringUtil.isEmpty(value) ? CoreConstants.EMPTY : value.toString();
 		} catch(Exception e) {
 			Logger.getLogger(getClass().getName()).log(Level.WARNING, "Error getting variable's value: " + variableName, e);
 		}
 		return CoreConstants.EMPTY;
+	}
+
+	private MultipleSelectionVariablesResolver getResolver(String variableName) {
+		MultipleSelectionVariablesResolver resolver = null;
+		try {
+			resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variableName);
+		} catch (Exception e) {}
+		return resolver;
 	}
 
 	private CasesBPMDAO getCasesBPMDAO() {
