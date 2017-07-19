@@ -728,89 +728,95 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			if (usePaging && noSortingOptions) {
 				//	No need to load all the cases, just for one page
 				casesIds = getSubList(casesIds, startIndex, count, totalCount);
-			}
+				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
+			} else if (usePaging) {
 
-			List<String> variablesToLoad = new ArrayList<String>();
-			List<String> defaultVariables = new ArrayList<String>();
-			for (Method method : Case.class.getMethods()){
-				defaultVariables.add(method.getName());
-			}
-			for (AdvancedProperty sortingOption: criterias.getSortingOptions()) {
-				String variableName = sortingOption.getId();
-				VariablesPreloader preloader = null;
-				if (defaultVariables.contains(variableName)){
-					preLoadCases = true;
-				} else if ("getCaseStatusLocalized".equals(variableName)) {
-					preLoadStatus = true;
-					preLoadCases = true;
+				List<String> variablesToLoad = new ArrayList<String>();
+				List<String> defaultVariables = new ArrayList<String>();
+				for (Method method : Case.class.getMethods()){
+					defaultVariables.add(method.getName());
 				}
-				else {
-					try {
-						preloader = ELUtil.getInstance().getBean(VariablesPreloader.BEAN_NAME_PREFIX + variableName);
-					} catch (Exception e) {}
-					if (preloader != null){
-						preloader.preloadForCaseIds(casesIds);
+
+				for (AdvancedProperty sortingOption: criterias.getSortingOptions()) {
+					String variableName = sortingOption.getId();
+					VariablesPreloader preloader = null;
+					if (defaultVariables.contains(variableName)){
+						preLoadCases = true;
+					} else if ("getCaseStatusLocalized".equals(variableName)) {
+						preLoadStatus = true;
+						preLoadCases = true;
 					}
-					variablesToLoad.add(variableName);
+					else {
+						try {
+							preloader = ELUtil.getInstance().getBean(VariablesPreloader.BEAN_NAME_PREFIX + variableName);
+						} catch (Exception e) {}
+						if (preloader != null){
+							preloader.preloadForCaseIds(casesIds);
+						}
+						variablesToLoad.add(variableName);
+					}
 				}
-			}
-			LOGGER.info("TST1.1 Gather whats needed " + (System.currentTimeMillis() - start) + " ms");
-			try {
-				procInstCase = casesBPMDAO.getProcessInstancesAndCasesIdsByCasesIds(casesIds);
-			} catch (Exception e) {}
 
-			LOGGER.info("TST1.2 got proc ids " + (System.currentTimeMillis() - start) + " ms");
+				LOGGER.info("TST1.1 Gather whats needed " + (System.currentTimeMillis() - start) + " ms");
+				try {
+					procInstCase = casesBPMDAO.getProcessInstancesAndCasesIdsByCasesIds(casesIds);
+				} catch (Exception e) {}
 
-			List<Integer> caseIds = new ArrayList<Integer>();
-			Map<Integer, Long> caseProcInst = new HashMap<>();
-			for (Long key : procInstCase.keySet()){
-				caseProcInst.put(procInstCase.get(key), key);
-				caseIds.add(procInstCase.get(key));
-			}
+				LOGGER.info("TST1.2 got proc ids " + (System.currentTimeMillis() - start) + " ms");
 
-			getCasesListVariableCache().addCache(CASE_PROC_ID_BIND, caseProcInst);
+				List<Integer> caseIds = new ArrayList<Integer>();
+				Map<Integer, Long> caseProcInst = new HashMap<>();
+				for (Long key : procInstCase.keySet()){
+					caseProcInst.put(procInstCase.get(key), key);
+					caseIds.add(procInstCase.get(key));
+				}
 
-			if (preLoadCases) {
-				preLoadCases(caseProcInst);
-			}
+				getCasesListVariableCache().addCache(CASE_PROC_ID_BIND, caseProcInst);
 
-			if (preLoadStatus){
-				preLoadStatuses();
-			}
+				if (preLoadCases) {
+					preLoadCases(caseProcInst);
+				}
 
-			LOGGER.info("TST1.3 preload cases " + (System.currentTimeMillis() - start) + " ms");
+				if (preLoadStatus){
+					preLoadStatuses();
+				}
 
-			if (!ListUtil.isEmpty(variablesToLoad)) {
-				preLoadVariablesForCases(procInstCase, variablesToLoad);
-			}
+				LOGGER.info("TST1.3 preload cases " + (System.currentTimeMillis() - start) + " ms");
+
+				if (!ListUtil.isEmpty(variablesToLoad)) {
+					preLoadVariablesForCases(procInstCase, variablesToLoad);
+				}
 
 
-			LOGGER.info("TST1.4 preload vars " + (System.currentTimeMillis() - start) + " ms");
-			List<Integer> sortedIds = new ArrayList<Integer>(caseIds);
+				LOGGER.info("TST1.4 preload vars " + (System.currentTimeMillis() - start) + " ms");
+				List<Integer> sortedIds = new ArrayList<Integer>(caseIds);
 
-			if (!criterias.isNoOrdering()) {
-				CaseComparator comparator = getCaseComparator(criterias, locale);
-				getLogger().info("Sorting cases by comparator: " + comparator + " and sorting options: " + criterias.getSortingOptions());
-				Collections.sort(sortedIds, comparator);
-			}
+				if (!criterias.isNoOrdering()) {
+					CaseComparator comparator = getCaseComparator(criterias, locale);
+					getLogger().info("Sorting cases by comparator: " + comparator + " and sorting options: " + criterias.getSortingOptions());
+					Collections.sort(sortedIds, comparator);
+				}
 
-			if (usePaging)
-				sortedIds = getSubList(sortedIds, startIndex, count, totalCount);
+				if (usePaging)
+					sortedIds = getSubList(sortedIds, startIndex, count, totalCount);
 
-			LOGGER.info("TST1.5 " + (System.currentTimeMillis() - start) + " ms");
-			cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale);
-			if (!criterias.isNoOrdering()) {
-				List<CasePresentation> casesTmp = new ArrayList<CasePresentation>();
-				for (Integer id: sortedIds){
-					for (CasePresentation cp : cases.getCollection()){
-						if (id.equals(cp.getPrimaryKey())) {
-							casesTmp.add(cp);
-							cases.getCollection().remove(cp);
-							break;
+				LOGGER.info("TST1.5 " + (System.currentTimeMillis() - start) + " ms");
+				cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale);
+				if (!criterias.isNoOrdering()) {
+					List<CasePresentation> casesTmp = new ArrayList<CasePresentation>();
+					for (Integer id: sortedIds){
+						for (CasePresentation cp : cases.getCollection()){
+							if (id.equals(cp.getPrimaryKey())) {
+								casesTmp.add(cp);
+								cases.getCollection().remove(cp);
+								break;
+							}
 						}
 					}
+					cases = new PagedDataCollection<CasePresentation>(casesTmp);
 				}
-				cases = new PagedDataCollection<CasePresentation>(casesTmp);
+			} else {
+				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
 			}
 		}
 		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
