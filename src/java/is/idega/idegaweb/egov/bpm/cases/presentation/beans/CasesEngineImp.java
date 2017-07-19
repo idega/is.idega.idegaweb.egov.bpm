@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -45,6 +46,7 @@ import com.idega.block.process.event.CaseModifiedEvent;
 import com.idega.block.process.presentation.CaseBlock;
 import com.idega.block.process.presentation.UICasesList;
 import com.idega.block.process.presentation.UserCases;
+import com.idega.block.process.presentation.beans.CaseComparator;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasePresentationComparator;
@@ -62,6 +64,7 @@ import com.idega.builder.business.BuilderLogic;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
 import com.idega.core.accesscontrol.bean.UserHasLoggedInEvent;
 import com.idega.core.builder.data.ICPage;
 import com.idega.core.business.DefaultSpringBean;
@@ -81,7 +84,9 @@ import com.idega.idegaweb.egov.bpm.presentation.CasesExporter;
 import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;
 import com.idega.jbpm.bean.BPMProcessVariable;
+import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.bean.VariableInstanceType;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.presentation.BPMTaskViewer;
 import com.idega.jbpm.utils.JBPMConstants;
@@ -110,6 +115,7 @@ import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.business.ApplicationType;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.business.CaseListVariableCache;
 import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessView;
 import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
 import is.idega.idegaweb.egov.bpm.cases.exe.CasesBPMProcessDefinitionW;
@@ -158,6 +164,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	@Autowired
 	private CaseConverterToPDF caseConverter;
 
+	@Autowired
+	private VariableInstanceQuerier variableInstanceQuerier;
+
 	public static final String	FILE_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMAttachmentDownloader",
 								PDF_GENERATOR_AND_DOWNLOAD_LINK_STYLE_CLASS = "casesBPMPDFGeneratorAndDownloader",
 								DOWNLOAD_TASK_IN_PDF_LINK_STYLE_CLASS = "casesBPMDownloadTaskInPDF",
@@ -165,6 +174,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	private static final Logger LOGGER = Logger.getLogger(CasesEngineImp.class.getName());
 
+	public static final String CASE_DATA_CACHE_NAME = "caseDataCache";
+	public static final String VARIABLE_INFO_CACHE_NAME = "variableInfoCache";
+	public static final String CASE_PROC_ID_BIND = "caseProcInstIdBind";
+	public static final String STATUS_MAP_CACHE = "statusMapCache";
 	protected CasesRetrievalManager getCasesRetrievalManager() {
 		if (this.casesRetrievalManager == null) {
 			this.casesRetrievalManager = getCaseManagersProvider().getCaseManager();
@@ -695,6 +708,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			Collections.sort(casesIds, c);
 		}
 
+		LOGGER.info("TST1 " + (System.currentTimeMillis() - start) + " ms");
 		int totalCount = casesIds.size();
 		criterias.setFoundResults(totalCount);
 		if (criterias.getPageSize() <= 0)
@@ -704,41 +718,135 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		criterias.setAllDataLoaded(!(totalCount > criterias.getPageSize()));
 		int count = criterias.getPageSize();
 		int startIndex = (criterias.getPage() - 1) * count;
+		boolean preLoadCases = false;
+		boolean preLoadStatus = false;
 
 		Locale locale = iwc.getCurrentLocale();
 		PagedDataCollection<CasePresentation> cases = null;
+		Map<Long, Integer> procInstCase = null;
 		if (!ListUtil.isEmpty(casesIds)) {
 			if (usePaging && noSortingOptions) {
 				//	No need to load all the cases, just for one page
 				casesIds = getSubList(casesIds, startIndex, count, totalCount);
 			}
 
+			List<String> variablesToLoad = new ArrayList<String>();
+			List<String> defaultVariables = new ArrayList<String>();
+			for (Method method : Case.class.getMethods()){
+				defaultVariables.add(method.getName());
+			}
 			for (AdvancedProperty sortingOption: criterias.getSortingOptions()) {
 				String variableName = sortingOption.getId();
-				VariablesPreloader preloader = ELUtil.getInstance().getBean(VariablesPreloader.BEAN_NAME_PREFIX + variableName);
-				if (preloader != null){
-					preloader.preloadForCaseIds(casesIds);
+				VariablesPreloader preloader = null;
+				if (defaultVariables.contains(variableName)){
+					preLoadCases = true;
+				} else if ("getCaseStatusLocalized".equals(variableName)) {
+					preLoadStatus = true;
+					preLoadCases = true;
+				}
+				else {
+					try {
+						preloader = ELUtil.getInstance().getBean(VariablesPreloader.BEAN_NAME_PREFIX + variableName);
+					} catch (Exception e) {}
+					if (preloader != null){
+						preloader.preloadForCaseIds(casesIds);
+					}
+					variablesToLoad.add(variableName);
 				}
 			}
-			//	Loading cases by IDs
-			cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
-		}
+			LOGGER.info("TST1.1 Gather whats needed " + (System.currentTimeMillis() - start) + " ms");
+			try {
+				procInstCase = casesBPMDAO.getProcessInstancesAndCasesIdsByCasesIds(casesIds);
+			} catch (Exception e) {}
 
+			LOGGER.info("TST1.2 got proc ids " + (System.currentTimeMillis() - start) + " ms");
+
+			List<Integer> caseIds = new ArrayList<Integer>();
+			Map<Integer, Long> caseProcInst = new HashMap<>();
+			for (Long key : procInstCase.keySet()){
+				caseProcInst.put(procInstCase.get(key), key);
+				caseIds.add(procInstCase.get(key));
+			}
+
+			getCasesListVariableCache().addCache(CASE_PROC_ID_BIND, caseProcInst);
+
+			if (preLoadCases) {
+				preLoadCases(caseProcInst);
+			}
+
+			if (preLoadStatus){
+				preLoadStatuses();
+			}
+
+			LOGGER.info("TST1.3 preload cases " + (System.currentTimeMillis() - start) + " ms");
+
+			if (!ListUtil.isEmpty(variablesToLoad)) {
+				preLoadVariablesForCases(procInstCase, variablesToLoad);
+			}
+
+
+			LOGGER.info("TST1.4 preload vars " + (System.currentTimeMillis() - start) + " ms");
+			List<Integer> sortedIds = new ArrayList<Integer>(caseIds);
+
+			if (!criterias.isNoOrdering()) {
+				CaseComparator comparator = getCaseComparator(criterias, locale);
+				getLogger().info("Sorting cases by comparator: " + comparator + " and sorting options: " + criterias.getSortingOptions());
+				Collections.sort(sortedIds, comparator);
+			}
+
+			if (usePaging)
+				sortedIds = getSubList(sortedIds, startIndex, count, totalCount);
+
+			LOGGER.info("TST1.5 " + (System.currentTimeMillis() - start) + " ms");
+			cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale);
+			if (!criterias.isNoOrdering()) {
+				List<CasePresentation> casesTmp = new ArrayList<CasePresentation>();
+				for (Integer id: sortedIds){
+					for (CasePresentation cp : cases.getCollection()){
+						if (id.equals(cp.getPrimaryKey())) {
+							casesTmp.add(cp);
+							cases.getCollection().remove(cp);
+							break;
+						}
+					}
+				}
+				cases = new PagedDataCollection<CasePresentation>(casesTmp);
+			}
+		}
 		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
 			return null;
 
-		List<CasePresentation> result = new ArrayList<CasePresentation>(cases.getCollection());
-		if (!criterias.isNoOrdering()) {
-			CasePresentationComparator comparator = getCasePresentationComparator(criterias, locale);
-			getLogger().info("Sorting cases by comparator: " + comparator + " and sorting options: " + criterias.getSortingOptions());
-			Collections.sort(result, comparator);
-		}
-		if (usePaging && !noSortingOptions)
-			result = getSubList(result, startIndex, count, totalCount);
-
-		cases = new PagedDataCollection<CasePresentation>(result);
 		LOGGER.info("Sorting and paging was executed in " + (System.currentTimeMillis() - start) + " ms");
 		return cases;
+	}
+
+	private void preLoadStatuses() {
+		try {
+			List<String> statuses = getCasesBusiness(getIWApplicationContext()).getAllCasesStatuses();
+			Map<String, String> statusMap = new HashMap<>();
+			for (String statusKey : statuses){
+				String key = ProcessConstants.CASE_STATUS_KEY + CoreConstants.DOT + statusKey;
+				IWResourceBundle iwrb = getIWApplicationContext().getIWMainApplication().getBundle("is.idega.idegaweb.egov.cases").getResourceBundle(IWContext.getCurrentInstance().getCurrentLocale());
+				statusMap.put(statusKey, iwrb.getLocalizedString(key, statusKey));
+			}
+			getCasesListVariableCache().addCache(STATUS_MAP_CACHE, statusMap);
+		} catch (Exception e) {
+		}
+
+	}
+
+	private void preLoadVariablesForCases(Map<Long, Integer> procInstCase, List<String> variables) {
+		Map<Long, Map<String, VariableInstanceInfo>> vars = getVariableInstanceQuerier().getVariablesByNamesAndValuesAndExpressionsByProcesses(null, variables, null, new ArrayList(procInstCase.keySet()), null);
+		getCasesListVariableCache().addCache(VARIABLE_INFO_CACHE_NAME, vars);
+	}
+
+	private void preLoadCases(Map<Integer, Long> caseProcInst) {
+		Collection<Case> cases = getCasesBusiness(getIWApplicationContext()).getCasesByIds(caseProcInst.keySet());
+		Map<Integer, Case> caseProc = new HashMap<Integer, Case>();
+		for (Case cs : cases){
+			caseProc.put(Integer.parseInt(cs.getId()), cs);
+		}
+		getCasesListVariableCache().addCache(CASE_DATA_CACHE_NAME, caseProc);
 	}
 
 	private <T> List<T> getSubList(List<T> list, int startIndex, int count, int totalCount) {
@@ -747,6 +855,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		} else {
 			return list.subList(startIndex, totalCount);
 		}
+	}
+
+	private CaseComparator getCaseComparator(CasesListSearchCriteriaBean criterias, Locale locale) {
+		return (criterias == null || ListUtil.isEmpty(criterias.getSortingOptions())) ?
+				new CaseComparator() :
+				new BPMCaseComparator(locale, criterias);
 	}
 
 	private CasePresentationComparator getCasePresentationComparator(CasesListSearchCriteriaBean criterias, Locale locale) {
@@ -1726,5 +1840,27 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (jQuery == null)
 			ELUtil.getInstance().autowire(this);
 		return jQuery;
+	}
+
+	private CaseBusiness getCaseBusiness() {
+		try {
+			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+
+	public CaseListVariableCache getCasesListVariableCache() {
+		return ELUtil.getInstance().getBean(CaseListVariableCache.NAME);
+	}
+
+	public VariableInstanceQuerier getVariableInstanceQuerier() {
+		if (variableInstanceQuerier == null) ELUtil.getInstance().autowire(this);
+		return variableInstanceQuerier;
+	}
+
+	public void setVariableInstanceQuerier(VariableInstanceQuerier variableInstanceQuerier) {
+		this.variableInstanceQuerier = variableInstanceQuerier;
 	}
 }
