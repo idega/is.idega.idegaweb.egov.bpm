@@ -1492,12 +1492,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale) {
 		Long start = System.currentTimeMillis();
 		Collection<Case> cases = getCasesBusiness().getCasesByIds(ids);
-		LOGGER.info("CASE BY ID EXTRACTION " + (System.currentTimeMillis() - start) + " ms");
-		try {
-			return getCasesByEntities(cases, locale);
-		} finally {
-			LOGGER.info("CASE PRESENTATION EXTRACTION " + (System.currentTimeMillis() - start) + " ms");
-		}
+		return getCasesByEntities(cases, locale);
 	}
 
 	@Override

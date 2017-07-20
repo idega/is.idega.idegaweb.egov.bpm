@@ -708,7 +708,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			Collections.sort(casesIds, c);
 		}
 
-		LOGGER.info("TST1 " + (System.currentTimeMillis() - start) + " ms");
 		int totalCount = casesIds.size();
 		criterias.setFoundResults(totalCount);
 		if (criterias.getPageSize() <= 0)
@@ -757,12 +756,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					}
 				}
 
-				LOGGER.info("TST1.1 Gather whats needed " + (System.currentTimeMillis() - start) + " ms");
 				try {
 					procInstCase = casesBPMDAO.getProcessInstancesAndCasesIdsByCasesIds(casesIds);
 				} catch (Exception e) {}
-
-				LOGGER.info("TST1.2 got proc ids " + (System.currentTimeMillis() - start) + " ms");
 
 				List<Integer> caseIds = new ArrayList<Integer>();
 				Map<Integer, Long> caseProcInst = new HashMap<>();
@@ -781,14 +777,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					preLoadStatuses();
 				}
 
-				LOGGER.info("TST1.3 preload cases " + (System.currentTimeMillis() - start) + " ms");
-
 				if (!ListUtil.isEmpty(variablesToLoad)) {
 					preLoadVariablesForCases(procInstCase, variablesToLoad);
 				}
 
-
-				LOGGER.info("TST1.4 preload vars " + (System.currentTimeMillis() - start) + " ms");
 				List<Integer> sortedIds = new ArrayList<Integer>(caseIds);
 
 				if (!criterias.isNoOrdering()) {
@@ -800,7 +792,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				if (usePaging)
 					sortedIds = getSubList(sortedIds, startIndex, count, totalCount);
 
-				LOGGER.info("TST1.5 " + (System.currentTimeMillis() - start) + " ms");
 				cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale);
 				if (!criterias.isNoOrdering()) {
 					List<CasePresentation> casesTmp = new ArrayList<CasePresentation>();
