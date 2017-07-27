@@ -381,6 +381,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		Locale locale = CoreUtil.getCurrentLocale();
+		boolean latestValueOnly = IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("bpm_var.search_by_latest", false);
 
 		List<Long> allResults = null;
 		List<Long> variableResults = null;
@@ -426,6 +427,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			} else if (variable.isLongType()) {
 				if (value instanceof Long) {
 					variableResults = getCaseIdsByVariable(
+							latestValueOnly ? CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariablesLastValue :
 							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables,
 							processDefinitionName,
 							variable.getName(),
@@ -439,7 +441,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				if (value instanceof String) {
 					String query = VariableInstanceQuerierImpl.isDataMirrowed() ?
 							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables :
-							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow;
+							latestValueOnly ? CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrowLast : CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow;
 					variableResults = getCaseIdsByVariable(query, processDefinitionName, variable.getName(),
 							CoreConstants.PERCENT.concat((String) value).concat(CoreConstants.PERCENT), BPMProcessVariable.STRING_TYPES);
 				}
@@ -1924,11 +1926,22 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				tmpNames.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
 		}
 
-		String query = "select v.id_, v.name_, v.class_, v.stringvalue_, v.LONGVALUE_, v.DOUBLEVALUE_, v.DATEVALUE_, v.BYTEARRAYVALUE_, " +
+		boolean latestValueOnly = IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("bpm_var.search_by_latest", false);
+
+		String query = latestValueOnly ?
+				"select v.id_, v.name_, v.class_, v.stringvalue_, v.LONGVALUE_, v.DOUBLEVALUE_, v.DATEVALUE_, v.BYTEARRAYVALUE_, " +
+				"v.TASKINSTANCE_, v.processinstance_, b." + CaseProcInstBind.caseIdColumnName + " from jbpm_variableinstance v " +
+				" left join " + CaseProcInstBind.TABLE_NAME + " b on v.processinstance_ = b." + CaseProcInstBind.procInstIdColumnName +
+				" left join JBPM_VARIABLEINSTANCE var2 on v.PROCESSINSTANCE_ = var2.PROCESSINSTANCE_ and v.NAME_ = var2.NAME_ and v.ID_ < var2.ID_ "+
+				" where b." + CaseProcInstBind.caseIdColumnName + " in (" + tmpCases.toString() + ") and v.name_ in (" + tmpNames.toString() +
+				") and v.CLASS_ <> '" + VariableInstanceType.NULL.getTypeKeys().get(0) + "' and var2.ID_ is null "
+				:
+				"select v.id_, v.name_, v.class_, v.stringvalue_, v.LONGVALUE_, v.DOUBLEVALUE_, v.DATEVALUE_, v.BYTEARRAYVALUE_, " +
 				"v.TASKINSTANCE_, v.processinstance_, b." + CaseProcInstBind.caseIdColumnName + " from jbpm_variableinstance v, " +
 				CaseProcInstBind.TABLE_NAME + " b where b." +	CaseProcInstBind.caseIdColumnName + " in (" + tmpCases.toString() +
 				") and v.processinstance_ = b." + CaseProcInstBind.procInstIdColumnName + " and v.name_ in (" + tmpNames.toString() +
 				") and v.CLASS_ <> '" + VariableInstanceType.NULL.getTypeKeys().get(0) + "'";
+
 		List<Serializable[]> data = null;
 		try {
 			data = SimpleQuerier.executeQuery(query, 11);

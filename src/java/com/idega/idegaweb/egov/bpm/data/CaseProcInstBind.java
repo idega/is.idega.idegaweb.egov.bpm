@@ -160,6 +160,14 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 				" var.PROCESSINSTANCE_ where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp +
 				") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp + " and var.LONGVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
 			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariablesLastValue, resultSetMapping="caseId",
+			query=
+				"select cp.case_id caseId from JBPM_PROCESSINSTANCE pi inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.id_ inner join " +
+				CaseProcInstBind.TABLE_NAME + " cp on pi.ID_ = cp." + CaseProcInstBind.procInstIdColumnName + " inner join JBPM_VARIABLEINSTANCE var on pi.ID_ =" +
+				" var.PROCESSINSTANCE_ left join JBPM_VARIABLEINSTANCE var2 on var.PROCESSINSTANCE_ = var2.PROCESSINSTANCE_ and var.NAME_ = var2.NAME_ and var.ID_ < var2.ID_ " +
+				"where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp + " and var.CLASS_ in (:" + CaseProcInstBind.variablesTypesProp +
+				") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp + " and var.LONGVALUE_ = :" + CaseProcInstBind.variablesValuesProp + " and var2.ID_ is null group by cp.case_id"
+			),
 			//	Queries to case IDs by STRING variables
 			//	Using mirrow table
 			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables, resultSetMapping="caseId",
@@ -179,6 +187,15 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 				"inner join JBPM_VARIABLEINSTANCE var on pi.ID_ = var.PROCESSINSTANCE_ where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp +
 				" and var.CLASS_ in (:" +	CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp +
 				" and lower(var.STRINGVALUE_) like :" + CaseProcInstBind.variablesValuesProp + " group by cp.case_id"
+			),
+			@NamedNativeQuery(name=CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrowLast, resultSetMapping="caseId",
+			query=
+				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." +
+				CaseProcInstBind.procInstIdColumnName + " = pi.ID_ inner join JBPM_PROCESSDEFINITION pd on pi.PROCESSDEFINITION_ = pd.ID_ " +
+				"inner join JBPM_VARIABLEINSTANCE var on pi.ID_ = var.PROCESSINSTANCE_ left join JBPM_VARIABLEINSTANCE var2 on var.PROCESSINSTANCE_ = var2.PROCESSINSTANCE_ and var.NAME_ = var2.NAME_ and var.ID_ < var2.ID_ " +
+				" where pd.NAME_ = :" + CaseProcInstBind.processDefinitionNameProp +
+				" and var.CLASS_ in (:" +	CaseProcInstBind.variablesTypesProp + ") and var.NAME_ = :" + CaseProcInstBind.variablesNamesProp +
+				" and lower(var.STRINGVALUE_) like :" + CaseProcInstBind.variablesValuesProp + " and var2.ID_ is null group by cp.case_id"
 			),
 			/** Variable queries end **/
 
@@ -249,9 +266,11 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByProcessDefinitionName = "CaseProcInstBind.getCaseIdsByProcessDefinitionName";
 	public static final String getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables = "CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables";
 	public static final String getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow = getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables + "NoMirrow";
+	public static final String getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrowLast = getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow + "Last";
 	public static final String getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables = "CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDateVariables";
 	public static final String getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables = "CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndDoubleVariables";
 	public static final String getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables = "CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariables";
+	public static final String getCaseIdsByProcessDefinitionIdsAndNameAndLongVariablesLastValue = "CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndLongVariablesLastValue";
 	public static final String getCaseIdsByCaseNumber = "CaseProcInstBind.getCaseIdsByCaseNumber";
 	public static final String getCaseIdsByCaseNumberNoMirrow = getCaseIdsByCaseNumber + "NoMirrow";
 	public static final String getCaseIdsByCaseStatus = "CaseProcInstBind.getCaseIdsByCaseStatus";
