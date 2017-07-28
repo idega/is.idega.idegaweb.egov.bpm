@@ -38,6 +38,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					addExportContacts = false,
 					showUserCompany = false,
 					showTimeSpentOnCase = false,
+					showCaseSubstatus = false,
 					search = false;
 
 	public String getProcessId() {
@@ -270,6 +271,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setShowTimeSpentOnCase(boolean showTimeSpentOnCase) {
 		this.showTimeSpentOnCase = showTimeSpentOnCase;
+	}
+
+	public boolean isShowCaseSubstatus() {
+		return showCaseSubstatus;
+	}
+
+	public void setShowCaseSubstatus(boolean showCaseSubstatus) {
+		this.showCaseSubstatus = showCaseSubstatus;
 	}
 
 }
