@@ -1191,6 +1191,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				}
 				putIdsToCache(casesIds, key);
 			}
+			getLogger().log(Level.INFO, this.getClass().getName() + " found " + casesIds.size() + " case ids.");
 		}
 	}
 

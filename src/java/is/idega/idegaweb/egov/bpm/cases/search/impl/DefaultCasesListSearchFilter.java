@@ -1,9 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
-import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
-import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,6 +22,10 @@ import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
+import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchFilter;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean implements CasesListSearchFilter {
 
@@ -82,6 +82,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	}
 
 	private List<Integer> beforeFiltering() {
+		if (!isCacheUpdateTurnedOn()) return null;
 		String searchKey = getSearchKey();
 		if (searchKey == null) {
 			return null;
@@ -96,8 +97,13 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return cachedIds;
 	}
 
+	private boolean isCacheUpdateTurnedOn() {
+		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
+	}
+
 	protected void afterFiltering(String info, List<Integer> ids) {
 		try {
+			if (!isCacheUpdateTurnedOn()) return;
 			if (ids == null) {
 				return;
 			}
