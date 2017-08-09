@@ -1189,9 +1189,17 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							handlerCategoryIDs
 					);
 				}
-				putIdsToCache(casesIds, key);
+
+				if (casesIds != null)
+					putIdsToCache(casesIds, key);
+
+				Map<Integer, Date> cachedData = getCachedIds(key);
+				String amount = cachedData == null ? "0" : String.valueOf(cachedData.size());
+				getLogger().log(Level.INFO, this.getClass().getName() + " found " + amount + " case ids.");
+			} else {
+				String amount = casesIds == null ? "0" : String.valueOf(casesIds.size());
+				getLogger().log(Level.INFO, this.getClass().getName() + " found " + amount + " case ids.");
 			}
-			getLogger().log(Level.INFO, this.getClass().getName() + " found " + casesIds.size() + " case ids.");
 		}
 	}
 

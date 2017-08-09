@@ -1,6 +1,9 @@
 package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -44,6 +47,8 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	private long start;
 	private long end;
 	private boolean measure;
+	private List<Integer> initialCasesIds = null;
+
 
 	public DefaultCasesListSearchFilter() {
 		super();
@@ -78,11 +83,26 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 
 		String filterKey = getFilterKey();
 		filterKey = filterKey == null ? CoreConstants.MINUS : filterKey;
+		StringBuilder sb = new StringBuilder();
+		if (getInitialCasesIds() != null ) {
+			for (Integer id : getInitialCasesIds())
+			{
+			    sb.append(id.toString());
+			}
+		}
+		MessageDigest md = null;
+		try {
+			md = MessageDigest.getInstance("SHA");
+		} catch (NoSuchAlgorithmException e) {
+		}
+		if (md != null){
+			byte[] arr = md.digest(sb.toString().getBytes());
+			filterKey = filterKey.concat(CoreConstants.UNDER).concat(Base64.getEncoder().encodeToString(arr));
+		}
 		return filterKey.concat(CoreConstants.UNDER).concat(this.toString());
 	}
 
 	private List<Integer> beforeFiltering() {
-		if (!isCacheUpdateTurnedOn()) return null;
 		String searchKey = getSearchKey();
 		if (searchKey == null) {
 			return null;
@@ -97,13 +117,8 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return cachedIds;
 	}
 
-	private boolean isCacheUpdateTurnedOn() {
-		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
-	}
-
 	protected void afterFiltering(String info, List<Integer> ids) {
 		try {
-			if (!isCacheUpdateTurnedOn()) return;
 			if (ids == null) {
 				return;
 			}
@@ -126,6 +141,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 
 	@Override
 	public List<Integer> doFilter(List<Integer> casesIds) {
+		setInitialCasesIds(casesIds);
 		List<Integer> cachedIds = beforeFiltering();
 		if (!ListUtil.isEmpty(cachedIds)) {
 			return getNarrowedResults(casesIds, cachedIds);
@@ -373,6 +389,14 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 
 	protected String getAddress() {
 		return criterias instanceof CasesListSearchCriteriaBean ? ((CasesListSearchCriteriaBean) criterias).getAddress() : null;
+	}
+
+	public List<Integer> getInitialCasesIds() {
+		return initialCasesIds;
+	}
+
+	public void setInitialCasesIds(List<Integer> initialCasesIds) {
+		this.initialCasesIds = initialCasesIds;
 	}
 
 }
