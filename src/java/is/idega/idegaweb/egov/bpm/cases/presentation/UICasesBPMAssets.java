@@ -102,6 +102,14 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		super.initializeComponent(context);
 
 		String caseID = context.getExternalContext().getRequestParameterMap().get(ProcessManagerBind.caseIdParam);
+		String processIntanceId = context.getExternalContext().getRequestParameterMap().get(ProcessManagerBind.processInstanceIdParam);
+		if (StringUtil.isEmpty(caseID) && !StringUtil.isEmpty(processIntanceId)) {
+			Integer id = getCasesBPMDAO().getCaseIdByProcessId(Long.valueOf(processIntanceId));
+			if (id != null) {
+				caseID = id.toString();
+			}
+		}
+		
 		if (caseID != null && caseID.length() > 0) {
 			setCaseId(new Integer(caseID));
 		}
@@ -329,8 +337,8 @@ public class UICasesBPMAssets extends IWBaseComponent {
 		if (caseId != null) {
 			CasesBPMAssetsState stateBean = getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 			stateBean.setCaseId(caseId);
+			this.caseId = caseId;
 		}
-		this.caseId = caseId;
 	}
 
 	private Web2Business getWeb2Business() {
