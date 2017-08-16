@@ -1,7 +1,5 @@
 package com.idega.idegaweb.egov.bpm.presentation;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,9 +23,12 @@ import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 
 public abstract class DefaultCasesListCustomizer extends DefaultSpringBean implements CasesListCustomizer {
 
@@ -131,7 +132,18 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 		}
 
-		Map<Long, List<VariableInstanceInfo>> vars = getCasesBPMDAO().getBPMValuesByCasesIdsAndVariablesNames(casesIds, headersKeys);
+		List<Integer> tmp = new ArrayList<>();
+		for (String caseId: casesIds) {
+			if (StringHandler.isNumeric(caseId)) {
+				tmp.add(Integer.valueOf(caseId));
+			}
+		}
+		Map<Long, Integer> procInstIdsAndCasesIds = getCasesBPMDAO().getProcessInstancesAndCasesIdsByCasesIds(tmp);
+		if (MapUtil.isEmpty(procInstIdsAndCasesIds)) {
+			return null;
+		}
+
+		Map<Long, List<VariableInstanceInfo>> vars = getVariablesQuerier().getGroupedVariables(getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(procInstIdsAndCasesIds.keySet(), headersKeys));
 		if (MapUtil.isEmpty(vars)) {
 			getLogger().warning("There are no values for cases " + casesIds + " and variables " + headersKeys);
 			return null;
@@ -142,14 +154,21 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		Map<String, Long> mappings = new HashMap<String, Long>();
 		for (Long procId: vars.keySet()) {
 			List<VariableInstanceInfo> procVars = vars.get(procId);
-			if (ListUtil.isEmpty(procVars))
+			if (ListUtil.isEmpty(procVars)) {
 				continue;
+			}
 
 			Map<String, String> caseLabels = null;
 			for (VariableInstanceInfo info: procVars) {
-				String caseId = info.getCaseId();
-				if (StringUtil.isEmpty(caseId))
+				Integer caseIdTmp = procInstIdsAndCasesIds.get(procId);
+				if (caseIdTmp == null) {
 					continue;
+				}
+
+				String caseId = caseIdTmp.toString();
+				if (StringUtil.isEmpty(caseId)) {
+					continue;
+				}
 
 				mappings.put(caseId, procId);
 
@@ -158,10 +177,14 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 					caseLabels = new HashMap<String, String>();
 					labels.put(caseId, caseLabels);
 				}
+				if (caseLabels.containsKey(info.getName())) {
+					continue;
+				}
 
 				Serializable value = info.getValue();
-				if (value == null)
+				if (value == null) {
 					continue;
+				}
 
 				AdvancedProperty label = getLabel(info);
 				caseLabels.put(label.getId(), label.getValue());
