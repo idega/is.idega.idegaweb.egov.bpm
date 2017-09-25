@@ -367,7 +367,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<Long> getCaseIdsByProcessDefinitionNameAndVariables(String processDefinitionName, List<BPMProcessVariable> variables) {
-
 		if (StringUtil.isEmpty(processDefinitionName)) {
 			return null;
 		}
@@ -441,9 +440,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				if (value instanceof String) {
 					String query = VariableInstanceQuerierImpl.isDataMirrowed() ?
 							CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariables :
-							latestValueOnly ? CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrowLast : CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow;
-					variableResults = getCaseIdsByVariable(query, processDefinitionName, variable.getName(),
-							CoreConstants.PERCENT.concat((String) value).concat(CoreConstants.PERCENT), BPMProcessVariable.STRING_TYPES);
+							latestValueOnly ?
+									CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrowLast :
+									CaseProcInstBind.getCaseIdsByProcessDefinitionIdsAndNameAndStringVariablesNoMirrow;
+					variableResults = getCaseIdsByVariable(
+							query,
+							processDefinitionName,
+							variable.getName(),
+							value,
+							BPMProcessVariable.STRING_TYPES
+					);
 				}
 
 			// Unsupported variable
