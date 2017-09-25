@@ -7,8 +7,6 @@ import java.util.Locale;
 
 import javax.faces.context.FacesContext;
 
-import org.jbpm.JbpmContext;
-import org.jbpm.JbpmException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.business.IBOLookup;
@@ -16,11 +14,9 @@ import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
 import com.idega.facelets.ui.FaceletComponent;
 import com.idega.idegaweb.IWBundle;
-import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseState;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
-import com.idega.jbpm.JbpmCallback;
 import com.idega.presentation.IWBaseComponent;
 import com.idega.presentation.IWContext;
 import com.idega.util.PresentationUtil;
@@ -31,13 +27,11 @@ import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CaseStateConfigBean;
 
-import org.jbpm.graph.def.ProcessDefinition;
-
 public class UICaseStateConfig  extends IWBaseComponent {
 
 	public static final String SAVE_STATE_PARAMETER = "iw_save_case_state";
 	public static final String ADD_STATE_PARAMETER = "iw_add_case_state";
-	
+
 	public static final String STATE_NAME_PARAMETER = "iw_state_name";
 	public static final String STATE_PROCESS_NAME_PARAMETER = "iw_process_name";
 	public static final String STATE_LOCALIZATION_KEY_PARAMETER = "iw_localization_key_name";
@@ -46,30 +40,30 @@ public class UICaseStateConfig  extends IWBaseComponent {
 	public static final String STATE_INACTIVE_SLA_PARAMETER = "iw_inactive_sla_name";
 	public static final String STATE_SLA_REMINDER_INTERVAL_PARAMETER = "iw_state_sla_reminder_interval";
 	public static final String STATE_SEQUENCE_ID_PARAMETER = "iw_state_sequence_id";
-	
-	
+
+
 	@Autowired
 	private BPMContext bpmContext;
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	private CaseStateConfigBean caseStateConfigBean;
-	
+
 	private int error = 0;
-	
+
 	@Override
 	protected void initializeComponent(FacesContext context) {
-		
+
 		super.initializeComponent(context);
-		
+
 		IWContext iwc = IWContext.getIWContext(context);
-		
+
 		try {
 			if (iwc.isParameterSet(ADD_STATE_PARAMETER)){
 				addState(iwc);
 			}
-			
+
 			if (iwc.isParameterSet(SAVE_STATE_PARAMETER)){
 				updateState(iwc);
 			}
@@ -77,34 +71,34 @@ public class UICaseStateConfig  extends IWBaseComponent {
 			setError(1);
 			e.printStackTrace();
 		}
-		
+
 		this.caseStateConfigBean = ELUtil.getInstance().getBean(CaseStateConfigBean.NAME);
-		
+
 		ApplicationBusiness appBusiness = getApplicationBusiness(iwc);
 		Collection<Application> processDefinitions = appBusiness.getAvailableApplications(iwc, null);
-		
+
 		List<List<String>> procDefNames = new ArrayList<List<String>>();
 		Locale locale = iwc.getCurrentLocale();
 		for (Application processDefinition: processDefinitions){
-			
+
 				List<String> values = new ArrayList<String>();
 				procDefNames.add(values);
 				values.add(processDefinition.getUrl());
 				values.add(appBusiness.getApplicationName(processDefinition, locale));
-		
+
 		}
-		
+
 		List<CaseState> caseStates = getCasesBPMDAO().getCaseStates();
-		
+
 		this.caseStateConfigBean.setCaseStates(caseStates);
 		this.caseStateConfigBean.setProcessDefinitions(procDefNames);
-		
+
 		IWBundle bundle = getBundle(context, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
 		FaceletComponent facelet = (FaceletComponent)context.getApplication().createComponent(FaceletComponent.COMPONENT_TYPE);
 		facelet.setFaceletURI(bundle.getFaceletURI("UICasesStatusConfig.xhtml"));
-		
-		PresentationUtil.addJavaScriptSourceLineToHeader(iwc, bundle.getVirtualPathWithFileNameString("javascript/CaseStateConfig.js")); 
-		
+
+		PresentationUtil.addJavaScriptSourceLineToHeader(iwc, bundle.getVirtualPathWithFileNameString("javascript/CaseStateConfig.js"));
+
 		this.add(facelet);
 	}
 
@@ -173,7 +167,7 @@ public class UICaseStateConfig  extends IWBaseComponent {
 	public void setError(int error) {
 		this.error = error;
 	}
-	
+
 	private ApplicationBusiness getApplicationBusiness(IWContext iwc) {
 		try {
 			return IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);

@@ -1,8 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
-import is.idega.idegaweb.egov.cases.util.CasesConstants;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +26,9 @@ import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 @Service
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)

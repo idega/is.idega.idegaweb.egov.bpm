@@ -45,10 +45,8 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	private CasesSearchCriteriaBean criterias;
 
 	private long start;
-	private long end;
 	private boolean measure;
 	private List<Integer> initialCasesIds = null;
-
 
 	public DefaultCasesListSearchFilter() {
 		super();
