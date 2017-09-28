@@ -495,4 +495,10 @@ public interface CasesBPMDAO extends GenericDao {
 
 	List<Integer> getCaseIdsByProcessDef(String processDefinitionName);
 
+	/**
+	 * 
+	 * @param uuid is process instance id in Camunda BPM, not <code>null</code>
+	 * @return entity or <code>null</code> on failure
+	 */
+	CaseProcInstBind findByUUID(String uuid);
 }

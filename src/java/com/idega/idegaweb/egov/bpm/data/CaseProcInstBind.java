@@ -321,6 +321,13 @@ public class CaseProcInstBind implements Serializable {
 	@Column(name="case_identifier", unique=false)
 	private String caseIdentifier;
 
+	public static final String uuidProp = "uuid";
+	public static final String COLUMN_UUID = "UUID";
+	@Column(name = COLUMN_UUID, 
+			unique = true, 
+			nullable = true)
+	private String uuid;
+
 	public static final String processDefinitionIdsProp = "processDefinitionIds";
 	public static final String processDefinitionNameProp = "processDefinitionName";
 	public static final String caseNumberProp = "caseNumber";
@@ -381,6 +388,20 @@ public class CaseProcInstBind implements Serializable {
 	public void setCaseIdentifier(String caseIdentifier) {
     	this.caseIdentifier = caseIdentifier;
     }
+
+	/**
+	 * @return process instance id in Camunda or <code>null</code> if BPM 1 was used
+	 */
+	public String getUuid() {
+		return uuid;
+	}
+
+	/**
+	 * @param uuid is process instance id in Camunda or <code>null</code> if BPM 1 was used
+	 */
+	public void setUuid(String uuid) {
+		this.uuid = uuid;
+	}
 
 	@Override
 	public String toString() {

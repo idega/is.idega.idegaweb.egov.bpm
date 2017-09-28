@@ -2508,4 +2508,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return null;
 	}
 
+	/*
+	 * (non-Javadoc)
+	 * @see com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO#findByUUID(java.lang.String)
+	 */
+	@Override
+	public CaseProcInstBind findByUUID(String uuid) {
+		if (!StringUtil.isEmpty(uuid)) {
+			return getSingleResultByInlineQuery(
+					"FROM com.idega.idegaweb.egov.bpm.data.CaseProcInstBind c WHERE c.uuid = :" + CaseProcInstBind.uuidProp, 
+					CaseProcInstBind.class, 
+					new Param(CaseProcInstBind.uuidProp, uuid));
+		}
+
+		return null;
+	};
 }
