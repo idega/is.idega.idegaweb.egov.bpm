@@ -49,7 +49,6 @@ import com.idega.block.process.presentation.UserCases;
 import com.idega.block.process.presentation.beans.CaseComparator;
 import com.idega.block.process.presentation.beans.CaseListPropertiesBean;
 import com.idega.block.process.presentation.beans.CasePresentation;
-import com.idega.block.process.presentation.beans.CasePresentationComparator;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.block.process.presentation.beans.CasesSearchResults;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
@@ -64,7 +63,6 @@ import com.idega.builder.business.BuilderLogic;
 import com.idega.builder.business.BuilderLogicWrapper;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
-import com.idega.business.IBORuntimeException;
 import com.idega.core.accesscontrol.bean.UserHasLoggedInEvent;
 import com.idega.core.builder.data.ICPage;
 import com.idega.core.business.DefaultSpringBean;
@@ -834,7 +832,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private void preLoadVariablesForCases(Map<Long, Integer> procInstCase, List<String> variables) {
-		Map<Long, Map<String, VariableInstanceInfo>> vars = getVariableInstanceQuerier().getVariablesByNamesAndValuesAndExpressionsByProcesses(null, variables, null, new ArrayList(procInstCase.keySet()), null);
+		Map<Long, Map<String, VariableInstanceInfo>> vars = getVariableInstanceQuerier().getVariablesByNamesAndValuesAndExpressionsByProcesses(
+				null,
+				variables,
+				null,
+				new ArrayList<>(procInstCase.keySet()),
+				null
+		);
 		getCasesListVariableCache().addCache(VARIABLE_INFO_CACHE_NAME, vars);
 	}
 
@@ -859,12 +863,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return (criterias == null || ListUtil.isEmpty(criterias.getSortingOptions())) ?
 				new CaseComparator() :
 				new BPMCaseComparator(locale, criterias);
-	}
-
-	private CasePresentationComparator getCasePresentationComparator(CasesListSearchCriteriaBean criterias, Locale locale) {
-		return (criterias == null || ListUtil.isEmpty(criterias.getSortingOptions())) ?
-				new CasePresentationComparator() :
-				new BPMCasePresentationComparator(locale, criterias);
 	}
 
 	private BuilderLogicWrapper getBuilderLogic() {
@@ -1838,15 +1836,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (jQuery == null)
 			ELUtil.getInstance().autowire(this);
 		return jQuery;
-	}
-
-	private CaseBusiness getCaseBusiness() {
-		try {
-			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
-			throw new IBORuntimeException(ile);
-		}
 	}
 
 	public CaseListVariableCache getCasesListVariableCache() {
