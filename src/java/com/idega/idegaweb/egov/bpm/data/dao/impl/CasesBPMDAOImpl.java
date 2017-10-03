@@ -1654,8 +1654,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		List<Serializable[]> data = null;
-		String query = "select b.process_instance_id from " + CaseProcInstBind.TABLE_NAME + " b, proc_case c where c.CASE_SUBJECT = '" + subject +
-				"' and b.case_id = c.PROC_CASE_ID";
+		String query = "select b." + CaseProcInstBind.procInstIdColumnName + " from " + CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.TABLE_NAME + " c where" +
+				" c." + CaseBMPBean.COLUMN_CASE_SUBJECT + " = '" + subject + "' and b." + CaseProcInstBind.caseIdColumnName + " = c." + CaseBMPBean.PK_COLUMN +
+				" order by c." +  CaseBMPBean.COLUMN_CREATED + " desc";
 		try {
 			data = SimpleQuerier.executeQuery(query, 1);
 		} catch (Exception e) {
@@ -2522,8 +2523,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	public CaseProcInstBind findByUUID(String uuid) {
 		if (!StringUtil.isEmpty(uuid)) {
 			return getSingleResultByInlineQuery(
-					"FROM com.idega.idegaweb.egov.bpm.data.CaseProcInstBind c WHERE c.uuid = :" + CaseProcInstBind.uuidProp, 
-					CaseProcInstBind.class, 
+					"FROM com.idega.idegaweb.egov.bpm.data.CaseProcInstBind c WHERE c.uuid = :" + CaseProcInstBind.uuidProp,
+					CaseProcInstBind.class,
 					new Param(CaseProcInstBind.uuidProp, uuid));
 		}
 
