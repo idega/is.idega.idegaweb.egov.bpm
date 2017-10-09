@@ -1072,16 +1072,16 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public AdvancedProperty getExportedSearchResults(String id) {
-		return getExportedSearchResults(id, false, false, null);
+	public AdvancedProperty getExportedSearchResults(String id, boolean exportContacts, boolean showCompany) {
+		return getSearchResults(id, exportContacts, showCompany, null);
 	}
 
 	@Override
 	public <T extends MediaWritable> AdvancedProperty getSearchResultsWithExporter(String id, Class<T> exporter) {
-		return getExportedSearchResults(id, false, false, exporter);
+		return getSearchResults(id, false, false, exporter);
 	}
 
-	private <T extends MediaWritable> AdvancedProperty getExportedSearchResults(String pageURI, boolean exportContacts, boolean showCompany, Class<T> exporter) {
+	private <T extends MediaWritable> AdvancedProperty getSearchResults(String pageURI, boolean exportContacts, boolean showCompany, Class<T> exporter) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
