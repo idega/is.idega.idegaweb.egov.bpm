@@ -1,8 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
-import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-
 import java.util.Iterator;
 import java.util.Locale;
 import java.util.Map;
@@ -39,6 +36,9 @@ import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -169,7 +169,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 			}
 
 			previousStatus = theCase.getCaseStatus().getStatus();
-			if (ifCaseStatus == null || ifCaseStatus.equals(previousStatus)) {
+			if (StringUtil.isEmpty(ifCaseStatus) || ifCaseStatus.equals(previousStatus)) {
 				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
 				if (performerUserId == null) {
 					if (iwc != null) {
