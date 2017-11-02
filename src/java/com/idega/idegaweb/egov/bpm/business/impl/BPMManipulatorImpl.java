@@ -1,6 +1,7 @@
 package com.idega.idegaweb.egov.bpm.business.impl;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -26,6 +27,7 @@ import org.springframework.util.Base64Utils;
 import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
+import com.idega.block.process.data.CaseHome;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.xformsview.converters.DataConvertersFactory;
@@ -34,6 +36,7 @@ import com.idega.core.accesscontrol.business.LoginDBHandler;
 import com.idega.core.accesscontrol.dao.UserLoginDAO;
 import com.idega.core.accesscontrol.data.bean.UserLogin;
 import com.idega.core.business.DefaultSpringBean;
+import com.idega.data.IDOLookup;
 import com.idega.idegaweb.egov.bpm.business.BPMManipulator;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -131,6 +134,30 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 	@Override
 	@RemoteMethod
+	public boolean doReSubmitCaseByIdentifierWithVariables(String caseIdentifier, boolean onlyStart, boolean submitRepeatedTasks, String variablesEncodedBase64) {
+		if (StringUtil.isEmpty(caseIdentifier)) {
+			getLogger().warning("Case's identifier is not provided");
+			return false;
+		}
+
+		try {
+			CaseHome caseHome = (CaseHome) IDOLookup.getHome(Case.class);
+			Collection<Case> cases = caseHome.findCasesByCaseIdentifier(caseIdentifier);
+			if (ListUtil.isEmpty(cases)) {
+				return false;
+			}
+
+			Integer caseId = (Integer) cases.iterator().next().getPrimaryKey();
+			return doReSubmitCaseWithVariables(caseId, onlyStart, submitRepeatedTasks, variablesEncodedBase64);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error while re-submitting case with identifier: " + caseIdentifier, e);
+		}
+
+		return false;
+	}
+
+	@Override
+	@RemoteMethod
 	public boolean doSubmitVariables(Integer caseId, String variablesEncodedBase64) {
 		if (caseId == null) {
 			getLogger().warning("Case ID is not provided");
@@ -150,8 +177,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 		return doSubmitVariables(caseId, bind.getProcInstId(), variablesEncodedBase64);
 	}
 
-	private boolean doReSubmit(final CaseProcInstBind bind,
-			final boolean onlyStart, final boolean submitRepeatedTasks) {
+	private boolean doReSubmit(final CaseProcInstBind bind, final boolean onlyStart, final boolean submitRepeatedTasks) {
 		if (bind == null) {
 			getLogger().warning("Case and proc. inst. bind is not provided");
 			return false;
@@ -163,8 +189,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			return false;
 		}
 
-		if (!getApplication().getSettings().getBoolean(
-				"bpm.allow_resubmit_proc", Boolean.FALSE)) {
+		if (!getApplication().getSettings().getBoolean("bpm.allow_resubmit_proc", Boolean.FALSE)) {
 			getLogger().warning("It is forbidden to re-submit process");
 			return false;
 		}
@@ -175,15 +200,12 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
 				UserLogin login = null;
 				boolean hasLogin = false;
-				LoginBusinessBean loginBusiness = LoginBusinessBean
-						.getLoginBusinessBean(iwc);
+				LoginBusinessBean loginBusiness = LoginBusinessBean.getLoginBusinessBean(iwc);
 				try {
 					Long piId = bind == null ? null : bind.getProcInstId();
 					Integer caseId = bind == null ? null : bind.getCaseId();
 					if (bind == null || caseId == null) {
-						getLogger().warning(
-								"Unable to find case and proc. inst. bind for proc. inst. ID "
-										+ piId);
+						getLogger().warning("Unable to find case and proc. inst. bind for proc. inst. ID " + piId);
 						return false;
 					}
 
@@ -195,13 +217,12 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 					}
 					if (owner != null) {
 						User author = getActor(owner.getPersonalID());
+						author = author == null ? getUser(owner) : author;
 						hasLogin = hasLogin(author);
 						if (!hasLogin) {
 							login = doCreateUserLogin(author);
 							if (login == null || login.getId() == null) {
-								getLogger().warning(
-										"Failed to create temp. login for "
-												+ author);
+								getLogger().warning("Failed to create temp. login for " + author);
 								return false;
 							}
 						}
@@ -370,10 +391,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			context.getSession().save(newTi);
 			return true;
 		} catch (Exception e) {
-			getLogger().log(
-					Level.WARNING,
-					"Error updating task instance " + newTaskInstW
-							+ " by old one: " + oldTaskInst.getId(), e);
+			getLogger().log(Level.WARNING, 	"Error updating task instance " + newTaskInstW + " by old one: " + oldTaskInst.getId(), e);
 		}
 		return false;
 	}
@@ -402,8 +420,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 					.loadInitView(processCreatorId, theCase == null ? null : theCase.getCaseIdentifier());
 
 			Map<String, String> parameters = initView.resolveParameters();
-			Long processDefinitionId = new Long(
-					parameters.get(ProcessConstants.PROCESS_DEFINITION_ID));
+			Long processDefinitionId = new Long(parameters.get(ProcessConstants.PROCESS_DEFINITION_ID));
 			String viewId = parameters.get(ProcessConstants.VIEW_ID);
 			String viewType = parameters.get(ProcessConstants.VIEW_TYPE);
 
@@ -413,14 +430,11 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			viewSubmission.setViewId(viewId);
 			viewSubmission.setViewType(viewType);
 
-			parameters.put(
-					com.idega.block.process.business.ProcessConstants.CASE_ID,
-					String.valueOf(caseId));
+			parameters.put(com.idega.block.process.business.ProcessConstants.CASE_ID, String.valueOf(caseId));
 
 			viewSubmission.populateParameters(parameters);
 
-			org.jbpm.taskmgmt.exe.TaskInstance ti = context
-					.getTaskInstance(startTiW.getTaskInstanceId());
+			org.jbpm.taskmgmt.exe.TaskInstance ti = context.getTaskInstance(startTiW.getTaskInstanceId());
 			org.jbpm.graph.exe.Token token = ti.getToken();
 			Map<String, Object> variables = startTiW.getVariables(token);
 			if (variables.containsKey("mainProcessInstanceId")) {
@@ -431,25 +445,18 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			viewSubmission.populateVariables(variables);
 			viewSubmission.populateParameters(parameters);
 
-			ProcessDefinitionW pdw = bpmFactory.getProcessManager(
-					processDefinitionId).getProcessDefinition(
-					processDefinitionId);
+			ProcessDefinitionW pdw = bpmFactory.getProcessManager(processDefinitionId).getProcessDefinition(processDefinitionId);
 			Long piId = pdw.startProcess(viewSubmission);
 			if (piId != null) {
-				ProcessInstanceW newPiW = bpmFactory.getProcessInstanceW(
-						context, piId);
-				if (doUpdateTaskInstance(context, ti,
-						newPiW.getStartTaskInstance(), attachments)) {
+				ProcessInstanceW newPiW = bpmFactory.getProcessInstanceW(context, piId);
+				if (doUpdateTaskInstance(context, ti, newPiW.getStartTaskInstance(), attachments)) {
 					return piId;
 				}
 			}
 
 			return null;
 		} catch (Exception e) {
-			getLogger().log(
-					Level.WARNING,
-					"Failed to create new proc. inst. for old proc. inst.: "
-							+ piW.getProcessInstanceId(), e);
+			getLogger().log(Level.WARNING, "Failed to create new proc. inst. for old proc. inst.: " + piW.getProcessInstanceId(), e);
 		}
 		return null;
 	}
@@ -469,38 +476,39 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 	private UserLogin doCreateUserLogin(User user) {
 		try {
-			UserLoginDAO loginDAO = ELUtil.getInstance().getBean(
-					UserLoginDAO.class);
+			if (user == null) {
+				return null;
+			}
+
+			UserLoginDAO loginDAO = ELUtil.getInstance().getBean(UserLoginDAO.class);
 			com.idega.user.data.User legacyUser = getLegacyUser(user);
-			List<String> logins = LoginDBHandler
-					.getPossibleGeneratedUserLogins(legacyUser);
+			List<String> logins = LoginDBHandler.getPossibleGeneratedUserLogins(legacyUser);
 			if (ListUtil.isEmpty(logins)) {
 				return null;
 			}
 
-			String password = LoginDBHandler
-					.getGeneratedPasswordForUser(legacyUser);
+			String password = LoginDBHandler.getGeneratedPasswordForUser(legacyUser);
 			if (StringUtil.isEmpty(password)) {
 				return null;
 			}
-			return loginDAO.createLogin(user, logins.get(0), password, true,
-					true, true, 1, true);
+			return loginDAO.createLogin(user, logins.get(0), password, true, true, true, 1, true);
 		} catch (Exception e) {
-			getLogger().log(Level.WARNING, "Error creating login for " + user,
-					e);
+			getLogger().log(Level.WARNING, "Error creating login for " + user, e);
 		}
 		return null;
 	}
 
 	private boolean hasLogin(User user) {
 		try {
-			UserLoginDAO loginDAO = ELUtil.getInstance().getBean(
-					UserLoginDAO.class);
+			if (user == null) {
+				return false;
+			}
+
+			UserLoginDAO loginDAO = ELUtil.getInstance().getBean(UserLoginDAO.class);
 			UserLogin login = loginDAO.findLoginForUser(user);
 			return login != null;
 		} catch (Exception e) {
-			getLogger().log(Level.WARNING,
-					"Error while checking if " + user + " has login", e);
+			getLogger().log(Level.WARNING, "Error while checking if " + user + " has login", e);
 		}
 		return false;
 	}
