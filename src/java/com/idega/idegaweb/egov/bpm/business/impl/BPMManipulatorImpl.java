@@ -94,15 +94,13 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 	@Override
 	@RemoteMethod
-	public boolean doReSubmitProcess(Long piId, boolean onlyStart,
-			boolean submitRepeatedTasks) {
+	public boolean doReSubmitProcess(Long piId, boolean onlyStart, boolean submitRepeatedTasks) {
 		if (piId == null) {
 			getLogger().warning("Proc. inst. ID is not provided");
 			return false;
 		}
 
-		CaseProcInstBind bind = casesDAO
-				.getCaseProcInstBindByProcessInstanceId(piId);
+		CaseProcInstBind bind = casesDAO.getCaseProcInstBindByProcessInstanceId(piId);
 		return doReSubmit(bind, onlyStart, submitRepeatedTasks);
 	}
 
@@ -232,63 +230,43 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 					ProcessInstanceW piW = bpmFactory.getProcessInstanceW(piId);
 					TaskInstanceW startTiW = piW.getStartTaskInstance();
 					if (startTiW == null || !startTiW.isSubmitted()) {
-						getLogger().warning(
-								"Unable to find start task instance for proc. ins. ID "
-										+ piId + " or it (" + startTiW
-										+ ") is not submitted");
+						getLogger().warning("Unable to find start task instance for proc. inst. ID " + piId + " or start task (" + startTiW + ") is not submitted");
 						return false;
 					}
 
-					Long newProcInstId = getIdOfNewProcess(context, piW,
-							startTiW, caseId);
+					Long newProcInstId = getIdOfNewProcess(context, piW, startTiW, caseId);
 					if (newProcInstId == null) {
-						getLogger().warning(
-								"Failed to start new proc. inst. for old proc. inst.: "
-										+ piId);
+						getLogger().warning("Failed to start new proc. inst. for old proc. inst.: " + piId);
 						return false;
 					}
 
-					List<TaskInstanceW> allSubmittedTasks = onlyStart ? null
-							: piW.getSubmittedTaskInstances();
+					List<TaskInstanceW> allSubmittedTasks = onlyStart ? null : piW.getSubmittedTaskInstances();
 					if (!ListUtil.isEmpty(allSubmittedTasks)) {
-						Collections.sort(allSubmittedTasks,
-								new Comparator<TaskInstanceW>() {
-									@Override
-									public int compare(TaskInstanceW t1,
-											TaskInstanceW t2) {
-										Date d1 = t1.getTaskInstance().getEnd();
-										Date d2 = t1.getTaskInstance().getEnd();
-										return d1.compareTo(d2);
-									}
-								});
+						Collections.sort(allSubmittedTasks, new Comparator<TaskInstanceW>() {
 
-						long startTaskInstId = startTiW.getTaskInstanceId()
-								.longValue();
-						ProcessInstanceW newPiw = bpmFactory
-								.getProcessInstanceW(newProcInstId);
+							@Override
+							public int compare(TaskInstanceW t1, TaskInstanceW t2) {
+								Date d1 = t1.getTaskInstance().getEnd();
+								Date d2 = t1.getTaskInstance().getEnd();
+								return d1.compareTo(d2);
+							}
+						});
+
+						long startTaskInstId = startTiW.getTaskInstanceId().longValue();
+						ProcessInstanceW newPiw = bpmFactory.getProcessInstanceW(newProcInstId);
 						Map<String, Boolean> submitted = new HashMap<String, Boolean>();
 						for (TaskInstanceW submittedTask : allSubmittedTasks) {
-							String name = submittedTask.getTaskInstance()
-									.getName();
-							if (!submitRepeatedTasks
-									&& submitted.containsKey(name)) {
-								getLogger()
-										.info("Task instance by name "
-												+ name
-												+ " was already submitted, not submitting repeating tasks");
+							String name = submittedTask.getTaskInstance().getName();
+							if (!submitRepeatedTasks && submitted.containsKey(name)) {
+								getLogger().info("Task instance by name " + name + " was already submitted, not submitting repeating tasks");
 								continue;
 							}
 
 							if (submittedTask.getTaskInstanceId().longValue() != startTaskInstId) {
-								if (doSubmitTask(context, piW, submittedTask,
-										newPiw)) {
+								if (doSubmitTask(context, piW, submittedTask, newPiw)) {
 									submitted.put(name, Boolean.TRUE);
 								} else {
-									getLogger().warning(
-											"Unable to re-submit task instance "
-													+ submittedTask
-													+ " for proc. inst. "
-													+ piId);
+									getLogger().warning("Unable to re-submit task instance " + submittedTask + " for proc. inst. " + piId);
 									return false;
 								}
 							}
@@ -302,17 +280,12 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 					return true;
 				} catch (Exception e) {
-					getLogger()
-							.log(Level.WARNING,
-									"Failed to re-submit case/process for bind "
-											+ bind, e);
+					getLogger().log(Level.WARNING, "Failed to re-submit case/process for bind " + bind, e);
 				} finally {
 					try {
-						loginBusiness.logInAsAnotherUser(iwc, iwc
-								.getAccessController().getAdministratorUser());
+						loginBusiness.logInAsAnotherUser(iwc, iwc.getAccessController().getAdministratorUser());
 					} catch (Exception e) {
-						getLogger().log(Level.WARNING,
-								"Error logging in as super admin", e);
+						getLogger().log(Level.WARNING, "Error logging in as super admin", e);
 					}
 					doDeleteLogin(context.getSession(), login);
 				}
@@ -560,6 +533,10 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 		ProcessInstanceW piW = bpmFactory.getProcessInstanceW(procInstId);
 		TaskInstanceW startTaskInstance = piW.getStartTaskInstance();
+		if (startTaskInstance == null) {
+			getLogger().warning("Start task is unknown for proc. inst.: " + procInstId);
+			return false;
+		}
 
 		for (String name: allVariables.keySet()) {
 			String value = null;
