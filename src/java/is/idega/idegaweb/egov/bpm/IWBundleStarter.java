@@ -2,9 +2,10 @@ package is.idega.idegaweb.egov.bpm;
 
 import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWBundleStartable;
+import com.idega.idegaweb.egov.bpm.view.BPMViewManager;
 
 /**
- * 
+ *
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.3 $
  *
@@ -12,15 +13,16 @@ import com.idega.idegaweb.IWBundleStartable;
  *
  */
 public class IWBundleStarter implements IWBundleStartable {
-	
+
 	public static final String IW_BUNDLE_IDENTIFIER = "is.idega.idegaweb.egov.bpm";
 
+	@Override
 	public void start(IWBundle starterBundle) {
-		
-//		EgovBPMViewManager viewManager = EgovBPMViewManager.getInstance(starterBundle.getApplication());
-//		viewManager.initializeStandardNodes(starterBundle);
+		BPMViewManager vm = BPMViewManager.getInstance(starterBundle.getApplication());
+		vm.initializeStandardNodes(starterBundle);
 	}
 
+	@Override
 	public void stop(IWBundle starterBundle) {
 	}
 }

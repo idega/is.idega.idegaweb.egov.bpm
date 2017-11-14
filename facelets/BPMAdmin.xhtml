@@ -1,0 +1,37 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ws="http://xmlns.idega.com/com.idega.workspace"
+	xmlns:t="http://myfaces.apache.org/tomahawk"
+	xmlns:wf="http://xmlns.idega.com/com.idega.webface"
+>
+
+<ws:page id="processRootPage" stylesheeturls="/idegaweb/bundles/org.jboss.jbpm.bundle/resources/style/egovBPM.css" showFunctionMenu="true">
+
+	<h:form enctype="multipart/form-data">
+		<wf:block id="bpmManagerBlock" title="BPM administration">
+			<div>
+		        <h:commandButton value="Force all autoloaded processes redeploy" action="#{bpmProcessDefinitionsAutoloader.forceAutodeploy}" />
+		        <t:inputFileUpload id="fileupload" value="#{bpmDeployProcess.processBundle}" storage="file" />
+		        <h:commandButton value="Deploy bundle" action="#{bpmDeployProcess.deploy}" />
+	        </div>
+	        
+	        <div>
+	          	<label for="tokenIdButton">Token id:</label>
+	           	<input type="text" id="tokenIdButton" value="#{bpmSandbox.tokenId}"/>
+	        </div>
+	        <div>
+	            <h:commandButton value="executeLicenseFeeClaimReceived" action="#{bpmSandbox.executeLicenseFeeClaimReceived}" />
+	        </div>
+	        <div>
+	            <h:commandButton value="Rebuild BPM variables indexes" action="#{searchIndex.rebuild}" />
+	        </div>
+	        <div>
+	            <h:commandButton value="Rebuild indexes for each BPM variable" action="#{searchIndex.doIndexEachVariable}" />
+	        </div>
+        </wf:block>
+	</h:form>
+</ws:page>
+</html>
