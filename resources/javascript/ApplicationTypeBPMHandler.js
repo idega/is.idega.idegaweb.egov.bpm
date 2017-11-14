@@ -18,13 +18,13 @@ AppTypeBPM.processRolesCheckbox = function(checkboxId, rolesSpanId, rolesMenuId)
     }
 }
 
-AppTypeBPM.processProcessesSelector = function(selectId, rolesMenuId, rolesSpanId, checkboxId, applicationId) {
+AppTypeBPM.processProcessesSelector = function(dwrObject, selectId, rolesMenuId, rolesSpanId, checkboxId, applicationId) {
 	
 	if(applicationId != null) {
 		
 		var processId = jQuery('#'+selectId).val();
 	    
-	    ApplicationTypeBPM.getRolesCanStartProcessDWR(processId, applicationId, 
+		dwrObject.getRolesCanStartProcessDWR(processId, applicationId, 
                function(roles) {
                 
                 var opts = document.getElementById(rolesMenuId).options;

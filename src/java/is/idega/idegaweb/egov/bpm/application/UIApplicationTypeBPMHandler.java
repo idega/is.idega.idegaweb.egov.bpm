@@ -1,10 +1,6 @@
 package is.idega.idegaweb.egov.bpm.application;
 
-import is.idega.idegaweb.egov.application.business.ApplicationType.ApplicationTypeHandlerComponent;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.application.presentation.ApplicationCreator;
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +27,14 @@ import com.idega.presentation.ui.Label;
 import com.idega.presentation.ui.SelectOption;
 import com.idega.presentation.ui.SelectPanel;
 import com.idega.util.CoreConstants;
+import com.idega.util.StringHandler;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.application.business.ApplicationType;
+import is.idega.idegaweb.egov.application.business.ApplicationType.ApplicationTypeHandlerComponent;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.presentation.ApplicationCreator;
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 
 
 /**
@@ -47,7 +50,7 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 	public static final String rolesToStartCaseParam = "rolesToStartCase";
 
 	private Application application;
-	static final String MENU_PARAM = "procDefId";
+	public static final String MENU_PARAM = "procDefId";
 
 	@Autowired
 	private BPMFactory bpmFactory;
@@ -66,13 +69,13 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		menu.setId(MENU_PARAM);
 		menu.addMenuElement("-1", "Select");
 
-		ApplicationTypeBPM appTypeBPM = getApplicationTypeBPM();
-		appTypeBPM.fillMenu(menu);
+		ApplicationType appType = getApplicationTypeBPM();
+		appType.fillMenu(menu);
 
-		if(application != null) {
+		if (application != null) {
 			menu.setSelectedElement(getApplicationTypeBPM().getSelectedElement(application));
 		}
-		if(procDef != null && !procDef.equals("-1")) {
+		if (procDef != null && !procDef.equals("-1")) {
 			menu.setSelectedElement(procDef);
 		}
 
@@ -109,21 +112,25 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 
 		boolean isSelected = iwc.isParameterSet(rolesToStartCaseNeedToBeCheckedParam);
 
-		if(iwc.isParameterSet(rolesToStartCaseParam)) {
+		if (iwc.isParameterSet(rolesToStartCaseParam)) {
 
 			String[] vals = iwc.getParameterValues(rolesToStartCaseParam);
 			selectedRoles = Arrays.asList(vals);
 
-		} else if((procDef != null && !procDef.equals("-1")) || application != null) {
+		} else if ((procDef != null && !procDef.equals("-1")) || application != null) {
 
-			final Long pdId;
+			Serializable pdId = null;
 
-			if(procDef != null && !procDef.equals("-1")) {
+			if (procDef != null && !procDef.equals("-1") && StringHandler.isNumeric(procDef)) {
 
 				pdId = new Long(procDef);
 
-			} else
-				pdId = new Long(getApplicationTypeBPM().getSelectedElement(application));
+			} else {
+				pdId = getApplicationTypeBPM().getSelectedElement(application);
+				if (pdId != null && !pdId.equals("-1") && StringHandler.isNumeric(pdId.toString())) {
+					pdId = Long.valueOf(pdId.toString());
+				}
+			}
 
 			selectedRoles = getApplicationTypeBPM().getRolesCanStartProcess(pdId, application.getPrimaryKey());
 			isSelected = selectedRoles != null && !selectedRoles.isEmpty();
@@ -131,14 +138,14 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		} else
 			selectedRoles = null;
 
-		if(isSelected)
+		if (isSelected)
 			cb.setChecked(true, true);
 
 		SelectPanel rolesMenu = new SelectPanel(rolesToStartCaseParam);
 		rolesMenu.setSize(10);
 		rolesMenu.setMultiple(true);
 
-		if(roles != null) {
+		if (roles != null) {
 
 			for (ICRole role : roles) {
 
@@ -153,7 +160,7 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 
 		Layer rolesSpan = new Layer(Layer.SPAN);
 
-		if(!isSelected)
+		if (!isSelected)
 			rolesSpan.setStyleAttribute("display: none");
 
 		label = new Label("Select roles", rolesMenu);
@@ -171,15 +178,17 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 
 		cb.setOnClick(act);
 
-		String includeJs2 = "'"+CoreConstants.DWR_ENGINE_SCRIPT+"', '/dwr/interface/ApplicationTypeBPM.js'";
+		String includeJs2 = "'"+CoreConstants.DWR_ENGINE_SCRIPT+"', '/dwr/interface/" + getDWRObjectName() + ".js'";
 
-		act = "LazyLoader.loadMultiple(["+includeJs1+", "+includeJs2+"], function() {AppTypeBPM.processProcessesSelector('"+menu.getId()+"', '"+rolesMenu.getId()+"', '"+rolesSpan.getId()+"', '"+cb.getId()+"', "+(application != null ? application.getPrimaryKey().toString() : null)+");});";
+		act = "LazyLoader.loadMultiple(["+includeJs1+", "+includeJs2+"], function() {AppTypeBPM.processProcessesSelector(" + getDWRObjectName() + ", '"+menu.getId()+"', '"+rolesMenu.getId()+"', '"+rolesSpan.getId()+"', '"+cb.getId()+"', "+(application != null ? application.getPrimaryKey().toString() : null)+");});";
 
 		menu.setOnChange(act);
 
 		add(container);
+	}
 
-		//PresentationUtil.addJavaScriptActionToBody(iwc, "");
+	protected String getDWRObjectName() {
+		return "ApplicationTypeBPM";
 	}
 
 	public void setApplication(Application application) {
@@ -230,12 +239,14 @@ public class UIApplicationTypeBPMHandler extends Block implements ApplicationTyp
 		this.applicationTypeBPM = applicationTypeBPM;
 	}
 
-	public ApplicationTypeBPM getApplicationTypeBPM() {
-
-		if(applicationTypeBPM == null)
+	public <T extends ApplicationType> T getApplicationTypeBPM() {
+		if (applicationTypeBPM == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 
-		return applicationTypeBPM;
+		@SuppressWarnings("unchecked")
+		T type = (T) applicationTypeBPM;
+		return type;
 	}
 
 	public JQuery getjQuery() {

@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.application;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.security.AccessControlException;
 import java.security.Permission;
@@ -8,7 +9,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 
 import javax.faces.application.FacesMessage;
 
@@ -22,6 +22,7 @@ import com.idega.core.builder.business.BuilderService;
 import com.idega.core.builder.business.BuilderServiceFactory;
 import com.idega.core.builder.data.ICPage;
 import com.idega.core.builder.data.ICPageHome;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.data.IDOLookup;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
@@ -39,6 +40,7 @@ import com.idega.presentation.ui.DropdownMenu;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
 
@@ -52,7 +54,7 @@ import is.idega.idegaweb.egov.application.model.ApplicationModel;
  */
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(ApplicationTypeBPM.beanIdentifier)
-public class ApplicationTypeBPM implements ApplicationType {
+public class ApplicationTypeBPM extends DefaultSpringBean implements ApplicationType {
 
 	@Autowired
 	private BPMFactory bpmFactory;
@@ -127,7 +129,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 			}
 		} catch (Exception exp) {
 			iwc.addMessage(null, new FacesMessage("Exception:" + exp.getMessage()));
-			Logger.getLogger(getClass().getName()).log(Level.SEVERE, "", exp);
+			getLogger().log(Level.SEVERE, "", exp);
 		}
 
 		return false;
@@ -141,6 +143,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 		this.bpmBindsDAO = bpmBindsDAO;
 	}
 
+	@Override
 	public void fillMenu(DropdownMenu menu) {
 		List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
 		BPMDAO bpmDAO = getBpmFactory().getBPMDAO();
@@ -158,6 +161,7 @@ public class ApplicationTypeBPM implements ApplicationType {
 		}
 	}
 
+	@Override
 	public String getSelectedElement(ApplicationModel app) {
 		try {
 			final String pdName = app.getUrl();
@@ -175,15 +179,24 @@ public class ApplicationTypeBPM implements ApplicationType {
 		return String.valueOf(-1);
 	}
 
-	public List<String> getRolesCanStartProcessDWR(Long pdId, String applicationId) {
-		return getRolesCanStartProcess(pdId, applicationId);
+	@Override
+	public List<String> getRolesCanStartProcessDWR(String pdId, String applicationId) {
+		if (StringHandler.isNumeric(pdId)) {
+			return getRolesCanStartProcess(Long.valueOf(pdId), applicationId);
+		} else {
+			getLogger().warning("Invalid ID: " + pdId);
+		}
+		return Collections.emptyList();
 	}
 
-	public List<String> getRolesCanStartProcess(Long pdId, Object applicationId) {
-		try {
-			return getBpmFactory().getProcessManager(pdId).getProcessDefinition(pdId).getRolesCanStartProcess(applicationId);
-		} catch (Exception e) {
-			e.printStackTrace();
+	@Override
+	public <T extends Serializable> List<String> getRolesCanStartProcess(T pdId, Object applicationId) {
+		if (pdId instanceof Number) {
+			try {
+				return getBpmFactory().getProcessManager(((Number) pdId).longValue()).getProcessDefinition(pdId).getRolesCanStartProcess(applicationId);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 		return Collections.emptyList();
 	}
