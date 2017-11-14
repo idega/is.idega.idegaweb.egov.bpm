@@ -85,6 +85,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	public static final String SPRING_BEAN_IDENTIFIER = "casesPDW";
 
+	private String processDefinitionName;
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
@@ -516,7 +518,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	public List<String> getRolesCanStartProcess(Object context) {
 		final Integer applicationId = new Integer(context.toString());
 
-		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory().getAppSupportsManager(applicationId, getProcessDefinition().getName());
+		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory().getAppSupportsManager(applicationId, getProcessDefinitionName());
 
 		List<String> rolesCanStartProcess = appSupportsManager.getRolesCanStartProcess();
 		return rolesCanStartProcess;
@@ -539,7 +541,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		final Integer applicationId = new Integer(processContext.toString());
 
-		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory().getAppSupportsManager(applicationId, getProcessDefinition().getName());
+		AppSupportsManager appSupportsManager = getAppSupportsManagerFactory().getAppSupportsManager(applicationId, getProcessDefinitionName());
 		appSupportsManager.updateRolesCanStartProcess(rolesKeys);
 	}
 
@@ -704,7 +706,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		String name = null;
 		try {
-			name = getProcessDefinition().getName();
+			name = getProcessDefinitionName();
 			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getApplicationDAO().findByUri(name);
 			available = ApplicationUtil.isAvailabe(iwc, egovApp);
 			return available;
@@ -722,13 +724,24 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		String name = null;
 		try {
-			name = getProcessDefinition().getName();
+			name = getProcessDefinitionName();
 			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getApplicationDAO().findByUri(name);
 			return ApplicationUtil.getRedirectUrl(iwc.getIWMainApplication(), iwc, iwc.getRequest(), getApplicationTypesManager(), egovApp, egovApp.getId().toString(), iwc.isLoggedOn());
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting redirect URL for unavailable BPM process (name: " + name + ", ID: " + getProcessDefinitionId() + ")", e);
 		}
 		return null;
+	}
+
+	public String getProcessDefinitionName() {
+		if (StringUtil.isEmpty(processDefinitionName)) {
+			processDefinitionName = getProcessDefinition().getName();
+		}
+		return processDefinitionName;
+	}
+
+	public void setProcessDefinitionName(String processDefinitionName) {
+		this.processDefinitionName = processDefinitionName;
 	}
 
 }
