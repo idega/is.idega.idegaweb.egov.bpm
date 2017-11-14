@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -614,25 +615,31 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return getProcessName(getProcessDefinitionId(), locale);
 	}
 
-	//	TODO: make caching?
 	@Transactional(readOnly = true)
-	public String getProcessName(final Long processDefinitionId, final Locale locale) {
+	private String getProcessName(Serializable processDefinitionId, final Locale locale) {
 		if (processDefinitionId == null) {
 			return null;
 		}
 
-		return getBpmContext().execute(new JbpmCallback<String>() {
-			@Override
-			public String doInJbpm(JbpmContext context) throws JbpmException {
-				ProcessDefinition pd = context.getGraphSession().getProcessDefinition(processDefinitionId);
-				try {
-					return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
-				} catch (IDOLookupException e) {
-					e.printStackTrace();
-					return null;
+		if (processDefinitionId instanceof Number) {
+			final Long id = ((Number) processDefinitionId).longValue();
+			return getBpmContext().execute(new JbpmCallback<String>() {
+				@Override
+				public String doInJbpm(JbpmContext context) throws JbpmException {
+					ProcessDefinition pd = context.getGraphSession().getProcessDefinition(id);
+					try {
+						return getProcessDefinitionLocalizedName(pd, locale, (ApplicationHome) IDOLookup.getHome(Application.class));
+					} catch (IDOLookupException e) {
+						e.printStackTrace();
+						return null;
+					}
 				}
-			}
-		});
+			});
+		} else {
+			getLogger().warning("Do not know how to load process name for proc. def.: " + processDefinitionId + ", locale: " + locale);
+		}
+
+		return null;
 	}
 
 	private String getProcessDefinitionLocalizedName(ProcessDefinition pd, Locale locale, ApplicationHome appHome) {
