@@ -4,11 +4,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.util.CoreConstants;
 import com.idega.util.StringUtil;
 
+@XmlRootElement
+@XmlAccessorType(XmlAccessType.FIELD)
 public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	private static final long serialVersionUID = 8071978111646904945L;

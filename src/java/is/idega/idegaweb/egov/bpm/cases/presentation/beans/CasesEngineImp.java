@@ -812,6 +812,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
 			return null;
 
+		cases.setTotalCount(new Long(totalCount));
+		cases.setPageSize(criterias.getPageSize());
+		cases.setPage(criterias.getPage());
 		LOGGER.info("Sorting and paging was executed in " + (System.currentTimeMillis() - start) + " ms");
 		return cases;
 	}
