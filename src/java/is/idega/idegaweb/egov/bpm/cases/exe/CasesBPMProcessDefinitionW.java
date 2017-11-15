@@ -265,7 +265,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	@Transactional(readOnly = false)
 	@Override
-	public Long startProcess(final ViewSubmission viewSubmission) {
+	public <T extends Serializable> T startProcess(final ViewSubmission viewSubmission) {
 		final Long processDefinitionId = viewSubmission.getProcessDefinitionId();
 
 		if (!processDefinitionId.equals(getProcessDefinitionId()))
@@ -414,7 +414,10 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				getLogger().warning("Failed to start process for proc. def. ID: " + processDefinitionId);
 			else
 				getLogger().info("Process was created: " + piId);
-			return piId;
+
+			@SuppressWarnings("unchecked")
+			T result = (T) piId;
+			return result;
 		} finally {
 			if (piId != null) {
 				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(getProcessDefinitionId()), piId, variables);
