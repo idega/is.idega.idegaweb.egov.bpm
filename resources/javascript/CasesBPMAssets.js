@@ -152,7 +152,7 @@ CasesBPMAssets.initGrid = function(container, piId, caseId,
 		showComments, showContacts, specialBackPage, nameFromExternalEntity,
 		showUserProfilePicture,showUserCompany,showLastLoginDate,showPDFName, inactiveTasksToShow
 ) {
-	if (JQGridInclude == null) {
+	if (typeof JQGridInclude != 'function') {
 		return false;
 	}
 	
