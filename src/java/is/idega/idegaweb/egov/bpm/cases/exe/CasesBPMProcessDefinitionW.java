@@ -615,11 +615,11 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			return null;
 		}
 
-		return getProcessName(getProcessDefinitionId(), locale);
+		return getProcessNameById(getProcessDefinitionId(), locale);
 	}
 
 	@Transactional(readOnly = true)
-	private String getProcessName(Serializable processDefinitionId, final Locale locale) {
+	private String getProcessNameById(Serializable processDefinitionId, final Locale locale) {
 		if (processDefinitionId == null) {
 			return null;
 		}
