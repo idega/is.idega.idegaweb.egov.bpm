@@ -3,7 +3,6 @@ package is.idega.idegaweb.egov.bpm.cases.messages;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -65,6 +64,26 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 	@Override
 	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn) {
+		List<User> receivers = new ArrayList<>();
+
+		if (msgs.getRecipientUserId() != null) {
+			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
+			User receiver = null;
+			try {
+				receiver = userBusiness.getUser(msgs.getRecipientUserId());
+			} catch (Exception e) {}
+			if (receiver != null) {
+				receivers.add(receiver);
+			}
+		} else if (!StringUtil.isEmpty(msgs.getSendToRoles())) {
+			receivers = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
+		}
+
+		send(mvCtx, context, pi, msgs, tkn, receivers);
+	}
+
+	@Override
+	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn, List<User> users) {
 		final Integer caseId = context instanceof Integer ? (Integer) context : null;
 
 		final IWContext iwc = CoreUtil.getIWContext();
@@ -78,18 +97,11 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 		defaultLocale = iwc == null ? defaultLocale : iwc.getCurrentLocale();
 		defaultLocale = defaultLocale == null ? Locale.ENGLISH : defaultLocale;
 
-		Collection<User> users = null;
 		final List<MessageValue> msgValsToSend = new ArrayList<MessageValue>();
 		try {
 			CasesBusiness casesBusiness = getCasesBusiness(iwc);
 
 			Case theCase = casesBusiness.getCase(caseId);
-			if (msgs.getRecipientUserId() != null) {
-				users = new ArrayList<User>();
-				users.add(getUserBusiness(iwc).getUser(msgs.getRecipientUserId()));
-			} else if (!StringUtil.isEmpty(msgs.getSendToRoles())) {
-				users = getUsersToSendMessageTo(msgs.getSendToRoles(), pi);
-			}
 
 			if (ListUtil.isEmpty(users)) {
 				getLogger().warning("There are no recipients to send message " + msgs);
