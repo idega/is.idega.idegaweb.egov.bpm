@@ -92,15 +92,9 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		this.token = token;
 	}
 
-	@Override
-	public void execute(ExecutionContext ectx) throws Exception {
-		final String sendToRoles = getSendToRoles();
-		final Integer recipientUserId = getRecipientUserID();
-		LOGGER.info("Will send message to role(s) " + sendToRoles + " or/and user " + recipientUserId);
-
-		ProcessInstance candPI;
-		String caseIdStr;
-
+	protected Object[] getProcInstAndCaseId(ExecutionContext ectx) {
+		ProcessInstance candPI = null;
+		String caseIdStr = null;
 		if (getProcessInstanceId() != null) {
 			// resolving candidate process instance from expression, if present
 			if (ectx == null) {
@@ -115,6 +109,18 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 			candPI = ectx.getProcessInstance();
 			caseIdStr = (String) ectx.getVariable(CasesBPMProcessConstants.caseIdVariableName);
 		}
+		return new Object[] {candPI, caseIdStr};
+	}
+
+	@Override
+	public void execute(ExecutionContext ectx) throws Exception {
+		final String sendToRoles = getSendToRoles();
+		final Integer recipientUserId = getRecipientUserID();
+		LOGGER.info("Will send message to role(s) " + sendToRoles + " or/and user " + recipientUserId);
+
+		Object[] data = getProcInstAndCaseId(ectx);
+		ProcessInstance candPI = data == null ? null : (ProcessInstance) data[0];
+		String caseIdStr = data == null ? null : (String) data[1];
 
 		LocalizedMessages msgs = getLocalizedMessages();
 		if (msgs == null) {
@@ -274,9 +280,9 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param processDefinitionId is {@link ProcessDefinition#getId()}, not <code>null</code>
-	 * @return <code>true</code> if {@link ProcessDefinition#getId()} is in the list 
+	 * @return <code>true</code> if {@link ProcessDefinition#getId()} is in the list
 	 * of "forced_handler_notification_proc_def_id" property
 	 */
 	boolean isEMailSendingForced(String processDefinitionName) {
