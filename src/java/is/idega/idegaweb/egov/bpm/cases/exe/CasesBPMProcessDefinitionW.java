@@ -15,6 +15,7 @@ import java.util.logging.Logger;
 
 import javax.ejb.FinderException;
 
+import org.hibernate.Session;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.jbpm.graph.def.ProcessDefinition;
@@ -217,7 +218,20 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	@SuppressWarnings("deprecation")
 	@Transactional(readOnly = false)
-	private CaseProcInstBind getNewCaseProcBind(org.hibernate.Session session, CaseProcInstBind oldBind, Long newPiId) throws Exception {
+	private <T> CaseProcInstBind getNewCaseProcBind(Session session, CaseProcInstBind oldBind, T newPiId) throws Exception {
+		String uuid = null;
+		Long newPiID = null;
+		if (newPiId instanceof Number) {
+			newPiID = ((Number) newPiId).longValue();
+		} else if (newPiId != null) {
+			uuid = newPiId.toString();
+		}
+
+		if (newPiID == null) {
+			getLogger().warning("Unable to resolve proc. inst. ID Long type from " + newPiId);
+			return oldBind;
+		}
+
 		List<ProcessUserBind> usersBinds = getCasesBPMDAO().getResultListByInlineQuery(
 				"from " + ProcessUserBind.class.getName() + " ub where ub." + ProcessUserBind.caseProcessBindProp + " = :oldBind",
 				ProcessUserBind.class,
@@ -234,11 +248,16 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		CaseProcInstBind newBind = new CaseProcInstBind();
 		newBind.setCaseId(oldBind.getCaseId());
-		newBind.setProcInstId(newPiId);
+		newBind.setProcInstId(newPiID);
+		newBind.setUuid(uuid);
 		newBind.setCaseIdentierID(oldBind.getCaseIdentierID());
 		newBind.setDateCreated(oldBind.getDateCreated());
 		newBind.setCaseIdentifier(oldBind.getCaseIdentifier());
-		session.persist(newBind);
+		if (session == null) {
+			getCasesBPMDAO().persist(newBind);
+		} else {
+			session.persist(newBind);
+		}
 		getLogger().info("Created new bind (" + newBind + ") instead of existing one: " + oldBind);
 
 		String sql = "delete from " + CaseProcInstBind.TABLE_NAME + " where " + CaseProcInstBind.procInstIdColumnName + " = " +
@@ -256,24 +275,38 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				userBind.setCaseProcessBind(newBind);
 				userBind.setUserId(userData.getKey());
 				userBind.setStatus(userData.getValue());
-				session.persist(userBind);
+				if (session == null) {
+					getCasesBPMDAO().persist(userBind);
+				} else {
+					session.persist(userBind);
+				}
 			}
 		}
 
 		return newBind;
 	}
 
+	public <T> CaseProcessData doCreateBind(String procDefName, T piId, Map<String, String> parameters) throws Exception {
+		return doCreateBind(null, procDefName, piId, parameters, null);
+	}
+
 	@Transactional(readOnly = false)
-	@Override
-	public <T extends Serializable> T startProcess(final ViewSubmission viewSubmission) {
-		final Long processDefinitionId = viewSubmission.getProcessDefinitionId();
+	private <T> CaseProcessData doCreateBind(Session session, String procDefName, T piId, Map<String, String> parameters, Map<String, Object> variables) throws Exception {
+		if (piId == null) {
+			getLogger().warning("Proc. inst. ID is not provided. Parameters: " + parameters + ", variables: " + variables);
+			return null;
+		}
 
-		if (!processDefinitionId.equals(getProcessDefinitionId()))
-			throw new IllegalArgumentException("View submission was for different process definition id than tried to submit to");
+		final IWApplicationContext iwac = getIWAC();
+		final CasesBusiness casesBusiness = getCasesBusiness(iwac);
 
-		Map<String, String> parameters = viewSubmission.resolveParameters();
-
-		getLogger().finer("Params " + parameters);
+		GeneralCase theCase = null;
+		String caseId = parameters == null ? null : parameters.get(com.idega.block.process.business.ProcessConstants.CASE_ID);
+		if (!StringUtil.isEmpty(caseId)) {
+			try {
+				theCase = casesBusiness.getGeneralCase(Integer.valueOf(caseId));
+			} catch (Exception e) {}
+		}
 
 		final Integer userId = parameters.containsKey(CasesBPMProcessConstants.userIdActionVariableName) ?
 				Integer.parseInt(parameters.get(CasesBPMProcessConstants.userIdActionVariableName)) : null;
@@ -281,22 +314,94 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		final String caseStatusKey = parameters.containsKey(CasesBPMProcessConstants.caseStatusVariableName) ?
 				parameters.get(CasesBPMProcessConstants.caseStatusVariableName) : null;
 
-		final IWApplicationContext iwac = getIWAC();
-		final CasesBusiness casesBusiness = getCasesBusiness(iwac);
-
-		GeneralCase theCase = null;
-		final String caseId = parameters.get(com.idega.block.process.business.ProcessConstants.CASE_ID);
-		if (!StringUtil.isEmpty(caseId)) {
-			try {
-				theCase = casesBusiness.getGeneralCase(Integer.valueOf(caseId));
-			} catch (Exception e) {}
-		}
-
 		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		final String caseIdentifier = theCase == null ? parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER) :
 														theCase.getCaseIdentifier();
 		final String realCaseCreationDate = theCase == null ?	parameters.get(CasesBPMProcessConstants.caseCreationDateParam) :
 																String.valueOf(theCase.getCreated());
+
+		IWMainApplication iwma = iwac.getIWMainApplication();
+
+		UserBusiness userBusiness = getUserBusiness(iwac);
+		User user = userId == null ? null : userBusiness.getUser(userId);
+
+		GeneralCase genCase = getCase(caseId, procDefName, casesBusiness, user, iwma, caseStatusKey, realCaseCreationDate, caseIdentifier);
+		getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + piId);
+
+		Timestamp caseCreated = genCase.getCreated();
+		CaseProcessData result = new CaseProcessData();
+		result.setCaseCreated(caseCreated);
+
+		Map<String, Object> caseData = new HashMap<String, Object>();
+		caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
+		caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
+		caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
+		caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
+		caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
+		caseData.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, caseIdentifier);
+
+		result.setCaseData(caseData);
+
+		Collection<CaseStatus> allStatuses = casesBusiness.getCaseStatuses();
+
+		CasesStatusMapperHandler casesStatusMapper = getCasesStatusMapperHandler();
+
+		for (CaseStatus caseStatus: allStatuses)
+			caseData.put(casesStatusMapper.getStatusVariableNameFromStatusCode(caseStatus.getStatus()), caseStatus.getStatus());
+
+		IWContext iwc = CoreUtil.getIWContext();
+		Locale dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
+		dateLocale = dateLocale == null ? iwma.getDefaultLocale() : dateLocale;
+		dateLocale = dateLocale == null ? Locale.ENGLISH : dateLocale;
+		IWTimestamp created = new IWTimestamp(genCase.getCreated());
+		caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT, IWTimestamp.SHORT));
+
+		Integer caseID = new Integer(genCase.getPrimaryKey().toString());
+		CaseProcInstBind piBind = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseID);
+		if (piBind == null) {
+			piBind = new CaseProcInstBind();
+			piBind.setCaseId(caseID);
+			if (piId instanceof Number) {
+				piBind.setProcInstId(((Number) piId).longValue());
+			} else {
+				piBind.setProcInstId(Long.valueOf(piId.toString().hashCode()));
+				piBind.setUuid(piId.toString());
+			}
+			piBind.setCaseIdentierID(caseIdentifierNumber);
+			piBind.setDateCreated(caseCreated);
+			piBind.setCaseIdentifier(caseIdentifier);
+			getCasesBPMDAO().persist(piBind);
+			getLogger().info("Bind was created: process instance ID=" + piId + ", case ID=" + caseId);
+		} else {
+			getNewCaseProcBind(session, piBind, piId);
+		}
+		result.setBind(piBind);
+
+		variables = variables == null ? new HashMap<>() : variables;
+		if (variables.containsKey(BPMConstants.PUBLIC_PROCESS)) {
+			Object publicProcess = variables.get(BPMConstants.PUBLIC_PROCESS);
+			if (Boolean.valueOf(publicProcess.toString())) {
+				genCase.setAsAnonymous(Boolean.TRUE);
+				genCase.store();
+			}
+		}
+
+		return result;
+	}
+
+	@Transactional(readOnly = false)
+	@Override
+	public <T extends Serializable> T startProcess(final ViewSubmission viewSubmission) {
+		final Long processDefinitionId = viewSubmission.getProcessDefinitionId();
+
+		if (!processDefinitionId.equals(getProcessDefinitionId())) {
+			throw new IllegalArgumentException("View submission was for different process definition id than tried to submit to");
+		}
+
+		Map<String, String> parameters = viewSubmission.resolveParameters();
+
+		getLogger().finer("Params " + parameters);
+
 		final Map<String, Object> variables = new HashMap<String, Object>();
 
 		Long piId = getBpmContext().execute(new JbpmCallback<Long>() {
@@ -326,70 +431,19 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 					pi.setStart(new Date());
 
-					IWMainApplication iwma = iwac.getIWMainApplication();
-
-					UserBusiness userBusiness = getUserBusiness(iwac);
-					User user = userId == null ? null : userBusiness.getUser(userId);
-
-					GeneralCase genCase = getCase(caseId, procDefName, casesBusiness, user, iwma, caseStatusKey, realCaseCreationDate,
-							caseIdentifier);
-					getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + piId);
-
-					Timestamp caseCreated = genCase.getCreated();
-					pi.setStart(caseCreated);
-
-					Map<String, Object> caseData = new HashMap<String, Object>();
-					caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
-					caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
-					caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
-					caseData.put(CasesBPMProcessConstants.caseStatusVariableName, genCase.getCaseStatus().getStatus());
-					caseData.put(CasesBPMProcessConstants.caseStatusClosedVariableName, casesBusiness.getCaseStatusReady().getStatus());
-					caseData.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, caseIdentifier);
-
-					Collection<CaseStatus> allStatuses = casesBusiness.getCaseStatuses();
-
-					CasesStatusMapperHandler casesStatusMapper = getCasesStatusMapperHandler();
-
-					for (CaseStatus caseStatus: allStatuses)
-						caseData.put(casesStatusMapper.getStatusVariableNameFromStatusCode(caseStatus.getStatus()), caseStatus.getStatus());
-
-					IWContext iwc = CoreUtil.getIWContext();
-					Locale dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
-					dateLocale = dateLocale == null ? iwma.getDefaultLocale() : dateLocale;
-					dateLocale = dateLocale == null ? Locale.ENGLISH : dateLocale;
-					IWTimestamp created = new IWTimestamp(genCase.getCreated());
-					caseData.put(CasesBPMProcessConstants.caseCreatedDateVariableName, created.getLocaleDateAndTime(dateLocale, IWTimestamp.SHORT,
-							IWTimestamp.SHORT));
-
-					Integer caseId = new Integer(genCase.getPrimaryKey().toString());
-					CaseProcInstBind piBind = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
-					if (piBind == null) {
-						piBind = new CaseProcInstBind();
-						piBind.setCaseId(caseId);
-						piBind.setProcInstId(piId);
-						piBind.setCaseIdentierID(caseIdentifierNumber);
-						piBind.setDateCreated(caseCreated);
-						piBind.setCaseIdentifier(caseIdentifier);
-						getCasesBPMDAO().persist(piBind);
-						getLogger().info("Bind was created: process instance ID=" + piId + ", case ID=" + caseId);
+					CaseProcessData data = doCreateBind(context.getSession(), procDefName, piId, parameters, variables);
+					if (data == null) {
+						piId = null;
 					} else {
-						getNewCaseProcBind(context.getSession(), piBind, piId);
+						pi.setStart(data.getCaseCreated());
+
+						pi.getContextInstance().setVariables(data.getCaseData());
+
+						variables.putAll(viewSubmission.resolveVariables());
+						submitVariablesAndProceedProcess(context, ti, variables, true);
+
+						getLogger().info("Variables were submitted and a process instance (ID: " + piId + ") proceeded");
 					}
-
-					pi.getContextInstance().setVariables(caseData);
-
-					variables.putAll(viewSubmission.resolveVariables());
-					submitVariablesAndProceedProcess(context, ti, variables, true);
-
-					if (variables != null && variables.containsKey(BPMConstants.PUBLIC_PROCESS)) {
-						Object publicProcess = variables.get(BPMConstants.PUBLIC_PROCESS);
-						if (Boolean.valueOf(publicProcess.toString())) {
-							genCase.setAsAnonymous(Boolean.TRUE);
-							genCase.store();
-						}
-					}
-
-					getLogger().info("Variables were submitted and a process instance (ID: " + piId + ") proceeded");
 
 					return piId;
 				} catch (JbpmException e) {
@@ -743,6 +797,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return null;
 	}
 
+	@Override
 	public String getProcessDefinitionName() {
 		if (StringUtil.isEmpty(processDefinitionName)) {
 			processDefinitionName = getProcessDefinition().getName();
