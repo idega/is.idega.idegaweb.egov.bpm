@@ -799,8 +799,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	@Override
 	public String getProcessDefinitionName() {
-		if (StringUtil.isEmpty(processDefinitionName) && getProcessDefinition() != null) {
-			processDefinitionName = getProcessDefinition().getName();
+		if (StringUtil.isEmpty(processDefinitionName)) {
+			ProcessDefinition pd = getProcessDefinition();
+			processDefinitionName = pd == null ? null : pd.getName();
 		}
 
 		return processDefinitionName;
