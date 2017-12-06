@@ -98,7 +98,7 @@ public class ApplicationTypeBPM extends DefaultSpringBean implements Application
 
 		try {
 			Long pdId = new Long(procDef);
-			String processName = getBpmFactory().getProcessManager(pdId).getProcessDefinition(pdId).getProcessDefinition().getName();
+			String processName = getBpmFactory().getProcessManager(pdId).getProcessDefinition(pdId).getProcessDefinitionName();
 			app.setUrl(processName);
 		} catch (Exception exp) {
 			exp.printStackTrace();

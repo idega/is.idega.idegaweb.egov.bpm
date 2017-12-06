@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.messages;
 
+import java.io.Serializable;
 import java.net.URL;
 import java.rmi.RemoteException;
 import java.util.ArrayList;
@@ -200,7 +201,10 @@ public class CaseUserImpl {
 				}
 
 				final URIUtil uriUtil = new URIUtil(fullUrl);
-				uriUtil.setParameter(BPMUser.processInstanceIdParam, String.valueOf(getProcessInstanceW().getProcessInstanceId()));
+				Serializable procInstId = getProcessInstanceW().getProcessInstanceId();
+				if (procInstId != null) {
+					uriUtil.setParameter(BPMUser.processInstanceIdParam, String.valueOf(procInstId));
+				}
 				fullUrl = uriUtil.getUri();
 			} else {
 				//	Hasn't login, get link to case view

@@ -1,7 +1,5 @@
 package com.idega.idegaweb.egov.bpm.pdf;
 
-import is.idega.idegaweb.egov.bpm.presentation.IWContextMockUp;
-
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -13,6 +11,7 @@ import javax.faces.context.ResponseWriter;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.myfaces.renderkit.html.util.HtmlBufferResponseWriterWrapper;
+import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Lazy;
@@ -48,6 +47,8 @@ import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
+
+import is.idega.idegaweb.egov.bpm.presentation.IWContextMockUp;
 
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
@@ -173,7 +174,8 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 			List<CasePDF> pdfs = new ArrayList<CasePDF>();
 			for (TaskInstanceW tiW: finishedTasks) {
 				String taskInstanceId = String.valueOf(tiW.getTaskInstanceId());
-				String taskEnd = new IWTimestamp(tiW.getTaskInstance().getEnd()).getDateString("yyyy-MM-dd_HH-mm-ss");
+				TaskInstance ti = tiW.getTaskInstance();
+				String taskEnd = new IWTimestamp(ti.getEnd()).getDateString("yyyy-MM-dd_HH-mm-ss");
 				CasePDF casePDF = null;
 				try {
 

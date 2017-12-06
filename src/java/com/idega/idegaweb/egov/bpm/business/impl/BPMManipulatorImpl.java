@@ -17,6 +17,7 @@ import org.directwebremoting.annotations.RemoteProxy;
 import org.directwebremoting.spring.SpringCreator;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
+import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -246,23 +247,28 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 							@Override
 							public int compare(TaskInstanceW t1, TaskInstanceW t2) {
-								Date d1 = t1.getTaskInstance().getEnd();
-								Date d2 = t1.getTaskInstance().getEnd();
+								TaskInstance ti1 = t1.getTaskInstance();
+								TaskInstance ti2 = t2.getTaskInstance();
+
+								Date d1 = ti1.getEnd();
+								Date d2 = ti2.getEnd();
 								return d1.compareTo(d2);
 							}
 						});
 
-						long startTaskInstId = startTiW.getTaskInstanceId().longValue();
+						Long tiId = startTiW.getTaskInstanceId();
+						long startTaskInstId = tiId.longValue();
 						ProcessInstanceW newPiw = bpmFactory.getProcessInstanceW(newProcInstId);
 						Map<String, Boolean> submitted = new HashMap<String, Boolean>();
 						for (TaskInstanceW submittedTask : allSubmittedTasks) {
-							String name = submittedTask.getTaskInstance().getName();
+							String name = submittedTask.getTaskInstanceName();
 							if (!submitRepeatedTasks && submitted.containsKey(name)) {
 								getLogger().info("Task instance by name " + name + " was already submitted, not submitting repeating tasks");
 								continue;
 							}
 
-							if (submittedTask.getTaskInstanceId().longValue() != startTaskInstId) {
+							Long submittedTaskInstanceId = submittedTask.getTaskInstanceId();
+							if (submittedTaskInstanceId.longValue() != startTaskInstId) {
 								if (doSubmitTask(context, piW, submittedTask, newPiw)) {
 									submitted.put(name, Boolean.TRUE);
 								} else {
@@ -378,9 +384,10 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 		try {
 			List<BinaryVariable> attachments = startTiW.getAttachments();
 
-			String procDefName = piW.getProcessDefinitionW(context).getProcessDefinition().getName();
+			String procDefName = piW.getProcessDefinitionW(context).getProcessDefinitionName();
 
-			String actoriId = startTiW.getTaskInstance().getActorId();
+			TaskInstance startTaskInstance = startTiW.getTaskInstance();
+			String actoriId = startTaskInstance.getActorId();
 			User creator = getActor(actoriId);
 			Integer processCreatorId = creator == null ? null : creator.getId();
 

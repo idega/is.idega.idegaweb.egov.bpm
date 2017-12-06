@@ -3,7 +3,9 @@ package is.idega.idegaweb.egov.bpm.xform.bean;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
+import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -12,9 +14,9 @@ import com.idega.core.contact.data.Email;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.variables.BinaryVariable;
-import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
+import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.text.Item;
 
@@ -109,26 +111,21 @@ public class XformBPMDSBean implements XformBPM {
 
 	@Override
 	public List<Item> getProcessAttachments(String pid) {
-
 		long processInstanceId = Long.valueOf(pid);
 		ProcessInstanceW piw = getProcessInstanceW(processInstanceId);
 
 		List<Item> attachments = new ArrayList<Item>();
 
+		Locale locale = CoreUtil.getCurrentLocale();
 		for (BinaryVariable binaryVariable : piw.getAttachments())
-			if (binaryVariable.getHidden() == null
-			        || binaryVariable.getHidden().equals(false)) {
-				attachments.add(new Item(binaryVariable.getTaskInstanceId()
-				        + ";" + binaryVariable.getHash(), binaryVariable
-				        .getFileName()
-				        + " - "
-				        + new IWTimestamp(getBpmFactory().getTaskInstanceW(
-				            binaryVariable.getTaskInstanceId())
-				                .getTaskInstance().getEnd())
-				                .getLocaleDateAndTime(IWContext
-				                        .getCurrentInstance()
-				                        .getCurrentLocale(), IWTimestamp.SHORT,
-				                    IWTimestamp.SHORT)));
+			if (binaryVariable.getHidden() == null || binaryVariable.getHidden().equals(false)) {
+				TaskInstance ti = getBpmFactory().getTaskInstanceW(binaryVariable.getTaskInstanceId()).getTaskInstance();
+				attachments.add(
+						new Item(
+								binaryVariable.getTaskInstanceId() + ";" + binaryVariable.getHash(),
+								binaryVariable.getFileName()  + " - " + new IWTimestamp(ti.getEnd()).getLocaleDateAndTime(locale, IWTimestamp.SHORT, IWTimestamp.SHORT)
+						)
+				);
 			}
 
 		return attachments;

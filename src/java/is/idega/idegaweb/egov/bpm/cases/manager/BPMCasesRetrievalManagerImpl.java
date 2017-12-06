@@ -1499,7 +1499,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale) {
-		Long start = System.currentTimeMillis();
 		Collection<Case> cases = getCasesBusiness().getCasesByIds(ids);
 		return getCasesByEntities(cases, locale);
 	}
@@ -1600,7 +1599,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 
 		for (TaskInstanceW task: tasks) {
-			if (taskName.equals(task.getTaskInstance().getName())) {
+			if (taskName.equals(task.getTaskInstanceName())) {
 				return task.getTaskInstanceId();
 			}
 		}

@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.jbpm.graph.def.ActionHandler;
+import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +66,8 @@ public class SetProcessDescriptionHandler extends DefaultSpringBean implements A
 		);
 
 		String processDescription = getDescription() == null ? piw.getProcessDescription() : getDescription();
-		String procDefName = piw.getProcessDefinitionW(ctx.getJbpmContext()).getProcessDefinition().getName();
+		ProcessDefinition processDefinition = piw.getProcessDefinitionW(ctx.getJbpmContext()).getProcessDefinition();
+		String procDefName = processDefinition == null ? null : processDefinition.getName();
 		setCaseSubject(pi.getId(), processDescription, procDefName);
 	}
 

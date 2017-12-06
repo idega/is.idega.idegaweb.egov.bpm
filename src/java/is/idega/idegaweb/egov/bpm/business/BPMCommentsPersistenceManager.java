@@ -1,12 +1,5 @@
 package is.idega.idegaweb.egov.bpm.business;
 
-import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
-import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
-import is.idega.idegaweb.egov.bpm.servlet.CommentViewerRedirector;
-
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -85,6 +78,13 @@ import com.sun.syndication.feed.WireFeed;
 import com.sun.syndication.feed.atom.Entry;
 import com.sun.syndication.feed.atom.Feed;
 import com.sun.syndication.feed.synd.SyndFeed;
+
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
+import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
+import is.idega.idegaweb.egov.bpm.servlet.CommentViewerRedirector;
 
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service(BPMCommentsPersistenceManager.SPRING_BEAN_IDENTIFIER)
@@ -211,7 +211,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		try {
 			ProcessInstanceW piw = getProcessInstance(processInstanceId);
 			ApplicationBusiness appBusiness = getApplicationBusiness(iwc);
-			Collection<Application> apps = appBusiness.getApplicationHome().findAllByApplicationUrl(piw.getProcessDefinitionW().getProcessDefinition().getName());
+			Collection<Application> apps = appBusiness.getApplicationHome().findAllByApplicationUrl(piw.getProcessDefinitionW().getProcessDefinitionName());
 			if (ListUtil.isEmpty(apps)) {
 				return defaultTitle;
 			}
@@ -805,7 +805,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			if (taskName.equals(ti.getName())) {
 				if (latestTask == null) {
 					latestTask = taskInstance;
-				} else if (created.after(latestTask.getTaskInstance().getCreate())) {
+				} else if (created.after(latestTask.getCreate())) {
 					latestTask = taskInstance;
 				}
 			}

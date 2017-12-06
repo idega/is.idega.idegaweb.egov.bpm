@@ -109,7 +109,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 				caseID = id.toString();
 			}
 		}
-		
+
 		if (caseID != null && caseID.length() > 0) {
 			setCaseId(new Integer(caseID));
 		}
@@ -175,7 +175,7 @@ public class UICasesBPMAssets extends IWBaseComponent {
 					for (int i = 0; i < states.size(); i++){
 						CaseStatePresentation statePrsnt = new CaseStatePresentation();
 						CaseStateInstance state = states.get(i);
-						CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinition().getName(),state.getStateName());
+						CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinitionName(), state.getStateName());
 						statePrsnt.setStateDefinition(stateDef);
 						statePrsnt.setStateInstance(state);
 						stateTable.add(statePrsnt);

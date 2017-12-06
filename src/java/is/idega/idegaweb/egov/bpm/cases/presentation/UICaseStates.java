@@ -111,7 +111,7 @@ public class UICaseStates {
 				rows.addRow(row);
 				row.setId(state.getId().toString());
 
-				CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinition().getName(),state.getStateName());
+				CaseState stateDef = getCasesBPMDAO().getCaseStateByProcessDefinitionNameAndStateName(pi.getProcessDefinitionW().getProcessDefinitionName(), state.getStateName());
 				row.addCell(stateDef.getStateDefaultLocalizedName());
 
 

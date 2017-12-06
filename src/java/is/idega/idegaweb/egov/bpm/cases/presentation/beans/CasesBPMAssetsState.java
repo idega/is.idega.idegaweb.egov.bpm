@@ -680,7 +680,7 @@ public class CasesBPMAssetsState implements Serializable {
 			for (Iterator<TaskInstanceW> tasksIter = allUnfinishedTasks.iterator(); (!found && tasksIter.hasNext());) {
 				TaskInstanceW task = tasksIter.next();
 
-				if (currentTaskName.equals(task.getTaskInstance().getName())) {
+				if (currentTaskName.equals(task.getTaskInstanceName())) {
 					this.nextProcessInstanceId = nextProcessInstance.getProcessInstanceId();
 					this.nextTaskId = task.getTaskInstanceId();
 					this.nextCaseId = nextCaseId;
@@ -713,8 +713,7 @@ public class CasesBPMAssetsState implements Serializable {
 
 	private String getCurrentTaskInstanceName() {
 		if (StringUtil.isEmpty(currentTaskInstanceName)) {
-			currentTaskInstanceName = getBpmFactory().getProcessManagerByTaskInstanceId(getViewSelected()).getTaskInstance(getViewSelected())
-					.getTaskInstance().getName();
+			currentTaskInstanceName = getBpmFactory().getProcessManagerByTaskInstanceId(getViewSelected()).getTaskInstance(getViewSelected()).getTaskInstanceName();
 		}
 		return currentTaskInstanceName;
 	}

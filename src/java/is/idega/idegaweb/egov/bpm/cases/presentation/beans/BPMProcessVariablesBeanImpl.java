@@ -142,7 +142,7 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 
 		Collection<VariableInstanceInfo> variables = null;
 		try {
-			String procDefName = procDef.getProcessDefinition().getName();
+			String procDefName = procDef.getProcessDefinitionName();
 			variables = getVariablesQuerier().getVariablesByProcessDefinition(procDefName);
 		} catch(Exception e) {
 			LOGGER.log(Level.SEVERE, "Error getting variables for process: " + processDefinitionId, e);
@@ -160,7 +160,7 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		boolean isAdmin = iwc.isSuperAdmin();
 		List<AdvancedProperty> availableVariables = getAvailableVariables(variables, iwrb, iwc.getCurrentLocale(), isAdmin, false);
 		if (ListUtil.isEmpty(availableVariables)) {
-			LOGGER.info("No variables found for process: " + procDef.getProcessDefinition().getName());
+			LOGGER.info("No variables found for process: " + procDef.getProcessDefinitionName());
 			processVariables = new ArrayList<SelectItem>();
 			return null;
 		}
