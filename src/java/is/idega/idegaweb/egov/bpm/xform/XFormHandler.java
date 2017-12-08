@@ -1,9 +1,5 @@
 package is.idega.idegaweb.egov.bpm.xform;
 
-import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
-import is.idega.idegaweb.egov.application.data.Application;
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -34,6 +30,10 @@ import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Service("bpmApplicationXFormHandler")
@@ -79,7 +79,8 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 			boolean foundAvailableTask = false;
 			long tiId = task.getTaskInstanceId();
 			for (Iterator<BPMDocument> tasksIter = tasksForUser.iterator(); (!foundAvailableTask && tasksIter.hasNext());) {
-				foundAvailableTask = tiId == tasksIter.next().getTaskInstanceId().longValue();
+				Long id = tasksIter.next().getTaskInstanceId();
+				foundAvailableTask = tiId == id.longValue();
 			}
 
 			if (foundAvailableTask) {
