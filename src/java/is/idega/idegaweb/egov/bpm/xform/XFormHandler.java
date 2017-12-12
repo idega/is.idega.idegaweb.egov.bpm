@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.xform;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -79,8 +80,10 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 			boolean foundAvailableTask = false;
 			long tiId = task.getTaskInstanceId();
 			for (Iterator<BPMDocument> tasksIter = tasksForUser.iterator(); (!foundAvailableTask && tasksIter.hasNext());) {
-				if (tasksIter.next().getTaskInstanceId() instanceof Number)
-					foundAvailableTask = tiId == ((Number)tasksIter.next().getTaskInstanceId()).longValue();
+				Serializable id = tasksIter.next().getTaskInstanceId();
+				if (id instanceof Number)
+					foundAvailableTask = tiId == ((Number)id).longValue();
+
 			}
 
 			if (foundAvailableTask) {

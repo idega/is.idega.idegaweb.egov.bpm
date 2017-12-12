@@ -582,10 +582,12 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	@Transactional(readOnly = true)
 	private ProcessDefinition getProcessDefinition(JbpmContext context, Case theCase) {
 		final Long piId = getProcessInstanceId(theCase);
-		if (piId == null)
+		if (piId == null) {
 			return null;
+		}
 
-		return context.getProcessInstance(piId).getProcessDefinition();
+		ProcessInstance pi = context.getProcessInstance(piId);
+		return pi == null ? null : pi.getProcessDefinition();
 	}
 
 	@Override
