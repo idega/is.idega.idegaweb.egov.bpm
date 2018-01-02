@@ -282,7 +282,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 		String pathToFeed = null;
 		try {
-			pathToFeed = new StringBuilder(getHost()).append(getRepositoryService().getWebdavServerURL()).append(uri).toString();
+			pathToFeed = new StringBuilder(getHost(false)).append(getRepositoryService().getWebdavServerURL()).append(uri).toString();
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
