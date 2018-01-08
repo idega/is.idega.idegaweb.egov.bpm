@@ -1,9 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
-import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-
 import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.util.Collection;
@@ -50,6 +46,10 @@ import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.ListUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.cases.actionhandlers.CaseHandlerAssignmentHandler;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -202,7 +202,10 @@ public class CasesBPMProcessInstanceW extends DefaultBPMProcessInstanceW {
 	@Override
 	@Transactional(readOnly = true)
 	public Integer getHandlerId() {
-		CaseProcInstBind cpi = getCasesBPMDAO().find(CaseProcInstBind.class, getProcessInstanceId());
+		Serializable procInstId = getProcessInstanceId();
+		CaseProcInstBind cpi = procInstId instanceof Number ?
+				getCasesBPMDAO().find(CaseProcInstBind.class, ((Number) procInstId).longValue()) :
+				getCasesBPMDAO().findByUUID(procInstId.toString());
 
 		Integer caseId = cpi.getCaseId();
 
