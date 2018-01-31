@@ -976,8 +976,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
 				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_FINISHED_KEY) ||
 				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_OFFERED) ||
-				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CANCELLED_KEY))
+				caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CANCELLED_KEY)
+		) {
 			showClosedCases = true;
+		}
 
 		List<Param> params = new ArrayList<Param>();
 		if (!ListUtil.isEmpty(caseCodes)) {
@@ -2082,7 +2084,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	) {
 
 		StringBuilder query = new StringBuilder();
-		query.append("SELECT bcpi.case_id, case_created created FROM bpm_cases_processinstances bcpi ");
+		query.append("SELECT bcpi.case_id, case_created created FROM " + CaseProcInstBind.TABLE_NAME + " bcpi ");
 
 		if (!ListUtil.isEmpty(processDefinitionNames) || hasEnded != null) {
 			query.append("JOIN jbpm_processinstance jpi ON bcpi.process_instance_id=jpi.ID_ ");
@@ -2186,8 +2188,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 			/* Searching by groups of subscribers */
 			if (!ListUtil.isEmpty(subscriberGroupsIDs)) {
-//				query.append("JOIN ic_user iu ON iu.IC_USER_ID = pcs.IC_USER_ID ")
-//				.append("AND iu.PRIMARY_GROUP IN (").append(toStringNumbers(subscriberGroupsIDs)).append(") ");
 				query.append(getSubscribedUsersQueryPart(toStringNumbers(handlersIDs), subscriberGroupsIDs));
 			}
 		}
@@ -2235,10 +2235,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return sql;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO#getCasesPrimaryKeys(java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection, java.util.Collection)
-	 */
 	@Override
 	public Map<Integer, Date> getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
@@ -2482,7 +2478,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public List<CaseStateInstance> getStateInstancesForProcessByName(long id, List<String> stateList) {
-		List<CaseStateInstance> caseStates = getResultList(CaseStateInstance.getSetByProcessIdAndName, CaseStateInstance.class, new Param(CaseStateInstance.processIdProperty, id), new Param(CaseStateInstance.stateNameProperty, stateList));
+		List<CaseStateInstance> caseStates = getResultList(
+				CaseStateInstance.getSetByProcessIdAndName,
+				CaseStateInstance.class,
+				new Param(CaseStateInstance.processIdProperty, id),
+				new Param(CaseStateInstance.stateNameProperty, stateList)
+		);
 		return caseStates;
 	}
 
@@ -2494,7 +2495,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public CaseState getCaseStateByProcessDefinitionNameAndStateName(String processName, String stateName) {
-		CaseState caseState = getSingleResult(CaseState.getByProcessNameAndStateName, CaseState.class, new Param(CaseState.processDefinitionNameProperty, processName), new Param(CaseState.stateNameProperty, stateName));
+		CaseState caseState = getSingleResult(
+				CaseState.getByProcessNameAndStateName,
+				CaseState.class,
+				new Param(CaseState.processDefinitionNameProperty, processName),
+				new Param(CaseState.stateNameProperty, stateName)
+		);
 		return caseState;
 	}
 
@@ -2525,17 +2531,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return null;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO#findByUUID(java.lang.String)
-	 */
 	@Override
 	public CaseProcInstBind findByUUID(String uuid) {
 		if (!StringUtil.isEmpty(uuid)) {
 			return getSingleResultByInlineQuery(
-					"FROM com.idega.idegaweb.egov.bpm.data.CaseProcInstBind c WHERE c.uuid = :" + CaseProcInstBind.uuidProp,
+					"FROM " + CaseProcInstBind.class.getName() + " c WHERE c.uuid = :" + CaseProcInstBind.uuidProp,
 					CaseProcInstBind.class,
-					new Param(CaseProcInstBind.uuidProp, uuid));
+					new Param(CaseProcInstBind.uuidProp, uuid)
+			);
 		}
 
 		return null;
@@ -2601,5 +2604,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
-	};
+	}
+
 }
