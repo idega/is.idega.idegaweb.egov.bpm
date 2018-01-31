@@ -874,57 +874,63 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<String> casecodes,
 			boolean isSuperAdmin
 	) throws Exception {
-		if (CasesRetrievalManager.CASE_LIST_TYPE_OPEN.equals(type)) {
+		if (StringUtil.isEmpty(type)) {
+			getLogger().warning("Cases list type is not provided");
+			return null;
+		}
+
+		switch (type) {
+		case CasesRetrievalManager.CASE_LIST_TYPE_OPEN:
 			return isSuperAdmin ?
-						getCasesBPMDAO().getOpenCasesIdsForAdmin(
-								caseCodes,
-								statusesToShow,
-								statusesToHide,
-								caseId,
-								procInstIds,
-								handlerCategoryIDs,
-								from,
-								to
-						) :
-						getCasesBPMDAO().getOpenCasesIds(
-								user,
-								caseCodes,
-								statusesToShow,
-								statusesToHide,
-								groups,
-								roles,
-								onlySubscribedCases,
-								caseId,
-								procInstIds,
-								handlerCategoryIDs,
-								from,
-								to
-						);
-		} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
+					getCasesBPMDAO().getOpenCasesIdsForAdmin(
+							caseCodes,
+							statusesToShow,
+							statusesToHide,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							from,
+							to
+					) :
+					getCasesBPMDAO().getOpenCasesIds(
+							user,
+							caseCodes,
+							statusesToShow,
+							statusesToHide,
+							groups,
+							roles,
+							onlySubscribedCases,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							from,
+							to
+					);
+		case CasesRetrievalManager.CASE_LIST_TYPE_CLOSED:
 			return isSuperAdmin ?
-						getCasesBPMDAO().getClosedCasesIdsForAdmin(
-								statusesToShow,
-								statusesToHide,
-								caseId,
-								procInstIds,
-								handlerCategoryIDs,
-								from,
-								to
-						) :
-						getCasesBPMDAO().getClosedCasesIds(
-								user,
-								statusesToShow,
-								statusesToHide,
-								groups,
-								roles,
-								onlySubscribedCases,
-								caseId,
-								procInstIds,
-								handlerCategoryIDs,
-								from,
-								to
-						);
-		} else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
+					getCasesBPMDAO().getClosedCasesIdsForAdmin(
+							statusesToShow,
+							statusesToHide,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							from,
+							to
+					) :
+					getCasesBPMDAO().getClosedCasesIds(
+							user,
+							statusesToShow,
+							statusesToHide,
+							groups,
+							roles,
+							onlySubscribedCases,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							from,
+							to
+					);
+		case CasesRetrievalManager.CASE_LIST_TYPE_MY:
 			return getCasesBPMDAO().getMyCasesIds(
 					user,
 					statusesToShow,
@@ -936,7 +942,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					from,
 					to
 			);
-		} else if (CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(type)) {
+		case CasesRetrievalManager.CASE_LIST_TYPE_USER:
 			return getCasesBPMDAO().getUserCasesIds(
 					user,
 					statusesToShow,
@@ -950,7 +956,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					from,
 					to
 			);
-		} else if (CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC.equals(type)) {
+		case CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC:
 			return getCasesBPMDAO().getPublicCasesIds(
 					statusesToShow,
 					statusesToHide,
@@ -961,7 +967,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					from,
 					to
 			);
-		} else if (CasesRetrievalManager.CASE_LIST_TYPE_HANDLER.equals(type)) {
+		case CasesRetrievalManager.CASE_LIST_TYPE_HANDLER:
 			return getCasesBPMDAO().getHandlerCasesIds(
 					user,
 					caseStatusesToShow,
@@ -974,9 +980,11 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					from,
 					to
 			);
-		} else {
+		default:
 			getLogger().warning("Unknown cases list type: '" + type + "'");
+			break;
 		}
+
 		return null;
 	}
 
