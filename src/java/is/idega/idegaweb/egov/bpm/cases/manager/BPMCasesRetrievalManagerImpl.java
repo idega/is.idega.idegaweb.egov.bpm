@@ -597,8 +597,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public UIComponent getView(IWContext iwc, Integer caseId, String type, String caseManagerType) {
-		if (!caseHandlerType.equals(caseManagerType))
+		if (!caseHandlerType.equals(caseManagerType)) {
 			return super.getView(iwc, caseId, type, caseManagerType);
+		}
 
 		CasesBPMAssetsState stateBean = WFUtil.getBeanInstance(CasesBPMAssetsState.beanIdentifier);
 		stateBean.setDisplayPropertyForStyleAttribute(Boolean.FALSE);
@@ -610,8 +611,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		if (stateBean.getCustomView() == null) {
 			UICasesBPMAssets casesAssets = (UICasesBPMAssets)iwc.getApplication().createComponent(UICasesBPMAssets.COMPONENT_TYPE);
 			UIViewRoot viewRoot = iwc.getViewRoot();
-			if (viewRoot != null)
+			if (viewRoot != null) {
 				casesAssets.setId(viewRoot.createUniqueId());
+			}
 
 			casesAssets.setUsePdfDownloadColumn(stateBean.getUsePDFDownloadColumn() == null ? false : stateBean.getUsePDFDownloadColumn());
 			casesAssets.setAllowPDFSigning(stateBean.getAllowPDFSigning() == null ? false : stateBean.getAllowPDFSigning());
@@ -629,19 +631,22 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			casesAssets.setShowLastLoginDate(stateBean.getShowLastLoginDate());
 			casesAssets.setInactiveTasksToShow(stateBean.getInactiveTasksToShow());
 
-			if (caseId != null)
+			if (caseId != null) {
 				casesAssets.setCaseId(caseId);
+			}
 			return casesAssets;
 		} else {
 			AbstractCasesBPMAssets casesAssets =  (AbstractCasesBPMAssets)iwc.getApplication().createComponent(stateBean.getCustomView());
 
 			UIViewRoot viewRoot = iwc.getViewRoot();
-			if (viewRoot != null)
+			if (viewRoot != null) {
 				casesAssets.setId(viewRoot.createUniqueId());
+			}
 
 			casesAssets.setCaseState(stateBean);
-			if (caseId != null)
+			if (caseId != null) {
 				casesAssets.setCaseId(caseId);
+			}
 			return casesAssets;
 		}
 	}
@@ -748,8 +753,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			List<CasePresentation> casesPresentation = convertToPresentationBeans(cases, locale);
 			if (!ListUtil.isEmpty(casesPresentation) &&
-					IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE))
+					IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE)) {
 				Collections.sort(casesPresentation, new CasePresentationComparator());
+			}
 
 			duration = System.currentTimeMillis() - start;
 			if (duration > 1000) {
@@ -837,7 +843,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		);
 	}
 
-	private Set<String> getRoles(HttpSession session, AccessController access, User user) {
+	@Override
+	public Set<String> getRoles(HttpSession session, AccessController access, User user) {
 		if (user == null) {
 			return null;
 		}
@@ -1200,8 +1207,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					);
 				}
 
-				if (casesIds != null)
+				if (casesIds != null) {
 					putIdsToCache(casesIds, key);
+				}
 
 				Map<Integer, Date> cachedData = getCachedIds(key);
 				String amount = cachedData == null ? "0" : String.valueOf(cachedData.size());
@@ -1244,8 +1252,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				Collection<Group> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
 				if (!ListUtil.isEmpty(groupBeans)) {
 					groups = new ArrayList<Integer>(groupBeans.size());
-					for (Group group : groupBeans)
+					for (Group group : groupBeans) {
 						groups.add(new Integer(group.getPrimaryKey().toString()));
+					}
 				}
 			}
 
@@ -1330,8 +1339,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	private final HashMap<String, String> uris = new HashMap<String, String>(2);
 
 	protected String getPageUri(IWApplicationContext iwac, String pageType) {
-		if (uris != null && uris.containsKey(pageType))
+		if (uris != null && uris.containsKey(pageType)) {
 			return uris.get(pageType);
+		}
 
 		Collection<ICPage> icpages = getPages(pageType);
 		if (icpages == null || icpages.isEmpty()) {
@@ -1340,12 +1350,14 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 
 		ICPage icPage = null;
-		if (icPage == null)
+		if (icPage == null) {
 			icPage = icpages.iterator().next();
+		}
 
 		String uri = icPage.getDefaultPageURI();
-		if (!uri.startsWith(CoreConstants.PAGES_URI_PREFIX))
+		if (!uri.startsWith(CoreConstants.PAGES_URI_PREFIX)) {
 			uri = CoreConstants.PAGES_URI_PREFIX + uri;
+		}
 
 		String ruri = iwac.getIWMainApplication().getTranslatedURIWithContext(uri);
 		uris.put(pageType, ruri);
@@ -1434,8 +1446,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	//	TODO: use case type!
 	private List<ProcessDefinition> getAllProcessDefinitions() {
 		final List<CaseTypesProcDefBind> casesProcesses = getCasesBPMDAO().getAllCaseTypes();
-		if (ListUtil.isEmpty(casesProcesses))
+		if (ListUtil.isEmpty(casesProcesses)) {
 			return null;
+		}
 
 		return getBpmContext().execute(new JbpmCallback<List<ProcessDefinition>>() {
 
@@ -1756,12 +1769,14 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	@Override
 	public String resolveCaseId(IWContext iwc) {
 		String caseId = super.resolveCaseId(iwc);
-		if (!StringUtil.isEmpty(caseId))
+		if (!StringUtil.isEmpty(caseId)) {
 			return caseId;
+		}
 
 		String processInstanceId = iwc.getParameter(ProcessManagerBind.processInstanceIdParam);
-		if (StringUtil.isEmpty(processInstanceId))
+		if (StringUtil.isEmpty(processInstanceId)) {
 			return null;
+		}
 
 		processInstanceId = StringHandler.replace(processInstanceId, CoreConstants.DOT, CoreConstants.EMPTY);
 		processInstanceId = StringHandler.replace(processInstanceId, CoreConstants.SPACE, CoreConstants.EMPTY);
@@ -1807,8 +1822,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	private User getUser(Integer userId) {
-		if (userId == null || userId < 0)
+		if (userId == null || userId < 0) {
 			return null;
+		}
 
 		try {
 			UserBusiness userBusiness = getServiceInstance(UserBusiness.class);
@@ -1849,8 +1865,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					Integer caseId = Integer.valueOf(id);
 					Collection<CasesCacheCriteria> criterias = getCacheKeySet();
 					for (CasesCacheCriteria criteria: criterias) {
-						if (criteria == null)
+						if (criteria == null) {
 							continue;
+						}
 
 						if (ommitClearing && containsElement(criteria, caseId)) {
 							//	No need to execute SQL query to verify if case ID still belongs to the cache because it is forbidden to remove ID
@@ -1928,8 +1945,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			Object source = event.getSource();
-			if (!(source instanceof Case))
+			if (!(source instanceof Case)) {
 				return;
+			}
 
 			Case theCase = (Case) source;
 			doManageCasesCache(theCase, theCase == null || StringUtil.isEmpty(theCase.getSubject()));
@@ -1970,8 +1988,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			Object source = event.getSource();
-			if (!(source instanceof Case))
+			if (!(source instanceof Case)) {
 				return;
+			}
 
 			Case theCase = (Case) source;
 			Integer id = Integer.valueOf(theCase.getId());
@@ -1994,8 +2013,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	private void doUpdateBPMCase(Long piId) {
-		if (piId == null)
+		if (piId == null) {
 			return;
+		}
 
 		CaseProcInstBind bind = null;
 		try {

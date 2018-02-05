@@ -82,13 +82,14 @@
  */
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
-import is.idega.idegaweb.egov.application.data.Application;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+
+import javax.servlet.http.HttpSession;
 
 import org.jbpm.graph.def.ProcessDefinition;
 import org.jbpm.graph.exe.ProcessInstance;
@@ -96,11 +97,14 @@ import org.jbpm.taskmgmt.def.Task;
 
 import com.idega.block.process.business.CasesRetrievalManager;
 import com.idega.block.process.data.Case;
+import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.data.ICRole;
 import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMEmailDocument;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.user.data.User;
+
+import is.idega.idegaweb.egov.application.data.Application;
 
 /**
  * <p>Extension to {@link CasesRetrievalManager}</p>
@@ -239,7 +243,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 
 	/**
 	 *
-	 * @param processDefinitionNames is {@link Collection} of 
+	 * @param processDefinitionNames is {@link Collection} of
 	 * {@link ProcessDefinition#getName()}, not <code>null</code>;
 	 * @return all {@link ProcessDefinition}s by given name or
 	 * {@link Collections#emptyList()} on failure;
@@ -303,12 +307,12 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 
 	/**
 	 * <p>Only PROC_CASE</p>
-	 * @param processDefinitionNames is {@link Collection} of 
+	 * @param processDefinitionNames is {@link Collection} of
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
 	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
-	 * @return array of {@link Case#getPrimaryKey()} by criteria or 
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
@@ -316,7 +320,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 
 	/**
 	 * <p>Only PROC_CASE</p>
-	 * @param processDefinitionNames is {@link Collection} of 
+	 * @param processDefinitionNames is {@link Collection} of
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
@@ -324,18 +328,18 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param subscribers is {@link Collection} of {@link User}, who
 	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
 	 * then this option will be skipped;
-	 * @return array of {@link Case#getPrimaryKey()} by criteria or 
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	public String[] getCasesPrimaryKeys(
-			Collection<String> processDefinitionNames, 
-			Collection<String> caseStatuses, 
+			Collection<String> processDefinitionNames,
+			Collection<String> caseStatuses,
 			Collection<User> subscribers);
 
 	/**
 	 * <p>Only PROC_CASE</p>
-	 * @param processDefinitionNames is {@link Collection} of 
+	 * @param processDefinitionNames is {@link Collection} of
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
 	 * @param processInstanceIds is {@link Collection} of {@link ProcessInstance#getId()}
@@ -345,31 +349,31 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param subscribers is {@link Collection} of {@link User}, who
 	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
 	 * then this option will be skipped;
-	 * @param caseManagerTypes is {@link Collection} of 
+	 * @param caseManagerTypes is {@link Collection} of
 	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
 	 * will be skipped;
-	 * @param dateCreatedFrom is floor of {@link Case#getCreated()}, 
+	 * @param dateCreatedFrom is floor of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
 	 * @param dateCreatedTo is ceiling of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
-	 * @return array of {@link Case#getPrimaryKey()} by criteria or 
+	 * @return array of {@link Case#getPrimaryKey()} by criteria or
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	public String[] getCasesPrimaryKeys(
 			Collection<String> processDefinitionNames,
-			Collection<? extends Number> processInstanceIds, 
+			Collection<? extends Number> processInstanceIds,
 			Collection<String> caseStatuses,
 			Collection<User> subscribers, Collection<String> caseManagerTypes, Date dateCreatedFrom, Date dateCreatedTo);
 
 	/**
 	 * <p>Only PROC_CASE</p>
-	 * @param processDefinitionNames is {@link Collection} of 
+	 * @param processDefinitionNames is {@link Collection} of
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
 	 * to filter {@link Case}s by. It is skipped, if <code>null</code>;
-	 * @return {@link List} of {@link Case}s by criteria or 
+	 * @return {@link List} of {@link Case}s by criteria or
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
@@ -378,7 +382,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 
 	/**
 	 * <p>Only PROC_CASE</p>
-	 * @param processDefinitionNames is {@link Collection} of 
+	 * @param processDefinitionNames is {@link Collection} of
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
 	 * @param caseStatuses is {@link Collection} of {@link Case#getStatus()}
@@ -386,7 +390,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param subscribers is {@link Collection} of {@link User}, who
 	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
 	 * then this option will be skipped;
-	 * @return {@link List} of {@link Case}s by criteria or 
+	 * @return {@link List} of {@link Case}s by criteria or
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
@@ -395,7 +399,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 
 	/**
 	 * <p>Only PROC_CASE</p>
-	 * @param processDefinitionNames is {@link Collection} of 
+	 * @param processDefinitionNames is {@link Collection} of
 	 * {@link ProcessDefinition#getName()} to filter {@link Case}s by. It is
 	 * skipped, if <code>null</code>;
 	 * @param processInstanceIds is {@link Collection} of {@link ProcessInstance#getId()}
@@ -405,28 +409,28 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @param subscribers is {@link Collection} of {@link User}, who
 	 * is subscribed "{@link Case#addSubscriber(User)}". If <code>null</code>
 	 * then this option will be skipped;
-	 * @param caseManagerTypes is {@link Collection} of 
+	 * @param caseManagerTypes is {@link Collection} of
 	 * {@link Case#getCaseManagerType()}, if <code>null</code> then option
 	 * will be skipped;
-	 * @param dateFrom is floor of {@link Case#getCreated()}, 
+	 * @param dateFrom is floor of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
 	 * @param dateTo is ceiling of {@link Case#getCreated()},
 	 * skipped if <code>null</code>;
-	 * @return {@link List} of {@link Case}s by criteria or 
+	 * @return {@link List} of {@link Case}s by criteria or
 	 * {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	public List<Case> getCases(
 			Collection<String> processDefinitionNames,
-			Collection<Long> processInstanceIds, 
+			Collection<Long> processInstanceIds,
 			Collection<String> caseStatuses,
-			Collection<User> subscribers, 
-			Collection<String> caseManagerTypes, 
-			Date dateFrom, 
+			Collection<User> subscribers,
+			Collection<String> caseManagerTypes,
+			Date dateFrom,
 			Date dateTo);
 
 	/**
-	 * 
+	 *
 	 * @param processInstances to search by, not <code>null</code>;
 	 * @return {@link Case}s by criteria, {@link Collections#emptyList()} on failure;
 	 * @author <a href="mailto:martynas@idega.com">Martynas Stakė</a>
@@ -434,9 +438,9 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	public List<Case> getCases(Collection<ProcessInstanceW> processInstances);
 
 	/**
-	 * 
-	 * @param caseIdentifiers is {@link Collection} of 
-	 * {@link Case#getCaseIdentifier()}, to search role names for, 
+	 *
+	 * @param caseIdentifiers is {@link Collection} of
+	 * {@link Case#getCaseIdentifier()}, to search role names for,
 	 * not <code>null</code>;
 	 * @return {@link ICRole}s for {@link Case}s, which has managerRoleName
 	 * permissions or <code>null</code> on failure;
@@ -445,7 +449,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	public String[] getManagerRoleNames(Collection<String> caseIdentifiers);
 
 	/**
-	 * 
+	 *
 	 * <p>Checks if current {@link User} has cases manager access for at least
 	 * one of give {@link Case#getCaseIdentifier()}.</p>
 	 * @param caseIdentifiers is {@link Case#getCaseIdentifier()} to check
@@ -456,4 +460,7 @@ public interface BPMCasesRetrievalManager extends CasesRetrievalManager {
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	public boolean hasManagerAccess(Collection<String> caseIdentifiers);
+
+	public Set<String> getRoles(HttpSession session, AccessController access, User user);
+
 }
