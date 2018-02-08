@@ -40,8 +40,9 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 	private VariableInstanceQuerier variablesQuerier;
 
 	protected CasesBPMDAO getCasesBPMDAO() {
-		if (casesBPMDAO == null)
+		if (casesBPMDAO == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 
 		return casesBPMDAO;
 	}
@@ -51,8 +52,9 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 	}
 
 	protected VariableInstanceQuerier getVariablesQuerier() {
-		if (variablesQuerier == null)
+		if (variablesQuerier == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 
 		return variablesQuerier;
 	}
@@ -67,25 +69,29 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 	@Override
 	public List<String> getHeaders(List<String> headersKeys) {
-		if (ListUtil.isEmpty(headersKeys))
+		if (ListUtil.isEmpty(headersKeys)) {
 			return null;
+		}
 
 		List<String> headers = new ArrayList<String>();
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
-		for (String key: headersKeys)
+		for (String key: headersKeys) {
 			headers.add(getLocalizedHeader(iwrb, key));
+		}
 		return headers;
 	}
 
 	@Override
 	public Map<String, String> getHeadersAndVariables(CaseListPropertiesBean properties, List<String> headersKeys) {
-		if (ListUtil.isEmpty(headersKeys))
+		if (ListUtil.isEmpty(headersKeys)) {
 			return null;
+		}
 
 		Map<String, String> headers = new LinkedHashMap<String, String>(headersKeys.size());
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
-		for (String key: headersKeys)
+		for (String key: headersKeys) {
 			headers.put(key, getLocalizedHeader(iwrb, key));
+		}
 
 		return headers;
 	}
@@ -103,24 +109,28 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			resolvers.put(key, validResolver);
 		}
 
-		if (resolver != null)
+		if (resolver != null) {
 			return resolver;
+		}
 
-		if (validResolver != null && validResolver)
+		if (validResolver != null && validResolver) {
 			return ELUtil.getInstance().getBean(key);
+		}
 
 		return null;
 	}
 
-	protected AdvancedProperty getLabel(VariableInstanceInfo variable) {
+	protected AdvancedProperty getLabel(VariableInstanceInfo variable, Map<Long, Integer> procInstIdsAndCasesIds) {
 		String name = variable.getName();
 
 		MultipleSelectionVariablesResolver resolver = getResolver(name);
-		if (resolver != null)
+		if (resolver != null) {
+			resolver.setProcInstIdsAndCasesIds(procInstIdsAndCasesIds);
 			return new AdvancedProperty(name, resolver.isValueUsedForCaseList() ?
 					resolver.getPresentation(variable.getValue().toString()) :
 					resolver.getKeyPresentation(variable.getProcessInstanceId(), variable.getValue().toString())
 			);
+		}
 
 		return new AdvancedProperty(name, variable.getValue().toString());
 	}
@@ -186,7 +196,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 					continue;
 				}
 
-				AdvancedProperty label = getLabel(info);
+				AdvancedProperty label = getLabel(info, procInstIdsAndCasesIds);
 				caseLabels.put(label.getId(), label.getValue());
 			}
 		}
@@ -196,8 +206,9 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		for (String caseId: labels.keySet()) {
 			for (String headerKey: headersKeys) {
 				Map<String, String> caseLabels = labels.get(caseId);
-				if (caseLabels.containsKey(headerKey) && !StringUtil.isEmpty(caseLabels.get(headerKey)))
+				if (caseLabels.containsKey(headerKey) && !StringUtil.isEmpty(caseLabels.get(headerKey))) {
 					continue;
+				}
 
 				List<String> varNames = missingLabels.get(caseId);
 				if (varNames == null) {
@@ -221,18 +232,21 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 	 * @param missingLabels: case ID -> variable names
 	 */
 	protected void doResolveMissingLabels(Map<String, Map<String, String>> labels, Map<String, List<String>> missingLabels) {
-		if (MapUtil.isEmpty(labels) || MapUtil.isEmpty(missingLabels))
+		if (MapUtil.isEmpty(labels) || MapUtil.isEmpty(missingLabels)) {
 			return;
+		}
 
 		for (String caseId: missingLabels.keySet()) {
 			List<String> varNames = missingLabels.get(caseId);
-			if (ListUtil.isEmpty(varNames))
+			if (ListUtil.isEmpty(varNames)) {
 				continue;
+			}
 
 			Map<String, String> caseLabels = labels.get(caseId);
 			for (String varName: varNames) {
-				if (!caseLabels.containsKey(varName))
+				if (!caseLabels.containsKey(varName)) {
 					caseLabels.put(varName, CoreConstants.MINUS);
+				}
 			}
 		}
 	}
