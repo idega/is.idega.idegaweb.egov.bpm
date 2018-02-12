@@ -810,7 +810,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<String> statusesToHide,
 			List<String> statusesToShow,
 			boolean onlySubscribedCases,
-			boolean showAllCases
+			boolean showAllCases,
+			Integer page,
+			Integer pageSize
 	) throws Exception {
 		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false);
 	}
