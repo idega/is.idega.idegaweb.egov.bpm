@@ -253,12 +253,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public Document getCaseManagerView(CasesBPMAssetProperties properties) {
-		if (properties == null)
+		if (properties == null) {
 			return null;
+		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null)
+		if (iwc == null) {
 			return null;
+		}
 
 		String caseIdStr = properties.getCaseId();
 		if (caseIdStr == null || CoreConstants.EMPTY.equals(caseIdStr) || iwc == null) {
@@ -336,8 +338,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public Document getRenderedCasesByQuery(CasesSearchCriteriaBean criterias) {
-		if (criterias instanceof CasesListSearchCriteriaBean)
+		if (criterias instanceof CasesListSearchCriteriaBean) {
 			return getCasesListByUserQuery((CasesListSearchCriteriaBean) criterias);
+		}
 
 		getLogger().warning("Criterias " + criterias + " are not instance of " + CasesListSearchCriteriaBean.class + " (actual implementation: " +
 				criterias.getClass().getName() + "), returning null");
@@ -352,9 +355,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		}
 
 		criterias.setSearch(true);
-		if (criterias.isClearResults())
+		if (criterias.isClearResults()) {
 			//	Clearing search result before new search
 			clearSearchResults(criterias.getId());
+		}
 
 		List<Long> piIds = criterias.getProcInstIds();
 		LOGGER.log(Level.INFO, new StringBuilder("Search query: caseNumber: ").append(criterias.getCaseNumber()).append(", description: ")
@@ -385,11 +389,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			if (criterias.isClearResults()) {
 				if (cases == null) {
 					Collection<CasePresentation> externalData = getExternalSearchResults(getSearchResultsHolder(), criterias.getId());
-					if (externalData != null)
+					if (externalData != null) {
 						setSearchResults(iwc, externalData, criterias);
+					}
 
-				} else
+				} else {
 					setSearchResults(iwc, cases.getCollection(), criterias);
+				}
 			}
 		}
 
@@ -543,8 +549,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					try {
 						resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName());
 					} catch (Throwable e) {}
-					if (resolver != null)
+					if (resolver != null) {
 						value = resolver.getPresentation(variable);
+					}
 				}
 
 				searchFields.add(new AdvancedProperty(
@@ -579,8 +586,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias) {
-		if (criterias instanceof CasesListSearchCriteriaBean)
+		if (criterias instanceof CasesListSearchCriteriaBean) {
 			return getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criterias);
+		}
 
 		getLogger().warning("Unable to get cases by query " + criterias + " because it is not instance of " +
 				CasesListSearchCriteriaBean.class.getName() + ". Actual implementation: " + criterias.getClass().getName());
@@ -630,8 +638,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					allStatuses = new StringBuffer();
 					for (Iterator<CaseStatus> statusesIter = statuses.iterator(); statusesIter.hasNext();) {
 						allStatuses.append(statusesIter.next().getStatus());
-						if (statusesIter.hasNext())
+						if (statusesIter.hasNext()) {
 							allStatuses.append(CoreConstants.COMMA);
+						}
 					}
 				}
 
@@ -667,22 +676,26 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		long end = System.currentTimeMillis();
 		LOGGER.info("Cases IDs were resolved in " + (end - start) + " ms");
 
-		if (criterias.getStatusId() != null)
+		if (criterias.getStatusId() != null) {
 			criterias.setStatuses(new String[] {criterias.getStatusId()});
+		}
 
 		if (ListUtil.isEmpty(criterias.getProcInstIds())) {
 			//	Filtering out the initial set of cases IDs by filters
 			List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criterias);
-			if (ListUtil.isEmpty(filters))
+			if (ListUtil.isEmpty(filters)) {
 				return null;
+			}
 
-			for (CasesListSearchFilter filter: filters)
+			for (CasesListSearchFilter filter: filters) {
 				casesIds = filter.doFilter(casesIds);
+			}
 		} else {
 			//	Selecting cases IDs by provided process instance IDs
 			List<Integer> casesIdsByProcInstIds = casesBPMDAO.getCasesIdsByProcInstIds(criterias.getProcInstIds());
-			if (ListUtil.isEmpty(casesIdsByProcInstIds))
+			if (ListUtil.isEmpty(casesIdsByProcInstIds)) {
 				return null;
+			}
 
 			//	Making sure user will see cases that are available to her/him only
 			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, casesIdsByProcInstIds);
@@ -691,8 +704,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		start = System.currentTimeMillis();
 		LOGGER.info("Searh was executed in " + (start - end) + " ms");
 
-		if (ListUtil.isEmpty(casesIds))
+		if (ListUtil.isEmpty(casesIds)) {
 			return null;
+		}
 
 		boolean usePaging = isPagingTurnedOn();
 		boolean noSortingOptions = ListUtil.isEmpty(criterias.getSortingOptions());
@@ -709,10 +723,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		int totalCount = casesIds.size();
 		criterias.setFoundResults(totalCount);
-		if (criterias.getPageSize() <= 0)
+		if (criterias.getPageSize() <= 0) {
 			criterias.setPageSize(20);
-		if (criterias.getPage() <= 0)
+		}
+		if (criterias.getPage() <= 0) {
 			criterias.setPage(1);
+		}
 		criterias.setAllDataLoaded(!(totalCount > criterias.getPageSize()));
 		int count = criterias.getPageSize();
 		int startIndex = (criterias.getPage() - 1) * count;
@@ -788,8 +804,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					Collections.sort(sortedIds, comparator);
 				}
 
-				if (usePaging)
+				if (usePaging) {
 					sortedIds = getSubList(sortedIds, startIndex, count, totalCount);
+				}
 
 				cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale);
 				if (!criterias.isNoOrdering()) {
@@ -809,8 +826,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
 			}
 		}
-		if (cases == null || ListUtil.isEmpty(cases.getCollection()))
+		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
 			return null;
+		}
 
 		cases.setTotalCount(new Long(totalCount));
 		cases.setPageSize(criterias.getPageSize());
@@ -1010,12 +1028,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	@Override
 	public AdvancedProperty getExportedCases(String instanceId, String uri,
 			Boolean exportContacts, Boolean showCompany) {
-		if (StringUtil.isEmpty(instanceId))
+		if (StringUtil.isEmpty(instanceId)) {
 			return null;
+		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		if (iwc == null || !iwc.isLoggedOn())
+		if (iwc == null || !iwc.isLoggedOn()) {
 			return null;
+		}
 
 		BuilderLogic builder = BuilderLogic.getInstance();
 		String pageKey = builder.getPageKeyByURI(uri, iwc.getDomain());
@@ -1184,8 +1204,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	private void doLoadCases(IWMainApplication app) {
 		String groupId = app.getSettings().getProperty("load_cases_for_group");
-		if (StringUtil.isEmpty(groupId))
+		if (StringUtil.isEmpty(groupId)) {
 			return;
+		}
 
 		try {
 			GroupBusiness groupBusiness = IBOLookup.getServiceInstance(app.getIWApplicationContext(), GroupBusiness.class);
@@ -1199,8 +1220,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					return;
 				}
 
-				for (Group child: children)
+				for (Group child: children) {
 					doLoadCases(app, child);
+				}
 			}
 		} catch (FinderException e) {
 			LOGGER.warning("Group by ID '" + groupId + "' does not exist!");
@@ -1264,20 +1286,24 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				instances = instanceHome.getByClassName(theClass);
 			} catch (FinderException e) {
 			} catch (Exception e) {}
-			if (ListUtil.isEmpty(instances))
+			if (ListUtil.isEmpty(instances)) {
 				continue;
+			}
 
 			for (ICObjectInstance instance: instances) {
-				if (instance == null)
+				if (instance == null) {
 					continue;
+				}
 				String uniqueId = instance.getUniqueId();
-				if (StringUtil.isEmpty(uniqueId))
+				if (StringUtil.isEmpty(uniqueId)) {
 					continue;
+				}
 
 				String instanceId = ICObjectBusiness.UUID_PREFIX.concat(uniqueId);
 				ICPage page = builder.findPageForModule(getApplication(), instanceId);
-				if (page == null || page.getDeleted())
+				if (page == null || page.getDeleted()) {
 					continue;
+				}
 				String pageKey = page.getId();
 
 				String type = getType(builder, pageKey, instanceId);
@@ -1287,8 +1313,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				boolean onlySubscribedCases = isShowSubscribedOnly(builder, pageKey, instanceId);
 
 				try {
-					getCaseManagersProvider().getCaseManager().getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow,
-							onlySubscribedCases, false);
+					getCaseManagersProvider().getCaseManager().getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, false, 0, Integer.MAX_VALUE);
 				} catch (Exception e) {
 					getLogger().log(Level.WARNING, "Error loading cases for list " + theClass.getName() + " for user " + user +
 							" after login event", e);
@@ -1298,11 +1323,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private void doLoadCases(final Integer userId) {
-		if (!getApplication().getSettings().getBoolean("load_cases_on_user_login", Boolean.TRUE))
+		if (!getApplication().getSettings().getBoolean("load_cases_on_user_login", Boolean.TRUE)) {
 			return;
+		}
 
-		if (userId == null || userId < 0)
+		if (userId == null || userId < 0) {
 			return;
+		}
 
 		Thread loader = new Thread(new Runnable() {
 
@@ -1322,8 +1349,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	@Override
 	public Collection<CasePresentation> getReLoadedCases(CasesSearchCriteriaBean criterias) {
 		Collection<CasePresentation> reLoadedCases = getReLoadedCases(null, criterias, null);
-		if (!ListUtil.isEmpty(reLoadedCases))
+		if (!ListUtil.isEmpty(reLoadedCases)) {
 			criterias.setAllDataLoaded(Boolean.FALSE);
+		}
 		return reLoadedCases;
 	}
 
@@ -1333,8 +1361,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			CasesListSearchCriteriaBean listCriterias = (CasesListSearchCriteriaBean) criterias;
 
 			PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, listCriterias);
-			if (cases == null)
+			if (cases == null) {
 				cases = new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>());
+			}
 
 			listCriterias.setAllDataLoaded(Boolean.TRUE);
 			listCriterias.setPageSize(cases.getTotalCount().intValue());
@@ -1506,8 +1535,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
-		if (cache.containsKey(beanName))
+		if (cache.containsKey(beanName)) {
 			return cache.get(beanName);
+		}
 
 		try {
 			MultipleSelectionVariablesResolver resolver = ELUtil.getInstance().getBean(beanName);
@@ -1806,19 +1836,27 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public Long startWorkingOnCase(Integer caseId){
-		if (caseId==null) return -1L;
+		if (caseId==null) {
+			return -1L;
+		}
 		TSOCManager tsocManager = ELUtil.getInstance().getBean(TimeSpentOnCaseManager.BEAN_NAME);
 		Integer userId = IWContext.getInstance().getCurrentUserId();
-		if (userId < 1) return -1L;
+		if (userId < 1) {
+			return -1L;
+		}
 		return tsocManager.startWorkingOnCase(userId, caseId);
 	}
 
 	@Override
 	public Boolean stopWorkingOnCase(Integer caseId){
-		if (caseId==null) return false;
+		if (caseId==null) {
+			return false;
+		}
 		TSOCManager tsocManager = ELUtil.getInstance().getBean(TimeSpentOnCaseManager.BEAN_NAME);
 		Integer userId = IWContext.getInstance().getCurrentUserId();
-		if (userId < 1) return false;
+		if (userId < 1) {
+			return false;
+		}
 		tsocManager.stopWorkingOnCase(userId, caseId);
 		return true;
 	}
@@ -1826,7 +1864,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	@Override
 	public void stopWorkingOnAllCases(){
 		IWContext iwc = IWContext.getCurrentInstance();
-		if (iwc.isLoggedOn()) stopWorkingOnAllCases(iwc.getCurrentUserId());
+		if (iwc.isLoggedOn()) {
+			stopWorkingOnAllCases(iwc.getCurrentUserId());
+		}
 	}
 
 	@Override
@@ -1836,8 +1876,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private JQuery getJQuery() {
-		if (jQuery == null)
+		if (jQuery == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 		return jQuery;
 	}
 
@@ -1846,7 +1887,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	public VariableInstanceQuerier getVariableInstanceQuerier() {
-		if (variableInstanceQuerier == null) ELUtil.getInstance().autowire(this);
+		if (variableInstanceQuerier == null) {
+			ELUtil.getInstance().autowire(this);
+		}
 		return variableInstanceQuerier;
 	}
 
