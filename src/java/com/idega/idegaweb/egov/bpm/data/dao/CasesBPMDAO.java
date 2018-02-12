@@ -207,14 +207,27 @@ public interface CasesBPMDAO extends GenericDao {
 	);
 
 	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
+	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			com.idega.user.data.bean.User user,
+			boolean onlySubscribed
+	);
+
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Integer firstResult, Integer maxResults, boolean newestOnTop);
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
-			List<String> procDefNames);
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
-			List<String> procDefNames, Param metadata, int offset, int maxCount, String endDate);
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
-			List<Long> procInstIds);
+	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			com.idega.user.data.bean.User user,
+			boolean onlySubscribed,
+			Integer firstResult,
+			Integer maxResults,
+			boolean newestOnTop
+	);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,List<String> procDefNames);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Param metadata, int offset, int maxCount, String endDate);
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses, List<Long> procInstIds);
 
 	public List<Long> getProcessInstancesByCasesIds(Collection<Integer> casesIds);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds);
