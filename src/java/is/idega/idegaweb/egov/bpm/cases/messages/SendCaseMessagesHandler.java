@@ -100,8 +100,9 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 			if (ectx == null) {
 				candPI = bpmFactory.getProcessManagerByProcessInstanceId(getProcessInstanceId()).getProcessInstance(getProcessInstanceId())
 						.getProcessInstance();
-			} else
+			} else {
 				candPI = ectx.getJbpmContext().getProcessInstance(getProcessInstanceId());
+			}
 
 			caseIdStr = (String) candPI.getContextInstance().getVariable(CasesBPMProcessConstants.caseIdVariableName);
 		} else {
@@ -135,8 +136,9 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 					recipientUserId + " and message:\n" + msgs;
 			LOGGER.warning(msg);
 			CoreUtil.sendExceptionNotification(msg, null);
-		} else
+		} else {
 			LOGGER.info("Sending message to process instance " + candPI.getId());
+		}
 
 		if (caseIdStr == null) {
 			// no case id variable found, trying to get it from super process
@@ -197,7 +199,7 @@ public class SendCaseMessagesHandler extends SendMessagesHandler {
 		if (validSendToEmail) {
 			msgs.setSendToEmails(Arrays.asList(getSendToEmail()));
 		}
-		getSendMessage().send(null, Integer.valueOf(caseIdStr), pi, msgs, tkn);
+		getSendMessage().send(null, new Object[] {Integer.valueOf(caseIdStr), ectx}, pi, msgs, tkn);
 
 		if (isSendViaEmail() || validSendToEmail) {
 			MessageValueContext mvCtx = new MessageValueContext();

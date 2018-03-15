@@ -9,6 +9,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.logging.Level;
 
+import org.jbpm.graph.exe.ExecutionContext;
 import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,7 @@ import com.idega.jbpm.process.business.messages.TypeRef;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
@@ -84,7 +86,23 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 	@Override
 	public void send(MessageValueContext mvCtx, final Object context, final ProcessInstance pi, final LocalizedMessages msgs, final Token tkn, List<User> users) {
-		final Integer caseId = context instanceof Integer ? (Integer) context : null;
+		final Integer caseId = context instanceof Integer ?
+				(Integer) context :
+				context instanceof Object[] && !ArrayUtil.isEmpty((Object[]) context) ?
+					(Integer) ((Object[]) context)[0] :
+					null;
+
+		ExecutionContext ectx = null;
+		try {
+			if (context instanceof Object[] && !ArrayUtil.isEmpty((Object[]) context)) {
+				ectx = (ExecutionContext) ((Object[]) context)[1];
+				if (mvCtx != null) {
+					mvCtx.setExecutionContext(ectx);
+				}
+			}
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error resolving " + ExecutionContext.class.getName(), e);
+		}
 
 		final IWContext iwc = CoreUtil.getIWContext();
 		final IWMainApplication iwma = iwc == null ? IWMainApplication.getDefaultIWMainApplication() : iwc.getIWMainApplication();
@@ -114,8 +132,10 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 
 			Map<Locale, String[]> unformattedForLocales = new HashMap<Locale, String[]>(5);
 
-			if (mvCtx == null)
+			if (mvCtx == null) {
 				mvCtx = new MessageValueContext(3);
+				mvCtx.setExecutionContext(ectx);
+			}
 
 			for (User user: users) {
 				String bcc = null;
@@ -152,19 +172,24 @@ public class SendCaseMessageImpl extends SendMailMessageImpl {
 				if (subject.equals("Vinsamlega endurnýjið veiðileyfi fyrir komandi fiskveiðiár")) {
 					//	Don't add message...
 				} else {
+					MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true, bcc);
+					msgValsToSend.add(mv);
+
 					User owner = theCase.getOwner();
 					if (owner != null && owner.getId().equals(user.getId())) {
-						Email email = owner.getUsersEmail();
+						Email email = null;
+						try {
+							email = owner.getUsersEmail();
+						} catch (Exception e) {}
 						String ownerEmail = (String) pi.getContextInstance().getVariable(com.idega.jbpm.exe.ProcessConstants.OWNER_EMAIL_ADDRESS);
 						if (com.idega.util.EmailValidator.getInstance().isValid(ownerEmail) && (email == null || !email.getEmailAddress().equals(ownerEmail))) {
 							getLogger().info("Resolved owner's email ('" + ownerEmail + "') from application, it was not main email of owner (" + owner + "): " +
 									(email == null ? "email unknown" : email.getEmailAddress()) + ". Proc. inst. ID: " + pi.getId());
 							bcc = ownerEmail;
+							mv.setBcc(bcc);
+							mv.setEmailAddress(ownerEmail);
 						}
 					}
-
-					MessageValue mv = messageBusiness.createUserMessageValue(theCase, user, null, null, subject, text, text, null, false, null, false, true, bcc);
-					msgValsToSend.add(mv);
 				}
 			}
 		} catch (Exception e) {
