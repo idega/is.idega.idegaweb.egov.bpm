@@ -741,7 +741,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
@@ -798,7 +800,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		String query = builder.toString();
 		try {
-			return getResults(query, params);
+			return getResults(query, params, dataFrom, dataTo);
 		} catch (HibernateException e) {
 			LOGGER.log(Level.WARNING, "Error executing query:\n" + query, e);
 			throw new RuntimeException(e);
@@ -903,7 +905,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	        List<Long> procInstIds,
 	        Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		boolean showClosedCases = false;
 		if (caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_DENIED_KEY) || caseStatusesToShow.contains(CaseBMPBean.CASE_STATUS_CLOSED) ||
@@ -985,7 +989,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
 		builder.append(") order by Created desc");
 
-		Map<Integer, Date> results = getResults(builder.toString(), params);
+		Map<Integer, Date> results = getResults(builder.toString(), params, dataFrom, dataTo);
 		return results;
 	}
 
@@ -999,7 +1003,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 			Timestamp from,
-			Timestamp to
+			Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		boolean showClosedCases = false;
 		if (
@@ -1078,10 +1084,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		builder.append(") order by Created desc");
 
-		return getResults(builder.toString(), params);
+		return getResults(builder.toString(), params, dataFrom, dataTo);
 	}
 
-	private Map<Integer, Date> getResults(String hqlQuery, List<Param> params) {
+	private Map<Integer, Date> getResults(String hqlQuery, List<Param> params, Integer dataFrom, Integer dataTo) {
 		boolean sqlMeasurementOn = CoreUtil.isSQLMeasurementOn();
 		long start = sqlMeasurementOn ? System.currentTimeMillis() : 0;
 		try {
@@ -1090,6 +1096,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				for (Param param: params) {
 					query.setParameter(param.getParamName(), param.getParamValue());
 				}
+			}
+			if (dataFrom != null) {
+				query.setFirstResult(dataFrom);
+			}
+			if (dataTo != null) {
+				query.setMaxResults(dataTo);
 			}
 			@SuppressWarnings("unchecked")
 			List<Object[]> data = query.getResultList();
@@ -1138,7 +1150,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
@@ -1208,7 +1222,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		builder.append("and proc_case.case_manager_type is null) order by Created desc");
 
-		return getResults(builder.toString(), params);
+		return getResults(builder.toString(), params, dataFrom, dataTo);
 	}
 
 	@SuppressWarnings("deprecation")
@@ -1220,7 +1234,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
@@ -1283,7 +1299,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 		builder.append("and proc_case.case_manager_type is null) order by Created desc");
 
-		return getResults(builder.toString(), params);
+		return getResults(builder.toString(), params, dataFrom, dataTo);
 	}
 
 	@Override
@@ -1297,7 +1313,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Set<String> roles,
 			Collection<? extends Number> handlerCategoryIDs,
 	        Date from,
-	        Date to
+	        Date to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		if (handler == null) {
 			return null;
@@ -1378,7 +1396,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		List<Param> params = new ArrayList<Param>();
 		params.add(new Param("caseCodes", caseCodes));
@@ -1439,7 +1459,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		builder.append(") order by Created desc");
 
-		return getResults(builder.toString(), params);
+		return getResults(builder.toString(), params, dataFrom, dataTo);
 	}
 
 	@Override
@@ -1451,7 +1471,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> procInstIds,
 			Collection<? extends Number> handlerCategoryIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	) {
 		boolean useCaseCodes = !ListUtil.isEmpty(caseCodes);
 		boolean useProcDef = false;
@@ -2721,6 +2743,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		return null;
+	}
+
+	@Override
+	public List<Integer> findCasesIdsByUUIDs(List<String> uuids) {
+		if (ListUtil.isEmpty(uuids)) {
+			return null;
+		}
+
+		return getResultListByInlineQuery(
+				"select c.caseId FROM " + CaseProcInstBind.class.getName() + " c WHERE c.uuid in (:" + CaseProcInstBind.uuidProp + ")",
+				Integer.class,
+				new Param(CaseProcInstBind.uuidProp, uuids)
+		);
 	}
 
 	@Override

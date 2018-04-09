@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.manager;
 
+import java.io.Serializable;
 import java.rmi.RemoteException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -798,7 +799,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				procInstIds,
 				roles,
 				handlerCategoryIDs,
-				searchQuery
+				searchQuery,
+				null,
+				null
 		);
 	}
 
@@ -814,7 +817,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Integer page,
 			Integer pageSize
 	) throws Exception {
-		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false);
+		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize);
 	}
 
 	@Override
@@ -841,7 +844,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				procInstIds,
 				roles,
 				null,
-				false
+				false,
+				null,
+				null
 		);
 	}
 
@@ -881,7 +886,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<String> statusesToHide,
 			List<Integer> groups,
 			List<String> casecodes,
-			boolean isSuperAdmin
+			boolean isSuperAdmin,
+			Integer dataFrom,
+			Integer dataTo
 	) throws Exception {
 		if (StringUtil.isEmpty(type)) {
 			getLogger().warning("Cases list type is not provided");
@@ -899,7 +906,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							procInstIds,
 							handlerCategoryIDs,
 							from,
-							to
+							to,
+					        dataFrom,
+					        dataTo
 					) :
 					getCasesBPMDAO().getOpenCasesIds(
 							user,
@@ -913,7 +922,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							procInstIds,
 							handlerCategoryIDs,
 							from,
-							to
+							to,
+					        dataFrom,
+					        dataTo
 					);
 		case CasesRetrievalManager.CASE_LIST_TYPE_CLOSED:
 			return isSuperAdmin ?
@@ -924,7 +935,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							procInstIds,
 							handlerCategoryIDs,
 							from,
-							to
+							to,
+					        dataFrom,
+					        dataTo
 					) :
 					getCasesBPMDAO().getClosedCasesIds(
 							user,
@@ -937,7 +950,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							procInstIds,
 							handlerCategoryIDs,
 							from,
-							to
+							to,
+					        dataFrom,
+					        dataTo
 					);
 		case CasesRetrievalManager.CASE_LIST_TYPE_MY:
 			return getCasesBPMDAO().getMyCasesIds(
@@ -949,7 +964,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					procInstIds,
 					handlerCategoryIDs,
 					from,
-					to
+					to,
+			        dataFrom,
+			        dataTo
 			);
 		case CasesRetrievalManager.CASE_LIST_TYPE_USER:
 			return getCasesBPMDAO().getUserCasesIds(
@@ -963,7 +980,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					procInstIds,
 					handlerCategoryIDs,
 					from,
-					to
+					to,
+			        dataFrom,
+			        dataTo
 			);
 		case CasesRetrievalManager.CASE_LIST_TYPE_PUBLIC:
 			return getCasesBPMDAO().getPublicCasesIds(
@@ -974,7 +993,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					procInstIds,
 					handlerCategoryIDs,
 					from,
-					to
+					to,
+					dataFrom,
+					dataTo
 			);
 		case CasesRetrievalManager.CASE_LIST_TYPE_HANDLER:
 			return getCasesBPMDAO().getHandlerCasesIds(
@@ -987,7 +1008,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					roles,
 					handlerCategoryIDs,
 					from,
-					to
+					to,
+			        dataFrom,
+			        dataTo
 			);
 		default:
 			getLogger().warning("Unknown cases list type: '" + type + "'");
@@ -1034,7 +1057,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<Long> procInstIds,
 			Set<String> roles,
 			Collection<Long> handlerCategoryIDs,
-			boolean searchQuery
+			boolean searchQuery,
+			Integer page,
+			Integer pageSize
 	) throws Exception {
 		Map<Integer, Date> casesIds = null;
 
@@ -1079,6 +1104,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			casecodes = ListUtil.isEmpty(casecodes) ? null : casecodes;
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
 			handlerCategoryIDs = getHandlerCategoryIDs(user, handlerCategoryIDs);
+
+			Integer dataFrom = pageSize == null || page == null ? null : (page == 0 ? 0 : (page * pageSize + 1));
+			Integer dataTo = pageSize == null || page == null ? null : (page == 0 ? pageSize : (page + 1) * pageSize);
 
 			/* Querying cache */
 			if (casesListCacheTurnedOn && caseId == null) {
@@ -1126,7 +1154,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 								statusesToHide,
 								groups,
 								casecodes,
-								isSuperAdmin
+								isSuperAdmin,
+								dataFrom,
+								dataTo
 						);
 						if (!MapUtil.isEmpty(casesIds)) {
 							for (Map.Entry<Integer, Date> caseEntry: casesIds.entrySet()) {
@@ -1171,13 +1201,15 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					procInstIds,
 					roles,
 					handlerCategoryIDs,
-					null,	//	from
-					null,	//	to
+					null,	//	Date from
+					null,	//	Date to
 					statusesToShow,
 					statusesToHide,
 					groups,
 					casecodes,
-					isSuperAdmin
+					isSuperAdmin,
+					dataFrom,	//	Data from
+					dataTo		//	Data to
 			);
 			if (casesIds == null) {
 				return Collections.emptyList();
@@ -1517,9 +1549,16 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	@Override
-	public Long getLatestProcessDefinitionIdByProcessName(String name) {
+	public <T extends Serializable> T getLatestProcessDefinitionIdByProcessName(String name) {
 		ProcessDefinition pd = getBpmFactory().getBPMDAO().findLatestProcessDefinition(name);
-		return pd == null ? null : pd.getId();
+		if (pd == null) {
+			return null;
+		}
+
+		Long id = pd.getId();
+		@SuppressWarnings("unchecked")
+		T result = (T) id;
+		return result;
 	}
 
 	@Override
@@ -1901,7 +1940,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 										criteria.getProcInstIds(),
 										criteria.getRoles(),
 										criteria.getHandlercategoryIds(),
-										false
+										false,
+										null,
+										null
 								);
 							} catch (Exception e) {
 								String caseInfo = "Case ID " + id + " (identifier: '" + theCase.getCaseIdentifier() + "', subject: '" +

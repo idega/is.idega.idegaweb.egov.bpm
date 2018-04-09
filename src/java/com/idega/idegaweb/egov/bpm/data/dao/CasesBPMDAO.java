@@ -101,7 +101,9 @@ public interface CasesBPMDAO extends GenericDao {
 	        List<Long> procInstIds,
 	        Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	public abstract Map<Integer, Date> getClosedCasesIds(
@@ -115,7 +117,9 @@ public interface CasesBPMDAO extends GenericDao {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	/**
@@ -134,7 +138,9 @@ public interface CasesBPMDAO extends GenericDao {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	public abstract Map<Integer, Date> getUserCasesIds(
@@ -148,7 +154,9 @@ public interface CasesBPMDAO extends GenericDao {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	/**
@@ -180,7 +188,9 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> procInstIds,
 			Collection<? extends Number> handlerCategoryIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	public abstract List<Integer> getCasesIdsByStatusForAdmin(List<String> caseStatuses, List<String> caseStatusesToHide);
@@ -193,7 +203,9 @@ public interface CasesBPMDAO extends GenericDao {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 			Timestamp from,
-			Timestamp to
+			Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	public Map<Integer, Date> getClosedCasesIdsForAdmin(
@@ -203,7 +215,9 @@ public interface CasesBPMDAO extends GenericDao {
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
 	        Timestamp from,
-	        Timestamp to
+	        Timestamp to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
@@ -464,7 +478,9 @@ public interface CasesBPMDAO extends GenericDao {
 			Set<String> roles,
 			Collection<? extends Number> handlerCategoryIDs,
 			Date from,
-			Date to
+			Date to,
+	        Integer dataFrom,
+	        Integer dataTo
 	);
 
 	public int getNumberOfApplications(Long procDefId);
@@ -514,6 +530,8 @@ public interface CasesBPMDAO extends GenericDao {
 	 * @return entity or <code>null</code> on failure
 	 */
 	CaseProcInstBind findByUUID(String uuid);
+
+	List<Integer> findCasesIdsByUUIDs(List<String> uuids);
 
 	public CaseTypesProcDefBind getConfiguredCaseTypesProcDefBind(String procDefName);
 
