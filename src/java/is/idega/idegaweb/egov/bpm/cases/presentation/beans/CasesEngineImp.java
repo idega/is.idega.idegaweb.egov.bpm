@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,10 +12,12 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -106,6 +109,7 @@ import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
+import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 import com.idega.webface.WFUtil;
 
@@ -628,7 +632,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				criterias.getCaseListType();
 
 		Collection<Long> handlerCategoryIDs = null;
-		List<Integer> casesIds = null;
+		Set<Integer> casesIDs = new HashSet<>();
 		try {
 			if (criterias.isShowAllCases()) {
 				CasesBusiness casesBusiness = getCasesBusiness(iwc);
@@ -649,29 +653,47 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 
 			handlerCategoryIDs = criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId());
-			casesIds = getCaseManagersProvider().getCaseManager().getCasePrimaryKeys(
-					currentUser,
-					casesProcessorType,
-					criterias.getCaseCodesInList(),
-					criterias.getStatusesToHideInList(),
-					criterias.getStatusesToShowInList(),
-					criterias.isOnlySubscribedCases(),
-					criterias.isShowAllCases(),
-					criterias.getProcInstIds(),
-					criterias.getRoles(),
-					handlerCategoryIDs,
-					true
-			);
+
+			List<CasesRetrievalManager> retrievalManagers = getCaseManagersProvider().getCaseManagers();
+			if (ListUtil.isEmpty(retrievalManagers)) {
+				return null;
+			}
+			final User user = currentUser;
+			final Collection<Long> handlerCategoryIds = handlerCategoryIDs;
+			retrievalManagers.parallelStream().forEach(retrievalManager -> {
+				try {
+					List<Integer> ids = retrievalManager.getCasePrimaryKeys(
+							user,
+							casesProcessorType,
+							criterias.getCaseCodesInList(),
+							criterias.getStatusesToHideInList(),
+							criterias.getStatusesToShowInList(),
+							criterias.isOnlySubscribedCases(),
+							criterias.isShowAllCases(),
+							criterias.getProcInstIds(),
+							criterias.getRoles(),
+							handlerCategoryIds,
+							true
+					);
+					if (!ListUtil.isEmpty(ids)) {
+						casesIDs.addAll(ids);
+					}
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Unable to get casess IDs using retrieval manager " + retrievalManager.getClass().getName(), e);
+				}
+			});
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
 		}
-		if (ListUtil.isEmpty(casesIds)) {
+		if (ListUtil.isEmpty(casesIDs)) {
 			LOGGER.warning("No primary keys for cases found, terminating search. Parameters: current user: " + currentUser + ", cases processor type: " + casesProcessorType +
 					", case codes: " + criterias.getCaseCodesInList() + ", statuses to hide: " + criterias.getStatusesToHideInList() + ", statuses to show: " + criterias.getStatusesToShowInList() +
 					", only subscribed cases: " + criterias.isOnlySubscribedCases() + ", show all cases: " + criterias.isShowAllCases() + ", proc. inst. IDs: " + criterias.getProcInstIds() +
 					", roles: " + criterias.getRoles() + ", handler category IDs: " + handlerCategoryIDs + ", search query: " + true);
 			return null;
 		}
+
+		List<Integer> casesIds = new ArrayList<>(casesIDs);
 
 		long end = System.currentTimeMillis();
 		LOGGER.info("Cases IDs were resolved in " + (end - start) + " ms");
@@ -1462,63 +1484,77 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
-		ApplicationType appType = null;
-		try {
-			appType = ELUtil.getInstance().getBean("appTypeBPM");
-		} catch(Exception e) {
-			LOGGER.log(Level.WARNING, "Unable to get application type", e);
-			return null;
-		}
-
-		Collection<Application> bpmApps = appBusiness.getApplicationsByType(appType.getType());
-		if (ListUtil.isEmpty(bpmApps)) {
-			return null;
-		}
-
-		CaseManagersProvider caseManagersProvider = ELUtil.getInstance().getBean(CaseManagersProvider.beanIdentifier);
-		if (caseManagersProvider == null) {
-			return null;
-		}
-
-		CasesRetrievalManager caseManager = caseManagersProvider.getCaseManager();
-		if (caseManager == null) {
-			return null;
-		}
-
+		Map<ApplicationType, Collection<Application>> appsByType = new HashMap<>();
 		List<AdvancedProperty> allProcesses = new ArrayList<AdvancedProperty>();
-
-		String processId = null;
-		String processName = null;
-		String localizedName = null;
-		Locale locale = iwc.getCurrentLocale();
-		for (Application bpmApp: bpmApps) {
-			processId = null;
-			processName = bpmApp.getUrl();
-			localizedName = processName;
-
-			if (appType.isVisible(bpmApp)) {
-
-				if (StringUtil.isEmpty(processId)) {
-					processId = String.valueOf(caseManager.getLatestProcessDefinitionIdByProcessName(processName));
-				}
-
-				localizedName = caseManager.getProcessName(processName, locale);
-
-				if (!StringUtil.isEmpty(processId)) {
-					allProcesses.add(new AdvancedProperty(processId, localizedName));
-				}
+		List<String> appTypeNames = Arrays.asList("appTypeBPM", "bpm2CamundaAppManager");
+		for (String appTypeName: appTypeNames) {
+			ApplicationType appType = null;
+			try {
+				appType = ELUtil.getInstance().getBean(appTypeName);
+			} catch(Exception e) {}
+			if (appType == null) {
+				continue;
 			}
-			else {
-				LOGGER.warning(new StringBuilder("Application '").append(bpmApp.getName()).append("' is not accessible")
-						.append((iwc.isLoggedOn() ? " for user: " + iwc.getCurrentUser() : ": user must be logged in!")).toString());
+
+			Collection<Application> bpmApps = appBusiness.getApplicationsByType(appType.getType());
+			if (!ListUtil.isEmpty(bpmApps)) {
+				appsByType.put(appType, bpmApps);
 			}
 		}
+		try {
+			Map<String, CasesRetrievalManager> managers = WebApplicationContextUtils.getWebApplicationContext(getApplication().getServletContext()).getBeansOfType(CasesRetrievalManager.class);
+			if (MapUtil.isEmpty(managers)) {
+				return null;
+			}
 
-		if (ListUtil.isEmpty(allProcesses)) {
-			return null;
+			Locale locale = iwc.getCurrentLocale();
+			for (CasesRetrievalManager caseManager: managers.values()) {
+				String processId = null;
+				String processName = null;
+				String localizedName = null;
+
+				for (ApplicationType appType: appsByType.keySet()) {
+					Collection<Application> apps = appsByType.get(appType);
+					if (ListUtil.isEmpty(apps)) {
+						continue;
+					}
+
+					for (Application app: apps) {
+						processId = null;
+						processName = app.getUrl();
+						localizedName = processName;
+
+						if (appType.isVisible(app)) {
+
+							if (StringUtil.isEmpty(processId)) {
+								Serializable id = caseManager.getLatestProcessDefinitionIdByProcessName(processName);
+								if (id != null) {
+									processId = String.valueOf(id);
+								}
+							}
+
+							localizedName = caseManager.getProcessName(processName, locale);
+
+							if (!StringUtil.isEmpty(processId) && !StringUtil.isEmpty(localizedName)) {
+								allProcesses.add(new AdvancedProperty(processId, localizedName));
+							}
+						}
+						else {
+							LOGGER.warning(new StringBuilder("Application '").append(app.getName()).append("' is not accessible")
+									.append((iwc.isLoggedOn() ? " for user: " + iwc.getCurrentUser() : ": user must be logged in!")).toString());
+						}
+					}
+				}
+			}
+
+			if (ListUtil.isEmpty(allProcesses)) {
+				return null;
+			}
+
+			Collections.sort(allProcesses, new AdvancedPropertyComparator(iwc.getCurrentLocale()));
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting names of BPM processes for " + appsByType, e);
 		}
-
-		Collections.sort(allProcesses, new AdvancedPropertyComparator(iwc.getCurrentLocale()));
 
 		return allProcesses;
 	}

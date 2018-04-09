@@ -27,7 +27,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					statusesToShow,
 					statusesToHide,
 					roles,
-					customView;
+					customView,
+					caseManagerType;
 
 	private List<BPMProcessVariable> processVariables;
 
@@ -285,6 +286,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setShowCaseSubstatus(boolean showCaseSubstatus) {
 		this.showCaseSubstatus = showCaseSubstatus;
+	}
+
+	public final String getCaseManagerType() {
+		return caseManagerType;
+	}
+
+	public final void setCaseManagerType(String caseManagerType) {
+		this.caseManagerType = caseManagerType;
 	}
 
 }
