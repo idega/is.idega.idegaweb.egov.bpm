@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
-import is.idega.idegaweb.egov.cases.business.CasesBusiness;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -19,6 +17,8 @@ import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+
 @Service
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 public class GeneralCasesFilter extends DefaultCasesListSearchFilter {
@@ -27,9 +27,9 @@ public class GeneralCasesFilter extends DefaultCasesListSearchFilter {
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		IWContext iwc = CoreUtil.getIWContext();
 		CasesBusiness casesBusiness = getCasesBusiness();
-		
+
 		String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
-		
+
 		Collection<Integer> casesIDs = null;
 		try {
 			casesIDs = casesBusiness.getCasesIDsByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
@@ -44,14 +44,14 @@ public class GeneralCasesFilter extends DefaultCasesListSearchFilter {
 					.append(getName()).append(", personalId: ").append(getPersonalId()).append(", statuses: ").append(getStatuses())
 					.append(", dateRange: ").append(getDateRange())
 			.toString());
-		} else {	
+		} else {
 			casesByCriteria = getUniqueIds(casesIDs);
 			getLogger().log(Level.INFO, "Cases by criterias: " + casesByCriteria);
 		}
-		
+
 		return casesByCriteria;
 	}
-	
+
 	@Override
 	protected String getInfo() {
 		return "Looking for cases by criteria: " + getDescription();
