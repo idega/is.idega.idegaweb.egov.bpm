@@ -28,11 +28,13 @@ public class GeneralCasesFilter extends DefaultCasesListSearchFilter {
 		IWContext iwc = CoreUtil.getIWContext();
 		CasesBusiness casesBusiness = getCasesBusiness();
 
-		String description = getDescription() == null ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
+		String description = StringUtil.isEmpty(getDescription()) ? null : getDescription().toLowerCase(iwc.getCurrentLocale());
+		String name = StringUtil.isEmpty(getName()) ? null : getName();
+		String personalId = StringUtil.isEmpty(getPersonalId()) ? null : getPersonalId();
 
 		Collection<Integer> casesIDs = null;
 		try {
-			casesIDs = casesBusiness.getCasesIDsByCriteria(null, description, getName(), getPersonalId(), getStatuses(), getDateFrom(),
+			casesIDs = casesBusiness.getCasesIDsByCriteria(null, description, name, personalId, getStatuses(), getDateFrom(),
 					getDateTo(), null, null, false, CasesRetrievalManager.CASE_LIST_TYPE_USER.equals(getCaseListType()));
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting cases by criterias", e);
