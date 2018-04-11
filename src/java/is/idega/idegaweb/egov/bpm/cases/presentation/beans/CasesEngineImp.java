@@ -698,7 +698,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		long end = System.currentTimeMillis();
 		LOGGER.info("Cases IDs were resolved in " + (end - start) + " ms");
 
-		if (criterias.getStatusId() != null) {
+		if (!StringUtil.isEmpty(criterias.getStatusId())) {
 			criterias.setStatuses(new String[] {criterias.getStatusId()});
 		}
 
