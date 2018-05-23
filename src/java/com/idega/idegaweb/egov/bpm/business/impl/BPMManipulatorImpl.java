@@ -121,6 +121,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 		CaseProcInstBind bind = casesDAO.getCaseProcInstBindByCaseId(caseId);
 		if (!doReSubmit(bind, onlyStart, submitRepeatedTasks)) {
+			getLogger().warning("Failed to re-submit case with ID " + caseId);
 			return false;
 		}
 
@@ -143,10 +144,16 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			CaseHome caseHome = (CaseHome) IDOLookup.getHome(Case.class);
 			Collection<Case> cases = caseHome.findCasesByCaseIdentifier(caseIdentifier);
 			if (ListUtil.isEmpty(cases)) {
+				getLogger().warning("Case was not found with identifier " + caseIdentifier);
 				return false;
 			}
 
 			Integer caseId = (Integer) cases.iterator().next().getPrimaryKey();
+
+			if (cases.size() > 1) {
+				getLogger().info("Found multiple cases (" + cases + ") for identifier " + caseIdentifier + ", using " + caseId);
+			}
+
 			return doReSubmitCaseWithVariables(caseId, onlyStart, submitRepeatedTasks, variablesEncodedBase64);
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error while re-submitting case with identifier: " + caseIdentifier, e);
@@ -545,6 +552,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			return false;
 		}
 
+		Long startTaskInstanceId = startTaskInstance.getTaskInstanceId();
 		for (String name: allVariables.keySet()) {
 			String value = null;
 			Variable variable = null;
@@ -556,16 +564,17 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 				try {
 					variableValue = getConvertersFactory().createConverter(dataType).convert(value);
 				} catch (Exception e) {
-					getLogger().log(Level.WARNING, "Error converting '" + value + "' into real value for variable " + name, e);
+					getLogger().log(Level.WARNING, "Error converting '" + value + "' into real value for variable " + name + " for task instance " + startTaskInstanceId, e);
 				}
-				if (variableValue == null) {
-					getLogger().warning("Failed to convert '" + value + "' into real value for variable " + name);
+				if (variableValue == null || StringUtil.isEmpty(variableValue.toString())) {
+					getLogger().warning("Failed to convert '" + value + "' into real value for variable " + name + " for task instance " + startTaskInstanceId);
 					continue;
 				}
 
+				getLogger().info("Addind variable (name: " + name + ", type: " + dataType + ", value: " + variableValue + ") for task instance " + startTaskInstanceId);
 				startTaskInstance.addVariable(variable, variableValue);
 			} catch (Exception e) {
-				getLogger().log(Level.WARNING, "Error adding variable '" + name + "' with value '" + value + "' (" + variable + ") for start task instance: " + startTaskInstance, e);
+				getLogger().log(Level.WARNING, "Error adding variable '" + name + "' with value '" + value + "' (" + variable + ") for start task instance: " + startTaskInstanceId, e);
 				return false;
 			}
 		}
@@ -573,13 +582,16 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 		String description = allVariables.get(com.idega.block.process.business.ProcessConstants.CASE_DESCRIPTION);
 		if (caseId != null && !StringUtil.isEmpty(description)) {
 			try {
-			CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
+				CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
 				Case theCase = caseBusiness.getCase(caseId);
 				theCase.setSubject(description);
 				theCase.store();
 			} catch (Exception e) {
 				getLogger().log(Level.WARNING, "Error setting description '" + description + "' for case: " + caseId, e);
 			}
+		}
+		if (StringUtil.isEmpty(description)) {
+			getLogger().warning("Unable to resolve description for case " + caseId);
 		}
 
 		return true;
