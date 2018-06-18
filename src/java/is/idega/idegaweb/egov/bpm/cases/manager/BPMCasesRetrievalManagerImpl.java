@@ -1105,8 +1105,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			type = StringUtil.isEmpty(type) ? CasesRetrievalManager.CASE_LIST_TYPE_OPEN : type;
 			handlerCategoryIDs = getHandlerCategoryIDs(user, handlerCategoryIDs);
 
-			Integer dataFrom = pageSize == null || page == null ? null : (page == 0 ? 0 : (page * pageSize + 1));
-			Integer dataTo = pageSize == null || page == null ? null : (page == 0 ? pageSize : (page + 1) * pageSize);
+			Integer dataFrom = pageSize == null || page == null ? null : page;
+			Integer dataTo = pageSize == null || page == null ? null : pageSize;
 
 			/* Querying cache */
 			if (casesListCacheTurnedOn && caseId == null) {

@@ -1405,7 +1405,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
 		StringBuilder builder = new StringBuilder(1000);
-		builder.append("(select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ")
+		builder.append("select r.caseId from ((select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ")
 				.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ")
 				.append("inner join bpm_actors act on act.process_instance_id = cp.process_instance_id ");
 
@@ -1457,7 +1457,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
 
-		builder.append(") order by Created desc");
+		builder.append(") order by Created desc) r where r.caseId in (select bcp.case_id from "
+				+ CaseProcInstBind.TABLE_NAME
+				+ " bcp where bcp."
+				+ CaseProcInstBind.COLUMN_UUID + " is null)");
 
 		return getResults(builder.toString(), params, dataFrom, dataTo);
 	}
