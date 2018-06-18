@@ -1405,7 +1405,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
 		StringBuilder builder = new StringBuilder(1000);
-		builder.append("select r.caseId from ((select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ")
+		builder.append("(select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ")
 				.append("inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ")
 				.append("inner join bpm_actors act on act.process_instance_id = cp.process_instance_id ");
 
@@ -1426,7 +1426,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("identityTypeRole", IdentityType.ROLE.toString()));
 		}
 		builder.append("ni.identity_id = :identityId and ni.identity_type = :identityType) ");
-		builder.append("and act.process_instance_id is not null and proc_case.case_code not in (:caseCodes) ");
+		builder.append("and act.process_instance_id is not null and cp.uuid is null and proc_case.case_code not in (:caseCodes) ");
 
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
 
@@ -1437,9 +1437,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		builder.append(") union (select distinct proc_case.proc_case_id as caseId, proc_case.created as Created from proc_case ");
-		if (!ListUtil.isEmpty(procInstIds)) {
-			builder.append(" inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
-		}
+		builder.append(" inner join " + CaseProcInstBind.TABLE_NAME + " cp on cp.case_id = proc_case.proc_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
 			builder.append(getSubscriberQueryPart(user, subscriberGroupIDs, "comm_case.comm_case_id"));
@@ -1453,14 +1451,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 		}
 
-		builder.append(" proc_case.user_id=:identityId and proc_case.case_code not in (:caseCodes) ");
+		builder.append(" proc_case.user_id=:identityId and cp.uuid is null and proc_case.case_code not in (:caseCodes) ");
 
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide, true));
 
-		builder.append(") order by Created desc) r where r.caseId in (select bcp.case_id from "
-				+ CaseProcInstBind.TABLE_NAME
-				+ " bcp where bcp."
-				+ CaseProcInstBind.COLUMN_UUID + " is null)");
+		builder.append(") order by Created desc");
 
 		return getResults(builder.toString(), params, dataFrom, dataTo);
 	}
