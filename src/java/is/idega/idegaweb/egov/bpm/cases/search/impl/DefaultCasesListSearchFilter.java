@@ -24,6 +24,7 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
@@ -42,7 +43,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	@Autowired
 	private BPMFactory bpmFactory;
 
-	private CasesSearchCriteriaBean criterias;
+	private CasesListSearchCriteriaBean criterias;
 
 	private long start;
 	private boolean measure;
@@ -52,7 +53,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		super();
 	}
 
-	public DefaultCasesListSearchFilter(CasesSearchCriteriaBean criterias) {
+	public DefaultCasesListSearchFilter(CasesListSearchCriteriaBean criterias) {
 		this();
 
 		this.criterias = criterias;
@@ -314,7 +315,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	}
 
 	@Override
-	public void setCriterias(CasesSearchCriteriaBean criterias) {
+	public void setCriterias(CasesListSearchCriteriaBean criterias) {
 		this.criterias = criterias;
 	}
 
@@ -341,25 +342,38 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	}
 
 	public String getOwnerKennitala() {
-		return criterias == null ? null : criterias.getOwnerKennitala();
+		return getVariableValue("string_ownerKennitala");
 	}
 
 	public String getPropertyNumber() {
-		return criterias == null ? null : criterias.getPropertyNumber();
+		return getVariableValue("string_propertyNumber");
 	}
 
 	public String getPropertyOwnerPersonalId() {
-		return criterias == null ? null : criterias.getPropertyOwnerPersonalId();
+		return getVariableValue("string_propertyOwnerPersonalId");
 	}
 
 	public String getOperatorPersonalId() {
-		return criterias == null ? null : criterias.getOperatorPersonalId();
+		return getVariableValue("string_operatorPersonalId");
 	}
 
 	public String getFreeVariableText() {
-		return criterias == null ? null : criterias.getFreeVariableText();
+		return getVariableValue("freeVariableText");
 	}
 
+	private String getVariableValue(String variableName) {
+		String variableVal = CoreConstants.EMPTY;
+		if (!StringUtil.isEmpty(variableName) && criterias != null && !ListUtil.isEmpty(criterias.getProcessVariables())) {
+			for (BPMProcessVariable procVar : criterias.getProcessVariables()) {
+				if (procVar != null && !StringUtil.isEmpty(procVar.getName()) && procVar.getName().equalsIgnoreCase(variableName)) {
+					variableVal = procVar.getValue();
+					break;
+				}
+			}
+		}
+		return variableVal;
+
+	}
 
 	protected String[] getStatuses() {
 		if (criterias == null || ArrayUtil.isEmpty(criterias.getStatuses()))

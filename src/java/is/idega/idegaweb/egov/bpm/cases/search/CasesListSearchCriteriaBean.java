@@ -48,6 +48,12 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					showCaseSubstatus = false,
 					search = false;
 
+	private List<String> varCaseIdentifierList,
+						 varOwnerKennitalaList,
+						 varPropertyNumberList,
+						 varPropertyOwnerPersonalIdList,
+						 varOperatorPersonalIdList;
+
 	public String getProcessId() {
 		return processId;
 	}
@@ -295,5 +301,48 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	public final void setCaseManagerType(String caseManagerType) {
 		this.caseManagerType = caseManagerType;
 	}
+
+
+	public List<String> getVarCaseIdentifierList() {
+		return varCaseIdentifierList;
+	}
+
+	public void setVarCaseIdentifierList(List<String> varCaseIdentifierList) {
+		this.varCaseIdentifierList = varCaseIdentifierList;
+	}
+
+	public List<String> getVarOwnerKennitalaList() {
+		return varOwnerKennitalaList;
+	}
+
+	public void setVarOwnerKennitalaList(List<String> varOwnerKennitalaList) {
+		this.varOwnerKennitalaList = varOwnerKennitalaList;
+	}
+
+	public List<String> getVarPropertyNumberList() {
+		return varPropertyNumberList;
+	}
+
+	public void setVarPropertyNumberList(List<String> varPropertyNumberList) {
+		this.varPropertyNumberList = varPropertyNumberList;
+	}
+
+	public List<String> getVarPropertyOwnerPersonalIdList() {
+		return varPropertyOwnerPersonalIdList;
+	}
+
+	public void setVarPropertyOwnerPersonalIdList(List<String> varPropertyOwnerPersonalIdList) {
+		this.varPropertyOwnerPersonalIdList = varPropertyOwnerPersonalIdList;
+	}
+
+	public List<String> getVarOperatorPersonalIdList() {
+		return varOperatorPersonalIdList;
+	}
+
+	public void setVarOperatorPersonalIdList(List<String> varOperatorPersonalIdList) {
+		this.varOperatorPersonalIdList = varOperatorPersonalIdList;
+	}
+
+
 
 }

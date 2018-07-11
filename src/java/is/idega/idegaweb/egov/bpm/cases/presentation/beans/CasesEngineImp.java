@@ -566,7 +566,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
 	}
 
-	private List<CasesListSearchFilter> getFilters(ServletContext servletContext, CasesSearchCriteriaBean criterias) {
+	private List<CasesListSearchFilter> getFilters(ServletContext servletContext, CasesListSearchCriteriaBean criterias) {
 		List<CasesListSearchFilter> filtersList = new ArrayList<CasesListSearchFilter>();
 
 		try {
