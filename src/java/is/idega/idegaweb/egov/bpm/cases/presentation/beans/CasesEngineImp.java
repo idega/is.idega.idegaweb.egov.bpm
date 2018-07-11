@@ -724,7 +724,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			getLogger().info("Found cases IDs (" + casesIds.size() + ": " + casesIds + ") by search and after narrowed results");
 		}
 		start = System.currentTimeMillis();
-		LOGGER.info("Searh was executed in " + (start - end) + " ms");
+		LOGGER.info("Search was executed in " + (start - end) + " ms");
 
 		if (ListUtil.isEmpty(casesIds)) {
 			return null;

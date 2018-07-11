@@ -340,6 +340,27 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return criterias == null ? null : criterias.getPersonalId();
 	}
 
+	public String getOwnerKennitala() {
+		return criterias == null ? null : criterias.getOwnerKennitala();
+	}
+
+	public String getPropertyNumber() {
+		return criterias == null ? null : criterias.getPropertyNumber();
+	}
+
+	public String getPropertyOwnerPersonalId() {
+		return criterias == null ? null : criterias.getPropertyOwnerPersonalId();
+	}
+
+	public String getOperatorPersonalId() {
+		return criterias == null ? null : criterias.getOperatorPersonalId();
+	}
+
+	public String getFreeVariableText() {
+		return criterias == null ? null : criterias.getFreeVariableText();
+	}
+
+
 	protected String[] getStatuses() {
 		if (criterias == null || ArrayUtil.isEmpty(criterias.getStatuses()))
 			return null;

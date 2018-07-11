@@ -153,6 +153,10 @@ bpm_variable.long_municipalityId=Sveitarf\u00E9lag
 bpm_variable.string_issueCaption=L\u00FDsing
 bpm_variable.string_issueAddress=Heimilisfang
 bpm_variable.long_issueStatusId=Sta\u00F0a
+bpm_variable.string_propertyNumber=Fasteignarnúmer
+bpm_variable.string_propertyOwnerPersonalId=Eigandi eigendaskipta
+bpm_variable.string_operatorPersonalId=Persónuskilríki flugrekanda
+bpm_variable.freeVariableText=Frjáls breytileg texti
 
 export=Flytja
 cases_bpm.company=Fyrirt\u00E6ki

@@ -113,6 +113,10 @@ bpm_variable.string_ownerGrantAmauntValue=Result board
 bpm_variable.string_ownerGrade=Reviewed choice
 bpm_variable.string_ownerAnswer=Conditions
 bpm_variable.handlerUserId=The manager
+bpm_variable.string_propertyNumber=Property number
+bpm_variable.string_propertyOwnerPersonalId=Property owner personal id
+bpm_variable.string_operatorPersonalId=Operator personal ID
+bpm_variable.freeVariableText=Free variable text
 
 bpm_variable.long_municipalityId=Municipality
 bpm_variable.string_issueCaption=Description

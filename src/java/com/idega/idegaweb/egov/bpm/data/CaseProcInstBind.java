@@ -323,8 +323,8 @@ public class CaseProcInstBind implements Serializable {
 
 	public static final String uuidProp = "uuid";
 	public static final String COLUMN_UUID = "UUID";
-	@Column(name = COLUMN_UUID, 
-			unique = true, 
+	@Column(name = COLUMN_UUID,
+			unique = true,
 			nullable = true)
 	private String uuid;
 

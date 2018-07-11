@@ -67,6 +67,10 @@ bpm_variable.string_schoolSeason=L\u00E4s\u00E5ret
 bpm_variable.string_musicSchoolBand=Musikskolan bandnamn
 bpm_variable.string_educationStage=Utbildningsniv\u00E5
 bpm_variable.string_requestedInstrumentsByLearning=Instarument
+bpm_variable.string_propertyNumber=Fastighetsnummer
+bpm_variable.string_propertyOwnerPersonalId=Fastighetsägare personligt id
+bpm_variable.string_operatorPersonalId=Operatör personligt ID
+bpm_variable.freeVariableText=Gratis variabel text
 
 back=Tillbaka
 loading=Laddar...
