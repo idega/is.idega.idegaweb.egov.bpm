@@ -1536,7 +1536,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 							localizedName = caseManager.getProcessName(processName, locale);
 
 							if (!StringUtil.isEmpty(processId) && !StringUtil.isEmpty(localizedName)) {
-								allProcesses.add(new AdvancedProperty(processId, localizedName));
+								allProcesses.add(new AdvancedProperty(processId, localizedName, processName));
 							}
 						}
 						else {

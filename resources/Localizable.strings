@@ -124,3 +124,4 @@ bpm_variable.string_issueAddress=Address
 bpm_variable.long_issueStatusId=Status
 
 bpm_variable.string_ownerGender=Gender
+bpm_variable.string_propertyAddress=Property address

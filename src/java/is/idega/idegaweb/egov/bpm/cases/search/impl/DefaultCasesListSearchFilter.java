@@ -71,7 +71,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return getCache(SEARCH_FILTER_CACHE_NAME, SEARCH_FILTER_CACHE_TTL);
 	}
 
-	protected CasesSearchCriteriaBean getCriterias() {
+	protected CasesListSearchCriteriaBean getCriterias() {
 		return criterias;
 	}
 
@@ -341,27 +341,11 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return criterias == null ? null : criterias.getPersonalId();
 	}
 
-	public String getOwnerKennitala() {
-		return getVariableValue("string_ownerKennitala");
-	}
-
-	public String getPropertyNumber() {
-		return getVariableValue("string_propertyNumber");
-	}
-
-	public String getPropertyOwnerPersonalId() {
-		return getVariableValue("string_propertyOwnerPersonalId");
-	}
-
-	public String getOperatorPersonalId() {
-		return getVariableValue("string_operatorPersonalId");
-	}
-
 	public String getFreeVariableText() {
-		return getVariableValue("freeVariableText");
+		return criterias == null ? null : criterias.getFreeVariableText();
 	}
 
-	private String getVariableValue(String variableName) {
+	public String getVariableValue(String variableName) {
 		String variableVal = CoreConstants.EMPTY;
 		if (!StringUtil.isEmpty(variableName) && criterias != null && !ListUtil.isEmpty(criterias.getProcessVariables())) {
 			for (BPMProcessVariable procVar : criterias.getProcessVariables()) {

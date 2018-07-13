@@ -71,6 +71,7 @@ bpm_variable.string_propertyNumber=Fastighetsnummer
 bpm_variable.string_propertyOwnerPersonalId=Fastighetsägare personligt id
 bpm_variable.string_operatorPersonalId=Operatör personligt ID
 bpm_variable.freeVariableText=Gratis variabel text
+bpm_variable.string_propertyAddress=Fastighetsadress
 
 back=Tillbaka
 loading=Laddar...
@@ -80,6 +81,8 @@ bpm_variable.long_municipalityId=Kommun
 bpm_variable.string_issueCaption=Beskrivning
 bpm_variable.string_issueAddress=Adress
 bpm_variable.long_issueStatusId=Status
+bpm_variable.string_ownerPostCode=Ägare postnummer
+
 
 case_status_key.ASSI=Tilldelat
 case_status_key.HOLD=Väntar

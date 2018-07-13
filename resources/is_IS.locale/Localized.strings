@@ -185,6 +185,7 @@ bpm_variable.string_salesAreaTypeOfLicenseInnerOption=Sölusvæði
 bpm_variable.string_caseStatus=Staða
 bpm_variable.string_industry=Atvinnugrein
 bpm_variable.string_industryMainGroup=Atvinnugrein, Yfirflokkur
+bpm_variable.string_propertyAddress=Eignarheimilisfang
 
 states=Tímalína
 
