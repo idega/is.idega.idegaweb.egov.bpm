@@ -1473,6 +1473,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	 */
 	@Override
 	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc) {
+		return getAvailableProcesses(iwc, Arrays.asList("appTypeBPM", "bpm2CamundaAppManager"));
+	}
+
+	@Override
+	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc, List<String> appTypeNames) {
 		ApplicationBusiness appBusiness = null;
 		try {
 			appBusiness = IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
@@ -1483,10 +1488,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (appBusiness == null) {
 			return null;
 		}
+		if (ListUtil.isEmpty(appTypeNames)) {
+			return null;
+		}
 
 		Map<ApplicationType, Collection<Application>> appsByType = new HashMap<>();
 		List<AdvancedProperty> allProcesses = new ArrayList<AdvancedProperty>();
-		List<String> appTypeNames = Arrays.asList("appTypeBPM", "bpm2CamundaAppManager");
 		for (String appTypeName: appTypeNames) {
 			ApplicationType appType = null;
 			try {
