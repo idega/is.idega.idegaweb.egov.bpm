@@ -108,6 +108,11 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			}
 			procDefName = processDefinition == null ? null : processDefinition.getName();
 		} else {
+			//Remove all vars, because variables for BPM2 are stored in Camunda, not in the local DB
+			if (!ListUtil.isEmpty(vars)) {
+				vars.clear();
+			}
+
 			ProcessDefinitionW procDefW = bpmFactory.getProcessManager((Serializable) processDefinitionId).getProcessDefinition((Serializable) processDefinitionId);
 			if (procDefW == null) {
 				return null;
