@@ -192,3 +192,4 @@ states=Tímalína
 case_status_key.ASSI=Úthlutað
 case_status_key.HOLD=Á bið
 case_status_key.SPAM=Ruslpóstur
+case_status_key.RECE=Kvittun

@@ -87,3 +87,4 @@ bpm_variable.string_ownerPostCode=Ägare postnummer
 case_status_key.ASSI=Tilldelat
 case_status_key.HOLD=Väntar
 case_status_key.SPAM=Skräppost
+case_status_key.RECE=Kvitto

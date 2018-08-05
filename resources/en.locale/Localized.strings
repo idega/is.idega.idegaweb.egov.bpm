@@ -137,3 +137,4 @@ female=Female
 bpm_variable.string_ownerGender=Gender
 
 bpm_variable.incident_registered=Incident registered
+case_status_key.RECE=Receipt
