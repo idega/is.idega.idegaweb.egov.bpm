@@ -1,6 +1,7 @@
 package com.idega.idegaweb.egov.bpm.pdf;
 
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -173,7 +174,15 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 
 			List<CasePDF> pdfs = new ArrayList<CasePDF>();
 			for (TaskInstanceW tiW: finishedTasks) {
-				String taskInstanceId = String.valueOf(tiW.getTaskInstanceId());
+				String taskInstanceId = null;
+				try {
+					Serializable value = tiW.getTaskInstanceId();
+					if (value != null) {
+						taskInstanceId = String.valueOf(value);
+					}
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Failed to get task instance id, cause of: ", e);
+				}
 				TaskInstance ti = tiW.getTaskInstance();
 				String taskEnd = new IWTimestamp(ti.getEnd()).getDateString("yyyy-MM-dd_HH-mm-ss");
 				CasePDF casePDF = null;
