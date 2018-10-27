@@ -2064,7 +2064,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		CaseProcInstBind bind = null;
 		try {
 			bind = piId instanceof Number || StringHandler.isNumeric(piId.toString()) ?
-					getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(Integer.valueOf(piId.toString()).longValue()) :
+					getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(Long.valueOf(piId.toString())) :
 					getCasesBPMDAO().findByUUID(piId.toString());
 		} catch (Exception e) {}
 		if (bind == null) {
