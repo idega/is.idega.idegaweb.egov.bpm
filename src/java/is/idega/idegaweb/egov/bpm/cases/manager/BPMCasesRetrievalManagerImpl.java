@@ -2021,7 +2021,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			TaskInstanceSubmitted taskSubmitted = (TaskInstanceSubmitted) event;
-			doUpdateBPMCase(taskSubmitted.getProcessInstanceId());
+			Serializable piId = taskSubmitted.getProcessInstanceId();
+			doUpdateBPMCase(piId);
 		} else if (event instanceof ProcessInstanceCreatedEvent) {
 			if (!isCacheUpdateTurnedOn()) {
 				try {
@@ -2071,14 +2072,16 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 	}
 
-	private void doUpdateBPMCase(Long piId) {
+	private void doUpdateBPMCase(Serializable piId) {
 		if (piId == null) {
 			return;
 		}
 
 		CaseProcInstBind bind = null;
 		try {
-			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(piId);
+			bind = piId instanceof Number || StringHandler.isNumeric(piId.toString()) ?
+					getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(Long.valueOf(piId.toString())) :
+					getCasesBPMDAO().findByUUID(piId.toString());
 		} catch (Exception e) {}
 		if (bind == null) {
 			getLogger().warning("Bind for process instance " + piId + " was not created yet!");
