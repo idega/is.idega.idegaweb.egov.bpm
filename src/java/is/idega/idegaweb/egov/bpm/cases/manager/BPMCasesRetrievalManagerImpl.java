@@ -1028,6 +1028,36 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			        dataFrom,
 			        dataTo
 			);
+		case CasesRetrievalManager.CASE_LIST_TYPE_SUBSCRIBER:
+			return isSuperAdmin ?
+					getCasesBPMDAO().getOpenCasesIdsForAdmin(
+							caseCodes,
+							statusesToShow,
+							statusesToHide,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							from,
+							to,
+					        dataFrom,
+					        dataTo
+					) :
+					getCasesBPMDAO().getOpenCasesIds(
+							user,
+							caseCodes,
+							statusesToShow,
+							statusesToHide,
+							groups,
+							roles,
+							true,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							from,
+							to,
+					        dataFrom,
+					        dataTo
+					);
 		default:
 			getLogger().warning("Unknown cases list type: '" + type + "'");
 			break;
@@ -1092,7 +1122,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		boolean isSuperAdmin = false;
 		if (iwc == null) {
 			isSuperAdmin = user == null ? false :
-					user.equals(accessController.getAdministratorUser()) || accessController.hasRole(user, CasesConstants.ROLE_CASES_SUPER_ADMIN);
+					((Integer) user.getPrimaryKey()).intValue() == accessController.getAdministratorUser().getId().intValue() ||
+					accessController.hasRole(user, CasesConstants.ROLE_CASES_SUPER_ADMIN);
 		} else {
 			isSuperAdmin = iwc.isSuperAdmin() || iwc.hasRole(CasesConstants.ROLE_CASES_SUPER_ADMIN);
 		}
