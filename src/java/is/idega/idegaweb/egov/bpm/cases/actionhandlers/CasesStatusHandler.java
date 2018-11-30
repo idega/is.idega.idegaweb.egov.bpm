@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseHome;
+import com.idega.block.process.data.CaseStatus;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
 import com.idega.business.IBORuntimeException;
@@ -168,8 +169,9 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 				status = theCase.getStatus();
 			}
 
-			previousStatus = theCase.getCaseStatus().getStatus();
-			if (StringUtil.isEmpty(ifCaseStatus) || ifCaseStatus.equals(previousStatus)) {
+			CaseStatus previousCaseStatus = theCase.getCaseStatus();
+			previousStatus = previousCaseStatus == null ? null : previousCaseStatus.getStatus();
+			if (StringUtil.isEmpty(ifCaseStatus) || (previousStatus == null || ifCaseStatus.equals(previousStatus))) {
 				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
 				if (performerUserId == null) {
 					if (iwc != null) {
@@ -355,15 +357,18 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 		}
 
 		Map<String, String> commentExpr = getCommentExpression();
-		if (commentExpr == null)
+		if (commentExpr == null) {
 			return null;
+		}
 
 		String comment = commentExpr.get(locale.toString());
-		if (StringUtil.isEmpty(comment))
+		if (StringUtil.isEmpty(comment)) {
 			return null;
+		}
 
-		if (StringUtil.isEmpty(getCommentValues()))
+		if (StringUtil.isEmpty(getCommentValues())) {
 			return comment;
+		}
 
 		MessageValueContext messageContext = new MessageValueContext();
 		messageContext.setValue(MessageValueContext.userBean, user);
@@ -391,8 +396,9 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 	}
 
 	MessageValueHandler getMessageValueHandler() {
-		if (messageValueHandler == null)
+		if (messageValueHandler == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 		return messageValueHandler;
 	}
 }
