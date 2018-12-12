@@ -28,7 +28,9 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.block.process.data.CaseCode;
 import com.idega.block.process.data.CaseStatus;
+import com.idega.block.process.data.model.CaseCodeModel;
 import com.idega.bpm.BPMConstants;
 import com.idega.bpm.exe.DefaultBPMProcessDefinitionW;
 import com.idega.bpm.xformsview.XFormsView;
@@ -76,6 +78,7 @@ import is.idega.idegaweb.egov.bpm.cases.CasesStatusMapperHandler;
 import is.idega.idegaweb.egov.bpm.cases.manager.BPMCasesRetrievalManagerImpl;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -176,8 +179,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 				getLogger().log(Level.WARNING, "Error finding case by ID: " + caseId, e);
 			}
 		}
-		if (genCase != null)
+		if (genCase != null) {
 			return genCase;
+		}
 
 		Long caseCategoryId = null;
 		Long caseTypeId = null;
@@ -204,6 +208,20 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						iwrb,
 						false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
 			);
+
+			if (genCase != null) {
+				CaseCode caseCode = genCase.getCaseCode();
+				if (caseCode == null || CasesConstants.CASE_CODE_KEY.equals(caseCode.getCode())) {
+					is.idega.idegaweb.egov.application.data.bean.Application application = getApplicationDAO().findByUri(procDefName);
+					if (application != null) {
+						CaseCodeModel caseCodeModel = application.getCaseCode();
+						if (caseCodeModel != null) {
+							genCase.setCode(caseCodeModel.getCode());
+							genCase.store();
+						}
+					}
+				}
+			}
 		} catch (Exception e) {
 			String message = "Error creating case for BPM process definition: " + procDefName + ". Author: " + author + ", case category ID: " +
 					caseCategoryId + ", case type ID: "	+ caseTypeId + ", resource bunlde: " + iwrb + ", case identifier: " +
@@ -346,8 +364,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		CasesStatusMapperHandler casesStatusMapper = getCasesStatusMapperHandler();
 
-		for (CaseStatus caseStatus: allStatuses)
+		for (CaseStatus caseStatus: allStatuses) {
 			caseData.put(casesStatusMapper.getStatusVariableNameFromStatusCode(caseStatus.getStatus()), caseStatus.getStatus());
+		}
 
 		IWContext iwc = CoreUtil.getIWContext();
 		Locale dateLocale = iwc == null ? userBusiness.getUsersPreferredLocale(user) : iwc.getCurrentLocale();
@@ -464,10 +483,11 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		});
 
 		try {
-			if (piId == null)
+			if (piId == null) {
 				getLogger().warning("Failed to start process for proc. def. ID: " + processDefinitionId);
-			else
+			} else {
 				getLogger().info("Process was created: " + piId);
+			}
 
 			@SuppressWarnings("unchecked")
 			T result = (T) piId;
@@ -543,8 +563,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						parameters.put(ProcessConstants.VIEW_ID, view.getViewId());
 						parameters.put(ProcessConstants.VIEW_TYPE, view.getViewType());
 
-						if (initiatorId != null)
+						if (initiatorId != null) {
 							parameters.put(CasesBPMProcessConstants.userIdActionVariableName, initiatorId.toString());
+						}
 
 						parameters.put(CasesBPMProcessConstants.caseIdentifierNumberParam, String.valueOf(identifierNumber));
 						parameters.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, String.valueOf(identifier));
@@ -594,8 +615,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	@Override
 	@Transactional(readOnly = false)
 	public void setRolesCanStartProcess(List<String> rolesKeys, Object processContext) {
-		if (rolesKeys == null)
+		if (rolesKeys == null) {
 			rolesKeys = Collections.emptyList();
+		}
 
 		final Integer applicationId = new Integer(processContext.toString());
 
