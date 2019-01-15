@@ -80,6 +80,7 @@ import com.idega.presentation.IWContext;
 import com.idega.presentation.paging.PagedDataCollection;
 import com.idega.presentation.text.Link;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.dao.GroupDAO;
 import com.idega.user.data.Group;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
@@ -1302,6 +1303,31 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 	}
 
+	private void doFillRolesAndGroups(User user, UserBusiness userBusiness, AccessController accessController, Set<String> roles, List<Integer> groups) {
+		Set<String> userRoles = getRoles(getSession(), accessController, user);
+		if (!ListUtil.isEmpty(userRoles)) {
+			roles.addAll(userRoles);
+		}
+
+		Collection<Group> groupBeans = null;
+		try {
+			groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting user groups directly related to " + user, e);
+		}
+		if (ListUtil.isEmpty(groupBeans)) {
+			GroupDAO groupDAO = ELUtil.getInstance().getBean(GroupDAO.class);
+			List<Integer> groupsIds = groupDAO.getAllGroupsIdsForUser(getUser(user), CoreUtil.getIWContext());
+			if (!ListUtil.isEmpty(groupsIds)) {
+				groups.addAll(groupsIds);
+			}
+		} else {
+			for (Group group : groupBeans) {
+				groups.add(new Integer(group.getPrimaryKey().toString()));
+			}
+		}
+	}
+
 	private CasesListParameters resolveParameters(CasesListParameters params, boolean showAllCases) throws Exception {
 		User user = params.getUser();
 		String type = params.getType();
@@ -1311,7 +1337,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		List<String> statusesToHide = params.getStatusesToHide();
 
 		Set<String> roles = params.getRoles();
+		roles = roles == null ? new HashSet<>() : roles;
 		List<Integer> groups = params.getGroups();
+		groups = groups == null ? new ArrayList<>() : groups;
 		List<String> codes = params.getCodes();
 
 		CasesBusiness casesBusiness = getServiceInstance(CasesBusiness.class);
@@ -1327,16 +1355,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				statusesToHide = ListUtil.getFilteredList(statusesToHide);
 			}
 
-			if (!isSuperAdmin) {
-				roles = getRoles(getSession(), accessController, user);
-
-				Collection<Group> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
-				if (!ListUtil.isEmpty(groupBeans)) {
-					groups = new ArrayList<Integer>(groupBeans.size());
-					for (Group group : groupBeans) {
-						groups.add(new Integer(group.getPrimaryKey().toString()));
-					}
-				}
+			if (!isSuperAdmin && user != null) {
+				doFillRolesAndGroups(user, userBusiness, accessController, roles, groups);
 			}
 
 		} else if (CasesRetrievalManager.CASE_LIST_TYPE_CLOSED.equals(type)) {
@@ -1346,18 +1366,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				statusesToShow = ListUtil.getFilteredList(statusesToShow);
 			}
 
-			if (!isSuperAdmin) {
-				if (user != null) {
-					roles = getRoles(getSession(), accessController, user);
-				}
-
-				Collection<Group> groupBeans = userBusiness.getUserGroupsDirectlyRelated(user);
-				if (!ListUtil.isEmpty(groupBeans)) {
-					groups = new ArrayList<Integer>(groupBeans.size());
-					for (Group group : groupBeans) {
-						groups.add(new Integer(group.getPrimaryKey().toString()));
-					}
-				}
+			if (!isSuperAdmin && user != null) {
+				doFillRolesAndGroups(user, userBusiness, accessController, roles, groups);
 			}
 
 		}  else if (CasesRetrievalManager.CASE_LIST_TYPE_MY.equals(type)) {
