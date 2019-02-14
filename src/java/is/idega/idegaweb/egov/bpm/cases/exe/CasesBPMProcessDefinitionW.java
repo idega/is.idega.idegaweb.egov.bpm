@@ -794,6 +794,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		try {
 			name = getProcessDefinitionName();
 			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getApplicationDAO().findByUri(name);
+			if (egovApp == null) {
+				getLogger().warning("Failed to find application by URI '" + name + "', proc. def. ID: " + getProcessDefinitionId());
+			}
 			available = ApplicationUtil.isAvailabe(iwc, egovApp);
 			return available;
 		} catch (Exception e) {
