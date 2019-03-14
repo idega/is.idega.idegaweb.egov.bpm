@@ -518,6 +518,39 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return loadInitView(initiatorId, null);
 	}
 
+	private Object[] getIdentifiers(
+			ProcessDefinition pd,
+			String externalIdentifier
+	) {
+		
+		is.idega.idegaweb.egov.application.data.bean.
+		Application application = 
+				getApplicationDAO()
+						.findByUri(pd.getName());
+		if(application == null) {
+			throw new JbpmException(
+					"Failed adding case identifier prefix,"
+							+ " application not found by process name '"
+							+ pd.getName()
+							+ "'"
+			);
+		}
+		String prefix = application.getIdentifierPrefix();
+		if(!StringUtil.isEmpty(prefix)) {
+			ApplicationIdentifier generator = ELUtil.getInstance().getBean(
+					ApplicationIdentifier.QUALIFIER
+			);
+			return generator.generatePrefixedCaseIdentifier(prefix);
+		}
+		if (StringUtil.isEmpty(externalIdentifier)) {
+			return getCaseIdentifier().generateNewCaseIdentifier();
+		}
+		Integer identifierNumber = getCaseIdentifier().getCaseIdentifierNumber(
+				externalIdentifier
+		);
+		return new Object[] {identifierNumber, externalIdentifier};
+	}
+	
 	@Override
 	@Transactional(readOnly = false)
 	public View loadInitView(final Integer initiatorId, final String externalIdentifier) {
@@ -529,6 +562,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					Long processDefinitionId = getProcessDefinitionId();
 					ProcessDefinition pd = getProcessDefinition(context);
 
+					
 					try {
 						Long startTaskId = pd.getTaskMgmtDefinition().getStartTask().getId();
 
@@ -543,16 +577,12 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						// will
 						// bind view with task instance
 
-						Integer identifierNumber = null;
-						String identifier = null;
-						if (StringUtil.isEmpty(externalIdentifier)) {
-							Object[] identifiers = getCaseIdentifier().generateNewCaseIdentifier();
-							identifierNumber = (Integer) identifiers[0];
-							identifier = (String) identifiers[1];
-						} else {
-							identifierNumber = getCaseIdentifier().getCaseIdentifierNumber(externalIdentifier);
-							identifier = externalIdentifier;
-						}
+						Object [] identifiers = getIdentifiers(
+								pd,
+								externalIdentifier
+						);
+						Integer identifierNumber = (Integer) identifiers[0];
+						String identifier = (String) identifiers[1];
 
 						IWTimestamp realCreationDate = new IWTimestamp();
 						String realCreationDateString = realCreationDate.toString();
