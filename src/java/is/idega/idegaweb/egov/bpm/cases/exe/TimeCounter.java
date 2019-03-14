@@ -25,8 +25,8 @@ public class TimeCounter {
 			return next++;
 		}
 		setTime(now);
-		next = 2;
-		return 1;
+		next = 1;
+		return 0;
 	}
 	
 	public String getDateString() {

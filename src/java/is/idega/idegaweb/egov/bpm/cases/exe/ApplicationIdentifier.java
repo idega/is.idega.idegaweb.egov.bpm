@@ -45,7 +45,7 @@ public class ApplicationIdentifier{
 		TimeCounter counter = getTimeCounter(prefix);
 		Integer IdentifierId = counter.getNextCounter();
 		String nr = String.valueOf(IdentifierId);
-		while (nr.length() < 4)
+		while (nr.length() < 5)
 			nr = "0" + nr;
 		String id = prefix
 				+ CoreConstants.MINUS
