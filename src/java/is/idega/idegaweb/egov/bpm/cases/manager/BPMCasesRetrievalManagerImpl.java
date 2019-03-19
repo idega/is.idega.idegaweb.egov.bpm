@@ -717,6 +717,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					procInstIds,
 					roles,
 					null,
+					null,
 					searchQuery
 			);
 			long duration = System.currentTimeMillis() - start;
@@ -786,6 +787,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<Long> procInstIds,
 			Set<String> roles,
 			Collection<Long> handlerCategoryIDs,
+			List<Integer> exceptOwnersIds,
 			boolean searchQuery
 	) throws Exception {
 		return getCasesIds(
@@ -802,7 +804,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				handlerCategoryIDs,
 				searchQuery,
 				null,
-				null
+				null,
+				exceptOwnersIds
 		);
 	}
 
@@ -818,7 +821,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Integer page,
 			Integer pageSize
 	) throws Exception {
-		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize);
+		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize, null);
 	}
 
 	@Override
@@ -832,9 +835,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			boolean showAllCases,
 			Integer page,
 			Integer pageSize,
-			Boolean handlerAssignedCases
+			Boolean handlerAssignedCases,
+			List<Integer> exceptOwnersIds
 	) throws Exception {
-		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize);
+		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize, exceptOwnersIds);
 	}
 
 	@Override
@@ -862,6 +866,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				roles,
 				null,
 				false,
+				null,
 				null,
 				null
 		);
@@ -905,7 +910,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<String> casecodes,
 			boolean isSuperAdmin,
 			Integer dataFrom,
-			Integer dataTo
+			Integer dataTo,
+			List<Integer> exceptOwnersIds
 	) throws Exception {
 		if (StringUtil.isEmpty(type)) {
 			getLogger().warning("Cases list type is not provided");
@@ -938,6 +944,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							caseId,
 							procInstIds,
 							handlerCategoryIDs,
+							exceptOwnersIds,
 							from,
 							to,
 					        dataFrom,
@@ -951,6 +958,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							caseId,
 							procInstIds,
 							handlerCategoryIDs,
+							exceptOwnersIds,
 							from,
 							to,
 					        dataFrom,
@@ -966,6 +974,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							caseId,
 							procInstIds,
 							handlerCategoryIDs,
+							exceptOwnersIds,
 							from,
 							to,
 					        dataFrom,
@@ -980,6 +989,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					caseId,
 					procInstIds,
 					handlerCategoryIDs,
+					exceptOwnersIds,
 					from,
 					to,
 			        dataFrom,
@@ -996,6 +1006,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					caseId,
 					procInstIds,
 					handlerCategoryIDs,
+					exceptOwnersIds,
 					from,
 					to,
 			        dataFrom,
@@ -1009,6 +1020,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					caseId != null ? Arrays.asList(caseId) : null,
 					procInstIds,
 					handlerCategoryIDs,
+					exceptOwnersIds,
 					from,
 					to,
 					dataFrom,
@@ -1024,6 +1036,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					procInstIds,
 					roles,
 					handlerCategoryIDs,
+					exceptOwnersIds,
 					from,
 					to,
 			        dataFrom,
@@ -1054,6 +1067,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							caseId,
 							procInstIds,
 							handlerCategoryIDs,
+							exceptOwnersIds,
 							from,
 							to,
 					        dataFrom,
@@ -1106,7 +1120,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Collection<Long> handlerCategoryIDs,
 			boolean searchQuery,
 			Integer page,
-			Integer pageSize
+			Integer pageSize,
+			List<Integer> exceptOwnersIds
 	) throws Exception {
 		Map<Integer, Date> casesIds = null;
 
@@ -1170,7 +1185,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 						casecodes,
 						showAllCases,
 						procInstIds,
-						handlerCategoryIDs
+						handlerCategoryIDs,
+						exceptOwnersIds
 				);
 
 				Map<Integer, Date> cachedData = getCachedIds(key);
@@ -1204,7 +1220,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 								casecodes,
 								isSuperAdmin,
 								dataFrom,
-								dataTo
+								dataTo,
+								exceptOwnersIds
 						);
 						if (!MapUtil.isEmpty(casesIds)) {
 							for (Map.Entry<Integer, Date> caseEntry: casesIds.entrySet()) {
@@ -1257,7 +1274,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					casecodes,
 					isSuperAdmin,
 					dataFrom,	//	Data from
-					dataTo		//	Data to
+					dataTo,		//	Data to
+					exceptOwnersIds
 			);
 			if (casesIds == null) {
 				return Collections.emptyList();
@@ -1268,7 +1286,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			getLogger().log(Level.WARNING, "Error getting cases for " + user + ", type: " + type + ", case codes: " + caseCodes + ", statuses to hide: " + caseStatusesToHide + ", statuses to show: " +
 					caseStatusesToShow + ", only subscribed cases to: " + onlySubscribedCases + ", show all cases: " + showAllCases + ", case ID: " + caseId + ", proc. inst. IDs: " + procInstIds + ", roles: " + roles +
 					", handler category IDs: " + handlerCategoryIDs + ", statuses to show: " + statusesToShow + ", statuses to hide: " + statusesToHide + ", groups: " + groups + ", case codes: " + casecodes +
-					", super admin: " + isSuperAdmin, e);
+					", except owners IDs: " + exceptOwnersIds + ", super admin: " + isSuperAdmin, e);
 			throw new RuntimeException(e);
 		} finally {
 			if (casesListCacheTurnedOn && caseId == null) {
@@ -1285,7 +1303,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 							casecodes,
 							showAllCases,
 							procInstIds,
-							handlerCategoryIDs
+							handlerCategoryIDs,
+							exceptOwnersIds
 					);
 				}
 
@@ -1802,8 +1821,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Collection<User> subscribers,
 			Collection<String> caseManagerTypes,
 			Date dateCreatedFrom,
-			Date dateCreatedTo) {
-
+			Date dateCreatedTo
+	) {
 		List<Long> subscribersIds = null;
 
 		/* Searching by subscribers */
@@ -1819,7 +1838,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				processInstanceIds,
 				caseStatuses, null, subscribersIds, null, null, null,
 				caseManagerTypes, null, null, null, null, null, null, null, null,
-				dateCreatedFrom, dateCreatedTo);
+				dateCreatedFrom, dateCreatedTo,
+				null
+		);
 		if (MapUtil.isEmpty(data)) {
 			return null;
 		}
@@ -1977,7 +1998,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 						try {
 							superAdmin = user == null ?
 								false :
-								IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser().equals(user);
+								IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser().getId().intValue() == Integer.valueOf(user.getId()).intValue();
 						} catch (Exception e) {
 							getLogger().log(Level.WARNING, "Error while resolving if user " + user + " is administrator");
 						}
@@ -1998,6 +2019,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 										criteria.getRoles(),
 										criteria.getHandlercategoryIds(),
 										false,
+										null,
 										null,
 										null
 								);

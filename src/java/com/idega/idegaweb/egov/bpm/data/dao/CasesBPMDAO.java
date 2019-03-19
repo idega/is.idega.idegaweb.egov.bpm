@@ -100,6 +100,7 @@ public interface CasesBPMDAO extends GenericDao {
 	        Integer caseId,
 	        List<Long> procInstIds,
 	        Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -116,6 +117,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -137,6 +139,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -153,6 +156,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -187,6 +191,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
 			Collection<? extends Number> handlerCategoryIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -214,6 +219,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -287,6 +293,7 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> exceptOwnersIds,
 	        Date from,
 	        Date to
 	);
@@ -360,11 +367,13 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<String> roles,
 			Collection<? extends Number> authorsIDs,
 			Collection<? extends Number> casesIds,
+			List<Integer> exceptOwnersIds,
 			Boolean isAnonymous,
 			Boolean generalCases,
 			Boolean hasEnded,
 			Date dateCreatedFrom,
-			Date dateCreatedTo);
+			Date dateCreatedTo
+	);
 
 	/**
 	 * <p>"AND" relation for filtering BPM {@link Case}s.
@@ -444,7 +453,8 @@ public interface CasesBPMDAO extends GenericDao {
 			Boolean generalCases,
 			Boolean hasEnded,
 			Date from,
-			Date to
+			Date to,
+			List<Integer> exceptOwnersIds
 	);
 
 	/**
@@ -477,6 +487,7 @@ public interface CasesBPMDAO extends GenericDao {
 			Collection<? extends Number> procInstIds,
 			Set<String> roles,
 			Collection<? extends Number> handlerCategoryIDs,
+			List<Integer> exceptOwnersIds,
 			Date from,
 			Date to,
 	        Integer dataFrom,

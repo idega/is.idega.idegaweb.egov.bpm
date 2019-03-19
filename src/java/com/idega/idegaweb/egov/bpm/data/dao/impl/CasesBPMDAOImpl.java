@@ -731,6 +731,33 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getCasesIds(procInstIds, cases);
 	}
 
+	private String getExceptOwnersIdsQueryPart(List<Integer> exceptOwnersIds, String column) {
+		return getExceptOwnersIdsQueryPart(exceptOwnersIds, column, false, true);
+	}
+
+	private String getExceptOwnersIdsQueryPart(List<Integer> exceptOwnersIds, String column, boolean startWithAnd, boolean endWithAnd) {
+		if (ListUtil.isEmpty(exceptOwnersIds)) {
+			return CoreConstants.EMPTY;
+		}
+
+		StringBuilder part = new StringBuilder();
+		if (startWithAnd) {
+			part.append(" and ");
+		}
+		part.append(CoreConstants.SPACE).append(column).append(" not in (");
+		for (Iterator<Integer> idsIter = exceptOwnersIds.iterator(); idsIter.hasNext();) {
+			part.append(idsIter.next());
+			if (idsIter.hasNext()) {
+				part.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+			}
+		}
+		part.append(") ");
+		if (endWithAnd) {
+			part.append(" and ");
+		}
+		return part.toString();
+	}
+
 	@Override
 	public Map<Integer, Date> getMyCasesIds(
 			User user,
@@ -740,6 +767,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -764,6 +792,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append("pi.end_ is null and ");
 		builder.append("(comm_case.handler = :"
@@ -793,6 +822,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" comm_case.handler = :").append(NativeIdentityBind.identityIdProperty);
 		builder.append(getConditionForCaseStatuses(params, caseStatusesToShow, caseStatusesToHide));
@@ -904,6 +934,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	        Integer caseId,
 	        List<Long> procInstIds,
 	        Collection<? extends Number> subscriberGroupIDs,
+	        List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -939,6 +970,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" (");
 		if (!ListUtil.isEmpty(roles)) {
@@ -977,6 +1009,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" proc_case.case_manager_type is null");
 		if (!ListUtil.isEmpty(groups)) {
@@ -1149,6 +1182,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -1178,6 +1212,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" (");
 		if (!ListUtil.isEmpty(roles)) {
@@ -1211,6 +1246,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" proc_case.case_status in (:statusesToShow) ");
 		if (!ListUtil.isEmpty(groups)) {
@@ -1233,6 +1269,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -1266,6 +1303,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" act.process_instance_id is not null and (pi.end_ is not null or proc_case.case_status in (:statusesToShow))");
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
@@ -1292,6 +1330,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "comm_case.comm_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" proc_case.case_status in (:statusesToShow) ");
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
@@ -1312,6 +1351,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> procInstIds,
 			Set<String> roles,
 			Collection<? extends Number> handlerCategoryIDs,
+			List<Integer> exceptOwnerIds,
 	        Date from,
 	        Date to,
 	        Integer dataFrom,
@@ -1340,7 +1380,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				null,	//	generalCases
 				null,	//	ended
 				from,
-				to
+				to,
+				exceptOwnerIds
 		);
 	}
 
@@ -1354,6 +1395,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			boolean onlySubscribedCases,
 			Integer caseId,
 			List<Long> procInstIds,
+			List<Integer> exceptOwnersIds,
 	        Date from,
 	        Date to
 	) {
@@ -1380,7 +1422,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				null,				//	generalCases
 				null,				//	ended
 				from,
-				to
+				to,
+				exceptOwnersIds
 		);
 	}
 
@@ -1395,6 +1438,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Integer caseId,
 			List<Long> procInstIds,
 			Collection<? extends Number> subscriberGroupIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -1418,6 +1462,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		builder.append(getConditionForCaseId(params, caseId, "proc_case.proc_case_id"));
 		builder.append(getConditionForFromAndTo(params, from, to));
 		builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" (");
 		if (!ListUtil.isEmpty(roles)) {
@@ -1450,6 +1495,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		if (!ListUtil.isEmpty(procInstIds)) {
 			builder.append(getConditionForProcInstIds(params, procInstIds, "cp." + CaseProcInstBind.procInstIdColumnName));
 		}
+		builder.append(getExceptOwnersIdsQueryPart(exceptOwnersIds, CaseBMPBean.TABLE_NAME.concat(CoreConstants.DOT).concat(CaseBMPBean.COLUMN_USER)));
 
 		builder.append(" proc_case.user_id=:identityId and cp.uuid is null and proc_case.case_code not in (:caseCodes) ");
 
@@ -1468,6 +1514,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<? extends Number> caseIDs,
 			Collection<? extends Number> procInstIds,
 			Collection<? extends Number> handlerCategoryIDs,
+			List<Integer> exceptOwnersIds,
 	        Timestamp from,
 	        Timestamp to,
 	        Integer dataFrom,
@@ -1490,18 +1537,18 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				return getCasesPrimaryKeys(caseCodes, procInstIds,
 						caseStatusesToShow,	caseStatusesToHide, null,
 						handlerCategoryIDs, null, null, null, null, null, null,
-						null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to);
+						null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to, exceptOwnersIds);
 			} else {
 				return getCasesPrimaryKeys(null, procInstIds,
 						caseStatusesToShow,	caseStatusesToHide, null,
 						handlerCategoryIDs, null, null, null, null, caseCodes,
-						null, null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to);
+						null, null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to, exceptOwnersIds);
 			}
 		} else {
 			return getCasesPrimaryKeys(null, procInstIds,
 					caseStatusesToShow,	caseStatusesToHide, null,
 					handlerCategoryIDs, null, null, null, null, null, null,
-					null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to);
+					null, caseIDs, Boolean.TRUE, Boolean.TRUE, null, from, to, exceptOwnersIds);
 		}
 	}
 
@@ -2268,7 +2315,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Boolean isGeneralCases,
 			Boolean hasEnded,
 			Date dateCreatedFrom,
-			Date dateCreatedTo
+			Date dateCreatedTo,
+			List<Integer> exceptOwnerIds
 	) {
 
 		StringBuilder query = new StringBuilder();
@@ -2304,8 +2352,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				!ListUtil.isEmpty(casesIds) ||
 				!ListUtil.isEmpty(handlerGroupIds) ||
 				dateCreatedFrom != null ||
-				dateCreatedTo != null) {
-
+				dateCreatedTo != null
+		) {
 			query.append("JOIN proc_case pc ON bcpi.case_id=pc.PROC_CASE_ID ");
 			caseCreatedColumn = "pc." + CaseBMPBean.COLUMN_CREATED;
 
@@ -2418,6 +2466,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			query.append("AND case_created <= '").append(iwTo.getDateString(pattern + "SS")).append("' ");
 		}
 
+		query.append(getExceptOwnersIdsQueryPart(exceptOwnerIds, "pc.".concat(CaseBMPBean.COLUMN_USER), true, false));
+
 		String sql = query.toString();
 		sql = StringHandler.replace(sql, "case_created", caseCreatedColumn);
 		return sql;
@@ -2443,14 +2493,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Boolean generalCases,
 			Boolean ended,
 			Date dateCreatedFrom,
-			Date dateCreatedTo
+			Date dateCreatedTo,
+			List<Integer> exceptOwnersIds
 	) {
-
 		String query = getCasesPrimaryKeysQuery(processDefinitionNames,
 				processInstanceIds, caseStatuses, caseStatusesToHide,
 				subscribersIDs, subscribersGroupIDs, handlersIDs, handlerGroupIDs,
 				caseManagerTypes, hasCaseManagerType, caseCodes, roles, authorsIDs,
-				casesIds, isAnonymous, generalCases, ended, dateCreatedFrom, dateCreatedTo);
+				casesIds, isAnonymous, generalCases, ended, dateCreatedFrom, dateCreatedTo,
+				exceptOwnersIds
+		);
 
 		/* Ordering by date created */
 		query = query + "ORDER BY created DESC";
@@ -2595,6 +2647,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Collection<String> roles,
 			Collection<? extends Number> authorsIDs,
 			Collection<? extends Number> casesIds,
+			List<Integer> exceptOwnersIds,
 			Boolean isAnonymous,
 			Boolean generalCases,
 			Boolean hasEnded,
@@ -2634,7 +2687,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				generalCases,
 				hasEnded,
 				from,
-				to
+				to,
+				exceptOwnersIds
 		);
 	}
 
