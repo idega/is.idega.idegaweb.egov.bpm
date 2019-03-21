@@ -9,6 +9,7 @@ import javax.ejb.FinderException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import com.idega.block.process.business.ProcessConstants;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.data.IDOLookup;
 import com.idega.data.MetaData;
 import com.idega.data.MetaDataBMPBean;
@@ -21,39 +22,39 @@ import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
-public abstract class DefaultIdentifierGenerator {
+public abstract class DefaultIdentifierGenerator extends DefaultSpringBean {
 
 	private static final Logger LOGGER = Logger.getLogger(DefaultIdentifierGenerator.class.getName());
-	
+
 	private static final String IDENTIFIER_META_DATA = "CASE_IDENTIFIER_IS_TAKEN_META_DATA";
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Autowired
 	private VariableInstanceQuerier variablesQuerier;
-	
+
 	/**
 	 * It is strongly recommended to implement this method as synchronized
-	 * 
+	 *
 	 * @return
 	 */
-	public abstract Object[] generateNewCaseIdentifier();
-	
+	public abstract Object[] getNewCaseIdentifier(String name);
+
 	/**
 	 * It is strongly recommended to implement this method as synchronized
-	 * 
+	 *
 	 * @return
 	 */
-	protected abstract Object[] generateNewCaseIdentifier(String usedIdentifier);
-	
+	protected abstract Object[] getNewCaseIdentifier(String name, String usedIdentifier);
+
 	protected synchronized boolean canUseIdentifier(String identifier) {
 		//	0.	Checking if identifier is not empty
 		if (StringUtil.isEmpty(identifier)) {
 			LOGGER.warning("Identifier is empty or null!");
 			return false;
 		}
-		
+
 		//	1.	Will check record in meta data table for the given identifier
 		try {
 			if (isStoredInMetaData(identifier)) {
@@ -62,7 +63,7 @@ public abstract class DefaultIdentifierGenerator {
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured while checking identifier ('" + identifier + "') in DB table: " + MetaDataBMPBean.TABLE_NAME, e);
 		}
-		
+
 		//	2.	Checking if already exists variable with such identifier
 		try {
 			if (isStoredInVariables(identifier)) {
@@ -71,7 +72,7 @@ public abstract class DefaultIdentifierGenerator {
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occured while checking identifier ('" + identifier + "') in BPM variables table", e);
 		}
-		
+
 		//	Identifier can be used, marking it as "taken" in meta data table
 		try {
 			storeIdentifier(identifier);
@@ -81,10 +82,10 @@ public abstract class DefaultIdentifierGenerator {
 			CoreUtil.sendExceptionNotification(errorMessage, e);
 			return false;
 		}
-		
+
 		return true;
 	}
-	
+
 	private boolean isStoredInMetaData(String identifier) throws Exception {
 		MetaDataHome metaDataHome = (MetaDataHome) IDOLookup.getHome(MetaData.class);
 		try {
@@ -95,7 +96,7 @@ public abstract class DefaultIdentifierGenerator {
 			return false;
 		}
 	}
-	
+
 	private boolean isStoredInVariables(String identifier) throws Exception {
 		if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("check_identifier_in_jbpm", Boolean.TRUE)) {
 			try {
@@ -108,7 +109,7 @@ public abstract class DefaultIdentifierGenerator {
 		}
 		return false;
 	}
-	
+
 	private void storeIdentifier(String identifier) throws Exception {
 		MetaDataHome metaDataHome = (MetaDataHome) IDOLookup.getHome(MetaData.class);
 		MetaData metaData = metaDataHome.create();

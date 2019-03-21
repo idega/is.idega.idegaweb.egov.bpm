@@ -522,35 +522,14 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			ProcessDefinition pd,
 			String externalIdentifier
 	) {
-		
-		is.idega.idegaweb.egov.application.data.bean.
-		Application application = 
-				getApplicationDAO()
-						.findByUri(pd.getName());
-		if(application == null) {
-			throw new JbpmException(
-					"Failed adding case identifier prefix,"
-							+ " application not found by process name '"
-							+ pd.getName()
-							+ "'"
-			);
-		}
-		String prefix = application.getIdentifierPrefix();
-		if(!StringUtil.isEmpty(prefix)) {
-			ApplicationIdentifier generator = ELUtil.getInstance().getBean(
-					ApplicationIdentifier.QUALIFIER
-			);
-			return generator.generatePrefixedCaseIdentifier(prefix);
-		}
 		if (StringUtil.isEmpty(externalIdentifier)) {
-			return getCaseIdentifier().generateNewCaseIdentifier();
+			return getCaseIdentifier().getNewCaseIdentifier(pd == null ? null : pd.getName());
 		}
-		Integer identifierNumber = getCaseIdentifier().getCaseIdentifierNumber(
-				externalIdentifier
-		);
+
+		Integer identifierNumber = getCaseIdentifier().getCaseIdentifierNumber(externalIdentifier);
 		return new Object[] {identifierNumber, externalIdentifier};
 	}
-	
+
 	@Override
 	@Transactional(readOnly = false)
 	public View loadInitView(final Integer initiatorId, final String externalIdentifier) {
@@ -562,7 +541,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					Long processDefinitionId = getProcessDefinitionId();
 					ProcessDefinition pd = getProcessDefinition(context);
 
-					
+
 					try {
 						Long startTaskId = pd.getTaskMgmtDefinition().getStartTask().getId();
 

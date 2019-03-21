@@ -1,6 +1,10 @@
 package is.idega.idegaweb.egov.bpm.cases.exe;
 
+import java.util.Collection;
 import java.util.Date;
+import java.util.logging.Level;
+
+import javax.ejb.FinderException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -10,9 +14,15 @@ import org.springframework.stereotype.Service;
 
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
+import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
+import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
+import is.idega.idegaweb.egov.application.data.Application;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -34,13 +44,79 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
-	@Override
-	public synchronized Object[] generateNewCaseIdentifier() {
-		return generateNewCaseIdentifier(null);
+	private Object[] getCustomIdentifier(String name) {
+		if (StringUtil.isEmpty(name)) {
+			return null;
+		}
+
+		try {
+			ApplicationBusiness appBusiness = getServiceInstance(ApplicationBusiness.class);
+			Collection<Application> apps = null;
+			try {
+				apps = appBusiness.getApplicationHome().findAllByApplicationUrl(name);
+			} catch (FinderException e) {
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error getting app by URL " + name, e);
+			}
+			if (ListUtil.isEmpty(apps)) {
+				return null;
+			}
+
+			ApplicationIdentifier generator = null;
+			try {
+				generator = ELUtil.getInstance().getBean(ApplicationIdentifier.QUALIFIER);
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error getting bean " + ApplicationIdentifier.QUALIFIER, e);
+			}
+			if (generator == null) {
+				return null;
+			}
+
+			Object[] identifierData = null;
+			for (Application app: apps) {
+				String prefix = app.getIdentifierPrefix();
+				if (StringUtil.isEmpty(prefix)) {
+					continue;
+				}
+
+				try {
+					identifierData = generator.generatePrefixedCaseIdentifier(prefix);
+				} catch (Exception e) {
+					identifierData = null;
+					getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name + " and prefix " + prefix, e);
+				}
+				if (!ArrayUtil.isEmpty(identifierData)) {
+					return identifierData;
+				}
+			}
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name, e);
+		}
+
+		return null;
 	}
 
 	@Override
-	protected synchronized Object[] generateNewCaseIdentifier(String usedIdentifier) {
+	public synchronized Object[] getNewCaseIdentifier(String name) {
+		if (!StringUtil.isEmpty(name)) {
+			Object[] identifierData = getCustomIdentifier(name);
+			if (!ArrayUtil.isEmpty(identifierData)) {
+				return identifierData;
+			}
+		}
+
+		return getNewCaseIdentifier(null, null);
+	}
+
+	@Override
+	protected synchronized Object[] getNewCaseIdentifier(String name, String usedIdentifier) {
+		if (!StringUtil.isEmpty(name)) {
+			Object[] identifierData = getCustomIdentifier(name);
+			if (!ArrayUtil.isEmpty(identifierData)) {
+				return identifierData;
+			}
+		}
+
 		IWTimestamp currentTime = new IWTimestamp();
 		currentTime.setAsDate();
 
@@ -89,8 +165,9 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		String generate() {
 			String nr = String.valueOf(++number);
 
-			while (nr.length() < 4)
+			while (nr.length() < 4) {
 				nr = "0" + nr;
+			}
 
 			return new StringBuffer(IDENTIFIER_PREFIX)
 			.append(CoreConstants.MINUS)
@@ -114,8 +191,9 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 	}
 
 	public Integer getCaseIdentifierNumber(String caseIdentifier) {
-		if (StringUtil.isEmpty(caseIdentifier))
+		if (StringUtil.isEmpty(caseIdentifier)) {
 			return null;
+		}
 
 		String[] parts = caseIdentifier.split(CoreConstants.MINUS);
 		String numberValue = parts[parts.length - 1];
