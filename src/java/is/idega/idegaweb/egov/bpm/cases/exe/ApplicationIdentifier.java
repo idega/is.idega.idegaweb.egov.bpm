@@ -33,7 +33,11 @@ public class ApplicationIdentifier {
 		}
 		Date now = new Date();
 		CaseProcInstBind b = casesBPMDAO.getCaseProcInstBindLatestByDateQN(now);
-		counter = new TimeCounter(now.getTime(), b.getCaseIdentierID());
+		counter = new TimeCounter(
+				now.getTime(), 
+				b == null 
+						? 0
+						: b.getCaseIdentierID());
 		counters.put(prefix, counter);
 		return counter;
 	}
