@@ -1,6 +1,8 @@
 package com.idega.idegaweb.egov.bpm.business.impl;
 
+import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -17,6 +19,9 @@ import org.directwebremoting.annotations.RemoteProxy;
 import org.directwebremoting.spring.SpringCreator;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
+import org.jbpm.graph.def.ActionHandler;
+import org.jbpm.graph.exe.ExecutionContext;
+import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.taskmgmt.exe.TaskInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -32,6 +37,7 @@ import com.idega.block.process.data.CaseHome;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.xformsview.converters.DataConvertersFactory;
+import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.accesscontrol.business.LoginBusinessBean;
 import com.idega.core.accesscontrol.business.LoginDBHandler;
 import com.idega.core.accesscontrol.dao.UserLoginDAO;
@@ -724,6 +730,111 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 	private ContentWithVariablesValues getObjectsLists(String content) {
 		return getVariables(content, "=[{", "]}}],", null);
+	}
+
+	@Override
+	@RemoteMethod
+	public boolean doExecuteHandler(Long procInstId, String handlerName, List<AdvancedProperty> params) {
+		try {
+			IWContext iwc = CoreUtil.getIWContext();
+			if (iwc == null || !iwc.isLoggedOn() || !iwc.isSuperAdmin()) {
+				getLogger().warning("You do not have rights to execute handler");
+				return false;
+			}
+
+			if (!getApplication().getSettings().getBoolean("bpm.allow_execute_handler", Boolean.FALSE)) {
+				getLogger().warning("It is forbidden to execute handler");
+				return false;
+			}
+
+			if (procInstId == null) {
+				getLogger().warning("Proc. inst. ID not provided");
+				return false;
+			}
+			if (StringUtil.isEmpty(handlerName)) {
+				getLogger().warning("Handler's name not provided");
+				return false;
+			}
+
+			ActionHandler handler = ELUtil.getInstance().getBean(handlerName);
+			if (handler == null) {
+				getLogger().warning("Handler by name " + handlerName + " not found");
+				return false;
+			}
+
+			if (!ListUtil.isEmpty(params)) {
+				for (AdvancedProperty param: params) {
+					String name = null;
+					Object value = null;
+					try {
+						name = param.getName();
+						if (StringUtil.isEmpty(name)) {
+							continue;
+						}
+						value = param.getValue();
+						if (value == null) {
+							continue;
+						}
+
+						String type = param.getId();
+						Method m = handler.getClass().getMethod(name, StringUtil.isEmpty(type) ? null : Class.forName(type));
+						if (m == null) {
+							getLogger().warning("Can't find method '" + name + "' at " + handler.getClass().getName() + ". All methods: " + Arrays.asList(handler.getClass().getMethods()));
+							continue;
+						}
+
+						if (!StringUtil.isEmpty(type)) {
+							Object tmp = null;
+							if (type.equals(Long.class.getName())) {
+								tmp = StringHandler.isNumeric(value.toString()) ? Long.valueOf(value.toString()) : null;
+
+							} else if (type.equals(Integer.class.getName())) {
+								tmp = StringHandler.isNumeric(value.toString()) ? Integer.valueOf(value.toString()) : null;
+
+							} else {
+								getLogger().warning("Do not know how to convert " + value + " (" + value.getClass().getName() + ") to " + type);
+							}
+
+							if (tmp == null) {
+								getLogger().warning("Do not know how to convert " + value + " (" + value.getClass().getName() + ") to " + type);
+							}
+
+							value = tmp;
+						}
+
+						m.invoke(handler, value);
+					} catch (Exception e) {
+						getLogger().log(Level.WARNING, "Error setting " + value + " (" + value.getClass().getName() + ") for " + name + " at " + handler.getClass().getName(), e);
+					}
+				}
+			}
+
+			Boolean success = bpmContext.execute(new JbpmCallback<Boolean>() {
+
+				@Override
+				public Boolean doInJbpm(JbpmContext context) throws JbpmException {
+					try {
+						ProcessInstance pi = context.getProcessInstance(procInstId);
+
+						ExecutionContext ectx = new ExecutionContext(pi.getRootToken());
+						handler.execute(ectx);
+
+						return Boolean.TRUE;
+					} catch (Exception e) {
+						getLogger().log(Level.WARNING, "Error executing " + handler.getClass().getName() + ". Proc. inst. " + procInstId + ", params: " + params, e);
+					}
+
+					return Boolean.FALSE;
+				}
+
+			});
+
+			return success == null ? false : success;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error executing handler " + handlerName + " for proc. inst. " + procInstId + ", params: " + params, e);
+		}
+
+		return false;
 	}
 
 }
