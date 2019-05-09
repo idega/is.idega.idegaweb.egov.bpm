@@ -590,8 +590,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias) {
+		return getCasesByQuery(criterias, false);
+	}
+	
+	@Override
+	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias, boolean isFirstPageIndexIsZero) {
 		if (criterias instanceof CasesListSearchCriteriaBean) {
-			return getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criterias);
+			return getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criterias, isFirstPageIndexIsZero);
 		}
 
 		getLogger().warning("Unable to get cases by query " + criterias + " because it is not instance of " +
@@ -619,6 +624,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	private PagedDataCollection<CasePresentation> getCasesByQuery(
 			IWContext iwc,
 			CasesListSearchCriteriaBean criterias
+	) {
+		return getCasesByQuery(iwc, criterias, false);
+	}
+	
+	private PagedDataCollection<CasePresentation> getCasesByQuery(
+			IWContext iwc,
+			CasesListSearchCriteriaBean criterias,
+			boolean isFirstPageIndexIsZero
 	) {
 		User currentUser = null;
 		if (!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
@@ -750,11 +763,20 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			criterias.setPageSize(20);
 		}
 		if (criterias.getPage() <= 0) {
-			criterias.setPage(1);
+			if (isFirstPageIndexIsZero) {
+				criterias.setPage(0);
+			} else {
+				criterias.setPage(1);
+			}
 		}
 		criterias.setAllDataLoaded(!(totalCount > criterias.getPageSize()));
 		int count = criterias.getPageSize();
-		int startIndex = (criterias.getPage() - 1) * count;
+		int startIndex = 0;
+		if (isFirstPageIndexIsZero) {
+			startIndex = criterias.getPage() * count;
+		} else {
+			startIndex = (criterias.getPage() - 1) * count;
+		}
 		boolean preLoadCases = false;
 		boolean preLoadStatus = false;
 
