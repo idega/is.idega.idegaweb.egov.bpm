@@ -2,6 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.List;
 import java.util.logging.Level;
 
 import javax.ejb.FinderException;
@@ -12,8 +13,10 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.data.bean.Metadata;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.user.data.bean.Group;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
@@ -23,6 +26,8 @@ import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.data.Application;
+import is.idega.idegaweb.egov.application.data.bean.ApplicationAccess;
+import is.idega.idegaweb.egov.application.data.dao.ApplicationDAO;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -38,11 +43,16 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 	public static final String QUALIFIER = "defaultCaseIdentifier";
 
 	public static final String IDENTIFIER_PREFIX = "P";
+	
+	public static final String METADATA_CASE_IDENTIFIER_PREFIX = "case_identifier_prefix";
 
 	private CaseIdentifierBean lastCaseIdentifierNumber;
 
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+	
+	@Autowired
+	private ApplicationDAO applicationDAO;
 
 	private Object[] getCustomIdentifier(String name) {
 		if (StringUtil.isEmpty(name)) {
@@ -61,6 +71,10 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 			if (ListUtil.isEmpty(apps)) {
 				return null;
 			}
+			String prefix = getCustomIdentifierPrefix(apps);
+			if(StringUtil.isEmpty(prefix)) {
+				return null;
+			}
 
 			ApplicationIdentifier generator = null;
 			try {
@@ -71,29 +85,69 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 			if (generator == null) {
 				return null;
 			}
-
-			Object[] identifierData = null;
-			for (Application app: apps) {
-				String prefix = app.getIdentifierPrefix();
-				if (StringUtil.isEmpty(prefix)) {
-					continue;
-				}
-
-				try {
-					identifierData = generator.generatePrefixedCaseIdentifier(prefix);
-				} catch (Exception e) {
-					identifierData = null;
-					getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name + " and prefix " + prefix, e);
-				}
+			try {
+				Object[] identifierData = generator.generatePrefixedCaseIdentifier(prefix);
 				if (!ArrayUtil.isEmpty(identifierData)) {
 					return identifierData;
 				}
+			} catch (Exception e) {
+				getLogger().log(
+						Level.WARNING, 
+						"Error getting custom identifier for name " 
+									+ name 
+									+ " and prefix " 
+									+ prefix, 
+						e
+				);
 			}
 		} catch (Exception e) {
-			getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name, e);
+			getLogger().log(
+					Level.WARNING, 
+					"Error getting custom identifier for name " 
+								+ name, 
+					e
+			);
 		}
 
 		return null;
+	}
+	
+	private String getCustomIdentifierPrefix(
+			Collection<Application> apps
+	) {
+		for (Application app: apps) {
+			String prefix = app.getIdentifierPrefix();
+			if(!StringUtil.isEmpty(prefix)) {
+				return prefix;
+			}
+			List<ApplicationAccess> accessList = applicationDAO.getApplicationAccessDescendingByLevel(
+					(Integer)app.getPrimaryKey()
+			);
+			if(ListUtil.isEmpty(accessList)) {
+				continue;
+			}
+			for(ApplicationAccess access : accessList) {
+				prefix = getGroupCaseIdentifierPrefix(
+						access.getGroup()
+				);
+				if(!StringUtil.isEmpty(prefix)) {
+					return prefix;
+				}
+			}
+		}
+		return null;
+	}
+	
+	private String getMetadataCaseIdentifierPrefix(Metadata metadata) {
+		if(metadata == null) {
+			return null;
+		}
+		return metadata.getValue();
+	}
+	private String getGroupCaseIdentifierPrefix(Group group) {
+		return getMetadataCaseIdentifierPrefix(
+				group.getMetadata(METADATA_CASE_IDENTIFIER_PREFIX)
+		);
 	}
 
 	@Override
