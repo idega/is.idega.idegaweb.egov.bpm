@@ -170,7 +170,7 @@ public class CasesStatusHandler extends DefaultSpringBean implements ActionHandl
 			}
 
 			CaseStatus previousCaseStatus = theCase.getCaseStatus();
-			previousStatus = previousCaseStatus == null ? null : previousCaseStatus.getStatus();
+			previousStatus = previousCaseStatus == null ? theCase.getStatus() : previousCaseStatus.getStatus();
 			if (StringUtil.isEmpty(ifCaseStatus) || (previousStatus == null || ifCaseStatus.equals(previousStatus))) {
 				// only changing if ifCaseStatus equals current case status, or ifCaseStatus not set (i.e. change always)
 				if (performerUserId == null) {
