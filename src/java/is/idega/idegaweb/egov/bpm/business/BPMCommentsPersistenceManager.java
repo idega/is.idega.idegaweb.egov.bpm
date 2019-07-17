@@ -158,8 +158,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 
 	@Override
 	public boolean hasRightsToWriteComments(Long identifier) {
-		if (identifier == null)
+		if (identifier == null) {
 			return false;
+		}
 
 		User currentUser = getLegacyUser(getCurrentUser());
 		if (currentUser != null) {
@@ -235,7 +236,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		AccessControlList acl = null;
 		try {
 			if (StringUtil.isEmpty(uri) || !getRepositoryService().getExistence(uri))
+			 {
 				return;	//	Resource does not exist
+			}
 
 			acl = getRepositoryService().getAccessControlList(uri);
 			if (acl == null) {
@@ -605,7 +608,9 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 		if (piw == null) {
 			return null;
 		}
-		return piw.getAttachments();
+
+		IWContext iwc = CoreUtil.getIWContext();
+		return piw.getAttachments(iwc);
 	}
 
 	private void fillWithReaders(CommentsViewerProperties properties, Comment comment, CommentEntry commentEntry) {
@@ -792,7 +797,7 @@ public class BPMCommentsPersistenceManager extends DefaultCommentsPersistenceMan
 			return null;
 		}
 
-		List<TaskInstanceW> submittedTasks = piw.getSubmittedTaskInstances();
+		List<TaskInstanceW> submittedTasks = piw.getSubmittedTaskInstances(CoreUtil.getIWContext());
 		if (ListUtil.isEmpty(submittedTasks)) {
 			return null;
 		}

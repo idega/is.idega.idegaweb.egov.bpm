@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.artifacts;
 
-import is.idega.idegaweb.egov.bpm.business.ProcessAttachmentDownloadNotifier;
-
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
@@ -25,16 +23,18 @@ import com.idega.util.PresentationUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.bpm.business.ProcessAttachmentDownloadNotifier;
+
 public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	@Override
 	public boolean hasRights(IWContext iwc) {
 		return Boolean.TRUE;
 	}
-	
+
 	@Override
 	public String getBundleIdentifier() {
 		return IWBundleStarter.IW_BUNDLE_IDENTIFIER;
@@ -46,9 +46,9 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 		if (StringUtil.isEmpty(caseId) || "-1".equals(caseId)) {
 			return null;
 		}
-		
+
 		setFileHolderIdentifier(caseId);
-		
+
 		return super.getPotentialDownloaders(iwc);
 	}
 
@@ -59,7 +59,7 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 		if (StringUtil.isEmpty(taskId) || StringUtil.isEmpty(varHash)) {
 			return null;
 		}
-		
+
 		StringBuilder realAction = new StringBuilder("CasesBPMAssets.notifyToDownloadAttachment({taskId: ").append(taskId)
 			.append(", hash: ").append(varHash).append(", file: ").append(file == null ? "null" : "'"+file.getId()+"'").append(", users: [");
 		for (Iterator<User> usersIter = usersToInform.iterator(); usersIter.hasNext();) {
@@ -69,7 +69,7 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 			}
 		}
 		realAction.append("]});");
-		
+
 		return PresentationUtil.getJavaScriptLinesLoadedLazily(Arrays.asList(
 				CoreConstants.DWR_ENGINE_SCRIPT,
 				"/dwr/interface/" + ProcessAttachmentDownloadNotifier.DWR_OBJECT + ".js"
@@ -82,15 +82,15 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 		if (file != null) {
 			return file;
 		}
-		
+
 		String taskId = iwc.getParameter(AttachmentWriter.PARAMETER_TASK_INSTANCE_ID);
 		String varHash = iwc.getParameter(AttachmentWriter.PARAMETER_VARIABLE_HASH);
 		if (StringUtil.isEmpty(taskId) || StringUtil.isEmpty(varHash)) {
 			return null;
 		}
-		
+
 		ELUtil.getInstance().autowire(this);
-		
+
 		Long taskID = null;
 		try {
 			taskID = Long.valueOf(taskId);
@@ -100,7 +100,7 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 		if (taskID == null) {
 			return null;
 		}
-		
+
 		Integer hash = null;
 		try {
 			hash = Integer.valueOf(varHash);
@@ -110,21 +110,21 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 		if (hash == null) {
 			return null;
 		}
-		
+
 		ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(taskID);
 		TaskInstanceW tiw = processManager.getTaskInstance(taskID);
-		List<BinaryVariable> attachments = tiw.getAttachments();
+		List<BinaryVariable> attachments = tiw.getAttachments(iwc);
 		if (!ListUtil.isEmpty(attachments)) {
 			for (Iterator<BinaryVariable> variablesIter = attachments.iterator(); (variablesIter.hasNext() && file == null);) {
 				BinaryVariable attachment = variablesIter.next();
-				
+
 				Integer attachmenHash = attachment.getHash();
 				if (attachmenHash != null && attachmenHash.intValue() == hash.intValue()) {
 					file = new AdvancedProperty(varHash, attachment.getFileName());
 				}
 			}
 		}
-		
+
 		if (file != null) {
 			setFile(file);
 		}
@@ -135,5 +135,5 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 	public String getMessageNobodyIsInterested(IWContext iwc) {
 		return getResourceBundle(iwc).getLocalizedString("there_are_no_users_interested_in_this_case", "There are no users interesed in this case");
 	}
-	
+
 }

@@ -85,7 +85,7 @@ public class CasesBPMProcessView {
 				String assignedTo = getTaskAssignedTo(ti);
 
 				CasesBPMTaskViewBean bean = new CasesBPMTaskViewBean();
-				bean.setTaskName(tiw.getName(iwc.getCurrentLocale()));
+				bean.setTaskName(tiw.getName(iwc, iwc.getCurrentLocale()));
 				bean.setTaskStatus(taskStatus);
 				bean.setAssignedTo(assignedTo);
 				bean.setCreatedDate(createTime.getLocaleDateAndTime(iwc
@@ -97,10 +97,12 @@ public class CasesBPMProcessView {
 
 	protected String getTaskStatus(TaskInstance taskInstance) {
 
-		if (taskInstance.hasEnded())
+		if (taskInstance.hasEnded()) {
 			return "Ended";
-		if (taskInstance.getStart() != null)
+		}
+		if (taskInstance.getStart() != null) {
 			return "In progress";
+		}
 
 		return "Not started";
 	}
@@ -244,15 +246,17 @@ public class CasesBPMProcessView {
 
 			Integer caseId;
 
-			if (casePK instanceof Integer)
+			if (casePK instanceof Integer) {
 				caseId = (Integer) casePK;
-			else
+			} else {
 				caseId = new Integer(String.valueOf(casePK));
+			}
 
 			CaseProcInstBind cpi = getCPIBind(caseId, null);
 
-			if (cpi != null)
+			if (cpi != null) {
 				return cpi.getProcInstId();
+			}
 		}
 
 		return null;
@@ -263,8 +267,9 @@ public class CasesBPMProcessView {
 
 		CaseProcInstBind cpi = getCPIBind(null, processInstanceId);
 
-		if (cpi != null)
+		if (cpi != null) {
 			return cpi.getCaseId();
+		}
 
 		return null;
 	}
@@ -280,12 +285,14 @@ public class CasesBPMProcessView {
 	public UIComponent getCaseManagerView(IWContext iwc,
 	        Long processInstanceId, Integer caseId, String caseProcessorType) {
 
-		if (iwc == null)
+		if (iwc == null) {
 			iwc = IWContext.getInstance();
+		}
 
-		if (processInstanceId == null && caseId == null)
+		if (processInstanceId == null && caseId == null) {
 			throw new IllegalArgumentException(
 			        "Neither processInstanceId, nor caseId provided");
+		}
 
 		caseId = caseId != null ? caseId : getCaseId(processInstanceId);
 
@@ -294,29 +301,32 @@ public class CasesBPMProcessView {
 
 			CasesRetrievalManager caseManager;
 
-			if (theCase.getCaseManagerType() != null)
+			if (theCase.getCaseManagerType() != null) {
 				caseManager = getCaseManagersProvider().getCaseManager();
-			else
+			} else {
 				caseManager = null;
+			}
 
 			if (caseManager != null) {
 
 				UIComponent caseAssets = caseManager.getView(iwc, caseId,
 				    caseProcessorType, theCase.getCaseManagerType());
 
-				if (caseAssets != null)
+				if (caseAssets != null) {
 					return caseAssets;
-				else
+				} else {
 					Logger.getLogger(getClass().getName()).log(
 					    Level.WARNING,
 					    "No case assets component resolved from case manager: "
 					            + caseManager.getType() + " by case pk: "
 					            + theCase.getPrimaryKey().toString());
-			} else
+				}
+			} else {
 				Logger.getLogger(getClass().getName()).log(
 				    Level.WARNING,
 				    "No case manager resolved by type="
 				            + theCase.getCaseManagerType());
+			}
 
 		} catch (Exception e) {
 			Logger.getLogger(getClass().getName()).log(Level.SEVERE,

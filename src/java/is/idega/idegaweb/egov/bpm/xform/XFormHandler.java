@@ -24,6 +24,7 @@ import com.idega.jbpm.exe.BPMDocument;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.presentation.BPMTaskViewer;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
@@ -57,22 +58,26 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 	}
 
 	private BPMFactory getBPMFactory() {
-		if (bpmFactory == null)
+		if (bpmFactory == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 		return bpmFactory;
 	}
 
 	private BPMDAO getBPMDAO() {
-		if (bpmDAO == null)
+		if (bpmDAO == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 		return bpmDAO;
 	}
 
 	private boolean isUserAbleToSubmitTask(User user, TaskInstanceW task) {
-		if (user == null || task == null)
+		if (user == null || task == null) {
 			return false;
+		}
 
-		List<BPMDocument> tasksForUser = task.getProcessInstanceW().getTaskDocumentsForUser(user, getCurrentLocale(), Boolean.FALSE);
+		IWContext iwc = CoreUtil.getIWContext();
+		List<BPMDocument> tasksForUser = task.getProcessInstanceW().getTaskDocumentsForUser(iwc, user, getCurrentLocale(), Boolean.FALSE);
 		if (ListUtil.isEmpty(tasksForUser)) {
 			getLogger().warning("There are no tasks available for the user " + user);
 			return false;
@@ -81,8 +86,9 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 			long tiId = task.getTaskInstanceId();
 			for (Iterator<BPMDocument> tasksIter = tasksForUser.iterator(); (!foundAvailableTask && tasksIter.hasNext());) {
 				Serializable id = tasksIter.next().getTaskInstanceId();
-				if (id instanceof Number)
+				if (id instanceof Number) {
 					foundAvailableTask = tiId == ((Number)id).longValue();
+				}
 
 			}
 
@@ -98,7 +104,9 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 	@Override
 	public boolean isPossibleToSubmitXForm(String uri) {
 		if (StringUtil.isEmpty(uri))
+		 {
 			return true;	//	Error - can not determine
+		}
 
 		User user = null;
 		try {
@@ -110,7 +118,9 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 		URIUtil uriUtil = new URIUtil(uri);
 		Map<String, String> params = uriUtil.getParameters();
 		if (params == null || params.isEmpty())
+		 {
 			return true;	//	Error - can not determine
+		}
 
 		try {
 			Long procDefId = null;
@@ -121,8 +131,9 @@ public class XFormHandler extends DefaultSpringBean implements XFormSubmissionVa
 				TaskInstanceW task = getBPMFactory().getProcessManagerByTaskInstanceId(tiId).getTaskInstance(tiId);
 				if (user == null) {
 					procDefId = task.getProcessInstanceW().getProcessDefinitionW().getProcessDefinitionId();
-				} else
+				} else {
 					return isUserAbleToSubmitTask(user, task);
+				}
 			} else if (params.containsKey(FormViewer.submissionIdParam)) {
 				String submissionId = params.get(FormViewer.submissionIdParam);
 				if (!StringHandler.isNumeric(submissionId)) {

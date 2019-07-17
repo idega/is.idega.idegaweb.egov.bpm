@@ -116,8 +116,9 @@ public class CasesBPMAssetsState implements Serializable {
 	private List<CaseStatePresentation> stateTable;
 
 	public Long getViewSelected() {
-		if (viewSelected == null)
+		if (viewSelected == null) {
 			viewSelected = getResolvedTaskInstanceId();
+		}
 
 		return viewSelected;
 	}
@@ -139,8 +140,9 @@ public class CasesBPMAssetsState implements Serializable {
 
 		if (tiIdParam != null && !CoreConstants.EMPTY.equals(tiIdParam)) {
 			tiId = new Long(tiIdParam);
-		} else
+		} else {
 			tiId = null;
+		}
 
 		return tiId;
 	}
@@ -171,8 +173,9 @@ public class CasesBPMAssetsState implements Serializable {
 
 		if(piIdParam != null && !CoreConstants.EMPTY.equals(piIdParam)) {
 			piId = new Long(piIdParam);
-		} else
+		} else {
 			piId = null;
+		}
 
 		return piId;
 	}
@@ -197,8 +200,9 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	public Long getProcessInstanceId() {
-		if (processInstanceId == null)
+		if (processInstanceId == null) {
 			processInstanceId = getResolvedProcessInstanceId();
+		}
 
 		return processInstanceId;
 	}
@@ -248,22 +252,25 @@ public class CasesBPMAssetsState implements Serializable {
 	}
 
 	private CasesBPMTaskViewBean getTaskView(Long taskId) {
-		if (taskId == null)
+		if (taskId == null) {
 			return null;
+		}
 
 		return getCasesBPMProcessView().getTaskView(taskId);
 	}
 
 	public CasesBPMProcessView getCasesBPMProcessView() {
-		if (casesBPMProcessView == null)
+		if (casesBPMProcessView == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 
 		return casesBPMProcessView;
 	}
 
 	public Integer getCaseId() {
-		if (caseId == null)
+		if (caseId == null) {
 			caseId = getResolvedCaseId();
+		}
 
 		return caseId;
 	}
@@ -312,8 +319,9 @@ public class CasesBPMAssetsState implements Serializable {
 		if(caseIdParam != null && !CoreConstants.EMPTY.equals(caseIdParam)) {
 
 			caseId = new Integer(caseIdParam);
-		} else
+		} else {
 			caseId = null;
+		}
 
 		return caseId;
 	}
@@ -397,8 +405,9 @@ public class CasesBPMAssetsState implements Serializable {
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 			getCasesBPMProcessView().startTask(getViewSelected(), iwc.getCurrentUserId());
 
-		} else
+		} else {
 			throw new RuntimeException("No view selected");
+		}
 	}
 
 	public void assignTask() {
@@ -408,8 +417,9 @@ public class CasesBPMAssetsState implements Serializable {
 			IWContext iwc = IWContext.getIWContext(FacesContext.getCurrentInstance());
 			getCasesBPMProcessView().assignTask(getViewSelected(), iwc.getCurrentUserId());
 
-		} else
+		} else {
 			throw new RuntimeException("No view selected");
+		}
 	}
 
 	public boolean isWatched() {
@@ -431,8 +441,9 @@ public class CasesBPMAssetsState implements Serializable {
 
 				String errMsg = getCasesBPMProcessView().getCanStartTask(getViewSelected(), userId);
 
-				if(errMsg == null)
+				if(errMsg == null) {
 					return true;
+				}
 			}
 		}
 
@@ -449,8 +460,9 @@ public class CasesBPMAssetsState implements Serializable {
 
 				String errMsg = getCasesBPMProcessView().getCanTakeTask(getViewSelected(), userId);
 
-				if(errMsg == null)
+				if(errMsg == null) {
 					return true;
+				}
 			}
 		}
 
@@ -607,7 +619,7 @@ public class CasesBPMAssetsState implements Serializable {
 				return showNextTask;
 			}
 
-			Long nextTaskId = getNextTaskId(id, getNextCaseId());
+			Long nextTaskId = getNextTaskId(iwc, id, getNextCaseId());
 			if (nextTaskId == null) {
 				LOGGER.info("NOT showing next task - couldn't resolve IDs for next task");
 				return showNextTask;
@@ -641,12 +653,12 @@ public class CasesBPMAssetsState implements Serializable {
 		if (nextTaskId == null) {
 			IWContext iwc = CoreUtil.getIWContext();
 			String id = iwc.getRequestURI();
-			nextTaskId = getNextTaskId(id, getNextCaseId());
+			nextTaskId = getNextTaskId(iwc, id, getNextCaseId());
 		}
 		return nextTaskId;
 	}
 
-	private Long getNextTaskId(String id, Integer nextCaseId) {
+	private Long getNextTaskId(IWContext iwc, String id, Integer nextCaseId) {
 		if (nextTaskId == null) {
 			if (nextCaseId == null) {
 				return null;
@@ -655,7 +667,7 @@ public class CasesBPMAssetsState implements Serializable {
 			ProcessInstanceW nextProcessInstance = getProcessInstance(getCasesBPMProcessView().getProcessInstanceId(nextCaseId));
 			if (nextProcessInstance == null) {
 				LOGGER.warning("Process instance was not found for case: " + nextCaseId);
-				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
+				return getNextTaskId(iwc, id, getNextCaseId(id, nextCaseId));
 			}
 
 			String currentTaskName = getCurrentTaskInstanceName();
@@ -666,14 +678,14 @@ public class CasesBPMAssetsState implements Serializable {
 
 			List<TaskInstanceW> allUnfinishedTasks = null;
 			try {
-				allUnfinishedTasks = nextProcessInstance.getAllUnfinishedTaskInstances();
+				allUnfinishedTasks = nextProcessInstance.getAllUnfinishedTaskInstances(iwc);
 			} catch(Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting unfinished tasks for process instance: " + nextProcessInstance.getProcessInstanceId(), e);
-				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
+				return getNextTaskId(iwc, id, getNextCaseId(id, nextCaseId));
 			}
 			if (ListUtil.isEmpty(allUnfinishedTasks)) {
 				LOGGER.warning("There are no unfinished tasks for process instance: " + nextProcessInstance.getProcessInstanceId());
-				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
+				return getNextTaskId(iwc, id, getNextCaseId(id, nextCaseId));
 			}
 
 			boolean found = false;
@@ -691,7 +703,7 @@ public class CasesBPMAssetsState implements Serializable {
 
 			if (nextTaskId == null) {
 				//	Particular task was not found - searching for it in next process instance
-				return getNextTaskId(id, getNextCaseId(id, nextCaseId));
+				return getNextTaskId(iwc, id, getNextCaseId(id, nextCaseId));
 			}
 		}
 		return nextTaskId;
@@ -726,8 +738,9 @@ public class CasesBPMAssetsState implements Serializable {
 		if (!specialBackPageDecoded) {
 			specialBackPageDecoded = true;
 
-			if (StringUtil.isEmpty(specialBackPage))
+			if (StringUtil.isEmpty(specialBackPage)) {
 				return null;
+			}
 
 			try {
 				specialBackPage = URLDecoder.decode(specialBackPage, CoreConstants.ENCODING_UTF8);

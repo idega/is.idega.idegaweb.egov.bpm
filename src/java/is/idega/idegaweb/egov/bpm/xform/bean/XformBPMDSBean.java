@@ -14,6 +14,7 @@ import com.idega.core.contact.data.Email;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.variables.BinaryVariable;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -47,8 +48,9 @@ public class XformBPMDSBean implements XformBPM {
 
 		List<Item> usersItem = new ArrayList<Item>();
 
-		for (User user : users)
+		for (User user : users) {
 			usersItem.add(new Item(user.getId(), user.getName()));
+		}
 
 		return usersItem;
 	}
@@ -59,8 +61,9 @@ public class XformBPMDSBean implements XformBPM {
 
 		List<Item> usersItem = new ArrayList<Item>();
 
-		for (User user : users)
+		for (User user : users) {
 			usersItem.add(new Item(user.getName(), user.getName()));
+		}
 
 		return usersItem;
 	}
@@ -72,9 +75,10 @@ public class XformBPMDSBean implements XformBPM {
 
 		List<Item> usersItem = new ArrayList<Item>();
 
-		for (User user : users)
+		for (User user : users) {
 			usersItem.add(new Item(getUserEmails(user.getEmails()), user
 			        .getName()));
+		}
 
 		return usersItem;
 	}
@@ -102,8 +106,9 @@ public class XformBPMDSBean implements XformBPM {
 
 		StringBuilder userEmails = new StringBuilder();
 
-		for (Email email : emails)
+		for (Email email : emails) {
 			userEmails.append(email.getEmailAddress());
+		}
 
 		return userEmails.toString();
 
@@ -117,7 +122,8 @@ public class XformBPMDSBean implements XformBPM {
 		List<Item> attachments = new ArrayList<Item>();
 
 		Locale locale = CoreUtil.getCurrentLocale();
-		for (BinaryVariable binaryVariable : piw.getAttachments())
+		IWContext iwc = CoreUtil.getIWContext();
+		for (BinaryVariable binaryVariable : piw.getAttachments(iwc)) {
 			if (binaryVariable.getHidden() == null || binaryVariable.getHidden().equals(false)) {
 				TaskInstance ti = getBpmFactory().getTaskInstanceW(binaryVariable.getTaskInstanceId()).getTaskInstance();
 				attachments.add(
@@ -127,6 +133,7 @@ public class XformBPMDSBean implements XformBPM {
 						)
 				);
 			}
+		}
 
 		return attachments;
 	}
@@ -134,13 +141,15 @@ public class XformBPMDSBean implements XformBPM {
 	@Override
 	public boolean hasProcessAttachments(String pid) {
 
-		if (pid.equals(CoreConstants.EMPTY))
+		if (pid.equals(CoreConstants.EMPTY)) {
 			return Boolean.FALSE;
+		}
 
 		long processInstanceId = Long.valueOf(pid);
 		ProcessInstanceW piw = getProcessInstanceW(processInstanceId);
 
-		return piw.getAttachments().size() != 0 ? Boolean.TRUE : Boolean.FALSE;
+		IWContext iwc = CoreUtil.getIWContext();
+		return piw.getAttachments(iwc).size() != 0 ? Boolean.TRUE : Boolean.FALSE;
 	}
 
 	private ProcessInstanceW getProcessInstanceW(Long pid) {

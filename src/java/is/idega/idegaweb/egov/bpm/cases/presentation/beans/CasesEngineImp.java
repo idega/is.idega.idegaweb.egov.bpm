@@ -592,7 +592,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias) {
 		return getCasesByQuery(criterias, false);
 	}
-	
+
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias, boolean isFirstPageIndexIsZero) {
 		if (criterias instanceof CasesListSearchCriteriaBean) {
@@ -627,7 +627,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	) {
 		return getCasesByQuery(iwc, criterias, false);
 	}
-	
+
 	private PagedDataCollection<CasePresentation> getCasesByQuery(
 			IWContext iwc,
 			CasesListSearchCriteriaBean criterias,
@@ -676,6 +676,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			retrievalManagers.parallelStream().forEach(retrievalManager -> {
 				try {
 					List<Integer> ids = retrievalManager.getCasePrimaryKeys(
+							iwc,
 							user,
 							casesProcessorType,
 							criterias.getCaseCodesInList(),
@@ -1358,7 +1359,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				boolean onlySubscribedCases = isShowSubscribedOnly(builder, pageKey, instanceId);
 
 				try {
-					getCaseManagersProvider().getCaseManager().getCaseIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, false, 0, Integer.MAX_VALUE);
+					IWContext iwc = CoreUtil.getIWContext();
+					getCaseManagersProvider().getCaseManager().getCaseIds(iwc, user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, false, 0, Integer.MAX_VALUE);
 				} catch (Exception e) {
 					getLogger().log(Level.WARNING, "Error loading cases for list " + theClass.getName() + " for user " + user +
 							" after login event", e);
@@ -1554,7 +1556,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 						processName = app.getUrl();
 						localizedName = processName;
 
-						if (appType.isVisible(app)) {
+						if (appType.isVisible(iwc, app)) {
 
 							if (StringUtil.isEmpty(processId)) {
 								Serializable id = caseManager.getLatestProcessDefinitionIdByProcessName(processName);
