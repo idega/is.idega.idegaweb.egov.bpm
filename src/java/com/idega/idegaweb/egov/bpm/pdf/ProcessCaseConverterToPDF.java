@@ -80,11 +80,12 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 		return bpmFactory.getProcessInstanceW(bind.getProcInstId());
 	}
 
-	private List<TaskInstanceW> getFinishedTasks(ProcessInstanceW piW) {
-		if (piW == null)
+	private List<TaskInstanceW> getFinishedTasks(IWContext iwc, ProcessInstanceW piW) {
+		if (piW == null) {
 			return null;
+		}
 
-		return piW.getSubmittedTaskInstances();
+		return piW.getSubmittedTaskInstances(iwc);
 	}
 
 	@Override
@@ -160,7 +161,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 				getLogger().warning("Proc. inst. ID can not be found for case: " + caseId);
 				return null;
 			}
-			List<TaskInstanceW> finishedTasks = getFinishedTasks(piW);
+			List<TaskInstanceW> finishedTasks = getFinishedTasks(iwc, piW);
 			if (ListUtil.isEmpty(finishedTasks)) {
 				getLogger().info("There are no submitted documents for case " + theCase + ", proc. inst. ID: " + piW.getProcessInstanceId() + ", identifier: " + identifier);
 				return null;
@@ -210,7 +211,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 						continue;
 					}
 
-					String name = tiW.getName(locale);
+					String name = tiW.getName(iwc, locale);
 					if (StringUtil.isEmpty(name)) {
 						getLogger().warning("Failed to resolve name for task instance: " + taskInstanceId);
 						continue;
@@ -233,7 +234,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 					pdfs.add(casePDF);
 
 					if (loadAttachments) {
-						List<BinaryVariable> attachments = tiW.getAttachments();
+						List<BinaryVariable> attachments = tiW.getAttachments(iwc);
 						if (!ListUtil.isEmpty(attachments)) {
 							for (BinaryVariable attachment: attachments) {
 								InputStream stream = attachmentsHandler.getBinaryVariableContent(attachment);

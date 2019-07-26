@@ -1,9 +1,5 @@
 package is.idega.idegaweb.egov.bpm.business;
 
-import is.idega.idegaweb.egov.bpm.bean.BPMAttachmentDownloadNotificationProperties;
-import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
-import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
-
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -32,10 +28,16 @@ import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.variables.BinaryVariable;
+import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
+import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
+
+import is.idega.idegaweb.egov.bpm.bean.BPMAttachmentDownloadNotificationProperties;
+import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserFactory;
+import is.idega.idegaweb.egov.bpm.cases.messages.CaseUserImpl;
 
 @Service(ProcessAttachmentDownloadNotifier.BEAN_IDENTIFIER)
 @Scope(BeanDefinition.SCOPE_SINGLETON)
@@ -49,13 +51,13 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 
 	public static final String BEAN_IDENTIFIER = "processAttachmentDownloadNotifier";
 	public static final String DWR_OBJECT = "ProcessAttachmentDownloadNotifier";
-	
+
 	@Autowired
 	private CaseUserFactory caseUserFactory;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	@RemoteMethod
 	public AdvancedProperty sendDownloadNotifications(BPMAttachmentDownloadNotificationProperties properties) {
 		return super.sendNotifications(properties);
@@ -66,41 +68,42 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 		if (!(properties instanceof BPMAttachmentDownloadNotificationProperties)) {
 			return null;
 		}
-		
+
 		BPMAttachmentDownloadNotificationProperties bpmProperties = (BPMAttachmentDownloadNotificationProperties) properties;
-		
+
 		URIUtil uri = new URIUtil(IWMainApplication.getDefaultIWMainApplication().getMediaServletURI());
-		
+
 		uri.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(AttachmentWriter.class));
 		uri.setParameter(AttachmentWriter.PARAMETER_TASK_INSTANCE_ID, bpmProperties.getTaskId().toString());
 		uri.setParameter(AttachmentWriter.PARAMETER_VARIABLE_HASH, bpmProperties.getHash().toString());
-		
+
 		if (user != null) {
 			uri.setParameter(LoginBusinessBean.PARAM_LOGIN_BY_UNIQUE_ID, user.getUniqueId());
 			uri.setParameter(LoginBusinessBean.LoginStateParameter, LoginBusinessBean.LOGIN_EVENT_LOGIN);
 		}
-		
+
 		return uri.getUri();
 	}
 
 	@Override
 	protected AdvancedProperty getFile(FileDownloadNotificationProperties properties) {
 		AdvancedProperty file = super.getFile(properties);
-		
+
 		if (file == null && properties instanceof BPMAttachmentDownloadNotificationProperties) {
 			BPMAttachmentDownloadNotificationProperties realProperties = (BPMAttachmentDownloadNotificationProperties) properties;
-			
+
 			file = getFile(realProperties.getHash());
-		
+
 			Integer fileHash = realProperties.getHash();
 			if (file == null && fileHash != null) {
+				IWContext iwc = CoreUtil.getIWContext();
 				ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
 				TaskInstanceW tiw = processManager.getTaskInstance(realProperties.getTaskId());
-				List<BinaryVariable> attachments = tiw.getAttachments();
+				List<BinaryVariable> attachments = tiw.getAttachments(iwc);
 				if (!ListUtil.isEmpty(attachments)) {
 					for (Iterator<BinaryVariable> variablesIter = attachments.iterator(); (variablesIter.hasNext() && file == null);) {
 						BinaryVariable attachment = variablesIter.next();
-						
+
 						Integer attachmenHash = attachment.getHash();
 						if (attachmenHash != null && attachmenHash.intValue() == fileHash.intValue()) {
 							file = new AdvancedProperty(String.valueOf(fileHash), attachment.getFileName());
@@ -109,7 +112,7 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 				}
 			}
 		}
-		
+
 		return file;
 	}
 
@@ -118,9 +121,9 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 		if (ListUtil.isEmpty(users) || !(properties instanceof BPMAttachmentDownloadNotificationProperties)) {
 			return null;
 		}
-		
+
 		BPMAttachmentDownloadNotificationProperties realProperties = (BPMAttachmentDownloadNotificationProperties) properties;
-		
+
 		ProcessInstanceW piw = null;
 		try {
 			ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
@@ -132,7 +135,7 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 		if (piw == null) {
 			return null;
 		}
-		
+
 		Map<String, String> linksForUsers = new HashMap<String, String>();
 		for (User user: users) {
 			CaseUserImpl caseUser = null;
@@ -141,7 +144,7 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			
+
 			String uri = null;
 			if (caseUser == null) {
 				uri = properties.getUrl();
@@ -155,11 +158,11 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 					uri = uriUtil.getUri();
 				}
 			}
-			
+
 			uri = StringUtil.isEmpty(uri) ? properties.getUrl() : uri;
 			linksForUsers.put(user.getId(), uri);
 		}
-		
+
 		return linksForUsers;
 	}
 

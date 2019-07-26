@@ -154,8 +154,9 @@ public class ApplicationTypeBPM extends DefaultSpringBean implements Application
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			if (pd == null)
+			if (pd == null) {
 				continue;
+			}
 
 			menu.addMenuElement(String.valueOf(pd.getId()), pd.getName());
 		}
@@ -165,8 +166,9 @@ public class ApplicationTypeBPM extends DefaultSpringBean implements Application
 	public String getSelectedElement(ApplicationModel app) {
 		try {
 			final String pdName = app.getUrl();
-			if (StringUtil.isEmpty(pdName))
+			if (StringUtil.isEmpty(pdName)) {
 				return String.valueOf(-1);
+			}
 
 			BPMFactory bpmFactory = getBpmFactory();
 			BPMDAO bpmDAO = bpmFactory.getBPMDAO();
@@ -215,8 +217,9 @@ public class ApplicationTypeBPM extends DefaultSpringBean implements Application
 		String url = CoreConstants.HASH;
 		try {
 			String pdName = app.getUrl();
-			if (pdName == null)
+			if (pdName == null) {
 				return url;
+			}
 
 			String uri = getBuilderService(iwc).getFullPageUrlByPageType(iwc, egovBPMPageType, true);
 
@@ -278,20 +281,20 @@ public class ApplicationTypeBPM extends DefaultSpringBean implements Application
 	 * then that user will be able to open the form (and submit)
 	 */
 	@Override
-	public boolean isVisible(ApplicationModel app) {
+	public boolean isVisible(IWContext iwc, ApplicationModel app) {
 		try {
-			IWContext iwc = IWContext.getCurrentInstance();
-
-			if (iwc != null && iwc.isSuperAdmin())
+			if (iwc != null && iwc.isSuperAdmin()) {
 				return true;
+			}
 
 			final Long pdId = new Long(getSelectedElement(app));
 
 			final ProcessDefinitionW pdw = getBpmFactory().getProcessManager(pdId).getProcessDefinition(pdId);
 
 			final List<String> rolesCanStart = pdw.getRolesCanStartProcess(app.getPrimaryKey());
-			if (ListUtil.isEmpty(rolesCanStart))
+			if (ListUtil.isEmpty(rolesCanStart)) {
 				return true;
+			}
 
 			if (iwc != null && iwc.isLoggedOn()) {
 				User usr = iwc.getCurrentUser();

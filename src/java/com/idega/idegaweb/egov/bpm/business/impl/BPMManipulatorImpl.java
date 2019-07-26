@@ -242,19 +242,19 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 					}
 
 					ProcessInstanceW piW = bpmFactory.getProcessInstanceW(piId);
-					TaskInstanceW startTiW = piW.getStartTaskInstance();
+					TaskInstanceW startTiW = piW.getStartTaskInstance(iwc);
 					if (startTiW == null || !startTiW.isSubmitted()) {
 						getLogger().warning("Unable to find start task instance for proc. inst. ID " + piId + " or start task (" + startTiW + ") is not submitted");
 						return false;
 					}
 
-					Long newProcInstId = getIdOfNewProcess(context, piW, startTiW, caseId);
+					Long newProcInstId = getIdOfNewProcess(iwc, context, piW, startTiW, caseId);
 					if (newProcInstId == null) {
 						getLogger().warning("Failed to start new proc. inst. for old proc. inst.: " + piId);
 						return false;
 					}
 
-					List<TaskInstanceW> allSubmittedTasks = onlyStart ? null : piW.getSubmittedTaskInstances();
+					List<TaskInstanceW> allSubmittedTasks = onlyStart ? null : piW.getSubmittedTaskInstances(iwc);
 					if (!ListUtil.isEmpty(allSubmittedTasks)) {
 						Collections.sort(allSubmittedTasks, new Comparator<TaskInstanceW>() {
 
@@ -282,7 +282,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 							Long submittedTaskInstanceId = submittedTask.getTaskInstanceId();
 							if (submittedTaskInstanceId.longValue() != startTaskInstId) {
-								if (doSubmitTask(context, piW, submittedTask, newPiw)) {
+								if (doSubmitTask(iwc, context, piW, submittedTask, newPiw)) {
 									submitted.put(name, Boolean.TRUE);
 								} else {
 									getLogger().warning("Unable to re-submit task instance " + submittedTask + " for proc. inst. " + piId);
@@ -314,6 +314,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 	}
 
 	private boolean doSubmitTask(
+			IWContext iwc,
 			JbpmContext context,
 			ProcessInstanceW oldPiW,
 			TaskInstanceW oldTiW,
@@ -324,8 +325,8 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			org.jbpm.taskmgmt.def.Task task = oldTi.getTask();
 
 			org.jbpm.graph.exe.Token token = oldTi.getToken();
-			Map<String, Object> variables = oldTiW.getVariables(token);
-			List<BinaryVariable> attachments = oldTiW.getAttachments();
+			Map<String, Object> variables = oldTiW.getVariables(iwc, token);
+			List<BinaryVariable> attachments = oldTiW.getAttachments(iwc);
 
 			Object mainProcessInstanceId = variables.get("mainProcessInstanceId");
 			if (mainProcessInstanceId instanceof Long) {
@@ -333,7 +334,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			}
 			variables.remove("files_attachments");
 
-			TaskInstanceW submittedTaskInstW = newPiW.getSubmittedTaskInstance(task.getName(), variables);
+			TaskInstanceW submittedTaskInstW = newPiW.getSubmittedTaskInstance(iwc, task.getName(), variables);
 			if (submittedTaskInstW == null) {
 				return false;
 			}
@@ -389,13 +390,14 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 	}
 
 	private Long getIdOfNewProcess(
+			IWContext iwc,
 			JbpmContext context,
 			ProcessInstanceW piW,
 			TaskInstanceW startTiW,
 			final Integer caseId
 	) {
 		try {
-			List<BinaryVariable> attachments = startTiW.getAttachments();
+			List<BinaryVariable> attachments = startTiW.getAttachments(iwc);
 
 			String procDefName = piW.getProcessDefinitionW(context).getProcessDefinitionName();
 
@@ -429,7 +431,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 			org.jbpm.taskmgmt.exe.TaskInstance ti = context.getTaskInstance(startTiW.getTaskInstanceId());
 			org.jbpm.graph.exe.Token token = ti.getToken();
-			Map<String, Object> variables = startTiW.getVariables(token);
+			Map<String, Object> variables = startTiW.getVariables(iwc, token);
 			if (variables.containsKey("mainProcessInstanceId")) {
 				variables.remove("mainProcessInstanceId");
 			}
@@ -439,10 +441,10 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			viewSubmission.populateParameters(parameters);
 
 			ProcessDefinitionW pdw = bpmFactory.getProcessManager(processDefinitionId).getProcessDefinition(processDefinitionId);
-			Long piId = pdw.startProcess(viewSubmission);
+			Long piId = pdw.startProcess(iwc, viewSubmission);
 			if (piId != null) {
 				ProcessInstanceW newPiW = bpmFactory.getProcessInstanceW(context, piId);
-				if (doUpdateTaskInstance(context, ti, newPiW.getStartTaskInstance(), attachments)) {
+				if (doUpdateTaskInstance(context, ti, newPiW.getStartTaskInstance(iwc), attachments)) {
 					return piId;
 				}
 			}
@@ -552,7 +554,8 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 		}
 
 		ProcessInstanceW piW = bpmFactory.getProcessInstanceW(procInstId);
-		TaskInstanceW startTaskInstance = piW.getStartTaskInstance();
+		IWContext iwc = CoreUtil.getIWContext();
+		TaskInstanceW startTaskInstance = piW.getStartTaskInstance(iwc);
 		if (startTaskInstance == null) {
 			getLogger().warning("Start task is unknown for proc. inst.: " + procInstId);
 			return false;

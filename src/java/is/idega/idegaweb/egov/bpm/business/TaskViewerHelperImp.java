@@ -1,9 +1,5 @@
 package is.idega.idegaweb.egov.bpm.business;
 
-import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
-import is.idega.idegaweb.egov.cases.presentation.CaseViewer;
-import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,22 +26,26 @@ import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
 import com.idega.util.datastructures.map.MapUtil;
 
+import is.idega.idegaweb.egov.bpm.cases.presentation.beans.CasesBPMAssetsState;
+import is.idega.idegaweb.egov.cases.presentation.CaseViewer;
+import is.idega.idegaweb.egov.cases.presentation.CasesProcessor;
+
 @Service
 @Scope("singleton")
 @Transactional
 public class TaskViewerHelperImp implements TaskViewerHelper {
 
 	private static final Logger LOGGER = Logger.getLogger(TaskViewerHelperImp.class.getName());
-	
+
 	public static final String PROCESS_INSTANCE_ID_PARAMETER = "processInstanceId";
 	public static final String TASK_NAME_PARAMETER = "taskName";
 	public static final String CASE_ID_PARAMETER = "caseId";
 	public static final String BACK_PAGE_PARAMETER = "backPage";
 	public static final String TASK_VIEWER_PAGE_REQUESTED_PARAMETER = "taskViewerPageRequested";
-	
+
 	@Autowired
 	private BuilderLogicWrapper builderLogicWrapper;
-	
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -55,9 +55,9 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 	 */
 	@Override
 	public Map<Long, String> getLinksToTheTaskRedirector(
-			IWContext iwc, 
-			Map<Long, ProcessInstance> relations, 
-			boolean backPage, 
+			IWContext iwc,
+			Map<Long, ProcessInstance> relations,
+			boolean backPage,
 			String taskName) {
 
 		if (iwc == null || StringUtil.isEmpty(taskName) || MapUtil.isEmpty(relations)) {
@@ -91,15 +91,15 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 			}
 
 			casesWithLinks.put(
-					theCase, 
+					theCase,
 					iwc.getIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri()));
-		}		
+		}
 
 		return casesWithLinks;
 	}
 
 	/**
-	 * 
+	 *
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	protected String getCurrentPageUri(IWContext iwc) {
@@ -120,18 +120,19 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 		return uri;
 	}
 
+	@Override
 	public String getLinkToTheTaskRedirector(IWContext iwc, String basePage, String caseId, Long processInstanceId, String backPage, String taskName) {
 		if (iwc == null || StringUtil.isEmpty(basePage) || StringUtil.isEmpty(taskName)) {
 			return null;
 		}
-		
+
 		URIUtil uriUtil = null;
-		if (getBpmFactory().getProcessInstanceW(processInstanceId).hasEnded()) {
+		if (getBpmFactory().getProcessInstanceW(processInstanceId).hasEnded(iwc)) {
 			uriUtil = new URIUtil(BuilderLogic.getInstance().getFullPageUrlByPageType(iwc, "bpm_assets_view", true));
 			uriUtil.setParameter("piId", String.valueOf(processInstanceId));
 			return iwc.getIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri());
 		}
-		
+
 		uriUtil = new URIUtil(basePage);
 		uriUtil.setParameter(TASK_VIEWER_PAGE_REQUESTED_PARAMETER, Boolean.TRUE.toString());
 		uriUtil.setParameter(CASE_ID_PARAMETER, caseId);
@@ -143,7 +144,8 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 
 		return iwc.getIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri());
 	}
-	
+
+	@Override
 	public String getLinkToTheTask(IWContext iwc, String caseId, String taskInstanceId, String backPage) {
 		URIUtil uriUtil = new URIUtil(getPageUriForTaskViewer(iwc));
 		uriUtil.setParameter(CasesProcessor.PARAMETER_ACTION, String.valueOf(UserCases.ACTION_CASE_MANAGER_VIEW));
@@ -152,34 +154,36 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 		if (!StringUtil.isEmpty(backPage)) {
 			uriUtil.setParameter(CasesBPMAssetsState.CASES_ASSETS_SPECIAL_BACK_PAGE_PARAMETER, backPage.toString());
 		}
-		
+
 		return IWMainApplication.getDefaultIWMainApplication().getTranslatedURIWithContext(uriUtil.getUri());
 	}
-	
+
+	@Override
 	public String getPageUriForTaskViewer(IWContext iwc) {
 		String uri = getBuilderLogicWrapper().getBuilderService(iwc).getFullPageUrlByPageType(iwc, BPMUser.defaultAssetsViewPageType, true);
 		return StringUtil.isEmpty(uri) ? iwc.getRequestURI() : uri;
 	}
-	
+
+	@Override
 	public String getTaskInstanceIdForTask(Long processInstanceId, String taskName) {
 		if (processInstanceId == null || StringUtil.isEmpty(taskName)) {
 			LOGGER.warning("Insufficient data: process instance ID: " + processInstanceId + ", task name: " + taskName);
 			return null;
 		}
-		
+
 		try {
 			ProcessInstanceW piw = getBpmFactory().getProcessInstanceW(processInstanceId);
-			
+
 			TaskInstanceW gradingTIW = piw.getSingleUnfinishedTaskInstanceForTask(taskName);
-			
-			if (gradingTIW != null)
+
+			if (gradingTIW != null) {
 				return String.valueOf(gradingTIW.getTaskInstanceId());
-			else {
+			} else {
 				LOGGER.log(Level.WARNING, "No grading task found for processInstance="+processInstanceId);
-				
+
 				return null;
 			}
-			
+
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error getting grading task instance for process = " + processInstanceId, e);
 			return null;
@@ -201,5 +205,5 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 	public void setBpmFactory(BPMFactory bpmFactory) {
 		this.bpmFactory = bpmFactory;
 	}
-	
+
 }

@@ -262,7 +262,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	@Override
 	public List<BPMDocument> getTaskBPMDocuments(
 			Collection<ProcessInstanceW> processInstances,
-			User owner, Locale locale) {
+			User owner, Locale locale
+	) {
 		if (ListUtil.isEmpty(processInstances) || owner == null) {
 			return Collections.emptyList();
 		}
@@ -271,9 +272,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			locale = getCurrentLocale();
 		}
 
-		ArrayList<BPMDocument> taskDocuments = new ArrayList<BPMDocument>();
+		IWContext iwc = CoreUtil.getIWContext();
+		List<BPMDocument> taskDocuments = new ArrayList<BPMDocument>();
 		for (ProcessInstanceW instance: processInstances) {
-			List<BPMDocument> entities = instance.getTaskDocumentsForUser(owner, locale);
+			List<BPMDocument> entities = instance.getTaskDocumentsForUser(iwc, owner, locale);
 			if (ListUtil.isEmpty(entities)) {
 				continue;
 			}
@@ -291,7 +293,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	@Override
 	public List<BPMDocument> getSubmittedBPMDocuments(
 			Collection<ProcessInstanceW> processInstances,
-			User owner, Locale locale) {
+			User owner, Locale locale
+	) {
 		if (ListUtil.isEmpty(processInstances) || owner == null) {
 			return Collections.emptyList();
 		}
@@ -300,9 +303,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			locale = getCurrentLocale();
 		}
 
-		ArrayList<BPMDocument> submittedDocuments = new ArrayList<BPMDocument>();
+		IWContext iwc = CoreUtil.getIWContext();
+		List<BPMDocument> submittedDocuments = new ArrayList<BPMDocument>();
 		for (ProcessInstanceW instance: processInstances) {
-			List<BPMDocument> entities = instance.getSubmittedDocumentsForUser(owner, locale);
+			List<BPMDocument> entities = instance.getSubmittedDocumentsForUser(iwc, owner, locale);
 			if (ListUtil.isEmpty(entities)) {
 				continue;
 			}
@@ -638,7 +642,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 			return casesAssets;
 		} else {
-			AbstractCasesBPMAssets casesAssets =  (AbstractCasesBPMAssets)iwc.getApplication().createComponent(stateBean.getCustomView());
+			AbstractCasesBPMAssets casesAssets = (AbstractCasesBPMAssets)iwc.getApplication().createComponent(stateBean.getCustomView());
 
 			UIViewRoot viewRoot = iwc.getViewRoot();
 			if (viewRoot != null) {
@@ -706,7 +710,9 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				roles = getApplication().getAccessController().getAllRolesForUser(user);
 			}
 
+			IWContext iwc = CoreUtil.getIWContext();
 			List<Integer> casesIds = getCasePrimaryKeys(
+					iwc,
 					user,
 					type,
 					caseCodes,
@@ -777,6 +783,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public List<Integer> getCasePrimaryKeys(
+			IWContext iwc,
 			User user,
 			String type,
 			List<String> caseCodes,
@@ -811,6 +818,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public List<Integer> getCaseIds(
+			IWContext iwc,
 			User user,
 			String type,
 			List<String> caseCodes,
@@ -826,6 +834,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public List<Integer> getCaseIds(
+			IWContext iwc,
 			User user,
 			String type,
 			List<String> caseCodes,
@@ -1734,7 +1743,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return null;
 		}
 
-		List<TaskInstanceW> tasks = processInstance.getAllUnfinishedTaskInstances();
+		List<TaskInstanceW> tasks = processInstance.getAllUnfinishedTaskInstances(CoreUtil.getIWContext());
 		if (ListUtil.isEmpty(tasks)) {
 			return null;
 		}

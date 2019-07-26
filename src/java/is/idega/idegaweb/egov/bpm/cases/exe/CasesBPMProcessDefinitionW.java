@@ -410,7 +410,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	@Transactional(readOnly = false)
 	@Override
-	public <T extends Serializable> T startProcess(final ViewSubmission viewSubmission) {
+	public <T extends Serializable> T startProcess(IWContext iwc, final ViewSubmission viewSubmission) {
 		final Long processDefinitionId = viewSubmission.getProcessDefinitionId();
 
 		if (!processDefinitionId.equals(getProcessDefinitionId())) {
