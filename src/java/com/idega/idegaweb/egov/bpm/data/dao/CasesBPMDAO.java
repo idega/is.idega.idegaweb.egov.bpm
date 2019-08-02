@@ -254,6 +254,8 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public Long getProcessInstanceIdByCaseSubject(String subject);
 
+	public Long getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus);
+
 	public List<Integer> getCasesIdsByHandlersAndProcessDefinition(List<Integer> handlersIds, String procDefName);
 
 	public List<Long> getProcessInstanceIdsForSubscribedCases(com.idega.user.data.User user);

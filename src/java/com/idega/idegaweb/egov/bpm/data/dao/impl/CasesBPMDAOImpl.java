@@ -1870,6 +1870,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public Long getProcessInstanceIdByCaseSubject(String subject) {
+		return getProcessInstanceIdByCaseSubjectAndStatus(subject, null);
+	}
+
+	@Override
+	public Long getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus) {
 		if (StringUtil.isEmpty(subject)) {
 			LOGGER.warning("Case subject is not provided!");
 			return null;
@@ -1877,8 +1882,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		List<Serializable[]> data = null;
 		String query = "select b." + CaseProcInstBind.procInstIdColumnName + " from " + CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.TABLE_NAME + " c where" +
-				" c." + CaseBMPBean.COLUMN_CASE_SUBJECT + " = '" + subject + "' and b." + CaseProcInstBind.caseIdColumnName + " = c." + CaseBMPBean.PK_COLUMN +
-				" order by c." +  CaseBMPBean.COLUMN_CREATED + " desc";
+				" c." + CaseBMPBean.COLUMN_CASE_SUBJECT + " = '" + subject + "' ";
+		if (!StringUtil.isEmpty(caseStatus)) {
+			query = query + " and c." + CaseBMPBean.COLUMN_CASE_STATUS + " = '" + caseStatus + "' ";
+		}
+		query = query + " and b." + CaseProcInstBind.caseIdColumnName + " = c." + CaseBMPBean.PK_COLUMN + " order by c." +  CaseBMPBean.COLUMN_CREATED + " desc";
 		try {
 			data = SimpleQuerier.executeQuery(query, 1);
 		} catch (Exception e) {
