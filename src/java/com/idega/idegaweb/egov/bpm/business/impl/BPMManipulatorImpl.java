@@ -206,6 +206,21 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			return false;
 		}
 
+		return doReSubmit(iwc.getLoggedInUser(), iwc, bind, onlyStart, submitRepeatedTasks);
+	}
+
+	@Override
+	public boolean doReSubmit(User user, IWContext iwc, final CaseProcInstBind bind, final boolean onlyStart, final boolean submitRepeatedTasks) {
+		try {
+			if (user == null || (iwc != null && !iwc.isSuperAdmin()) || iwc.getAccessController().getAdministratorUser().getId().intValue() != user.getId().intValue()) {
+				getLogger().warning("Wrong user: " + user);
+				return false;
+			}
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error resolving access rights", e);
+			return false;
+		}
+
 		return bpmContext.execute(new JbpmCallback<Boolean>() {
 
 			@Override
