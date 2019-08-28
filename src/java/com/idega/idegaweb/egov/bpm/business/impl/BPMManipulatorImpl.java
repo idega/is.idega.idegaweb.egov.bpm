@@ -49,7 +49,9 @@ import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
+import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.bean.VariableInstanceType;
+import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessDefinitionW;
@@ -77,8 +79,8 @@ import com.idega.util.expression.ELUtil;
 public class BPMManipulatorImpl extends DefaultSpringBean implements
 		BPMManipulator {
 
-	static final String BEAN_NAME = "bpmManipulator",
-			DWR_OBJECT = "BPMManipulator";
+	static final String BEAN_NAME =	"bpmManipulator",
+									DWR_OBJECT = "BPMManipulator";
 
 	@Autowired
 	private BPMFactory bpmFactory;
@@ -91,6 +93,9 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 	@Autowired
 	private DataConvertersFactory convertersFactory;
+
+	@Autowired
+	private VariableInstanceQuerier variableInstanceQuerier;
 
 	private DataConvertersFactory getConvertersFactory() {
 		if (convertersFactory == null) {
@@ -258,9 +263,43 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 					ProcessInstanceW piW = bpmFactory.getProcessInstanceW(piId);
 					TaskInstanceW startTiW = piW.getStartTaskInstance(iwc);
-					if (startTiW == null || !startTiW.isSubmitted()) {
-						getLogger().warning("Unable to find start task instance for proc. inst. ID " + piId + " or start task (" + startTiW + ") is not submitted");
+					if (startTiW == null) {
+						getLogger().warning("Unable to find start task instance for proc. inst. ID " + piId);
 						return false;
+					}
+
+					if (!startTiW.isSubmitted()) {
+						Map<String, Object> vars = null;
+						try {
+							ViewSubmission viewSubmission = bpmFactory.getViewSubmission();
+							viewSubmission.setTaskInstanceId(startTiW.getTaskInstanceId());
+							Collection<VariableInstanceInfo> data = variableInstanceQuerier.getVariablesByProcessInstanceId(piId);
+							if (!ListUtil.isEmpty(data)) {
+								vars = new HashMap<>();
+								for (VariableInstanceInfo var: data) {
+									if (var == null) {
+										continue;
+									}
+									String name = var.getName();
+									if (StringUtil.isEmpty(name)) {
+										continue;
+									}
+									Object value = var.getValue();
+									if (value == null) {
+										continue;
+									}
+
+									vars.put(name, value);
+								}
+								viewSubmission.populateVariables(vars);
+							}
+							startTiW.submit(viewSubmission);
+							getLogger().info("Submitted not submitted start task (" + startTiW + " for proc. inst. " + piW + " with variables " + vars + ") - did not need to re-create process");
+						} catch (Exception e) {
+							getLogger().log(Level.WARNING, "Failed to submit not submitted start task (" + startTiW + " for proc. inst. " + piW + " with variables " + vars + ")", e);
+							return false;
+						}
+						return true;
 					}
 
 					Long newProcInstId = getIdOfNewProcess(iwc, context, piW, startTiW, caseId);
