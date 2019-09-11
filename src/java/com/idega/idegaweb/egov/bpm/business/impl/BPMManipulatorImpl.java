@@ -38,12 +38,14 @@ import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.xformsview.converters.DataConvertersFactory;
 import com.idega.builder.bean.AdvancedProperty;
+import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.accesscontrol.business.LoginBusinessBean;
 import com.idega.core.accesscontrol.business.LoginDBHandler;
 import com.idega.core.accesscontrol.dao.UserLoginDAO;
 import com.idega.core.accesscontrol.data.bean.UserLogin;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.data.IDOLookup;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.business.BPMManipulator;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -217,8 +219,12 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 	@Override
 	public boolean doReSubmit(User user, IWContext iwc, final CaseProcInstBind bind, final boolean onlyStart, final boolean submitRepeatedTasks) {
 		try {
-			if (user == null || (iwc != null && !iwc.isSuperAdmin()) || iwc.getAccessController().getAdministratorUser().getId().intValue() != user.getId().intValue()) {
-				getLogger().warning("Wrong user: " + user);
+			AccessController accessController = getApplication().getAccessController();
+			boolean wrongUserFromContext = iwc != null && !iwc.isSuperAdmin();
+			User superAdmin = accessController.getAdministratorUser();
+			boolean notSuperAdmin = user == null || superAdmin.getId().intValue() != user.getId().intValue();
+			if (user == null || wrongUserFromContext || notSuperAdmin) {
+				getLogger().warning("Wrong user: " + user + ". Context: " + iwc);
 				return false;
 			}
 		} catch (Exception e) {
@@ -232,7 +238,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			public Boolean doInJbpm(JbpmContext context) throws JbpmException {
 				UserLogin login = null;
 				boolean hasLogin = false;
-				LoginBusinessBean loginBusiness = LoginBusinessBean.getLoginBusinessBean(iwc);
+				LoginBusinessBean loginBusiness = LoginBusinessBean.getLoginBusinessBean(iwc == null ? IWMainApplication.getDefaultIWApplicationContext(): iwc);
 				try {
 					Long piId = bind == null ? null : bind.getProcInstId();
 					Integer caseId = bind == null ? null : bind.getCaseId();
@@ -258,7 +264,9 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 								return false;
 							}
 						}
-						loginBusiness.logInAsAnotherUser(iwc, author);
+						if (iwc != null) {
+							loginBusiness.logInAsAnotherUser(iwc, author);
+						}
 					}
 
 					ProcessInstanceW piW = bpmFactory.getProcessInstanceW(piId);
@@ -355,10 +363,12 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 				} catch (Exception e) {
 					getLogger().log(Level.WARNING, "Failed to re-submit case/process for bind " + bind, e);
 				} finally {
-					try {
-						loginBusiness.logInAsAnotherUser(iwc, iwc.getAccessController().getAdministratorUser());
-					} catch (Exception e) {
-						getLogger().log(Level.WARNING, "Error logging in as super admin", e);
+					if (iwc != null) {
+						try {
+							loginBusiness.logInAsAnotherUser(iwc, superAdmin);
+						} catch (Exception e) {
+							getLogger().log(Level.WARNING, "Error logging in as super admin", e);
+						}
 					}
 					doDeleteLogin(context.getSession(), login);
 				}
