@@ -218,10 +218,11 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 
 	@Override
 	public boolean doReSubmit(User user, IWContext iwc, final CaseProcInstBind bind, final boolean onlyStart, final boolean submitRepeatedTasks) {
+		User superAdmin = null;
 		try {
-			AccessController accessController = getApplication().getAccessController();
 			boolean wrongUserFromContext = iwc != null && !iwc.isSuperAdmin();
-			User superAdmin = accessController.getAdministratorUser();
+			AccessController accessController = getApplication().getAccessController();
+			superAdmin = accessController.getAdministratorUser();
 			boolean notSuperAdmin = user == null || superAdmin.getId().intValue() != user.getId().intValue();
 			if (user == null || wrongUserFromContext || notSuperAdmin) {
 				getLogger().warning("Wrong user: " + user + ". Context: " + iwc);
@@ -231,6 +232,8 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			getLogger().log(Level.WARNING, "Error resolving access rights", e);
 			return false;
 		}
+
+		final User admin = superAdmin;
 
 		return bpmContext.execute(new JbpmCallback<Boolean>() {
 
@@ -363,9 +366,9 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 				} catch (Exception e) {
 					getLogger().log(Level.WARNING, "Failed to re-submit case/process for bind " + bind, e);
 				} finally {
-					if (iwc != null) {
+					if (iwc != null && admin != null) {
 						try {
-							loginBusiness.logInAsAnotherUser(iwc, superAdmin);
+							loginBusiness.logInAsAnotherUser(iwc, admin);
 						} catch (Exception e) {
 							getLogger().log(Level.WARNING, "Error logging in as super admin", e);
 						}
