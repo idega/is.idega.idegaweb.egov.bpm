@@ -71,7 +71,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 			if (ListUtil.isEmpty(apps)) {
 				return null;
 			}
-			String prefix = getCustomIdentifierPrefix(apps);
+			String prefix = getCustomIdentifierPrefix(apps.iterator().next());
 			if(StringUtil.isEmpty(prefix)) {
 				return null;
 			}
@@ -112,30 +112,29 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		return null;
 	}
 	
-	private String getCustomIdentifierPrefix(
-			Collection<Application> apps
-	) {
-		for (Application app: apps) {
-			String prefix = app.getIdentifierPrefix();
+	private String getAccessPrefix(Application app) {
+		List<ApplicationAccess> accessList = applicationDAO.getApplicationAccessDescendingByLevel(
+				(Integer)app.getPrimaryKey()
+		);
+		for(ApplicationAccess access : accessList) {
+			String prefix = getGroupCaseIdentifierPrefix(
+					access.getGroup()
+			);
 			if(!StringUtil.isEmpty(prefix)) {
 				return prefix;
 			}
-			List<ApplicationAccess> accessList = applicationDAO.getApplicationAccessDescendingByLevel(
-					(Integer)app.getPrimaryKey()
-			);
-			if(ListUtil.isEmpty(accessList)) {
-				continue;
-			}
-			for(ApplicationAccess access : accessList) {
-				prefix = getGroupCaseIdentifierPrefix(
-						access.getGroup()
-				);
-				if(!StringUtil.isEmpty(prefix)) {
-					return prefix;
-				}
-			}
 		}
-		return null;
+		return IDENTIFIER_PREFIX;
+	}
+	private String getCustomIdentifierPrefix(
+			Application app
+	) {
+		String accessPrefix = getAccessPrefix(app);
+		String servicePrefix = app.getIdentifierPrefix();
+		if(StringUtil.isEmpty(servicePrefix)) {
+			return accessPrefix;
+		}
+		return accessPrefix + CoreConstants.MINUS + servicePrefix;
 	}
 	
 	private String getMetadataCaseIdentifierPrefix(Metadata metadata) {
