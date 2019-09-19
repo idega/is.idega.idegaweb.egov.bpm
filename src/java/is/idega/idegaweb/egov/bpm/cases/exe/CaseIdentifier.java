@@ -112,29 +112,33 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		return null;
 	}
 	
+	private String getCustomIdentifierPrefix(
+			Application app
+	) {
+		String servicePrefix = app.getIdentifierPrefix();
+		if(!StringUtil.isEmpty(servicePrefix)) {
+			return servicePrefix;
+		}
+		return getAccessPrefix(app);
+	}
+	
 	private String getAccessPrefix(Application app) {
 		List<ApplicationAccess> accessList = applicationDAO.getApplicationAccessDescendingByLevel(
 				(Integer)app.getPrimaryKey()
 		);
+		if(ListUtil.isEmpty(accessList)) {
+			return null;
+		}
 		for(ApplicationAccess access : accessList) {
 			String prefix = getGroupCaseIdentifierPrefix(
 					access.getGroup()
 			);
-			if(!StringUtil.isEmpty(prefix)) {
-				return prefix;
+			if(StringUtil.isEmpty(prefix)) {
+				continue;
 			}
+			return prefix;
 		}
-		return IDENTIFIER_PREFIX;
-	}
-	private String getCustomIdentifierPrefix(
-			Application app
-	) {
-		String accessPrefix = getAccessPrefix(app);
-		String servicePrefix = app.getIdentifierPrefix();
-		if(StringUtil.isEmpty(servicePrefix)) {
-			return accessPrefix;
-		}
-		return accessPrefix + CoreConstants.MINUS + servicePrefix;
+		return null;
 	}
 	
 	private String getMetadataCaseIdentifierPrefix(Metadata metadata) {
