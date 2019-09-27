@@ -846,7 +846,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Integer pageSize,
 			Boolean handlerAssignedCases,
 			List<Integer> exceptOwnersIds,
-			List<String> exceptCaseCodes
+			List<String> exceptCaseCodes,
+			List<Integer> userIdsToUseInSearch
 	) throws Exception {
 		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize, exceptOwnersIds);
 	}
