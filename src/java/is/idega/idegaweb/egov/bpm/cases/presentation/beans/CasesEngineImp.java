@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -1517,8 +1518,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
+		List<AdvancedProperty> allProcesses = null;
 		Map<ApplicationType, Collection<Application>> appsByType = new HashMap<>();
-		List<AdvancedProperty> allProcesses = new ArrayList<AdvancedProperty>();
 		for (String appTypeName: appTypeNames) {
 			ApplicationType appType = null;
 			try {
@@ -1540,6 +1541,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 
 			Locale locale = iwc.getCurrentLocale();
+			Map<String, AdvancedProperty> results = new LinkedHashMap<String, AdvancedProperty>();
 			for (CasesRetrievalManager caseManager: managers.values()) {
 				String processId = null;
 				String processName = null;
@@ -1554,6 +1556,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					for (Application app: apps) {
 						processId = null;
 						processName = app.getUrl();
+						if (StringUtil.isEmpty(processName) || results.containsKey(processName)) {
+							continue;
+						}
+
 						localizedName = processName;
 
 						if (appType.isVisible(iwc, app)) {
@@ -1568,7 +1574,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 							localizedName = caseManager.getProcessName(processName, locale);
 
 							if (!StringUtil.isEmpty(processId) && !StringUtil.isEmpty(localizedName)) {
-								allProcesses.add(new AdvancedProperty(processId, localizedName, processName));
+								results.put(processName, new AdvancedProperty(processId, localizedName, processName));
 							}
 						}
 						else {
@@ -1579,11 +1585,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				}
 			}
 
-			if (ListUtil.isEmpty(allProcesses)) {
+			if (MapUtil.isEmpty(results)) {
 				return null;
 			}
 
-			Collections.sort(allProcesses, new AdvancedPropertyComparator(iwc.getCurrentLocale()));
+			allProcesses = new ArrayList<>(results.values());
+			Collections.sort(allProcesses, new AdvancedPropertyComparator(locale));
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting names of BPM processes for " + appsByType, e);
 		}
