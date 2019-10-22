@@ -22,6 +22,8 @@ import com.idega.util.CoreUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.application.data.Application;
+
 public abstract class DefaultIdentifierGenerator extends DefaultSpringBean {
 
 	private static final Logger LOGGER = Logger.getLogger(DefaultIdentifierGenerator.class.getName());
@@ -47,6 +49,8 @@ public abstract class DefaultIdentifierGenerator extends DefaultSpringBean {
 	 * @return
 	 */
 	protected abstract Object[] getNewCaseIdentifier(String name, String usedIdentifier);
+
+	public abstract String getCaseIdentifierPrefix(Application app);
 
 	protected synchronized boolean canUseIdentifier(String identifier) {
 		//	0.	Checking if identifier is not empty

@@ -43,14 +43,14 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 	public static final String QUALIFIER = "defaultCaseIdentifier";
 
 	public static final String IDENTIFIER_PREFIX = "P";
-	
+
 	public static final String METADATA_CASE_IDENTIFIER_PREFIX = "case_identifier_prefix";
 
 	private CaseIdentifierBean lastCaseIdentifierNumber;
 
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Autowired
 	private ApplicationDAO applicationDAO;
 
@@ -72,7 +72,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 				return null;
 			}
 			String prefix = getCustomIdentifierPrefix(apps.iterator().next());
-			if(StringUtil.isEmpty(prefix)) {
+			if (StringUtil.isEmpty(prefix)) {
 				return null;
 			}
 
@@ -92,65 +92,69 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 				}
 			} catch (Exception e) {
 				getLogger().log(
-						Level.WARNING, 
-						"Error getting custom identifier for name " 
-									+ name 
-									+ " and prefix " 
-									+ prefix, 
+						Level.WARNING,
+						"Error getting custom identifier for name "
+									+ name
+									+ " and prefix "
+									+ prefix,
 						e
 				);
 			}
 		} catch (Exception e) {
 			getLogger().log(
-					Level.WARNING, 
-					"Error getting custom identifier for name " 
-								+ name, 
+					Level.WARNING,
+					"Error getting custom identifier for name "
+								+ name,
 					e
 			);
 		}
 
 		return null;
 	}
-	
-	private String getCustomIdentifierPrefix(
-			Application app
-	) {
+
+	@Override
+	public String getCaseIdentifierPrefix(Application app) {
+		String prefix = getCustomIdentifierPrefix(app);
+		return StringUtil.isEmpty(prefix) ? IDENTIFIER_PREFIX : prefix;
+	}
+
+	private String getCustomIdentifierPrefix(Application app) {
+		if (app == null) {
+			return null;
+		}
+
 		String servicePrefix = app.getIdentifierPrefix();
-		if(!StringUtil.isEmpty(servicePrefix)) {
+		if (!StringUtil.isEmpty(servicePrefix)) {
 			return servicePrefix;
 		}
 		return getAccessPrefix(app);
 	}
-	
+
 	private String getAccessPrefix(Application app) {
-		List<ApplicationAccess> accessList = applicationDAO.getApplicationAccessDescendingByLevel(
-				(Integer)app.getPrimaryKey()
-		);
-		if(ListUtil.isEmpty(accessList)) {
+		List<ApplicationAccess> accessList = applicationDAO.getApplicationAccessDescendingByLevel((Integer)app.getPrimaryKey());
+		if (ListUtil.isEmpty(accessList)) {
 			return null;
 		}
-		for(ApplicationAccess access : accessList) {
-			String prefix = getGroupCaseIdentifierPrefix(
-					access.getGroup()
-			);
-			if(StringUtil.isEmpty(prefix)) {
+
+		for (ApplicationAccess access : accessList) {
+			String prefix = getGroupCaseIdentifierPrefix(access.getGroup());
+			if (StringUtil.isEmpty(prefix)) {
 				continue;
 			}
 			return prefix;
 		}
 		return null;
 	}
-	
+
 	private String getMetadataCaseIdentifierPrefix(Metadata metadata) {
-		if(metadata == null) {
+		if (metadata == null) {
 			return null;
 		}
 		return metadata.getValue();
 	}
+
 	private String getGroupCaseIdentifierPrefix(Group group) {
-		return getMetadataCaseIdentifierPrefix(
-				group.getMetadata(METADATA_CASE_IDENTIFIER_PREFIX)
-		);
+		return getMetadataCaseIdentifierPrefix(group.getMetadata(METADATA_CASE_IDENTIFIER_PREFIX));
 	}
 
 	@Override
