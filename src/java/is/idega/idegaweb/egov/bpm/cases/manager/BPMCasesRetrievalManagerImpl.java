@@ -781,7 +781,6 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), Long.valueOf(0));
 	}
 
-	@Override
 	public List<Integer> getCasePrimaryKeys(
 			IWContext iwc,
 			User user,
@@ -796,6 +795,26 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Collection<Long> handlerCategoryIDs,
 			List<Integer> exceptOwnersIds,
 			boolean searchQuery
+	) throws Exception {
+		return getCasePrimaryKeys(iwc, user, type, caseCodes, caseStatusesToHide, caseStatusesToShow, onlySubscribedCases, showAllCases, procInstIds, roles, handlerCategoryIDs, exceptOwnersIds, searchQuery, null);
+	}
+
+	@Override
+	public List<Integer> getCasePrimaryKeys(
+			IWContext iwc,
+			User user,
+			String type,
+			List<String> caseCodes,
+			List<String> caseStatusesToHide,
+			List<String> caseStatusesToShow,
+			boolean onlySubscribedCases,
+			boolean showAllCases,
+			List<Long> procInstIds,
+			Set<String> roles,
+			Collection<Long> handlerCategoryIDs,
+			List<Integer> exceptOwnersIds,
+			boolean searchQuery,
+			Boolean onlyCasesRequiringAction
 	) throws Exception {
 		return getCasesIds(
 				user,

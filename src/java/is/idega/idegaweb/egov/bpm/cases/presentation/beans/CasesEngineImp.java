@@ -689,7 +689,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 							criterias.getRoles(),
 							handlerCategoryIds,
 							null,
-							true
+							true,
+							null
 					);
 					if (!ListUtil.isEmpty(ids)) {
 						casesIDs.addAll(ids);
