@@ -548,4 +548,6 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public CaseTypesProcDefBind getConfiguredCaseTypesProcDefBind(String procDefName);
 
+	public Map<Integer, String> getUUIDsByCasesIds(Collection<Integer> casesIds);
+
 }

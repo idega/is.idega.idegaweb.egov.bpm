@@ -2847,6 +2847,55 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
+	public Map<Integer, String> getUUIDsByCasesIds(Collection<Integer> casesIds) {
+		if (ListUtil.isEmpty(casesIds)) {
+			return null;
+		}
+
+		try {
+			List<Object[]> allData = getResultListByInlineQuery(
+					"select c.caseId, c.uuid FROM " + CaseProcInstBind.class.getName() + " c WHERE c.caseId in (:" + CaseProcInstBind.caseIdProp + ")",
+					Object[].class,
+					new Param(CaseProcInstBind.caseIdProp, casesIds)
+			);
+			if (ListUtil.isEmpty(allData)) {
+				return null;
+			}
+
+			Map<Integer, String> results = new HashMap<>();
+			for (Object[] data: allData) {
+				if (ArrayUtil.isEmpty(data) || data.length < 2) {
+					continue;
+				}
+
+				Integer caseId = null;
+				String uuid = null;
+
+				Object id = data[0];
+				if (id instanceof Number) {
+					caseId = ((Number) id).intValue();
+				}
+				id = data[1];
+				if (id instanceof String) {
+					uuid = (String) id;
+				}
+
+				if (caseId == null || StringUtil.isEmpty(uuid)) {
+					continue;
+				}
+
+				results.put(caseId, uuid);
+			}
+
+			return results;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting UUIDs by cases IDs " + casesIds, e);
+		}
+
+		return null;
+	}
+
+	@Override
 	@Transactional(readOnly = false)
 	public CaseTypesProcDefBind getConfiguredCaseTypesProcDefBind(String procDefName) {
 		if (StringUtil.isEmpty(procDefName)) {
