@@ -88,3 +88,8 @@ case_status_key.ASSI=Tilldelat
 case_status_key.HOLD=Väntar
 case_status_key.SPAM=Skräppost
 case_status_key.RECE=Kvitto
+
+bpm_variable.string_ownerEmailAddress=Konsumentens e-postadress
+bpm_variable.string_sellerName=Säljarens namn
+bpm_variable.string_sellerPersonalId=Säljarens personliga id
+bpm_variable.string_sellerEmailAddress=Säljarens e-postadress

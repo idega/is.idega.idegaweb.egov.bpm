@@ -193,3 +193,8 @@ case_status_key.ASSI=Úthlutað
 case_status_key.HOLD=Á bið
 case_status_key.SPAM=Ruslpóstur
 case_status_key.RECE=Kvittun
+
+bpm_variable.string_ownerEmailAddress=Málshefjandi netfang
+bpm_variable.string_sellerName=Gagnaðili
+bpm_variable.string_sellerPersonalId=Gagnaðili kennitala
+bpm_variable.string_sellerEmailAddress=Gagnaðili netfang

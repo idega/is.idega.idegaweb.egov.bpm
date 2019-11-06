@@ -125,3 +125,9 @@ bpm_variable.long_issueStatusId=Status
 
 bpm_variable.string_ownerGender=Gender
 bpm_variable.string_propertyAddress=Property address
+
+
+bpm_variable.string_ownerEmailAddress=Consumer email address
+bpm_variable.string_sellerName=Seller name
+bpm_variable.string_sellerPersonalId=Seller personal id
+bpm_variable.string_sellerEmailAddress=Seller email address
