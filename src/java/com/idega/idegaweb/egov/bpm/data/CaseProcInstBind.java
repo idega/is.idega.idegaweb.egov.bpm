@@ -66,7 +66,11 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 					"org.jbpm.graph.def.ProcessDefinition pd where pd.name in (:procDefNames) and pd.id = pi.processDefinition.id and pi.id = cp.procInstId and pc.caseStatus in (:statuses) and pc.id = cp.caseId" +
 					" order by pc.created desc"
 	),
-	@NamedQuery(name=CaseProcInstBind.QUERY_GET_CASE_ID_BY_PROC_INST_ID, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp.procInstId  = :" + CaseProcInstBind.procInstIdProp)
+	@NamedQuery(name=CaseProcInstBind.QUERY_GET_CASE_ID_BY_PROC_INST_ID, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp.procInstId  = :" + CaseProcInstBind.procInstIdProp),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_FIND_ALL_UUIDS,
+			query = "select cp.uuid from CaseProcInstBind cp where cp.uuid is not null"
+	)
 })
 
 @SqlResultSetMappings({
@@ -282,7 +286,8 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getProcInstIdsByCaseStatus";
 	public static final String getProcInstIdsByCaseStatusesAndProcDefNamesNewestOnTop = "CaseProcInstBind.getProcInstIdsByCaseStatusNewestOnTop";
 	public static final String getCountedProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getCountedProcInstIdsByCaseStatus",
-								QUERY_GET_CASE_ID_BY_PROC_INST_ID = "CaseProcInstBind.getCaseIdByProcInstId";
+								QUERY_GET_CASE_ID_BY_PROC_INST_ID = "CaseProcInstBind.getCaseIdByProcInstId",
+								QUERY_FIND_ALL_UUIDS = "CaseProcInstBind.findAllUUIDs";
 
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";

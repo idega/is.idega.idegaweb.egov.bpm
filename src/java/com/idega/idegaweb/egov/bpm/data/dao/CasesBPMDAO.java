@@ -550,4 +550,6 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public Map<Integer, String> getUUIDsByCasesIds(Collection<Integer> casesIds);
 
+	public List<String> getAllUUIDs();
+
 }

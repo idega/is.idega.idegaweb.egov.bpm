@@ -2958,4 +2958,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 	}
 
+	@Override
+	public List<String> getAllUUIDs() {
+		try {
+			return getResultList(CaseProcInstBind.QUERY_FIND_ALL_UUIDS, String.class);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting UUIDs", e);
+		}
+		return null;
+	}
+
 }
