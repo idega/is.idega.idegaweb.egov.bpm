@@ -494,7 +494,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			return result;
 		} finally {
 			if (piId != null) {
-				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(getProcessDefinitionId()), piId, variables);
+				Long pdId = getProcessDefinitionId();
+				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(pdId), pdId, piId, variables);
 			}
 		}
 	}
