@@ -2,7 +2,9 @@ package is.idega.idegaweb.egov.bpm.cases.exe;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 
 import javax.ejb.FinderException;
@@ -14,6 +16,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.data.bean.Metadata;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.user.data.bean.Group;
@@ -21,6 +24,7 @@ import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -38,7 +42,7 @@ import is.idega.idegaweb.egov.application.data.dao.ApplicationDAO;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Service
 @Qualifier(CaseIdentifier.QUALIFIER)
-public class CaseIdentifier extends DefaultIdentifierGenerator {
+public class CaseIdentifier extends DefaultIdentifierGenerator implements IdentifierGenerator {
 
 	public static final String QUALIFIER = "defaultCaseIdentifier";
 
@@ -46,13 +50,36 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 
 	public static final String METADATA_CASE_IDENTIFIER_PREFIX = "case_identifier_prefix";
 
+	private static final String CASE_IDENTIFIER_LAST_RESET_SUFFIX = "case_identifier_last_reset";
+
 	private CaseIdentifierBean lastCaseIdentifierNumber;
+
+	private Map<String, Object[]> dataForPrefixes = new HashMap<>();
 
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
 	@Autowired
 	private ApplicationDAO applicationDAO;
+
+	private int getCaseIdentifierResetInterval() {
+		return getApplication().getSettings().getInt("case_identifier_reset_interval", 1);
+	}
+
+	private long getCounterResetForPrefix(String prefix) {
+		String key = prefix.concat(CoreConstants.DOT).concat(CASE_IDENTIFIER_LAST_RESET_SUFFIX);
+		IWMainApplicationSettings settings = getApplication().getSettings();
+		String lastReset = settings.getProperty(key);
+		if (StringHandler.isNumeric(lastReset)) {
+			return Long.valueOf(lastReset);
+		}
+		return -1;
+	}
+
+	private void setCounterResetForPrefix(String prefix, long time) {
+		String key = prefix.concat(CoreConstants.DOT).concat(CASE_IDENTIFIER_LAST_RESET_SUFFIX);
+		getApplication().getSettings().setProperty(key, String.valueOf(time));
+	}
 
 	private Object[] getCustomIdentifier(String name) {
 		if (StringUtil.isEmpty(name)) {
@@ -86,7 +113,8 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 				return null;
 			}
 			try {
-				Object[] identifierData = generator.generatePrefixedCaseIdentifier(prefix);
+				Object[] data = getData(prefix, new IWTimestamp(), generator.getMaxIdentifierValue());
+				Object[] identifierData = data == null || data.length < 3 ? null : generator.getCaseIdentifierWithPrefix((int) data[0], (long) data[1], (Integer) data[2], prefix);
 				if (!ArrayUtil.isEmpty(identifierData)) {
 					return identifierData;
 				}
@@ -183,20 +211,45 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 
 		CaseIdentifierBean scopedCI;
 
+		int resetInterval = getCaseIdentifierResetInterval();
 		if (lastCaseIdentifierNumber == null || !currentTime.equals(lastCaseIdentifierNumber.time)) {
 			lastCaseIdentifierNumber = new CaseIdentifierBean();
 
-			CaseProcInstBind b = getCasesBPMDAO().getCaseProcInstBindLatestByDateQN(new Date());
+			CaseProcInstBind b = null;
 
-			if (b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
-				lastCaseIdentifierNumber.time = new IWTimestamp(b.getDateCreated());
-				lastCaseIdentifierNumber.time.setAsDate();
-				lastCaseIdentifierNumber.number = b.getCaseIdentierID();
-			} else {
-				lastCaseIdentifierNumber.time = currentTime;
-				lastCaseIdentifierNumber.time.setAsDate();
-				lastCaseIdentifierNumber.number = 0;
+			switch (resetInterval) {
+			case 365:
+				Object[] data = getData(IDENTIFIER_PREFIX, new IWTimestamp(), getMaxIdentifierValue());
+				Integer latestCaseIdentifierForCurrentPrefix = data == null || data.length < 3 ? 0 : (Integer) data[2];
+				latestCaseIdentifierForCurrentPrefix = latestCaseIdentifierForCurrentPrefix == getMaxIdentifierValue() ? 0 : latestCaseIdentifierForCurrentPrefix;
+
+				if (lastCaseIdentifierNumber.number == null || lastCaseIdentifierNumber.number < 0) {
+					lastCaseIdentifierNumber.time = currentTime;
+					lastCaseIdentifierNumber.time.setAsDate();
+					lastCaseIdentifierNumber.number = latestCaseIdentifierForCurrentPrefix;
+				}
+
+				break;
+
+			default:
+				b = getCasesBPMDAO().getCaseProcInstBindLatestByDateQN(new Date());
+
+				if (b != null && b.getDateCreated() != null && b.getCaseIdentierID() != null) {
+					lastCaseIdentifierNumber.time = new IWTimestamp(b.getDateCreated());
+					lastCaseIdentifierNumber.time.setAsDate();
+					lastCaseIdentifierNumber.number = b.getCaseIdentierID();
+				} else {
+					lastCaseIdentifierNumber.time = currentTime;
+					lastCaseIdentifierNumber.time.setAsDate();
+					lastCaseIdentifierNumber.number = 0;
+				}
+
+				break;
 			}
+		}
+		if (resetInterval != 1) {
+			lastCaseIdentifierNumber.time = currentTime;
+			lastCaseIdentifierNumber.time.setAsDate();
 		}
 
 		scopedCI = lastCaseIdentifierNumber;
@@ -224,10 +277,14 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		private Integer number;
 
 		String generate() {
+			if (number + 1 > getMaxIdentifierValue()) {
+				number = 0;
+			}
 			String nr = String.valueOf(++number);
 
+			String zero = String.valueOf(0);
 			while (nr.length() < 4) {
-				nr = "0" + nr;
+				nr = zero.concat(nr);
 			}
 
 			return new StringBuffer(IDENTIFIER_PREFIX)
@@ -266,6 +323,55 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 		return lastCaseIdentifierNumber;
 	}
 
+	private Object[] getData(String prefix, IWTimestamp now, int maxIdentifierValue) {
+		if (StringUtil.isEmpty(prefix)) {
+			return null;
+		}
+
+		if (dataForPrefixes.containsKey(prefix)) {
+			return dataForPrefixes.get(prefix);
+		}
+
+		int interval = getCaseIdentifierResetInterval();
+		switch (interval) {
+		case 365:
+			IWTimestamp yearAgo = new IWTimestamp();
+			yearAgo.setYear(yearAgo.getYear() - 1);
+			long lastReset = getCounterResetForPrefix(prefix);
+			if (lastReset < 0) {
+				CaseProcInstBind firstBind = casesBPMDAO.getFirstBindForPrefix(prefix);
+				if (firstBind != null && firstBind.getDateCreated() != null) {
+					lastReset = firstBind.getDateCreated().getTime();
+				}
+			}
+
+			Integer latestCaseIdentifierForCurrentPrefix = 0;
+			//	If first bind for prefix is not older than 1 year - counter will continue. Otherwise it will be reset
+			if (lastReset > yearAgo.getTime().getTime()) {
+				//	Continue with counter
+				CaseProcInstBind latestBind = casesBPMDAO.getLatestBindForPrefix(prefix);
+				if (latestBind != null && latestBind.getCaseIdentierID() != null) {
+					latestCaseIdentifierForCurrentPrefix = latestBind.getCaseIdentierID();
+				}
+			} else {
+				now = now == null ? new IWTimestamp() : now;
+				lastReset = now.getTime().getTime();
+				setCounterResetForPrefix(prefix, lastReset);
+			}
+			latestCaseIdentifierForCurrentPrefix = latestCaseIdentifierForCurrentPrefix == maxIdentifierValue ? 0 : latestCaseIdentifierForCurrentPrefix;
+			Object[] data = new Object[] {interval, lastReset, latestCaseIdentifierForCurrentPrefix};
+			dataForPrefixes.put(prefix, data);
+			return data;
+
+		default:
+			getLogger().warning("Reset interval " + interval + " is not implemented");
+
+			break;
+		}
+
+		return null;
+	}
+
 	@Override
 	public CasesBPMDAO getCasesBPMDAO() {
 		return casesBPMDAO;
@@ -275,4 +381,10 @@ public class CaseIdentifier extends DefaultIdentifierGenerator {
 	public void setCasesBPMDAO(CasesBPMDAO casesBPMDAO) {
 		this.casesBPMDAO = casesBPMDAO;
 	}
+
+	@Override
+	public int getMaxIdentifierValue() {
+		return 9999;
+	}
+
 }
