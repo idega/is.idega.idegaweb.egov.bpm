@@ -49,6 +49,15 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 	@NamedQuery(name=CaseProcInstBind.BIND_BY_PROCESSES_IDS_QUERY_NAME, query="from CaseProcInstBind bind where bind.procInstId in (:"+CaseProcInstBind.procInstIdsParam + ")"),
 	@NamedQuery(name=CaseProcInstBind.getLatestByDateQN, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = :"+CaseProcInstBind.dateCreatedProp+" and cp."+CaseProcInstBind.caseIdentierIDProp+" = (select max(cp2."+CaseProcInstBind.caseIdentierIDProp+") from CaseProcInstBind cp2 where cp2."+CaseProcInstBind.dateCreatedProp+" = cp."+CaseProcInstBind.dateCreatedProp+")"),
 	@NamedQuery(name=CaseProcInstBind.getLastCreatedCase, query="from CaseProcInstBind cp where cp."+CaseProcInstBind.dateCreatedProp+" = (select max(cp2."+CaseProcInstBind.dateCreatedProp+") from CaseProcInstBind cp2) order by cp."+CaseProcInstBind.dateCreatedProp + ", cp."+CaseProcInstBind.caseIdentierIDProp),
+	@NamedQuery(
+			name = CaseProcInstBind.getFirstBindForPrefix,
+			query = "from CaseProcInstBind cp where cp." + CaseProcInstBind.caseIdentifierProp + " like :prefix order by cp." + CaseProcInstBind.dateCreatedProp
+	),
+	@NamedQuery(
+			name = CaseProcInstBind.getLatestBindForPrefix,
+			query = "from CaseProcInstBind cp where cp." + CaseProcInstBind.dateCreatedProp + " = (select max(cp2." + CaseProcInstBind.dateCreatedProp + ") from CaseProcInstBind cp2) and cp." +
+					CaseProcInstBind.caseIdentifierProp + " like :prefix order by cp." + CaseProcInstBind.dateCreatedProp + ", cp." + CaseProcInstBind.caseIdentierIDProp
+	),
 	@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getCaseIdByProcessInstanceId, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp."+ CaseProcInstBind.procInstIdProp + " = :" + CaseProcInstBind.procInstIdProp),
@@ -257,6 +266,8 @@ public class CaseProcInstBind implements Serializable {
 								BIND_BY_PROCESSES_IDS_QUERY_NAME = "CaseProcInstBind.bindByProcInstIdsQuery";
 	public static final String getLatestByDateQN = "CaseProcInstBind.getLatestByDate";
 	public static final String getLastCreatedCase = "CaseProcInstBind.getLastCreatedCase";
+	public static final String getFirstBindForPrefix = "CaseProcInstBind.getFirstBindForPrefix";
+	public static final String getLatestBindForPrefix = "CaseProcInstBind.getLatestBindForPrefix";
 	public static final String getCaseIdByProcessInstanceId="CaseProcInstBind.getCaseIdByPIID";
 	public static final String getCaseIdsByProcessInstanceIds = "CaseProcInstBind.getCaseIdsByPIIDs";
 	public static final String getByDateCreatedAndCaseIdentifierId = "CaseProcInstBind.getByDateCreatedAndCaseIdentifierId";

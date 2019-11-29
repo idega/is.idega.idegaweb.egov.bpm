@@ -2128,8 +2128,10 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			ProcessInstanceCreatedEvent procCreatedEvent = (ProcessInstanceCreatedEvent) event;
 
-			Long piId = Long.valueOf(procCreatedEvent.getProcessInstanceId());
-			doUpdateBPMCase(piId);
+			Serializable piId = procCreatedEvent.getProcessInstanceId();
+			if (piId instanceof Long) {
+				doUpdateBPMCase(piId);
+			}
 		} else if (event instanceof CaseDeletedEvent) {
 			if (!isCacheUpdateTurnedOn()) {
 				try {

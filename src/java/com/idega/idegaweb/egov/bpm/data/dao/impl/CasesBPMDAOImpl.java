@@ -2968,4 +2968,34 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return null;
 	}
 
+	@Override
+	public CaseProcInstBind getFirstBindForPrefix(String prefix) {
+		return getBindForPrefix(prefix, false);
+	}
+
+	@Override
+	public CaseProcInstBind getLatestBindForPrefix(String prefix) {
+		return getBindForPrefix(prefix, true);
+	}
+
+	private CaseProcInstBind getBindForPrefix(String prefix, boolean latest) {
+		if (StringUtil.isEmpty(prefix)) {
+			return null;
+		}
+
+		try {
+			prefix = prefix.concat("-%");
+			List<CaseProcInstBind> binds = getResultList(
+					latest ? CaseProcInstBind.getLatestBindForPrefix : CaseProcInstBind.getFirstBindForPrefix,
+					CaseProcInstBind.class,
+					new Param("prefix", prefix)
+			);
+			return ListUtil.isEmpty(binds) ? null : binds.iterator().next();
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting latest bind for prefix " + prefix, e);
+		}
+
+		return null;
+	}
+
 }

@@ -552,4 +552,7 @@ public interface CasesBPMDAO extends GenericDao {
 
 	public List<String> getAllUUIDs();
 
+	public CaseProcInstBind getFirstBindForPrefix(String prefix);
+	public CaseProcInstBind getLatestBindForPrefix(String prefix);
+
 }
