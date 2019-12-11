@@ -28,6 +28,8 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseCode;
 import com.idega.block.process.data.CaseStatus;
 import com.idega.block.process.data.model.CaseCodeModel;
@@ -58,9 +60,11 @@ import com.idega.presentation.IWContext;
 import com.idega.presentation.PresentationObject;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
+import com.idega.user.data.bean.Group;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
@@ -70,6 +74,7 @@ import is.idega.idegaweb.egov.application.business.ApplicationBusiness;
 import is.idega.idegaweb.egov.application.business.ApplicationTypesManager;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
+import is.idega.idegaweb.egov.application.data.bean.ApplicationAccess;
 import is.idega.idegaweb.egov.application.data.dao.ApplicationDAO;
 import is.idega.idegaweb.egov.bpm.application.AppSupportsManager;
 import is.idega.idegaweb.egov.bpm.application.AppSupportsManagerFactory;
@@ -168,8 +173,71 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		return null;
 	}
 
-	private GeneralCase getCase(String caseId, String procDefName, CasesBusiness casesBusiness, User author, IWMainApplication iwma,
-			String caseStatusKey, String realCaseCreationDate, String caseIdentifier) {
+	private Integer getHandlerGroupId(String procDefName, String caseId) {
+		if (StringUtil.isEmpty(procDefName) && StringUtil.isEmpty(caseId)) {
+			return null;
+		}
+
+		try {
+			ApplicationBusiness appBusiness = getServiceInstance(ApplicationBusiness.class);
+			Application app = null;
+
+			if (!StringUtil.isEmpty(procDefName)) {
+				Collection<Application> apps = null;
+				try {
+					apps = appBusiness.getApplicationHome().findAllByApplicationUrl(procDefName);
+				} catch (Exception e) {}
+				app = ListUtil.isEmpty(apps) ? null : apps.iterator().next();
+			}
+
+			if (app == null && StringHandler.isNumeric(caseId)) {
+				CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
+				Case theCase = caseBusiness.getCase(Integer.valueOf(caseId));
+				CaseCode caseCode = theCase.getCaseCode();
+				String code = caseCode == null ? null : caseCode.getCode();
+				if (!StringUtil.isEmpty(code)) {
+					Collection<Application> apps = null;
+					try {
+						apps = appBusiness.getApplicationHome().findAllByCaseCode(code);
+					} catch (Exception e) {}
+					app = ListUtil.isEmpty(apps) ? null : apps.iterator().next();
+				}
+			}
+
+			if (app == null) {
+				return null;
+			}
+
+			List<ApplicationAccess> accesses = getApplicationDAO().getApplicationAccessDescendingByLevel((Integer) app.getPrimaryKey());
+			if (ListUtil.isEmpty(accesses)) {
+				return null;
+			}
+
+			for (ApplicationAccess access: accesses) {
+				Group group = access.getGroup();
+				if (group == null) {
+					continue;
+				}
+
+				return group.getID();
+			}
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting handler group ID for " + procDefName, e);
+		}
+
+		return null;
+	}
+
+	private GeneralCase getCase(
+			String caseId,
+			String procDefName,
+			CasesBusiness casesBusiness,
+			User author,
+			IWMainApplication iwma,
+			String caseStatusKey,
+			String realCaseCreationDate,
+			String caseIdentifier
+	) {
 		IWResourceBundle iwrb = null;
 		GeneralCase genCase = null;
 		if (!StringUtil.isEmpty(caseId)) {
@@ -190,6 +258,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			caseCategoryId = bind.getCasesCategoryId();
 			caseTypeId = bind.getCasesTypeId();
 
+			Integer handlerGroupId = getHandlerGroupId(procDefName, caseId);
+
 			final Date caseCreated = StringUtil.isEmpty(realCaseCreationDate) ?
 					new Timestamp(System.currentTimeMillis()) :
 					new IWTimestamp(realCaseCreationDate).getTimestamp();
@@ -206,7 +276,12 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						BPMCasesRetrievalManagerImpl.caseHandlerType,
 						false,
 						iwrb,
-						false, caseIdentifier, true, caseStatusKey, new IWTimestamp(caseCreated).getTimestamp()
+						false,
+						caseIdentifier,
+						true,
+						caseStatusKey,
+						new IWTimestamp(caseCreated).getTimestamp(),
+						handlerGroupId
 			);
 
 			if (genCase != null) {
