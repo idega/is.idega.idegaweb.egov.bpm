@@ -866,6 +866,27 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Boolean handlerAssignedCases,
 			List<Integer> exceptOwnersIds,
 			List<String> exceptCaseCodes,
+			List<Integer> userIdsToUseInSearch,
+			Boolean onlyCasesRequiringAction
+	) throws Exception {
+		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize, exceptOwnersIds);
+	}
+
+	@Override
+	public List<Integer> getCaseIds(
+			IWContext iwc,
+			User user,
+			String type,
+			List<String> caseCodes,
+			List<String> statusesToHide,
+			List<String> statusesToShow,
+			boolean onlySubscribedCases,
+			boolean showAllCases,
+			Integer page,
+			Integer pageSize,
+			Boolean handlerAssignedCases,
+			List<Integer> exceptOwnersIds,
+			List<String> exceptCaseCodes,
 			List<Integer> userIdsToUseInSearch
 	) throws Exception {
 		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize, exceptOwnersIds);

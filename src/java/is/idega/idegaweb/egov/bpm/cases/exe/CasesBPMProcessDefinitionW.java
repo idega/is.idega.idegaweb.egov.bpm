@@ -97,6 +97,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	private String processDefinitionName;
 
+	private String caseManagerType = com.idega.block.process.business.ProcessConstants.BPM_CASE;
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
@@ -273,7 +275,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						null,
 						"This is simple cases-jbpm-formbuilder integration example.",
 						null,
-						BPMCasesRetrievalManagerImpl.caseHandlerType,
+						StringUtil.isEmpty(getCaseManagerType()) ? BPMCasesRetrievalManagerImpl.caseHandlerType : getCaseManagerType(),
 						false,
 						iwrb,
 						false,
@@ -921,6 +923,14 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	public void setProcessDefinitionName(String processDefinitionName) {
 		this.processDefinitionName = processDefinitionName;
+	}
+
+	public String getCaseManagerType() {
+		return caseManagerType;
+	}
+
+	public void setCaseManagerType(String caseManagerType) {
+		this.caseManagerType = caseManagerType;
 	}
 
 }
