@@ -87,18 +87,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 		}
 
 		try {
-			ApplicationBusiness appBusiness = getServiceInstance(ApplicationBusiness.class);
-			Collection<Application> apps = null;
-			try {
-				apps = appBusiness.getApplicationHome().findAllByApplicationUrl(name);
-			} catch (FinderException e) {
-			} catch (Exception e) {
-				getLogger().log(Level.WARNING, "Error getting app by URL " + name, e);
-			}
-			if (ListUtil.isEmpty(apps)) {
-				return null;
-			}
-			String prefix = getCustomIdentifierPrefix(apps.iterator().next());
+			String prefix = getPrefixForName(name);
 			if (StringUtil.isEmpty(prefix)) {
 				return null;
 			}
@@ -119,22 +108,10 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 					return identifierData;
 				}
 			} catch (Exception e) {
-				getLogger().log(
-						Level.WARNING,
-						"Error getting custom identifier for name "
-									+ name
-									+ " and prefix "
-									+ prefix,
-						e
-				);
+				getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name + " and prefix " + prefix, e);
 			}
 		} catch (Exception e) {
-			getLogger().log(
-					Level.WARNING,
-					"Error getting custom identifier for name "
-								+ name,
-					e
-			);
+			getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name, e);
 		}
 
 		return null;
@@ -187,21 +164,29 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 
 	@Override
 	public synchronized Object[] getNewCaseIdentifier(String name) {
-		if (!StringUtil.isEmpty(name)) {
-			Object[] identifierData = getCustomIdentifier(name);
-			if (!ArrayUtil.isEmpty(identifierData)) {
-				return identifierData;
-			}
-		}
-
-		return getNewCaseIdentifier(null, null);
-	}
-	
-	public synchronized Object[] getNewCaseIdentifierWithCustomPrefix(String name) {
 		if (StringUtil.isEmpty(name)) {
 			return getNewCaseIdentifier(null, null);
 		}
-		
+
+		try {
+			String prefix = getPrefixForName(name);
+			if (StringUtil.isEmpty(prefix)) {
+				return getNewCaseIdentifier(name, null);
+			}
+
+			return getNewCaseIdentifier(null, null, prefix);
+		} catch(Exception e) {
+			getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name, e);
+		}
+
+		return getNewCaseIdentifier(name, null);
+	}
+
+	private String getPrefixForName(String name) {
+		if (StringUtil.isEmpty(name)) {
+			return null;
+		}
+
 		try {
 			ApplicationBusiness appBusiness = getServiceInstance(ApplicationBusiness.class);
 			Collection<Application> apps = null;
@@ -214,26 +199,20 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 			if (ListUtil.isEmpty(apps)) {
 				return null;
 			}
-			String prefix = getCustomIdentifierPrefix(apps.iterator().next());
-			if (StringUtil.isEmpty(prefix)) {
-				return getNewCaseIdentifier(name);
-			}
-			
-			return getNewCaseIdentifier(null, null, prefix);
-		} catch(Exception e) {
-			getLogger().log(Level.WARNING, "Error getting custom identifier for name " + name, e);
+			return getCustomIdentifierPrefix(apps.iterator().next());
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting prefix for name " + name, e);
 		}
-		
-		return getNewCaseIdentifier(name);
+		return null;
 	}
-	
+
 	@Override
 	protected synchronized Object[] getNewCaseIdentifier(String name, String usedIdentifier) {
 		return getNewCaseIdentifier(name, usedIdentifier, null);
 	}
-	
+
 	protected synchronized Object[] getNewCaseIdentifier(String name, String usedIdentifier, String customIdentifierPrefix) {
-		if (!StringUtil.isEmpty(name)) {
+		if (!StringUtil.isEmpty(name) && StringUtil.isEmpty(customIdentifierPrefix)) {
 			Object[] identifierData = getCustomIdentifier(name);
 			if (!ArrayUtil.isEmpty(identifierData)) {
 				return identifierData;
@@ -296,7 +275,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 				scopedCI.number = number;
 			}
 		}
-		
+
 		if (!StringUtil.isEmpty(customIdentifierPrefix)) {
 			scopedCI.identifierPrefix = customIdentifierPrefix;
 		} else {
@@ -316,7 +295,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 		private IWTimestamp time;
 		private Integer number;
 		private String identifierPrefix;
-		
+
 		String generate() {
 			if (number + 1 > getMaxIdentifierValue()) {
 				number = 0;
@@ -347,7 +326,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 		public Integer getNumber() {
 			return number;
 		}
-		
+
 		public String getIdentifierPrefix() {
 			return identifierPrefix;
 		}
