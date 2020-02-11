@@ -1726,8 +1726,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 			
 			if(userCreatedBy != null) {
-				query += " and pc.user = :userCreatedBy";
-				params.add(new Param("userCreatedBy", userCreatedBy));
+				query += " and pc.user.userID = :userCreatedBy";
+				params.add(new Param("userCreatedBy", userCreatedBy.getId()));
 			}
 
 			query += " and pi.processDefinition.id = pd.id and pi.id = cp.procInstId and cp.caseId = pc.id";
