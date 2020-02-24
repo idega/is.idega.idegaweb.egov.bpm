@@ -233,9 +233,17 @@ public interface CasesBPMDAO extends GenericDao {
 			com.idega.user.data.bean.User user,
 			boolean onlySubscribed
 	);
-
+	
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Integer firstResult, Integer maxResults, boolean newestOnTop);
+	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+			List<String> caseStatuses, 
+			List<String> procDefNames, 
+			Integer firstResult, 
+			Integer maxResults, 
+			boolean newestOnTop,
+			com.idega.user.data.bean.User userCreatedBy 
+	);
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,

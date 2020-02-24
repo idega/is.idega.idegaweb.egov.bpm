@@ -307,16 +307,28 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 				nr = zero.concat(nr);
 			}
 
-			return new StringBuffer(StringUtil.isEmpty(identifierPrefix) ? IDENTIFIER_PREFIX : identifierPrefix)
-			.append(CoreConstants.MINUS)
-			.append(time.getYear())
-			.append(CoreConstants.MINUS)
-			.append(time.getMonth() < 10 ? "0"+time.getMonth() : time.getMonth())
-			.append(CoreConstants.MINUS)
-			.append(time.getDay() < 10 ? "0"+time.getDay() : time.getDay())
-			.append(CoreConstants.MINUS)
-			.append(nr)
-			.toString();
+			String pattern = getSettings().getProperty("case_id_pattern." + (StringUtil.isEmpty(identifierPrefix) ? CoreConstants.EMPTY : identifierPrefix), "prefix-year-month-day-nr");
+			String prefix = StringUtil.isEmpty(identifierPrefix) ? IDENTIFIER_PREFIX : identifierPrefix;
+			String year = String.valueOf(time.getYear());
+			String month = String.valueOf(time.getMonth() < 10 ? zero.concat(String.valueOf(time.getMonth())) : time.getMonth());
+			String day = String.valueOf(time.getDay() < 10 ? zero.concat(String.valueOf(time.getDay())) : time.getDay());
+
+			if (StringUtil.isEmpty(pattern)) {
+				String id = new StringBuffer(prefix)
+						.append(CoreConstants.MINUS).append(year)
+						.append(CoreConstants.MINUS).append(month)
+						.append(CoreConstants.MINUS).append(day)
+						.append(CoreConstants.MINUS).append(nr)
+						.toString();
+				return id;
+			}
+
+			String id = StringHandler.replace(pattern, "prefix", prefix);
+			id = StringHandler.replace(id, "year", year);
+			id = StringHandler.replace(id, "month", month);
+			id = StringHandler.replace(id, "day", day);
+			id = StringHandler.replace(id, "nr", nr);
+			return id;
 		}
 
 		public IWTimestamp getTime() {

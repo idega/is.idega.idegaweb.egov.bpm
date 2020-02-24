@@ -1609,6 +1609,28 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,
+			Integer firstResult,
+			Integer maxResults,
+			boolean newestOnTop,
+			com.idega.user.data.bean.User userCreatedBy
+	){
+		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
+				caseStatuses,
+				procDefNames,
+				null,
+				false,
+				firstResult,
+				maxResults,
+				newestOnTop,
+				false,
+				userCreatedBy
+		);
+	}
+
+	@Override
+	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+			List<String> caseStatuses,
+			List<String> procDefNames,
 			com.idega.user.data.bean.User user,
 			boolean onlySubscribed,
 			Integer firstResult,
@@ -1617,6 +1639,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	) {
 		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(caseStatuses, procDefNames, user, onlySubscribed, firstResult, maxResults, newestOnTop, false);
 	}
+
 
 	@Override
 	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(
@@ -1638,6 +1661,30 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			boolean newestOnTop,
 			boolean count
 	) {
+		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
+				caseStatuses,
+				procDefNames,
+				user,
+				onlySubscribed,
+				firstResult,
+				maxResults,
+				newestOnTop,
+				count,
+				null
+		);
+	}
+
+	private <T> T getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			com.idega.user.data.bean.User user,
+			boolean onlySubscribed,
+			Integer firstResult,
+			Integer maxResults,
+			boolean newestOnTop,
+			boolean count,
+			com.idega.user.data.bean.User userCreatedBy
+	) {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames)) {
 			if (count) {
 				@SuppressWarnings("unchecked")
@@ -1656,8 +1703,17 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			params.add(new Param("procDefNames", procDefNames));
 			params.add(new Param("statuses", caseStatuses));
 
-			query = "select " + (count ? "count(cp.procInstId)" : "cp.procInstId")  + " from " + CaseProcInstBind.class.getSimpleName() + " cp, "
-					+ ProcessInstance.class.getName() + " pi, " + ProcessDefinition.class.getName() + " pd, " + com.idega.block.process.data.bean.Case.class.getName() + " pc ";
+			query = "select "
+					+ (count ? "count(cp.procInstId)" : "cp.procInstId")
+					+ " from "
+					+ CaseProcInstBind.class.getSimpleName()
+					+ " cp, "
+					+ ProcessInstance.class.getName()
+					+ " pi, "
+					+ ProcessDefinition.class.getName()
+					+ " pd, "
+					+ com.idega.block.process.data.bean.Case.class.getName()
+					+ " pc ";
 
 			if (onlySubscribed && user != null) {
 				query += " inner join pc.subscribers sub ";
@@ -1668,6 +1724,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			if (onlySubscribed && user != null) {
 				query += " and :user in (sub) ";
 				params.add(new Param("user", user));
+			}
+
+			if(userCreatedBy != null) {
+				query += " and pc.userId = :userCreatedBy";
+				params.add(new Param("userCreatedBy", userCreatedBy.getId()));
 			}
 
 			query += " and pi.processDefinition.id = pd.id and pi.id = cp.procInstId and cp.caseId = pc.id";
