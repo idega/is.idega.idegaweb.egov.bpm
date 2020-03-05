@@ -50,7 +50,8 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 
 	public static final String METADATA_CASE_IDENTIFIER_PREFIX = "case_identifier_prefix";
 
-	private static final String CASE_IDENTIFIER_LAST_RESET_SUFFIX = "case_identifier_last_reset";
+	private static final String CASE_IDENTIFIER_LAST_RESET_SUFFIX = "case_identifier_last_reset",
+								NR = "nr";
 
 	private CaseIdentifierBean lastCaseIdentifierNumber;
 
@@ -287,6 +288,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 			generated = scopedCI.generate();
 		}
 
+		getLatestCaseIdentifier(resetInterval, scopedCI.identifierPrefix, IWTimestamp.RightNow());
 		return new Object[] {scopedCI.number, generated};
 	}
 
@@ -303,11 +305,13 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 			String nr = String.valueOf(++number);
 
 			String zero = String.valueOf(0);
-			while (nr.length() < 4) {
-				nr = zero.concat(nr);
+			if (getSettings().getBoolean("case_identifier.add_zeros_for_nr", true)) {
+				while (nr.length() < 4) {
+					nr = zero.concat(nr);
+				}
 			}
 
-			String pattern = getSettings().getProperty("case_id_pattern." + (StringUtil.isEmpty(identifierPrefix) ? CoreConstants.EMPTY : identifierPrefix), "prefix-year-month-day-nr");
+			String pattern = getPattern(identifierPrefix);
 			String prefix = StringUtil.isEmpty(identifierPrefix) ? IDENTIFIER_PREFIX : identifierPrefix;
 			String year = String.valueOf(time.getYear());
 			String month = String.valueOf(time.getMonth() < 10 ? zero.concat(String.valueOf(time.getMonth())) : time.getMonth());
@@ -327,7 +331,7 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 			id = StringHandler.replace(id, "year", year);
 			id = StringHandler.replace(id, "month", month);
 			id = StringHandler.replace(id, "day", day);
-			id = StringHandler.replace(id, "nr", nr);
+			id = StringHandler.replace(id, NR, nr);
 			return id;
 		}
 
@@ -344,13 +348,29 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 		}
 	}
 
+	private String getPattern(String prefix) {
+		return getSettings().getProperty("case_id_pattern." + (StringUtil.isEmpty(prefix) ? CoreConstants.EMPTY : prefix), "prefix-year-month-day-nr");
+	}
+
 	public Integer getCaseIdentifierNumber(String caseIdentifier) {
 		if (StringUtil.isEmpty(caseIdentifier)) {
 			return null;
 		}
 
 		String[] parts = caseIdentifier.split(CoreConstants.MINUS);
-		String numberValue = parts[parts.length - 1];
+		String currentPrefix = parts[0];
+		String pattern = getPattern(currentPrefix);
+		int nrIndex = parts.length - 1;
+		if (!StringUtil.isEmpty(pattern)) {
+			String[] patternParts = pattern.split(CoreConstants.MINUS);
+			for (int i = 0; i < patternParts.length; i++) {
+				if (patternParts[i].equals(NR)) {
+					nrIndex = i;
+				}
+			}
+		}
+
+		String numberValue = parts[nrIndex];
 		Integer number = Integer.valueOf(numberValue);
 		return number;
 	}
@@ -371,29 +391,9 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 		int interval = getCaseIdentifierResetInterval();
 		switch (interval) {
 		case 365:
-			IWTimestamp yearAgo = new IWTimestamp();
-			yearAgo.setYear(yearAgo.getYear() - 1);
-			long lastReset = getCounterResetForPrefix(prefix);
-			if (lastReset < 0) {
-				CaseProcInstBind firstBind = casesBPMDAO.getFirstBindForPrefix(prefix);
-				if (firstBind != null && firstBind.getDateCreated() != null) {
-					lastReset = firstBind.getDateCreated().getTime();
-				}
-			}
-
-			Integer latestCaseIdentifierForCurrentPrefix = 0;
-			//	If first bind for prefix is not older than 1 year - counter will continue. Otherwise it will be reset
-			if (lastReset > yearAgo.getTime().getTime()) {
-				//	Continue with counter
-				CaseProcInstBind latestBind = casesBPMDAO.getLatestBindForPrefix(prefix);
-				if (latestBind != null && latestBind.getCaseIdentierID() != null) {
-					latestCaseIdentifierForCurrentPrefix = latestBind.getCaseIdentierID();
-				}
-			} else {
-				now = now == null ? new IWTimestamp() : now;
-				lastReset = now.getTime().getTime();
-				setCounterResetForPrefix(prefix, lastReset);
-			}
+			Object[] tempData = getLatestCaseIdentifier(interval, prefix, now);
+			Integer latestCaseIdentifierForCurrentPrefix = (Integer) tempData[0];
+			Long lastReset = (Long) tempData[1];
 			latestCaseIdentifierForCurrentPrefix = latestCaseIdentifierForCurrentPrefix == maxIdentifierValue ? 0 : latestCaseIdentifierForCurrentPrefix;
 			Object[] data = new Object[] {interval, lastReset, latestCaseIdentifierForCurrentPrefix};
 			dataForPrefixes.put(prefix, data);
@@ -406,6 +406,37 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 		}
 
 		return null;
+	}
+
+	private Object[] getLatestCaseIdentifier(int resetInterval, String prefix, IWTimestamp now) {
+		if (resetInterval != 365) {
+			return null;
+		}
+
+		IWTimestamp yearAgo = new IWTimestamp();
+		yearAgo.setYear(yearAgo.getYear() - 1);
+		long lastReset = getCounterResetForPrefix(prefix);
+		if (lastReset < 0) {
+			CaseProcInstBind firstBind = casesBPMDAO.getFirstBindForPrefix(prefix);
+			if (firstBind != null && firstBind.getDateCreated() != null) {
+				lastReset = firstBind.getDateCreated().getTime();
+			}
+		}
+
+		Integer latestCaseIdentifierForCurrentPrefix = 0;
+		//	If first bind for prefix is not older than 1 year - counter will continue. Otherwise it will be reset
+		if (lastReset > yearAgo.getTime().getTime()) {
+			//	Continue with counter
+			CaseProcInstBind latestBind = casesBPMDAO.getLatestBindForPrefix(prefix);
+			if (latestBind != null && latestBind.getCaseIdentierID() != null) {
+				latestCaseIdentifierForCurrentPrefix = latestBind.getCaseIdentierID();
+			}
+		} else {
+			now = now == null ? new IWTimestamp() : now;
+			lastReset = now.getTime().getTime();
+			setCounterResetForPrefix(prefix, lastReset);
+		}
+		return new Object[] {latestCaseIdentifierForCurrentPrefix, lastReset};
 	}
 
 	@Override
