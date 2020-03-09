@@ -224,16 +224,21 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 		currentTime.setAsDate();
 
 		CaseIdentifierBean scopedCI;
+		String prefix = StringUtil.isEmpty(customIdentifierPrefix) ? IDENTIFIER_PREFIX : customIdentifierPrefix;
 
 		int resetInterval = getCaseIdentifierResetInterval();
-		if (lastCaseIdentifierNumber == null || !currentTime.equals(lastCaseIdentifierNumber.time)) {
+		if (
+				lastCaseIdentifierNumber == null ||
+				(lastCaseIdentifierNumber.identifierPrefix == null || !lastCaseIdentifierNumber.identifierPrefix.equals(prefix)) ||
+				!currentTime.equals(lastCaseIdentifierNumber.time)
+		) {
 			lastCaseIdentifierNumber = new CaseIdentifierBean();
 
 			CaseProcInstBind b = null;
 
 			switch (resetInterval) {
 			case 365:
-				Object[] data = getData(StringUtil.isEmpty(customIdentifierPrefix) ? IDENTIFIER_PREFIX : customIdentifierPrefix, new IWTimestamp(), getMaxIdentifierValue());
+				Object[] data = getData(prefix, new IWTimestamp(), getMaxIdentifierValue());
 				Integer latestCaseIdentifierForCurrentPrefix = data == null || data.length < 3 ? 0 : (Integer) data[2];
 				latestCaseIdentifierForCurrentPrefix = latestCaseIdentifierForCurrentPrefix == getMaxIdentifierValue() ? 0 : latestCaseIdentifierForCurrentPrefix;
 
