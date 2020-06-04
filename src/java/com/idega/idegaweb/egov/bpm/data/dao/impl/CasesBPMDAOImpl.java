@@ -543,7 +543,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		String query = "select " + CaseBMPBean.PK_COLUMN + " from " + CaseBMPBean.TABLE_NAME + " where " + CaseBMPBean.COLUMN_CASE_MANAGER_TYPE +
-				" = '" + ProcessConstants.BPM_CASE + "' and lower(" + CaseBMPBean.COLUMN_CASE_IDENTIFIER + ") LIKE '" + caseNumber + "'";
+				" in ('" + ProcessConstants.BPM_CASE + "', '" + ProcessConstants.BPM_2_CASE + "') and lower(" + CaseBMPBean.COLUMN_CASE_IDENTIFIER + ") LIKE '" + caseNumber + "'";
 		List<Serializable[]> data = null;
 		try {
 			data = SimpleQuerier.executeQuery(query, 1);
