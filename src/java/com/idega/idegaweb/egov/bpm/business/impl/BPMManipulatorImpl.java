@@ -1,5 +1,6 @@
 package com.idega.idegaweb.egov.bpm.business.impl;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,8 +79,7 @@ import com.idega.util.expression.ELUtil;
 @RemoteProxy(creator = SpringCreator.class, creatorParams = {
 		@Param(name = "beanName", value = BPMManipulatorImpl.BEAN_NAME),
 		@Param(name = "javascript", value = BPMManipulatorImpl.DWR_OBJECT) }, name = BPMManipulatorImpl.DWR_OBJECT)
-public class BPMManipulatorImpl extends DefaultSpringBean implements
-		BPMManipulator {
+public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipulator {
 
 	static final String BEAN_NAME =	"bpmManipulator",
 									DWR_OBJECT = "BPMManipulator";
@@ -904,6 +904,49 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements
 			getLogger().log(Level.WARNING, "Error executing handler " + handlerName + " for proc. inst. " + procInstId + ", params: " + params, e);
 		}
 
+		return false;
+	}
+
+	@Override
+	@RemoteMethod
+	public boolean doInsertVariable(Integer caseId, String name, String value) {
+		if (caseId == null || StringUtil.isEmpty(name) || StringUtil.isEmpty(value)) {
+			return false;
+		}
+
+		ProcessInstanceW piW = null;
+		try {
+			final IWContext iwc = CoreUtil.getIWContext();
+			if (iwc == null || !iwc.isLoggedOn() || !iwc.isSuperAdmin()) {
+				getLogger().warning("You do not have rights to insert variable");
+				return false;
+			}
+
+			if (!getApplication().getSettings().getBoolean("bpm.allow_resubmit_proc", Boolean.FALSE)) {
+				getLogger().warning("It is forbidden to insert variable");
+				return false;
+			}
+
+			CaseProcInstBind bind = casesDAO.getCaseProcInstBindByCaseId(caseId);
+			if (bind == null) {
+				getLogger().warning("Process and case bind not found by case ID " + caseId);
+				return false;
+			}
+
+			Serializable procInstId = bind.getUuid();
+			if (procInstId == null || StringUtil.isEmpty(procInstId.toString())) {
+				procInstId = bind.getProcInstId();
+			}
+			piW = bpmFactory.getProcessInstanceW(procInstId);
+			if (piW == null) {
+				getLogger().warning("Failed to find process by ID " + procInstId);
+				return false;
+			}
+
+			return piW.doInsertVariable(name, value);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error inserting variable " + name + " with value " + value + " for process " + piW, e);
+		}
 		return false;
 	}
 

@@ -21,4 +21,6 @@ public interface BPMManipulator {
 
 	public boolean doReSubmit(User user, IWContext iwc, CaseProcInstBind bind, boolean onlyStart, boolean submitRepeatedTasks);
 
+	public boolean doInsertVariable(Integer caseId, String name, String value);
+
 }
