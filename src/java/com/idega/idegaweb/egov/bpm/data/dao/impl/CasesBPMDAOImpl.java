@@ -1768,9 +1768,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,
-			List<String> procDefNames) {
-		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames)) {
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames) {
+		if (ListUtil.isEmpty(procDefNames)) {
 			return Collections.emptyMap();
 		}
 
@@ -1829,9 +1828,16 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return null;
 	}
 
-	private Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(List<String> caseStatuses, List<String> procDefNames,
-			List<Long> procInstIds, Map<Long, Integer> results, Param metadata, int offset, int maxCount, String endDate) {
-
+	private Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			List<Long> procInstIds,
+			Map<Long, Integer> results,
+			Param metadata,
+			int offset,
+			int maxCount,
+			String endDate
+	) {
 		if (results == null) {
 			results = new LinkedHashMap<Long, Integer>();
 		}
@@ -1840,11 +1846,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return results;
 		}
 
-		StringBuilder statusesProp = new StringBuilder();
-		for (Iterator<String> statusesIter = caseStatuses.iterator(); statusesIter.hasNext();) {
-			statusesProp.append(CoreConstants.QOUTE_SINGLE_MARK).append(statusesIter.next()).append(CoreConstants.QOUTE_SINGLE_MARK);
-			if (statusesIter.hasNext()) {
-				statusesProp.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+		StringBuilder statusesProp = null;
+		if (!ListUtil.isEmpty(caseStatuses)) {
+			statusesProp = new StringBuilder();
+			for (Iterator<String> statusesIter = caseStatuses.iterator(); statusesIter.hasNext();) {
+				statusesProp.append(CoreConstants.QOUTE_SINGLE_MARK).append(statusesIter.next()).append(CoreConstants.QOUTE_SINGLE_MARK);
+				if (statusesIter.hasNext()) {
+					statusesProp.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
+				}
 			}
 		}
 
@@ -1894,8 +1903,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			query += " pi.id_ in (" + processesProp.toString() + ")";
 		}
 
-		query += " and pc.CASE_STATUS in (" + statusesProp.toString() + ") and bind." +	CaseProcInstBind.procInstIdColumnName +
-				" = pi.id_ and bind." + CaseProcInstBind.caseIdColumnName + " = pc.proc_case_id";
+		if (statusesProp != null) {
+			query += " and pc.CASE_STATUS in (" + statusesProp.toString() + ")";
+		}
+		query += " and bind." +	CaseProcInstBind.procInstIdColumnName + " = pi.id_ and bind." + CaseProcInstBind.caseIdColumnName + " = pc.proc_case_id";
 		if (useProcDefs) {
 			query += " and pd.id_ = pi.processdefinition_";
 		}
