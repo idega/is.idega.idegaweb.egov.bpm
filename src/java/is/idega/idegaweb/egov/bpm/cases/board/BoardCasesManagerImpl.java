@@ -353,12 +353,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						} else {
 							int taskIndex = 0;
 							for (Map<String, String> taskInfo: obValue) {
-								if (MapUtil.isEmpty(taskInfo))
+								if (MapUtil.isEmpty(taskInfo)) {
 									continue;
+								}
 
 								String taskName = taskInfo.get("task");
-								if (StringUtil.isEmpty(taskName))
+								if (StringUtil.isEmpty(taskName)) {
 									continue;
+								}
 
 								String estimatedCost = taskInfo.get("cost_estimate");
 
@@ -485,8 +487,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		Serializable value = variable.getValue();
-		if (value == null)
+		if (value == null) {
 			return;
+		}
 
 		List<Map<String, String>> financing = view.getFinancingOfTheTasks();
 		if (financing == null) {
@@ -495,8 +498,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		String[] amounts = value.toString().split(CoreConstants.HASH);
-		if (ArrayUtil.isEmpty(amounts))
+		if (ArrayUtil.isEmpty(amounts)) {
 			return;
+		}
 
 		int index = 0;
 		for (String amount: amounts) {
@@ -513,16 +517,18 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	private List<Map<String, String>> getObjectValue(VariableByteArrayInstance variable) {
 		Serializable value = variable.getValue();
-		if (value == null)
+		if (value == null) {
 			return Collections.emptyList();
+		}
 
 		List<Map<String, String>> object = new ArrayList<Map<String,String>>();
 		if (value instanceof Collection<?>) {
 			Collection<?> jsonParts = (Collection<?>) value;
 			for (Object jsonPart: jsonParts) {
 				Map<String, String> genericValue = ObjectCollectionConverter.JSONToObj(jsonPart.toString());
-				if (genericValue != null)
+				if (genericValue != null) {
 					object.add(genericValue);
+				}
 			}
 		}
 
@@ -580,7 +586,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return total;
 	}
 
-	@SuppressWarnings("unchecked")
 	private void sortBoardCases(List<CaseBoardBean> boardCases, List<String> sortingPreferences) {
 		if (ListUtil.isEmpty(boardCases)) {
 			return;
@@ -677,8 +682,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				for (AdvancedProperty variable : CasesBoardViewer.CASE_FIELDS) {
 					variables.add(variable.getId());
 				}
-			} else
+			} else {
 				variables = new ArrayList<String>(customColumns);
+			}
 		}
 		return variables;
 	}
@@ -947,8 +953,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		} catch(RemoteException e) {
 			getLogger().log(Level.WARNING, "Error getting " + UserBusiness.class, e);
 		}
-		if (userBusiness == null)
+		if (userBusiness == null) {
 			return null;
+		}
 
 		AdvancedProperty info = new AdvancedProperty(handler.getName());
 
@@ -959,8 +966,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			getLogger().log(Level.WARNING, "Error getting email for user: " + handler, e);
 		} catch (NoEmailFoundException e) {}
 
-		if (email != null)
+		if (email != null) {
 			info.setValue(new StringBuilder("mailto:").append(email.getEmailAddress()).toString());
+		}
 
 		return info;
 	}
@@ -1035,8 +1043,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					continue;
 				} else {
 					localized = localize(LOCALIZATION_PREFIX.concat(column), column);
-					if (column.equals(localized))
+					if (column.equals(localized)) {
 						localized = bpmIWRB.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(column), column);
+					}
 					if (column.equals(localized)) {
 						getLogger().warning("Variable " + column + " is not localized");
 						continue;
@@ -1237,8 +1246,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	public TaskViewerHelper getTaskViewer() {
-		if (taskViewer == null)
+		if (taskViewer == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 		return taskViewer;
 	}
 
@@ -1256,8 +1266,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	public VariableInstanceQuerier getVariablesQuerier() {
-		if (variablesQuerier == null)
+		if (variablesQuerier == null) {
 			ELUtil.getInstance().autowire(this);
+		}
 		return variablesQuerier;
 	}
 

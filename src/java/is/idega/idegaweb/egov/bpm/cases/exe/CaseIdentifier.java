@@ -137,7 +137,10 @@ public class CaseIdentifier extends DefaultIdentifierGenerator implements Identi
 	}
 
 	private String getAccessPrefix(Application app) {
-		List<ApplicationAccess> accessList = applicationDAO.getApplicationAccessDescendingByLevel((Integer)app.getPrimaryKey());
+		List<ApplicationAccess> accessList = null;
+		if (getSettings().getBoolean("app_id_from_app_access", true)) {
+			accessList = applicationDAO.getApplicationAccessDescendingByLevel((Integer)app.getPrimaryKey());
+		}
 		if (ListUtil.isEmpty(accessList)) {
 			return null;
 		}

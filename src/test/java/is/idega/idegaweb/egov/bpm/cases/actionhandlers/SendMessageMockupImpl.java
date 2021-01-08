@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases.actionhandlers;
 
+import java.util.List;
 import java.util.Locale;
 
 import junit.framework.AssertionFailedError;
@@ -10,6 +11,7 @@ import org.jbpm.graph.exe.Token;
 import com.idega.bpm.process.messages.LocalizedMessages;
 import com.idega.bpm.process.messages.SendMessage;
 import com.idega.jbpm.process.business.messages.MessageValueContext;
+import com.idega.user.data.User;
 
 
 /**
@@ -36,4 +38,10 @@ public class SendMessageMockupImpl implements SendMessage {
 	public String getSubject() {
 		return null;
 	}
+
+	@Override
+	public void send(MessageValueContext mvCtx, Object context, ProcessInstance pi, LocalizedMessages msgs, Token tkn, List<User> receivers) {
+		send(mvCtx, context, pi, msgs, tkn);
+	}
+	
 }

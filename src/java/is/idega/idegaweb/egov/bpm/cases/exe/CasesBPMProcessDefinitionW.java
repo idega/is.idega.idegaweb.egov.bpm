@@ -176,6 +176,9 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 	}
 
 	private Integer getHandlerGroupId(String procDefName, String caseId) {
+		if (!getSettings().getBoolean("app_handler_gr_id_from_app_access", true)) {
+			return null;
+		}
 		if (StringUtil.isEmpty(procDefName) && StringUtil.isEmpty(caseId)) {
 			return null;
 		}
@@ -334,7 +337,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		);
 		Map<Integer, Status> data = null;
 		if (!ListUtil.isEmpty(usersBinds)) {
-			data = new HashMap<Integer, ProcessUserBind.Status>();
+			data = new HashMap<>();
 			for (ProcessUserBind userBind: usersBinds) {
 				data.put(userBind.getUserId(), userBind.getStatus());
 				SimpleQuerier.execute("delete from " + ProcessUserBind.TABLE_NAME + " where id_ = " + userBind.getId());
@@ -427,7 +430,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		CaseProcessData result = new CaseProcessData();
 		result.setCaseCreated(caseCreated);
 
-		Map<String, Object> caseData = new HashMap<String, Object>();
+		Map<String, Object> caseData = new HashMap<>();
 		caseData.put(CasesBPMProcessConstants.caseIdVariableName, genCase.getPrimaryKey().toString());
 		caseData.put(CasesBPMProcessConstants.caseTypeNameVariableName, genCase.getCaseType().getName());
 		caseData.put(CasesBPMProcessConstants.caseCategoryNameVariableName, genCase.getCaseCategory().getName());
@@ -498,7 +501,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 		getLogger().finer("Params " + parameters);
 
-		final Map<String, Object> variables = new HashMap<String, Object>();
+		final Map<String, Object> variables = new HashMap<>();
 
 		Long piId = getBpmContext().execute(new JbpmCallback<Long>() {
 			@Override
@@ -623,7 +626,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 					try {
 						Long startTaskId = pd.getTaskMgmtDefinition().getStartTask().getId();
 
-						List<String> preferred = new ArrayList<String>(1);
+						List<String> preferred = new ArrayList<>(1);
 						preferred.add(XFormsView.VIEW_TYPE);
 						View view = getBpmFactory().getViewByTask(startTaskId, true, preferred);
 						view.takeView();
@@ -643,7 +646,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 						IWTimestamp realCreationDate = new IWTimestamp();
 						String realCreationDateString = realCreationDate.toString();
-						Map<String, String> parameters = new HashMap<String, String>(7);
+						Map<String, String> parameters = new HashMap<>(7);
 
 						parameters.put(ProcessConstants.START_PROCESS, ProcessConstants.START_PROCESS);
 						parameters.put(ProcessConstants.PROCESS_DEFINITION_ID, String.valueOf(processDefinitionId));
@@ -660,7 +663,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 						view.populateParameters(parameters);
 
-						Map<String, Object> vars = new HashMap<String, Object>(1);
+						Map<String, Object> vars = new HashMap<>(1);
 						vars.put(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER, identifier);
 
 						view.populateVariables(vars);
