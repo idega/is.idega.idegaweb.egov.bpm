@@ -252,6 +252,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 
 					CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
 					Case theCase = caseBusiness.getCase(caseId);
+					String status = theCase.getStatus();
 					com.idega.user.data.User owner = theCase.getOwner();
 					if (owner == null) {
 						owner = theCase.getCreator();
@@ -337,7 +338,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 						Long tiId = startTiW.getTaskInstanceId();
 						long startTaskInstId = tiId.longValue();
 						ProcessInstanceW newPiw = bpmFactory.getProcessInstanceW(newProcInstId);
-						Map<String, Boolean> submitted = new HashMap<String, Boolean>();
+						Map<String, Boolean> submitted = new HashMap<>();
 						for (TaskInstanceW submittedTask : allSubmittedTasks) {
 							String name = submittedTask.getTaskInstanceName();
 							if (!submitRepeatedTasks && submitted.containsKey(name)) {
@@ -358,7 +359,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 					}
 
 					if (onlyStart) {
-						theCase.setStatus(CaseBMPBean.CASE_STATUS_OPEN_KEY);
+						theCase.setStatus(StringUtil.isEmpty(status) ? CaseBMPBean.CASE_STATUS_OPEN_KEY : status);
 						theCase.store();
 					}
 
