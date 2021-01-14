@@ -199,7 +199,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return Collections.emptyList();
 		}
 
-		List<User> allUsers = new ArrayList<User>();
+		List<User> allUsers = new ArrayList<>();
 		for (ProcessInstanceW instance: processInstances) {
 			List<User> users = instance.getUsersConnectedToProcess();
 			if (ListUtil.isEmpty(users)) {
@@ -242,7 +242,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return Collections.emptyList();
 		}
 
-		ArrayList<BPMEmailDocument> emails = new ArrayList<BPMEmailDocument>();
+		ArrayList<BPMEmailDocument> emails = new ArrayList<>();
 		for (ProcessInstanceW instance: processInstances) {
 			List<BPMEmailDocument> entities = instance.getAttachedEmails(owner);
 			if (ListUtil.isEmpty(entities)) {
@@ -273,7 +273,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		List<BPMDocument> taskDocuments = new ArrayList<BPMDocument>();
+		List<BPMDocument> taskDocuments = new ArrayList<>();
 		for (ProcessInstanceW instance: processInstances) {
 			List<BPMDocument> entities = instance.getTaskDocumentsForUser(iwc, owner, locale);
 			if (ListUtil.isEmpty(entities)) {
@@ -304,7 +304,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		List<BPMDocument> submittedDocuments = new ArrayList<BPMDocument>();
+		List<BPMDocument> submittedDocuments = new ArrayList<>();
 		for (ProcessInstanceW instance: processInstances) {
 			List<BPMDocument> entities = instance.getSubmittedDocumentsForUser(iwc, owner, locale);
 			if (ListUtil.isEmpty(entities)) {
@@ -365,7 +365,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return null;
 		}
 
-		ArrayList<ProcessInstanceW> instancesW = new ArrayList<ProcessInstanceW>();
+		ArrayList<ProcessInstanceW> instancesW = new ArrayList<>();
 		for (Long porcessInstanceId: porcessInstancesIds) {
 			instancesW.add(processManager.getProcessInstance(porcessInstanceId));
 		}
@@ -513,7 +513,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
 	protected List<String> getApplicationUrls(Collection<Application> applications) {
-		ArrayList<String> urls = new ArrayList<String>();
+		ArrayList<String> urls = new ArrayList<>();
 		if (!ListUtil.isEmpty(applications)) {
 			for (Application application :applications) {
 				urls.add(application.getUrl());
@@ -703,6 +703,26 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			Set<String> roles,
 			boolean searchQuery
 	) {
+		return getCases(user, type, locale, caseCodes, caseStatusesToHide, caseStatusesToShow, startIndex, count, onlySubscribedCases, showAllCases, procInstIds, null, roles, searchQuery);
+	}
+
+	@Override
+	public PagedDataCollection<CasePresentation> getCases(
+			User user,
+			String type,
+			Locale locale,
+			List<String> caseCodes,
+			List<String> caseStatusesToHide,
+			List<String> caseStatusesToShow,
+			int startIndex,
+			int count,
+			boolean onlySubscribedCases,
+			boolean showAllCases,
+			List<Long> procInstIds,
+			List<Integer> providedCasesIds,
+			Set<String> roles,
+			boolean searchQuery
+	) {
 		try {
 			long start = System.currentTimeMillis();
 
@@ -711,21 +731,26 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			IWContext iwc = CoreUtil.getIWContext();
-			List<Integer> casesIds = getCasePrimaryKeys(
-					iwc,
-					user,
-					type,
-					caseCodes,
-					caseStatusesToHide,
-					caseStatusesToShow,
-					onlySubscribedCases,
-					showAllCases,
-					procInstIds,
-					roles,
-					null,
-					null,
-					searchQuery
-			);
+			List<Integer> casesIds = null;
+			if (providedCasesIds == null) {
+				casesIds = getCasePrimaryKeys(
+						iwc,
+						user,
+						type,
+						caseCodes,
+						caseStatusesToHide,
+						caseStatusesToShow,
+						onlySubscribedCases,
+						showAllCases,
+						procInstIds,
+						roles,
+						null,
+						null,
+						searchQuery
+				);
+			} else {
+				casesIds = new ArrayList<>(providedCasesIds);
+			}
 			long duration = System.currentTimeMillis() - start;
 			if (duration > 1000) {
 				getLogger().info("It took " + duration + " ms to resolve cases IDs for " + user + ", type: " + type + ", locale: " + locale +
@@ -736,7 +761,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 			if (ListUtil.isEmpty(casesIds)) {
 				LOGGER.info("User '" + user + "' doesn't have any cases in case list: " + type);
-				return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), Long.valueOf(0));
+				return new PagedDataCollection<>(new ArrayList<CasePresentation>(), Long.valueOf(0));
 			}
 
 			start = System.currentTimeMillis();
@@ -761,8 +786,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			}
 
 			List<CasePresentation> casesPresentation = convertToPresentationBeans(cases, locale);
-			if (!ListUtil.isEmpty(casesPresentation) &&
-					IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE)) {
+			if (!ListUtil.isEmpty(casesPresentation) && getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE)) {
 				Collections.sort(casesPresentation, new CasePresentationComparator());
 			}
 
@@ -771,14 +795,14 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				getLogger().info("Cases (total: " + cases.size() + ") converted into beans in " + duration + " ms");
 			}
 
-			return new PagedDataCollection<CasePresentation>(casesPresentation, Long.valueOf(totalCount));
+			return new PagedDataCollection<>(casesPresentation, Long.valueOf(totalCount));
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Some error occurred while getting cases for user: " + user + " by type: " + type + ", by locale: " + locale +
 					", by case codes: " + caseCodes + ", by case statuses to hide: " + caseStatusesToHide + ", by case statuses to show: " +
 					caseStatusesToShow + ", start index: " + startIndex + ", count: " + count + ", only subscribed cases: " + onlySubscribedCases, e);
 		}
 
-		return new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>(), Long.valueOf(0));
+		return new PagedDataCollection<>(new ArrayList<CasePresentation>(), Long.valueOf(0));
 	}
 
 	public List<Integer> getCasePrimaryKeys(
@@ -938,7 +962,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return access.getAllRolesForUser(user);
 		}
 
-		return new HashSet<String>(Arrays.asList(activeRole));
+		return new HashSet<>(Arrays.asList(activeRole));
 	}
 
 	private Map<Integer, Date> getCaseIds(
@@ -1137,7 +1161,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return null;
 		}
 
-		handlerCategoryIDs = new ArrayList<Long>(handlerCategoryIDs);
+		handlerCategoryIDs = new ArrayList<>(handlerCategoryIDs);
 		Map<String, CasesSubcriberManager> beans = getBeansOfType(CasesSubcriberManager.class);
 		if (!MapUtil.isEmpty(beans)) {
 			for (CasesSubcriberManager bean: beans.values()) {
@@ -1176,8 +1200,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	) throws Exception {
 		Map<Integer, Date> casesIds = null;
 
-		List<String> statusesToShow = caseStatusesToShow == null ? new ArrayList<String>() : new ArrayList<String>(caseStatusesToShow);
-		List<String> statusesToHide = caseStatusesToHide == null ? new ArrayList<String>() : new ArrayList<String>(caseStatusesToHide);
+		List<String> statusesToShow = caseStatusesToShow == null ? new ArrayList<>() : new ArrayList<>(caseStatusesToShow);
+		List<String> statusesToHide = caseStatusesToHide == null ? new ArrayList<>() : new ArrayList<>(caseStatusesToHide);
 		statusesToHide = ListUtil.getFilteredList(statusesToHide);
 
 		List<Integer> groups = null;
@@ -1332,7 +1356,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				return Collections.emptyList();
 			}
 
-			return new ArrayList<Integer>(casesIds.keySet());
+			return new ArrayList<>(casesIds.keySet());
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting cases for " + user + ", type: " + type + ", case codes: " + caseCodes + ", statuses to hide: " + caseStatusesToHide + ", statuses to show: " +
 					caseStatusesToShow + ", only subscribed cases to: " + onlySubscribedCases + ", show all cases: " + showAllCases + ", case ID: " + caseId + ", proc. inst. IDs: " + procInstIds + ", roles: " + roles +
@@ -1454,7 +1478,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				roles = getRoles(getSession(), accessController, user);
 			}
 
-			codes = new ArrayList<String>(casecodes.length);
+			codes = new ArrayList<>(casecodes.length);
 			for (CaseCode code : casecodes) {
 				codes.add(code.getCode());
 			}
@@ -1497,7 +1521,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
-	private final HashMap<String, String> uris = new HashMap<String, String>(2);
+	private final HashMap<String, String> uris = new HashMap<>(2);
 
 	protected String getPageUri(IWApplicationContext iwac, String pageType) {
 		if (uris != null && uris.containsKey(pageType)) {
@@ -1558,7 +1582,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return null;
 		}
 
-		Map<Long, String> processes = new HashMap<Long, String>();
+		Map<Long, String> processes = new HashMap<>();
 
 		Locale locale = null;
 		IWContext iwc = CoreUtil.getIWContext();
@@ -1596,7 +1620,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return null;
 		}
 
-		List<Long> ids = new ArrayList<Long>();
+		List<Long> ids = new ArrayList<>();
 		for (ProcessDefinition pd: allProcesses) {
 			ids.add(Long.valueOf(pd.getId()));
 		}
@@ -1617,7 +1641,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			public List<ProcessDefinition> doInJbpm(JbpmContext context) throws JbpmException {
 
 				ProcessDefinition pd = null;
-				List<ProcessDefinition> caseProcessDefinitions = new ArrayList<ProcessDefinition>();
+				List<ProcessDefinition> caseProcessDefinitions = new ArrayList<>();
 
 				GraphSession graphSession = context.getGraphSession();
 
@@ -1696,7 +1720,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByEntities(Collection<Case> cases, Locale locale) {
-		return new PagedDataCollection<CasePresentation>(convertToPresentationBeans(cases, locale), Long.valueOf(cases.size()));
+		return new PagedDataCollection<>(convertToPresentationBeans(cases, locale), Long.valueOf(cases.size()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1705,7 +1729,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		try {
 			Collection<Case> closedCases = getCasesBusiness().getClosedCases(groups);
 			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
-			return new PagedDataCollection<CasePresentation>(presentationBeans);
+			return new PagedDataCollection<>(presentationBeans);
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
@@ -1718,7 +1742,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		try {
 			Collection<GeneralCase> closedCases = getCasesBusiness().getMyCases(user);
 			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
-			return new PagedDataCollection<CasePresentation>(presentationBeans);
+			return new PagedDataCollection<>(presentationBeans);
 		}
 		catch (RemoteException re) {
 			throw new IBORuntimeException(re);
@@ -1827,7 +1851,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return Collections.emptyList();
 		}
 
-		ArrayList<Integer> ids = new ArrayList<Integer>(primaryKeys.length);
+		ArrayList<Integer> ids = new ArrayList<>(primaryKeys.length);
 		for (String id : primaryKeys) {
 			ids.add(Integer.valueOf(id));
 		}
@@ -1837,7 +1861,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return Collections.emptyList();
 		}
 
-		return new ArrayList<Case>(casesCollection);
+		return new ArrayList<>(casesCollection);
 	}
 	/*
 	 * (non-Javadoc)
@@ -1878,7 +1902,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 		/* Searching by subscribers */
 		if (!ListUtil.isEmpty(subscribers)) {
-			subscribersIds = new ArrayList<Long>(subscribers.size());
+			subscribersIds = new ArrayList<>(subscribers.size());
 			for (User subscriber: subscribers) {
 				subscribersIds.add(Long.valueOf(subscriber.getPrimaryKey().toString()));
 			}
@@ -1896,7 +1920,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return null;
 		}
 
-		List<String> ids = new ArrayList<String>();
+		List<String> ids = new ArrayList<>();
 		for (Integer id: data.keySet()) {
 			ids.add(String.valueOf(id));
 		}
@@ -2008,7 +2032,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
 	}
 
-	private Map<String, Boolean> casesBeingUpdated = new HashMap<String, Boolean>();
+	private Map<String, Boolean> casesBeingUpdated = new HashMap<>();
 
 	private void doManageCasesCache(final Case theCase, final boolean ommitClearing) {
 		if (theCase == null) {
@@ -2312,7 +2336,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return Collections.emptyList();
 		}
 
-		ArrayList<Long> piids = new ArrayList<Long>();
+		ArrayList<Long> piids = new ArrayList<>();
 		for (ProcessInstanceW processInstance: processInstances) {
 			piids.add(processInstance.getProcessInstanceId());
 		}
