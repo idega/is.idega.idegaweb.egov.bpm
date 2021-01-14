@@ -173,7 +173,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		List<Integer> ids = new ArrayList<Integer>();
+		List<Integer> ids = new ArrayList<>();
 		for (Long caseId: casesIds) {
 			Integer id = caseId.intValue();
 			ids.add(id);
@@ -265,7 +265,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	public List<ProcessUserBind> getProcessUserBinds(int userId, Collection<Integer> casesIds) {
 
 		if (casesIds.isEmpty()) {
-			return new ArrayList<ProcessUserBind>(0);
+			return new ArrayList<>(0);
 		}
 
 		@SuppressWarnings("unchecked")
@@ -343,7 +343,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 			cps = u;
 		} else {
-			cps = new ArrayList<Object[]>(0);
+			cps = new ArrayList<>(0);
 		}
 
 		return cps;
@@ -363,7 +363,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 			cps = u;
 		} else {
-			cps = new ArrayList<Object[]>(0);
+			cps = new ArrayList<>(0);
 		}
 
 		return cps;
@@ -382,7 +382,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return u;
 
 		} else {
-			return new ArrayList<Token>(0);
+			return new ArrayList<>(0);
 		}
 	}
 
@@ -427,7 +427,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 						    new Param(CaseProcInstBind.variablesNamesProp, variable.getName()),
 						    new Param(CaseProcInstBind.variablesValuesProp, valueStart.getTimestamp()),
 						    new Param(CaseProcInstBind.variablesValuesPropEnd, valueEnd.getTimestamp()),
-						    new Param(CaseProcInstBind.variablesTypesProp, new HashSet<String>(BPMProcessVariable.DATE_TYPES))
+						    new Param(CaseProcInstBind.variablesTypesProp, new HashSet<>(BPMProcessVariable.DATE_TYPES))
 					);
 				}
 
@@ -485,7 +485,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 
 			if (ListUtil.isEmpty(allResults)) {
-				allResults = new ArrayList<Long>(variableResults);
+				allResults = new ArrayList<>(variableResults);
 			} else {
 				allResults.retainAll(variableResults);
 			}
@@ -525,14 +525,14 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			    new Param(CaseProcInstBind.processDefinitionNameProp, processDefinitionName),
 			    new Param(CaseProcInstBind.variablesNamesProp, variableName),
 			    new Param(CaseProcInstBind.variablesValuesProp, value),
-			    new Param(CaseProcInstBind.variablesTypesProp, new HashSet<String>(types))
+			    new Param(CaseProcInstBind.variablesTypesProp, new HashSet<>(types))
 		);
 	}
 
 	@Override
 	public List<Long> getCaseIdsByCaseNumber(String caseNumber) {
 		if (caseNumber == null || CoreConstants.EMPTY.equals(caseNumber)) {
-			return new ArrayList<Long>(0);
+			return new ArrayList<>(0);
 		}
 
 		if (!caseNumber.startsWith(CoreConstants.PERCENT)) {
@@ -551,10 +551,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			getLogger().log(Level.WARNING, "Error executing query: " + query, e);
 		}
 		if (ListUtil.isEmpty(data)) {
-			return new ArrayList<Long>(0);
+			return new ArrayList<>(0);
 		}
 
-		List<Integer> ids = new ArrayList<Integer>();
+		List<Integer> ids = new ArrayList<>();
 		for (Serializable[] temp: data) {
 			if (ArrayUtil.isEmpty(temp)) {
 				continue;
@@ -568,10 +568,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		List<CaseProcInstBind> binds = getCasesProcInstBindsByCasesIds(ids);
 		if (ListUtil.isEmpty(binds)) {
-			return new ArrayList<Long>(0);
+			return new ArrayList<>(0);
 		}
 
-		List<Long> results = new ArrayList<Long>();
+		List<Long> results = new ArrayList<>();
 		for (CaseProcInstBind bind: binds) {
 			results.add(Long.valueOf(bind.getCaseId()));
 		}
@@ -593,7 +593,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		Set<String> statusesInSet = new HashSet<String>(statuses.length);
+		Set<String> statusesInSet = new HashSet<>(statuses.length);
 		for (int i = 0; i < statuses.length; i++) {
 			statusesInSet.add(statuses[i]);
 		}
@@ -674,7 +674,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			long start = System.currentTimeMillis();
 			Collections.sort(cases, comparator);
 			LOGGER.info("Cases IDs (total " + cases.size() + ") were sorted in " + (System.currentTimeMillis() - start) + " ms");
-			List<Long> results = new ArrayList<Long>();
+			List<Long> results = new ArrayList<>();
 			for (CaseResult theCase: cases) {
 				results.add(theCase.id);
 			}
@@ -682,15 +682,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		if (cases == null) {
-			cases = new ArrayList<CasesBPMDAOImpl.CaseResult>();
+			cases = new ArrayList<>();
 		}
 
 		List<Long> usedIds = null;
 		if (procInstIds.size() > 1000) {
-			usedIds = new ArrayList<Long>(procInstIds.subList(0, 1000));
-			procInstIds = new ArrayList<Long>(procInstIds.subList(1000,	procInstIds.size()));
+			usedIds = new ArrayList<>(procInstIds.subList(0, 1000));
+			procInstIds = new ArrayList<>(procInstIds.subList(1000,	procInstIds.size()));
 		} else {
-			usedIds = new ArrayList<Long>(procInstIds);
+			usedIds = new ArrayList<>(procInstIds);
 			procInstIds = null;
 		}
 
@@ -773,7 +773,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	        Integer dataFrom,
 	        Integer dataTo
 	) {
-		List<Param> params = new ArrayList<Param>();
+		List<Param> params = new ArrayList<>();
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param("userStatus", ProcessUserBind.Status.PROCESS_WATCHED.toString()));
 
@@ -907,7 +907,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		StringBuilder queryPart = new StringBuilder(" inner join proc_case_subscribers on " + tableAndColumnName + " = proc_case_subscribers.proc_case_id ");
 
 		if (!ListUtil.isEmpty(subscriberGroupIDs)) {
-			List<U> users = new ArrayList<U>(1);
+			List<U> users = new ArrayList<>(1);
 			users.add(user);
 			queryPart.append(getSubscribedUsersQueryPart(users, subscriberGroupIDs));
 		}
@@ -950,7 +950,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			showClosedCases = true;
 		}
 
-		List<Param> params = new ArrayList<Param>();
+		List<Param> params = new ArrayList<>();
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, IdentityType.USER.toString()));
 		if (!ListUtil.isEmpty(caseCodes)) {
@@ -1059,7 +1059,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			showClosedCases = true;
 		}
 
-		List<Param> params = new ArrayList<Param>();
+		List<Param> params = new ArrayList<>();
 		if (!ListUtil.isEmpty(caseCodes)) {
 			params.add(new Param("caseCodes", caseCodes));
 		}
@@ -1168,7 +1168,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return Collections.emptyMap();
 		}
 
-		Map<Integer, Date> results = new LinkedHashMap<Integer, Date>();
+		Map<Integer, Date> results = new LinkedHashMap<>();
 		for (Object[] caseData: data) {
 			if (ArrayUtil.isEmpty(caseData) || caseData.length != 2) {
 				continue;
@@ -1200,7 +1200,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	        Integer dataFrom,
 	        Integer dataTo
 	) {
-		List<Param> params = new ArrayList<Param>();
+		List<Param> params = new ArrayList<>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
@@ -1291,7 +1291,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	        Integer dataFrom,
 	        Integer dataTo
 	) {
-		List<Param> params = new ArrayList<Param>();
+		List<Param> params = new ArrayList<>();
 		params.add(new Param("statusesToShow", caseStatusesToShow));
 		if (!ListUtil.isEmpty(caseStatusesToHide)) {
 			params.add(new Param("statusesToHide", caseStatusesToHide));
@@ -1464,7 +1464,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	        Integer dataFrom,
 	        Integer dataTo
 	) {
-		List<Param> params = new ArrayList<Param>();
+		List<Param> params = new ArrayList<>();
 		params.add(new Param("caseCodes", caseCodes));
 		params.add(new Param(NativeIdentityBind.identityIdProperty, user.getPrimaryKey().toString()));
 		params.add(new Param(NativeIdentityBind.identityTypeProperty, NativeIdentityBind.IdentityType.USER.toString()));
@@ -1582,7 +1582,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	@Override
 	public List<Integer> getCasesIdsByStatusForAdmin(List<String> caseStatusesToShow, List<String> caseStatusesToHide) {
 		StringBuilder builder = new StringBuilder(200);
-		List<Param> params = new ArrayList<Param>();
+		List<Param> params = new ArrayList<>();
 		params.add(new Param("statusToShow", caseStatusesToShow));
 		builder.append("select comm_case.comm_case_id as caseId from comm_case "
 		                + "inner join proc_case on comm_case.comm_case_id = proc_case.proc_case_id "
@@ -1613,17 +1613,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			Integer maxResults,
 			boolean newestOnTop,
 			com.idega.user.data.bean.User userCreatedBy
-	){
-		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
+	) {
+		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
 				caseStatuses,
 				procDefNames,
+				null,
 				null,
 				false,
 				firstResult,
 				maxResults,
 				newestOnTop,
 				false,
-				userCreatedBy
+				userCreatedBy,
+				false
 		);
 	}
 
@@ -1639,7 +1641,6 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	) {
 		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(caseStatuses, procDefNames, user, onlySubscribed, firstResult, maxResults, newestOnTop, false);
 	}
-
 
 	@Override
 	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNames(
@@ -1661,31 +1662,106 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			boolean newestOnTop,
 			boolean count
 	) {
-		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
+		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
 				caseStatuses,
 				procDefNames,
+				null,
 				user,
 				onlySubscribed,
 				firstResult,
 				maxResults,
 				newestOnTop,
 				count,
-				null
+				null,
+				false
 		);
 	}
 
-	private <T> T getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
+	@Override
+	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNamesOrCaseCode(
 			List<String> caseStatuses,
 			List<String> procDefNames,
+			List<String> caseCodes,
+			Integer firstResult,
+			Integer maxResults,
+			boolean newestOnTop,
+			com.idega.user.data.bean.User userCreatedBy
+	) {
+		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
+				caseStatuses,
+				procDefNames,
+				caseCodes,
+				null,
+				false,
+				firstResult,
+				maxResults,
+				newestOnTop,
+				false,
+				userCreatedBy,
+				false
+		);
+	}
+
+	@Override
+	public List<Integer> getCasesIdsByCaseStatusesAndProcessDefinitionNamesOrCaseCode(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			List<String> caseCodes,
+			Integer firstResult,
+			Integer maxResults,
+			boolean newestOnTop,
+			com.idega.user.data.bean.User userCreatedBy
+	) {
+		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
+				caseStatuses,
+				procDefNames,
+				caseCodes,
+				null,
+				false,
+				firstResult,
+				maxResults,
+				newestOnTop,
+				false,
+				userCreatedBy,
+				true
+		);
+	}
+
+	@Override
+	public Long getCountedProcessInstancesByCaseStatusesAndProcessDefinitionNamesOrCaseCode(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			List<String> caseCodes
+	) {
+		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
+				caseStatuses,
+				procDefNames,
+				caseCodes,
+				null,
+				false,
+				null,
+				null,
+				false,
+				true,
+				null,
+				false
+		);
+	}
+
+	private <T> T getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			List<String> caseCodes,
 			com.idega.user.data.bean.User user,
 			boolean onlySubscribed,
 			Integer firstResult,
 			Integer maxResults,
 			boolean newestOnTop,
 			boolean count,
-			com.idega.user.data.bean.User userCreatedBy
+			com.idega.user.data.bean.User userCreatedBy,
+			boolean casesIds
 	) {
-		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procDefNames)) {
+		if (ListUtil.isEmpty(caseStatuses) || (ListUtil.isEmpty(procDefNames) && ListUtil.isEmpty(caseCodes))) {
 			if (count) {
 				@SuppressWarnings("unchecked")
 				T result = (T) Long.valueOf(0);
@@ -1699,52 +1775,73 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		String query = null;
 		try {
+			boolean byCodes = !ListUtil.isEmpty(caseCodes);
+
 			List<Param> params = new ArrayList<>();
-			params.add(new Param("procDefNames", procDefNames));
 			params.add(new Param("statuses", caseStatuses));
 
-			query = "select "
-					+ (count ? "count(cp.procInstId)" : "cp.procInstId")
-					+ " from "
-					+ CaseProcInstBind.class.getSimpleName()
+			query = "select " +
+					(count ? "count(distinct pc.id)" : casesIds ? "distinct pc.id" : "distinct cp.procInstId");
+			query += " from " + com.idega.block.process.data.bean.Case.class.getSimpleName() + " pc ";
+			if (!byCodes) {
+				query += ", "
+					+ CaseProcInstBind.class.getName()
 					+ " cp, "
 					+ ProcessInstance.class.getName()
 					+ " pi, "
 					+ ProcessDefinition.class.getName()
-					+ " pd, "
-					+ com.idega.block.process.data.bean.Case.class.getName()
-					+ " pc ";
+					+ " pd ";
+			}
 
 			if (onlySubscribed && user != null) {
 				query += " inner join pc.subscribers sub ";
 			}
 
-			query += "where pd.name in (:procDefNames) and pc.caseStatus in (:statuses) ";
+			query += " where ";
+			if (byCodes) {
+				query += " pc.caseCode in (:caseCodes) ";
+				params.add(new Param("caseCodes", caseCodes));
+			} else {
+				query += " pd.name in (:procDefNames) ";
+				params.add(new Param("procDefNames", procDefNames));
+			}
+			query += " and pc.caseStatus in (:statuses) ";
 
 			if (onlySubscribed && user != null) {
 				query += " and :user in (sub) ";
 				params.add(new Param("user", user));
 			}
 
-			if(userCreatedBy != null) {
+			if (userCreatedBy != null) {
 				query += " and pc.userId = :userCreatedBy";
 				params.add(new Param("userCreatedBy", userCreatedBy.getId()));
 			}
 
-			query += " and pi.processDefinition.id = pd.id and pi.id = cp.procInstId and cp.caseId = pc.id";
+			if (!byCodes) {
+				query += " and pi.processDefinition.id = pd.id and pi.id = cp.procInstId ";
+				query += " and cp.caseId = pc.id";
+			}
 
 			if (!count && newestOnTop) {
 				query += " order by pc.created desc";
 			}
 
+			Param[] parameters = ArrayUtil.convertListToArray(params);
+
 			if (count) {
 				@SuppressWarnings("unchecked")
-				T result = (T) getSingleResultByInlineQuery(query, Long.class, ArrayUtil.convertListToArray(params));
+				T result = (T) getSingleResultByInlineQuery(query, Long.class, parameters);
 				return result;
 			} else {
-				@SuppressWarnings("unchecked")
-				T result = (T) getResultListByInlineQuery(query, Long.class, firstResult, maxResults, "caseProcInstIds", ArrayUtil.convertListToArray(params));
-				return result;
+				if (casesIds) {
+					@SuppressWarnings("unchecked")
+					T result = (T) getResultListByInlineQuery(query, Integer.class, firstResult, maxResults, "casesIdsByCaseStatusesAndProcessDefinitionNamesOrCaseCode", parameters);
+					return result;
+				} else {
+					@SuppressWarnings("unchecked")
+					T result = (T) getResultListByInlineQuery(query, Long.class, firstResult, maxResults, "caseProcInstIds", parameters);
+					return result;
+				}
 			}
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting data by query: " + query, e);
@@ -1839,7 +1936,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			String endDate
 	) {
 		if (results == null) {
-			results = new LinkedHashMap<Long, Integer>();
+			results = new LinkedHashMap<>();
 		}
 
 		if (ListUtil.isEmpty(procDefNames) && ListUtil.isEmpty(procInstIds)) {
@@ -1870,10 +1967,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		} else {
 			List<Long> usedIds = null;
 			if (procInstIds.size() > 1000) {
-				usedIds = new ArrayList<Long>(procInstIds.subList(0, 1000));
-				procInstIds = new ArrayList<Long>(procInstIds.subList(1000,	procInstIds.size()));
+				usedIds = new ArrayList<>(procInstIds.subList(0, 1000));
+				procInstIds = new ArrayList<>(procInstIds.subList(1000,	procInstIds.size()));
 			} else {
-				usedIds = new ArrayList<Long>(procInstIds);
+				usedIds = new ArrayList<>(procInstIds);
 				procInstIds = null;
 			}
 			for (Iterator<Long> procInstIdsIter = usedIds.iterator(); procInstIdsIter.hasNext();) {
@@ -2029,7 +2126,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		List<Integer> casesIds = new ArrayList<Integer>();
+		List<Integer> casesIds = new ArrayList<>();
 		for (Serializable[] caseId: cases) {
 			if (ArrayUtil.isEmpty(caseId)) {
 				continue;
@@ -2086,7 +2183,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		List<Long> subscribed = new ArrayList<Long>();
+		List<Long> subscribed = new ArrayList<>();
 		for (Serializable[] id: data) {
 			if (ArrayUtil.isEmpty(id)) {
 				continue;
@@ -2116,7 +2213,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		Map<Long, Integer> results = new HashMap<Long, Integer>();
+		Map<Long, Integer> results = new HashMap<>();
 		for (Serializable[] ids: data) {
 			if (ArrayUtil.isEmpty(ids) || ids.length != 2) {
 				continue;
@@ -2139,7 +2236,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return Collections.emptyList();
 		}
 
-		return new ArrayList<Long>(results.keySet());
+		return new ArrayList<>(results.keySet());
 	}
 
 	private Collection<Case> getCasesByProcessDefinition(String processDefinition) {
@@ -2152,7 +2249,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		List<Integer> ids = new ArrayList<Integer>();
+		List<Integer> ids = new ArrayList<>();
 		for (Long id: casesIds) {
 			ids.add(id.intValue());
 		}
@@ -2252,7 +2349,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return Collections.emptyMap();
 		}
 
-		Map<Long, Integer> results = new HashMap<Long, Integer>();
+		Map<Long, Integer> results = new HashMap<>();
 		for (CaseProcInstBind bind: binds) {
 			results.put(bind.getProcInstId(), bind.getCaseId());
 		}
@@ -2325,12 +2422,12 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return Collections.emptyList();
 		}
 
-		Map<Integer, Boolean> ids = new HashMap<Integer, Boolean>();
+		Map<Integer, Boolean> ids = new HashMap<>();
 		for (String id: casesIDs) {
 			ids.put(Integer.valueOf(id), Boolean.TRUE);
 		}
 
-		return new ArrayList<Integer>(ids.keySet());
+		return new ArrayList<>(ids.keySet());
 	}
 
 	/**
@@ -2642,7 +2739,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		List<Integer> casesIds = new ArrayList<Integer>(ids.size());
+		List<Integer> casesIds = new ArrayList<>(ids.size());
 		for (Long id: ids) {
 			casesIds.add(id.intValue());
 		}
@@ -2706,7 +2803,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		List<Integer> ids = new ArrayList<Integer>();
+		List<Integer> ids = new ArrayList<>();
 		for (Serializable[] result: results) {
 			if (ArrayUtil.isEmpty(result)) {
 				continue;
@@ -2767,9 +2864,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		if (handlersIDs == null) {
-			handlersIDs = new ArrayList<N>();
+			handlersIDs = new ArrayList<>();
 		} else {
-			handlersIDs = new ArrayList<N>(handlersIDs);
+			handlersIDs = new ArrayList<>(handlersIDs);
 		}
 		Long handlerId = Long.valueOf(handler.getPrimaryKey().toString());
 		@SuppressWarnings("unchecked")
