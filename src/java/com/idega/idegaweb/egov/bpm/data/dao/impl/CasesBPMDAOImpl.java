@@ -1835,7 +1835,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			} else {
 				if (casesIds) {
 					@SuppressWarnings("unchecked")
-					T result = (T) getResultListByInlineQuery(query, Integer.class, firstResult, maxResults, "casesIdsByCaseStatusesAndProcessDefinitionNamesOrCaseCode", parameters);
+					T result = (T) getResultListByInlineQuery(query, Integer.class, firstResult, maxResults, null, parameters);
 					return result;
 				} else {
 					@SuppressWarnings("unchecked")
