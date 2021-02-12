@@ -9,9 +9,11 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.logging.Level;
 
@@ -28,6 +30,7 @@ import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
 import com.idega.block.process.data.CaseHome;
+import com.idega.bpm.model.VariableInstance;
 import com.idega.bpm.xformsview.converters.ObjectCollectionConverter;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
@@ -151,9 +154,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return this.caseHome;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
-	public List<CaseBoardBean> getAllSortedCases(
+	public <K extends Serializable> List<CaseBoardBean> getAllSortedCases(
 			Collection<String> caseStatuses,
 			String processName,
 			String uuid,
@@ -161,14 +163,16 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boolean backPage,
 			String taskName,
 			Date dateFrom,
-			Date dateTo
+			Date dateTo,
+			String casesType,
+			Class<K> type
 	) {
 		//	Getting cases by the configuration
 		Collection<GeneralCase> cases = getCases(
 				caseStatuses,
 				processName,
 				isSubscribedOnly,
-				ProcessConstants.BPM_CASE,
+				StringUtil.isEmpty(casesType) ? ProcessConstants.BPM_CASE : casesType,
 				dateFrom,
 				dateTo
 		);
@@ -181,7 +185,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				cases,
 				uuid,
 				backPage,
-				taskName
+				taskName,
+				type
 		);
 		if (ListUtil.isEmpty(boardCases)) {
 			return null;
@@ -190,7 +195,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		List<String> sortingPreferences = null;
 		Object o = CoreUtil.getIWContext().getSessionAttribute(BOARD_CASES_LIST_SORTING_PREFERENCES);
 		if (o instanceof List) {
-			sortingPreferences = (List<String>) o;
+			@SuppressWarnings("unchecked")
+			List<String> prefs = (List<String>) o;
+			sortingPreferences = prefs;
 		}
 		if (ListUtil.isEmpty(sortingPreferences)) {
 			IWContext iwc = CoreUtil.getIWContext();
@@ -204,23 +211,34 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return boardCases;
 	}
 
-	protected List<CaseBoardBean> getFilledBoardCaseWithInfo(
+	/**
+	 *
+	 * @param <K> expected {@link Long} or {@link String}
+	 * @param casesIdsAndHandlers
+	 * @param uuid
+	 * @param backPage
+	 * @param taskName
+	 * @param type
+	 * @return
+	 */
+	protected <K extends Serializable> List<CaseBoardBean> getFilledBoardCaseWithInfo(
 			Collection<? extends GeneralCase> casesIdsAndHandlers,
 			String uuid,
 			boolean backPage,
-			String taskName
+			String taskName,
+			Class<K> type
 	) {
-		List<String> variablesToQuery = new ArrayList<String>(getVariables(uuid));
+		List<String> variablesToQuery = new ArrayList<>(getVariables(uuid));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
 			variablesToQuery.add(ProcessConstants.FINANCING_OF_THE_TASKS);
 		}
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_SUGGESTION);
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_DECISION);
-		List<String> allVariables = new ArrayList<String>(variablesToQuery);
+		List<String> allVariables = new ArrayList<>(variablesToQuery);
 		allVariables.addAll(getGradingVariables());
 
-		List<CaseBoardView> boardViews = getVariablesValuesByNamesForCases(casesIdsAndHandlers, allVariables, taskName);
+		List<CaseBoardView> boardViews = getVariablesValuesByNamesForCases(casesIdsAndHandlers, allVariables, taskName, type);
 		if (ListUtil.isEmpty(boardViews)) {
 			return null;
 		}
@@ -233,7 +251,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		);
 
 		/* Formatting links */
-		Map<Long, ProcessInstance> relations = new HashMap<Long, ProcessInstance>();
+		Map<Long, ProcessInstance> relations = new HashMap<>();
 		for (CaseBoardView view: boardViews) {
 			relations.put(Long.valueOf(view.getCaseId()), view.getProcessInstance());
 		}
@@ -244,7 +262,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		Locale locale = iwc.getCurrentLocale();
 
 		/* Filling board cases */
-		List<CaseBoardBean> boardCases = new ArrayList<CaseBoardBean>();
+		List<CaseBoardBean> boardCases = new ArrayList<>();
 		for (CaseBoardView view: boardViews) {
 			CaseBoardBean boardCase = new CaseBoardBean(view.getCaseId(), view.getProcessInstanceId());
 			boardCase.setApplicantName(view.getValue(CaseBoardBean.CASE_OWNER_FULL_NAME));
@@ -283,65 +301,110 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return boardCases;
 	}
 
-	private CaseBoardView getCaseView(List<CaseBoardView> views, Long processInstanceId) {
+	private <K extends Serializable> CaseBoardView getCaseView(List<CaseBoardView> views, K processInstanceId) {
 		if (ListUtil.isEmpty(views) || processInstanceId == null) {
 			return null;
 		}
 
+		Long id = processInstanceId instanceof Number ? ((Number) processInstanceId).longValue() : null;
 		for (CaseBoardView view: views) {
-			if (processInstanceId.longValue() == view.getProcessInstanceId().longValue()) {
-				return view;
+			if (id == null) {
+				if (processInstanceId.toString().equals(view.getProcessInstanceId().toString())) {
+					return view;
+				}
+			} else {
+				if (id.longValue() == ((Long) view.getProcessInstanceId()).longValue()) {
+					return view;
+				}
 			}
 		}
 
 		return null;
 	}
 
-	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
-	protected List<CaseBoardView> getVariablesValuesByNamesForCases(
-			Collection<? extends GeneralCase> cases,
-			List<String> variablesNames,
-			String gradingTaskName
-	) {
-		gradingTaskName = StringUtil.isEmpty(gradingTaskName) ? "Grading" : gradingTaskName;
+	protected <T extends VariableInstance, K extends Serializable> Collection<T> getVariables(Collection<String> variablesNames, Set<K> keys) {
+		if (ListUtil.isEmpty(keys)) {
+			return null;
+		}
 
-		/* Getting relations between cases and process instances */
-		Map<ProcessInstance, Case> casesAndProcesses = getCaseProcessInstanceRelation().getCasesAndProcessInstances(cases);
+		Set<Long> procInstIds = new HashSet<>();
+		for (K key: keys) {
+			if (key instanceof ProcessInstance) {
+				procInstIds.add(((ProcessInstance) key).getId());
+			} else if (key instanceof Number) {
+				procInstIds.add(((Number) key).longValue());
+			}
+		}
+		if (ListUtil.isEmpty(procInstIds)) {
+			return null;
+		}
 
-		/* Getting variables */
-		Collection<VariableInstanceInfo> variables = getVariablesQuerier().getVariables(
+		@SuppressWarnings("unchecked")
+		List<T> variables = (List<T>) getVariablesQuerier().getVariables(
 				variablesNames,
-				casesAndProcesses.keySet(),
+				procInstIds,
 				Boolean.FALSE,
 				Boolean.FALSE,
 				Boolean.FALSE
 		);
-		if (ListUtil.isEmpty(variables)) {
-			getLogger().warning("Didn't find any variables values for processes " + casesAndProcesses.values() + " and variables names " + variablesNames);
+		return variables;
+	}
+
+	/**
+	 *
+	 * @param <K> expected {@link Long} or {@link String}
+	 * @param cases
+	 * @param variablesNames
+	 * @param gradingTaskName
+	 * @param type
+	 * @return
+	 */
+	@Transactional(readOnly = true, propagation = Propagation.REQUIRED)
+	protected <K extends Serializable> List<CaseBoardView> getVariablesValuesByNamesForCases(
+			Collection<? extends GeneralCase> cases,
+			List<String> variablesNames,
+			String gradingTaskName,
+			Class<K> type
+	) {
+		/* Getting relations between cases and process instances */
+		Map<K, Case> processesIdsAndCases = getCaseProcessInstanceRelation().getCasesAndProcessInstancesIds(cases, type);
+		if (MapUtil.isEmpty(processesIdsAndCases)) {
 			return null;
 		}
 
-		List<CaseBoardView> views = new ArrayList<CaseBoardView>();
+		/* Getting variables */
+		Collection<VariableInstanceInfo> variables = getVariables(variablesNames, processesIdsAndCases.keySet());
+		if (ListUtil.isEmpty(variables)) {
+			getLogger().warning("Didn't find any variables values for processes " + processesIdsAndCases.keySet() + " and variables names " + variablesNames);
+			return null;
+		}
+
+		List<CaseBoardView> views = new ArrayList<>();
 		for (VariableInstanceInfo variable: variables) {
 			Serializable value = variable.getValue();
 			if (variable.getName() != null && value != null && variable.getProcessInstanceId() != null) {
-				Long processInstanceId = variable.getProcessInstanceId();
+				K processInstanceId = variable.getProcessInstanceId();
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
-					GeneralCase theCase = getCaseProcessInstanceRelation().getCase(casesAndProcesses, processInstanceId);
+					GeneralCase theCase = getCaseProcessInstanceRelation().getCase(processesIdsAndCases, processInstanceId);
 					if (theCase == null) {
-						getLogger().warning("Case ID was not found in " + casesAndProcesses + " for process instance ID: " + processInstanceId);
-						getLogger().warning("Couldn't get view bean for process: " + processInstanceId + ": " + casesAndProcesses);
+						getLogger().warning("Case ID was not found in " + processesIdsAndCases + " for process instance ID: " + processInstanceId);
+						getLogger().warning("Couldn't get view bean for process: " + processInstanceId + ": " + processesIdsAndCases);
 						continue;
 					}
 
 					view = new CaseBoardView(theCase.getPrimaryKey().toString(), processInstanceId);
 					view.setHandler(theCase.getHandledBy());
-					view.setProcessInstance(getCaseProcessInstanceRelation().getProcessInstance(casesAndProcesses, processInstanceId));
+					Serializable procInst = getCaseProcessInstanceRelation().getProcessInstance(processesIdsAndCases, processInstanceId);
+					if (procInst instanceof ProcessInstance) {
+						view.setProcessInstance((ProcessInstance) procInst);
+					} else {
+						view.setProcessInstanceId(procInst);
+					}
 					views.add(view);
 				}
 
-				List<String> gradingVariables = new ArrayList<String>();
+				List<String> gradingVariables = new ArrayList<>();
 
 				if (variable instanceof VariableByteArrayInstance) {
 					if (ProcessConstants.FINANCING_OF_THE_TASKS.equals(variable.getName())) {
@@ -366,7 +429,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 								Map<String, String> taskInfoFromBoard = taskIndex < financing.size() ? financing.get(taskIndex) : null;
 								if (taskInfoFromBoard == null) {
-									taskInfoFromBoard = new HashMap<String, String>();
+									taskInfoFromBoard = new HashMap<>();
 									financing.add(taskInfoFromBoard);
 								}
 
@@ -404,6 +467,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				}
 
 				if (!ListUtil.isEmpty(gradingVariables)) {
+					gradingTaskName = StringUtil.isEmpty(gradingTaskName) ? "Grading" : gradingTaskName;
 					Map<String, String> data = getVariablesLatestValues(processInstanceId, gradingTaskName, gradingVariables);
 					if (!MapUtil.isEmpty(data)) {
 						for (String varName: data.keySet()) {
@@ -429,35 +493,39 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return bpmFactory;
 	}
 
-	private Map<String, String> getVariablesLatestValues(Long piId, String taskName, List<String> variablesNames) {
+	protected <K extends Serializable> Map<String, String> getVariablesLatestValues(K piId, String taskName, List<String> variablesNames) {
 		if (piId == null || StringUtil.isEmpty(taskName) || ListUtil.isEmpty(variablesNames)) {
 			return null;
 		}
 
-		if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("cases_board_latest_value_db", true)) {
-			Map<Long, Map<String, VariableInstanceInfo>> data = getVariablesQuerier().getGroupedData(
-					getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, Arrays.asList(piId), false, true, false)
-			);
-			if (!MapUtil.isEmpty(data)) {
-				Map<String, VariableInstanceInfo> vars = data.get(piId);
-				if (!MapUtil.isEmpty(vars)) {
-					Map<String, String> results = new HashMap<String, String>();
-					for (String varName: variablesNames) {
-						VariableInstanceInfo variable = vars.get(varName);
-						if (variable != null) {
-							String value = variable.getValue();
-							results.put(varName, StringUtil.isEmpty(value) ? CoreConstants.EMPTY : value);
+		if (piId instanceof Number) {
+			if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("cases_board_latest_value_db", true)) {
+				Map<Long, Map<String, VariableInstanceInfo>> data = getVariablesQuerier().getGroupedData(
+						getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, Arrays.asList(((Number) piId).longValue()), false, true, false)
+				);
+				if (!MapUtil.isEmpty(data)) {
+					Map<String, VariableInstanceInfo> vars = data.get(piId);
+					if (!MapUtil.isEmpty(vars)) {
+						Map<String, String> results = new HashMap<>();
+						for (String varName: variablesNames) {
+							VariableInstanceInfo variable = vars.get(varName);
+							if (variable != null) {
+								String value = variable.getValue();
+								results.put(varName, StringUtil.isEmpty(value) ? CoreConstants.EMPTY : value);
+							}
 						}
+						return results;
 					}
-					return results;
+				}
+			} else {
+				try {
+					return getBPMFactory().getProcessInstanceW(piId).getValuesForTaskInstance(StringUtil.isEmpty(taskName) ? "Grading" : taskName, variablesNames);
+				} catch (Exception e) {
+					getLogger().log(Level.WARNING, "Error getting latest values for " + variablesNames + ", proc. inst. ID: " + piId + ", task: " + taskName, e);
 				}
 			}
 		} else {
-			try {
-				return getBPMFactory().getProcessInstanceW(piId).getValuesForTaskInstance(StringUtil.isEmpty(taskName) ? "Grading" : taskName, variablesNames);
-			} catch (Exception e) {
-				getLogger().log(Level.WARNING, "Error getting latest values for " + variablesNames + ", proc. inst. ID: " + piId + ", task: " + taskName, e);
-			}
+			getLogger().warning("Get data by ID " + piId + " (" + piId.getClass().getName() + ") and variables " + variablesNames);	//	TODO
 		}
 
 		return null;
@@ -493,7 +561,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 		List<Map<String, String>> financing = view.getFinancingOfTheTasks();
 		if (financing == null) {
-			financing = new ArrayList<Map<String,String>>();
+			financing = new ArrayList<>();
 			view.setFinancingOfTheTasks(financing);
 		}
 
@@ -506,7 +574,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		for (String amount: amounts) {
 			Map<String, String> cells = index < financing.size() ? financing.get(index) : null;
 			if (cells == null) {
-				cells = new HashMap<String, String>();
+				cells = new HashMap<>();
 				financing.add(index, cells);
 			}
 
@@ -521,7 +589,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return Collections.emptyList();
 		}
 
-		List<Map<String, String>> object = new ArrayList<Map<String,String>>();
+		List<Map<String, String>> object = new ArrayList<>();
 		if (value instanceof Collection<?>) {
 			Collection<?> jsonParts = (Collection<?>) value;
 			for (Object jsonPart: jsonParts) {
@@ -629,7 +697,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return null;
 		}
 
-		Collection<GeneralCase> bpmCases = new ArrayList<GeneralCase>();
+		Collection<GeneralCase> bpmCases = new ArrayList<>();
 		for (Case theCase: allCases) {
 			if (!(theCase instanceof GeneralCase) || theCase.isClosed()) {
 				continue;
@@ -678,12 +746,12 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		if (variables == null) {
 			List<String> customColumns = getCustomColumns(uuid);
 			if (ListUtil.isEmpty(customColumns)) {
-				variables = new ArrayList<String>(CasesBoardViewer.CASE_FIELDS.size());
+				variables = new ArrayList<>(CasesBoardViewer.CASE_FIELDS.size());
 				for (AdvancedProperty variable : CasesBoardViewer.CASE_FIELDS) {
 					variables.add(variable.getId());
 				}
 			} else {
-				variables = new ArrayList<String>(customColumns);
+				variables = new ArrayList<>(customColumns);
 			}
 		}
 		return variables;
@@ -720,7 +788,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			CaseBoardView view,
 			List<String> variables
 	) {
-		Map<String, BigDecimal> gradings = new HashMap<String, BigDecimal>(2);
+		Map<String, BigDecimal> gradings = new HashMap<>(2);
 
 		List<String> gradingValues = view.getValues(variables);
 		if (ListUtil.isEmpty(gradingValues)) {
@@ -767,7 +835,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	@Override
-	public CaseBoardTableBean getTableData(
+	public <K extends Serializable> CaseBoardTableBean getTableData(
 			Date dateFrom,
 			Date dateTo,
 			Collection<String> caseStatuses,
@@ -775,10 +843,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			String uuid,
 			boolean isSubscribedOnly,
 			boolean useBasePage,
-			String taskName
+			String taskName,
+			String casesType,
+			Class<K> type
 	) {
 		CaseBoardTableBean data = new CaseBoardTableBean();
 
+		@SuppressWarnings("unchecked")
+		Class<K> keyType = type == null ? (Class<K>) ProcessInstance.class : type;
 		List<CaseBoardBean> boardCases = getAllSortedCases(
 				caseStatuses,
 				processName,
@@ -787,7 +859,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				useBasePage,
 				taskName,
 				dateFrom,
-				dateTo
+				dateTo,
+				casesType,
+				keyType
 		);
 		if (ListUtil.isEmpty(boardCases)) {
 			data.setErrorMessage(localize("cases_board_viewer.no_cases_found", "There are no cases!"));
@@ -804,7 +878,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		BigDecimal grantAmountSuggestionTotal = new BigDecimal(0);
 		boolean financingTableAdded = false;
 		String uniqueCaseId = "uniqueCaseId";
-		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<CaseBoardTableBodyRowBean>(boardCases.size());
+		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<>(boardCases.size());
 
 		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 		boolean addBoardSuggestion = settings.getBoolean("cases_board_add_board_suggestion", false);
@@ -826,7 +900,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 			int index = 0;
 			List<AdvancedProperty> columnLabels = null;
-			Map<Integer, List<AdvancedProperty>> rowValues = new TreeMap<Integer, List<AdvancedProperty>>();
+			Map<Integer, List<AdvancedProperty>> rowValues = new TreeMap<>();
 			for (Integer key: columns.keySet()) {
 				columnLabels = columns.get(key);
 
@@ -938,7 +1012,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boolean backPage,
 			String taskName
 	) {
-		return getTableData(null, null, caseStatuses, processName, uuid, isSubscribedOnly, backPage, taskName);
+		return getTableData(null, null, caseStatuses, processName, uuid, isSubscribedOnly, backPage, taskName, ProcessConstants.BPM_CASE, Long.class);
 	}
 
 	@Override
@@ -1003,7 +1077,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public Map<Integer, List<AdvancedProperty>> getColumns(String uuid) {
-		Map<Integer, List<AdvancedProperty>> columns = new TreeMap<Integer, List<AdvancedProperty>>();
+		Map<Integer, List<AdvancedProperty>> columns = new TreeMap<>();
 		int index = 1;
 
 		List<String> customColumns = getCustomColumns(uuid);
@@ -1074,7 +1148,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			BigDecimal boardAmountTotal,
 			String uuid
 	) {
-		List<String> values = new ArrayList<String>();
+		List<String> values = new ArrayList<>();
 
 		indexOfTotal = indexOfTotal == null ? getIndexOfColumn(ProcessConstants.FINANCING_OF_THE_TASKS, uuid) : indexOfTotal;
 		if (indexOfTotal < 0) {
@@ -1136,16 +1210,16 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	protected class CaseBoardView {
 
 		private String caseId;
-		private Long processInstanceId;
+		private Serializable processInstanceId;
 		private ProcessInstance processInstance;
 
 		private User handler;
 
-		private List<AdvancedProperty> variables = new ArrayList<AdvancedProperty>();
+		private List<AdvancedProperty> variables = new ArrayList<>();
 
 		private List<Map<String, String>> financingOfTheTasks;
 
-		private CaseBoardView(String caseId, Long processInstanceId) {
+		private CaseBoardView(String caseId, Serializable processInstanceId) {
 			this.caseId = caseId;
 			this.processInstanceId = processInstanceId;
 		}
@@ -1162,8 +1236,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return caseId;
 		}
 
-		public Long getProcessInstanceId() {
-			return processInstanceId;
+		public <T extends Serializable> T getProcessInstanceId() {
+			@SuppressWarnings("unchecked")
+			T result = (T) processInstanceId;
+			return result;
 		}
 
 		public List<AdvancedProperty> getVariables() {
@@ -1201,7 +1277,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				return null;
 			}
 
-			List<String> values = new ArrayList<String>();
+			List<String> values = new ArrayList<>();
 			for (String variableName: variablesNames) {
 				String value = getValue(variableName);
 				values.add(value);
@@ -1223,6 +1299,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 		public void setFinancingOfTheTasks(List<Map<String, String>> financingOfTheTasks) {
 			this.financingOfTheTasks = financingOfTheTasks;
+		}
+
+		public void setProcessInstanceId(Serializable processInstanceId) {
+			this.processInstanceId = processInstanceId;
 		}
 
 		@Override
@@ -1326,7 +1406,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		int tasksIndex = 0;
-		Map<Integer, Map<String, String>> valuesToReplace = new TreeMap<Integer, Map<String,String>>();
+		Map<Integer, Map<String, String>> valuesToReplace = new TreeMap<>();
 		for (Map<String, String> taskInfo: tasksInfo) {
 			if (MapUtil.isEmpty(taskInfo)) {
 				continue;
@@ -1339,7 +1419,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 			Long cost = getNumberValue(taskInfo.get("cost_estimate"), Boolean.FALSE);
 
-			Map<String, String> cells = new HashMap<String, String>();
+			Map<String, String> cells = new HashMap<>();
 			cells.put(CasesBoardViewer.WORK_ITEM, taskName);
 			cells.put(CasesBoardViewer.ESTIMATED_COST, String.valueOf(cost));
 
@@ -1356,7 +1436,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			tasksIndex++;
 		}
 
-		tasksInfo = new ArrayList<Map<String,String>>();
+		tasksInfo = new ArrayList<>();
 		for (Map<String, String> infoToReplace: valuesToReplace.values()) {
 			tasksInfo.add(infoToReplace);
 		}

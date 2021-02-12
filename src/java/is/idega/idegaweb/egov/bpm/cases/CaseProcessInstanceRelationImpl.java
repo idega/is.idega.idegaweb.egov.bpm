@@ -1,7 +1,6 @@
 package is.idega.idegaweb.egov.bpm.cases;
 
-import is.idega.idegaweb.egov.cases.data.GeneralCase;
-
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -17,12 +16,16 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
 import com.idega.block.process.data.Case;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.data.dao.BPMDAO;
 import com.idega.util.ListUtil;
+import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
 
 /**
  * @author <a href="mailto:civilis@idega.com">Vytautas Čivilis</a>
@@ -30,7 +33,7 @@ import com.idega.util.expression.ELUtil;
  */
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
-public class CaseProcessInstanceRelationImpl {
+public class CaseProcessInstanceRelationImpl extends DefaultSpringBean {
 
 	@Autowired
 	private BPMDAO bpmDAO;
@@ -42,7 +45,7 @@ public class CaseProcessInstanceRelationImpl {
 
 		return this.bpmDAO;
 	}
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
@@ -50,40 +53,55 @@ public class CaseProcessInstanceRelationImpl {
 		if (this.casesBPMDAO == null) {
 			ELUtil.getInstance().autowire(this);
 		}
-		
+
 		return casesBPMDAO;
 	}
 
 	public Long getCaseProcessInstanceId(Integer caseId) {
 		CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
 		Long processInstanceId = cpi.getProcInstId();
-		
+
 		return processInstanceId;
 	}
 
-	
-
 	public Map<Integer, Long> getCasesProcessInstancesIds(Set<Integer> casesIds) {
-		List<CaseProcInstBind> binds = getCasesBPMDAO().getCasesProcInstBindsByCasesIds(new ArrayList<Integer>(casesIds));
-		if (ListUtil.isEmpty(binds))
+		return getCasesProcessInstancesIds(casesIds, Long.class);
+	}
+
+	private <T extends Serializable> Map<Integer, T> getCasesProcessInstancesIds(Set<Integer> casesIds, Class<T> type) {
+		List<CaseProcInstBind> binds = getCasesBPMDAO().getCasesProcInstBindsByCasesIds(new ArrayList<>(casesIds));
+		if (ListUtil.isEmpty(binds)) {
 			return Collections.emptyMap();
-		
-		Map<Integer, Long> casesIdsMapping = new HashMap<Integer, Long>();
+		}
+
+		boolean id = type == null || type.getName().equals(Long.class.getName());
+		Map<Integer, T> casesIdsMapping = new HashMap<>();
 		for (CaseProcInstBind bind: binds) {
 			Integer caseId = bind.getCaseId();
-			Long processInstanceId = bind.getProcInstId();
-			if (casesIdsMapping.get(caseId) == null) {
-				casesIdsMapping.put(caseId, processInstanceId);
+			if (id) {
+				Long processInstanceId = bind.getProcInstId();
+				if (casesIdsMapping.get(caseId) == null) {
+					@SuppressWarnings("unchecked")
+					T result = (T) processInstanceId;
+					casesIdsMapping.put(caseId, result);
+				}
+			} else {
+				String uuid = bind.getUuid();
+				if (!StringUtil.isEmpty(uuid) && casesIdsMapping.get(caseId) == null) {
+					@SuppressWarnings("unchecked")
+					T result = (T) uuid;
+					casesIdsMapping.put(caseId, result);
+				}
 			}
 		}
-		
+
 		return casesIdsMapping;
 	}
-	
+
 	/**
-	 * 
+	 *
 	 * @param cases to get {@link ProcessInstance}s for, not <code>null</code>;
-	 * @return values from {@link CaseProcInstBind} table or 
+	 * @return values from {@link CaseProcInstBind} table or
 	 * {@link Collections#emptyMap()} on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
@@ -93,7 +111,7 @@ public class CaseProcessInstanceRelationImpl {
 		}
 
 		/* Collecting ids of cases */
-		Map<Integer, Case> caseIDs = new HashMap<Integer, Case>(cases.size());
+		Map<Integer, Case> caseIDs = new HashMap<>(cases.size());
 		for (Case theCase: cases) {
 			caseIDs.put(Integer.valueOf(theCase.getPrimaryKey().toString()), theCase);
 		}
@@ -106,13 +124,13 @@ public class CaseProcessInstanceRelationImpl {
 
 		/* Collecting process instances */
 		List<ProcessInstance> processInstances = getBPMDAO().getProcessInstancesByIDs(ids.values());
-		Map<Long, ProcessInstance> processInstancesMap = new HashMap<Long, ProcessInstance>(processInstances.size());
+		Map<Long, ProcessInstance> processInstancesMap = new HashMap<>(processInstances.size());
 		for (ProcessInstance pi : processInstances) {
 			processInstancesMap.put(pi.getId(), pi);
 		}
 
 		/* Creating map of relations */
-		Map<ProcessInstance, Case> casesProcessInstances = new HashMap<ProcessInstance, Case>(ids.size());
+		Map<ProcessInstance, Case> casesProcessInstances = new HashMap<>(ids.size());
 		for (Integer caseId : ids.keySet()) {
 			Long processInstanceId = ids.get(caseId);
 			if (processInstanceId == null) {
@@ -121,33 +139,75 @@ public class CaseProcessInstanceRelationImpl {
 
 			casesProcessInstances.put(
 					processInstancesMap.get(processInstanceId),
-					caseIDs.get(caseId));
+					caseIDs.get(caseId)
+			);
+		}
+
+		return casesProcessInstances;
+	}
+
+	public <K extends Serializable> Map<K, Case> getCasesAndProcessInstancesIds(Collection<? extends Case> cases, Class<K> keyType) {
+		if (ListUtil.isEmpty(cases) || keyType == null) {
+			return Collections.emptyMap();
+		}
+
+		if (keyType.getName().equals(ProcessInstance.class.getName())) {
+			@SuppressWarnings("unchecked")
+			Map<K, Case> results = (Map<K, Case>) getCasesAndProcessInstances(cases);
+			return results;
+		}
+
+		/* Collecting ids of cases */
+		Map<Integer, Case> caseIDs = new HashMap<>(cases.size());
+		for (Case theCase: cases) {
+			caseIDs.put(Integer.valueOf(theCase.getPrimaryKey().toString()), theCase);
+		}
+
+		/* Collecting relations between cases and process instances */
+		Map<Integer, K> ids = getCasesProcessInstancesIds(caseIDs.keySet(), keyType);
+		if (MapUtil.isEmpty(ids)) {
+			return Collections.emptyMap();
+		}
+
+		/* Creating map of relations */
+		Map<K, Case> casesProcessInstances = new HashMap<>(ids.size());
+		for (Integer caseId : ids.keySet()) {
+			K id = ids.get(caseId);
+			if (id == null) {
+				continue;
+			}
+
+			casesProcessInstances.put(
+					id,
+					caseIDs.get(caseId)
+			);
 		}
 
 		return casesProcessInstances;
 	}
 
 	/**
-	 * 
+	 *
 	 * <p>Helping method, to get {@link GeneralCase} from created {@link Map}.
 	 * No querying is done.</p>
-	 * @param relationMap is {@link Map} from 
+	 * @param relationMap is {@link Map} from
 	 * {@link CaseProcessInstanceRelationImpl#getCasesAndProcessInstances(Collection)},
 	 * not <code>null</code>;
 	 * @param processInstanceId is {@link ProcessInstance#getId()} to search by,
 	 * not <code>null</code>;
-	 * @return {@link Case} corresponding {@link ProcessInstance} or 
+	 * @return {@link Case} corresponding {@link ProcessInstance} or
 	 * <code>null</code> on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
-	public GeneralCase getCase(
-			Map<ProcessInstance, Case> relationMap, 
-			Long processInstanceId) {
+	public <K extends Serializable> GeneralCase getCase(
+			Map<K, Case> relationMap,
+			K processInstanceId
+	) {
 		if (MapUtil.isEmpty(relationMap) || processInstanceId == null) {
 			return null;
 		}
 
-		ProcessInstance processInstance = getProcessInstance(relationMap, processInstanceId);
+		K processInstance = getProcessInstance(relationMap, processInstanceId);
 		if (processInstance == null) {
 			return null;
 		}
@@ -161,10 +221,10 @@ public class CaseProcessInstanceRelationImpl {
 	}
 
 	/**
-	 * 
+	 *
 	 * <p>Helping method, to get {@link ProcessInstance} from created {@link Map}.
 	 * No querying is done.</p>
-	 * @param relationMap is {@link Map} from 
+	 * @param relationMap is {@link Map} from
 	 * {@link CaseProcessInstanceRelationImpl#getCasesAndProcessInstances(Collection)},
 	 * not <code>null</code>;
 	 * @param processInstanceId is {@link ProcessInstance#getId()} to search by,
@@ -173,19 +233,46 @@ public class CaseProcessInstanceRelationImpl {
 	 * on failure;
 	 * @author <a href="mailto:martynas@idega.is">Martynas Stakė</a>
 	 */
-	public ProcessInstance getProcessInstance(
-			Map<ProcessInstance, Case> relationMap, 
-			Long processInstanceId) {
+	public <K extends Serializable> K getProcessInstance(
+			Map<K, Case> relationMap,
+			K processInstanceId
+	) {
 		if (MapUtil.isEmpty(relationMap) || processInstanceId == null) {
 			return null;
 		}
 
-		for (ProcessInstance pi : relationMap.keySet()) {
-			if (processInstanceId.longValue() == pi.getId()) {
-				return pi;
+		long piId = -1;
+		if (processInstanceId instanceof Number) {
+			piId = ((Number) processInstanceId).longValue();
+		}
+		for (Serializable key: relationMap.keySet()) {
+			if (key instanceof ProcessInstance) {
+				ProcessInstance pi = (ProcessInstance) key;
+				if (piId == pi.getId()) {
+					@SuppressWarnings("unchecked")
+					K result = (K) pi;
+					return result;
+				}
+
+			} else if (key instanceof Number) {
+				if (piId == ((Number) key).longValue()) {
+					@SuppressWarnings("unchecked")
+					K result = (K) key;
+					return result;
+				}
+
+			} else if (key instanceof String) {
+				if (processInstanceId.toString().equals(key.toString())) {
+					@SuppressWarnings("unchecked")
+					K result = (K) key;
+					return result;
+				}
+			} else {
+				getLogger().warning("Do not know how to handle key type " + key.getClass().getName() + ". Relations: " + relationMap);
 			}
 		}
 
 		return null;
 	}
+
 }
