@@ -12,6 +12,8 @@ public interface BPMManipulator {
 	public boolean doReSubmitProcess(Long piId, boolean onlyStart, boolean submitRepeatedTasks);
 	public boolean doReSubmitCase(Integer caseId, boolean onlyStart, boolean submitRepeatedTasks);
 
+	public boolean doReSubmitCases(String dateFrom, String dateTo, boolean onlyStart, boolean submitRepeatedTasks, boolean onlyMissingBinds);
+
 	public boolean doReSubmitCaseWithVariables(Integer caseId, boolean onlyStart, boolean submitRepeatedTasks, String variablesEncodedBase64);
 	public boolean doReSubmitCaseByIdentifierWithVariables(String caseIdentifier, boolean onlyStart, boolean submitRepeatedTasks, String variablesEncodedBase64);
 

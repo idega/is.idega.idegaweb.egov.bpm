@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import com.idega.core.accesscontrol.dao.UserLoginDAO;
 import com.idega.core.accesscontrol.data.bean.UserLogin;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.data.IDOLookup;
+import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.business.BPMManipulator;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
@@ -66,6 +68,7 @@ import com.idega.jbpm.view.ViewSubmission;
 import com.idega.presentation.IWContext;
 import com.idega.user.dao.UserDAO;
 import com.idega.user.data.bean.User;
+import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
@@ -143,6 +146,160 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 		}
 
 		return doSubmitVariables(caseId, variablesEncodedBase64);
+	}
+
+	@Override
+	@RemoteMethod
+	@Transactional(readOnly = false)
+	public boolean doReSubmitCases(String dateFrom, String dateTo, boolean onlyStart, boolean submitRepeatedTasks, boolean onlyMissingBinds) {
+		if (StringUtil.isEmpty(dateFrom) || StringUtil.isEmpty(dateTo)) {
+			getLogger().warning("Dates not provided");
+			return false;
+		}
+
+		try {
+			List<Serializable[]> allData = null;
+			String query = null;
+			if (onlyMissingBinds) {
+				query = "select proc_case_id from proc_case where proc_case_id in (select distinct c.proc_case_id from proc_case c, BPM_CASES_PROCESSINSTANCES b where c.created >= '" +
+					dateFrom + "' and c.created <= '" + dateTo + "' and c.CASE_MANAGER_TYPE = 'CasesBPM' and c.proc_case_id not in b.CASE_ID) order by created";
+			} else {
+				query = "select proc_case_id from proc_case where created >= '" + dateFrom + "' and c.created <= '" + dateTo + "' and c.CASE_MANAGER_TYPE = 'CasesBPM' order by created";
+			}
+			try {
+				allData = SimpleQuerier.executeQuery(query, 1);
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error executing query " + query, e);
+			}
+			if (ListUtil.isEmpty(allData)) {
+				getLogger().warning("Nothing found by " + query);
+				return false;
+			}
+
+			Collection<Integer> casesIds = new HashSet<>();
+			for (Serializable[] data: allData) {
+				if (ArrayUtil.isEmpty(data)) {
+					continue;
+				}
+
+				Serializable id = data[0];
+				if (id instanceof Number) {
+					casesIds.add(((Number) id).intValue());
+				}
+			}
+			if (ListUtil.isEmpty(casesIds)) {
+				getLogger().warning("No cases IDs resolved from " + query);
+				return false;
+			}
+
+			CaseHome caseHome = (CaseHome) IDOLookup.getHome(Case.class);
+			Collection<Case> cases = caseHome.findAllByIds(casesIds);
+			if (ListUtil.isEmpty(cases)) {
+				getLogger().warning("No cases found by " + casesIds);
+				return false;
+			}
+
+			int index = 1;
+			int all = cases.size();
+			Map<String, Boolean> reSubmitted = new HashMap<>();
+			for (Case theCase: cases) {
+				getLogger().info("Re-submitting case " + theCase + ": " + index + " out of " + all);
+				index++;
+
+				String caseIdentifier = theCase.getCaseIdentifier();
+				if (StringUtil.isEmpty(caseIdentifier)) {
+					getLogger().warning("Can not re-submit case " + theCase + ": case identifier unknown");
+					continue;
+				}
+
+				if (reSubmitted.containsKey(caseIdentifier)) {
+					getLogger().warning("Case " + theCase + " with case identifier " + caseIdentifier + " was already re-submitted");
+					continue;
+				}
+
+				List<Object[]> cps = null;
+				CaseProcInstBind bind = null;
+				try {
+					cps = casesDAO.getCaseProcInstBindProcessInstanceByCaseIdentifier(Arrays.asList(caseIdentifier));
+				} catch (Exception e) {}
+				if (!ListUtil.isEmpty(cps)) {
+					Object[] data = cps.iterator().next();
+					if (!ArrayUtil.isEmpty(data)) {
+						bind = (CaseProcInstBind) data[0];
+					}
+				}
+
+				if (bind == null) {
+					List<Serializable[]> procData = null;
+					String procInstQuery = "select PROCESSINSTANCE_ from jbpm_variableinstance where stringvalue_ like '" + caseIdentifier + "' and PROCESSINSTANCE_ is not null";
+					try {
+						procData = SimpleQuerier.executeQuery(procInstQuery, 1);
+					} catch (Exception e) {
+						getLogger().log(Level.WARNING, "Failed to get proc. inst. ID from query " + procInstQuery, e);
+					}
+					if (ListUtil.isEmpty(procData)) {
+						getLogger().warning("Can not re-submit case " + theCase + ": process' data unknown");
+						continue;
+					}
+
+					Long procInstId = null;
+					for (Iterator<Serializable[]> iter = procData.iterator(); (procInstId == null && iter.hasNext());) {
+						Serializable[] procId = iter.next();
+						if (ArrayUtil.isEmpty(procId)) {
+							continue;
+						}
+
+						Serializable id = procId[0];
+						if (id instanceof Number) {
+							procInstId = ((Number) id).longValue();
+						}
+					}
+					if (procInstId == null) {
+						getLogger().warning("Can not re-submit case " + theCase + ": proc. inst. ID is unknown");
+						continue;
+					}
+
+					Integer caseIdentifierNumber = null;
+					String[] parts = caseIdentifier.split(CoreConstants.MINUS);
+					if (!ArrayUtil.isEmpty(parts)) {
+						String lastPart = parts[parts.length - 1];
+						try {
+							caseIdentifierNumber = Integer.valueOf(lastPart);
+						} catch (Exception e) {
+							getLogger().log(Level.WARNING, "Failed to get identifier number from " + lastPart, e);
+						}
+					}
+
+					bind = new CaseProcInstBind();
+					bind.setProcInstId(procInstId);
+					bind.setCaseId((Integer) theCase.getPrimaryKey());
+					bind.setCaseIdentierID(caseIdentifierNumber);
+					bind.setDateCreated(theCase.getCreated());
+					bind.setCaseIdentifier(caseIdentifier);
+					casesDAO.persist(bind);
+					getLogger().info("Missing bind was created: process instance ID=" + procInstId + ", case ID=" + theCase);
+				} else {
+					getLogger().info("Case and proc. inst. bind exists: " + bind + ". Continuing to re-submit case" + theCase + " " + caseIdentifier);
+				}
+				if (bind == null || bind.getProcInstId() == null) {
+					getLogger().warning("Can not re-submit case " + theCase + " " + caseIdentifier + ": proc. inst. ID is unknown");
+					continue;
+				}
+
+				Long procInstId = bind.getProcInstId();
+				if (doReSubmit(bind, onlyStart, submitRepeatedTasks)) {
+					getLogger().info("Successfully re-submitted case " + theCase + " " + caseIdentifier + ". Old proc. inst. ID: " + procInstId);
+					reSubmitted.put(caseIdentifier, Boolean.TRUE);
+				} else {
+					getLogger().warning("Failed to re-submit case " + theCase + " " + caseIdentifier + ". Old proc. inst. ID: " + procInstId);
+				}
+			}
+
+			return true;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error re-submitting cases from " + dateFrom + " to " + dateTo, e);
+		}
+		return false;
 	}
 
 	@Override
@@ -252,6 +409,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 
 					CaseBusiness caseBusiness = getServiceInstance(CaseBusiness.class);
 					Case theCase = caseBusiness.getCase(caseId);
+					String status = theCase.getStatus();
 					com.idega.user.data.User owner = theCase.getOwner();
 					if (owner == null) {
 						owner = theCase.getCreator();
@@ -337,7 +495,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 						Long tiId = startTiW.getTaskInstanceId();
 						long startTaskInstId = tiId.longValue();
 						ProcessInstanceW newPiw = bpmFactory.getProcessInstanceW(newProcInstId);
-						Map<String, Boolean> submitted = new HashMap<String, Boolean>();
+						Map<String, Boolean> submitted = new HashMap<>();
 						for (TaskInstanceW submittedTask : allSubmittedTasks) {
 							String name = submittedTask.getTaskInstanceName();
 							if (!submitRepeatedTasks && submitted.containsKey(name)) {
@@ -358,7 +516,7 @@ public class BPMManipulatorImpl extends DefaultSpringBean implements BPMManipula
 					}
 
 					if (onlyStart) {
-						theCase.setStatus(CaseBMPBean.CASE_STATUS_OPEN_KEY);
+						theCase.setStatus(StringUtil.isEmpty(status) ? CaseBMPBean.CASE_STATUS_OPEN_KEY : status);
 						theCase.store();
 					}
 

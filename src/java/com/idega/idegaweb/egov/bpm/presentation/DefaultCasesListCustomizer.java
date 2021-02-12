@@ -73,7 +73,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 		}
 
-		List<String> headers = new ArrayList<String>();
+		List<String> headers = new ArrayList<>();
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
 		for (String key: headersKeys) {
 			headers.add(getLocalizedHeader(iwrb, key));
@@ -87,7 +87,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 		}
 
-		Map<String, String> headers = new LinkedHashMap<String, String>(headersKeys.size());
+		Map<String, String> headers = new LinkedHashMap<>(headersKeys.size());
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
 		for (String key: headersKeys) {
 			headers.put(key, getLocalizedHeader(iwrb, key));
@@ -128,7 +128,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			resolver.setProcInstIdsAndCasesIds(procInstIdsAndCasesIds);
 			return new AdvancedProperty(name, resolver.isValueUsedForCaseList() ?
 					resolver.getPresentation(variable.getValue().toString()) :
-					resolver.getKeyPresentation(variable.getProcessInstanceId(), variable.getValue().toString())
+					resolver.getKeyPresentation((Long) variable.getProcessInstanceId(), variable.getValue().toString())
 			);
 		}
 
@@ -160,8 +160,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		}
 
 		//	Resolving labels
-		Map<String, Map<String, String>> labels = new LinkedHashMap<String, Map<String,String>>();
-		Map<String, Long> mappings = new HashMap<String, Long>();
+		Map<String, Map<String, String>> labels = new LinkedHashMap<>();
+		Map<String, Long> mappings = new HashMap<>();
 		for (Long procId: vars.keySet()) {
 			List<VariableInstanceInfo> procVars = vars.get(procId);
 			if (ListUtil.isEmpty(procVars)) {
@@ -184,7 +184,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 				caseLabels = labels.get(caseId);
 				if (caseLabels == null) {
-					caseLabels = new HashMap<String, String>();
+					caseLabels = new HashMap<>();
 					labels.put(caseId, caseLabels);
 				}
 				if (caseLabels.containsKey(info.getName())) {
@@ -202,7 +202,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		}
 
 		//	Checking if everything was resolved
-		Map<String, List<String>> missingLabels = new HashMap<String, List<String>>();
+		Map<String, List<String>> missingLabels = new HashMap<>();
 		for (String caseId: labels.keySet()) {
 			for (String headerKey: headersKeys) {
 				Map<String, String> caseLabels = labels.get(caseId);
@@ -212,7 +212,7 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 
 				List<String> varNames = missingLabels.get(caseId);
 				if (varNames == null) {
-					varNames = new ArrayList<String>();
+					varNames = new ArrayList<>();
 					missingLabels.put(caseId, varNames);
 				}
 				varNames.add(headerKey);
