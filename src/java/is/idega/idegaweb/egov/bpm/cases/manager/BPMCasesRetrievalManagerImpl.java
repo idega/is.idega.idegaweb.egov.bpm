@@ -2049,7 +2049,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	private boolean isCacheUpdateTurnedOn() {
-		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
+		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.FALSE);
 	}
 
 	private Map<String, Boolean> casesBeingUpdated = new HashMap<>();
