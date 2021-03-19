@@ -800,7 +800,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				cases = getCaseBusiness().getCasesByIds(casesIds);
 			}
 
-			List<CasePresentation> casesPresentation = convertToPresentationBeans(cases, locale);
+			List<CasePresentation> casesPresentation = getConvertedToPresentationBeans(cases, locale);
 			if (!ListUtil.isEmpty(casesPresentation) && getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE)) {
 				Collections.sort(casesPresentation, new CasePresentationComparator());
 			}
@@ -1735,7 +1735,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByEntities(Collection<Case> cases, Locale locale) {
-		return new PagedDataCollection<>(convertToPresentationBeans(cases, locale), Long.valueOf(cases.size()));
+		return new PagedDataCollection<>(getConvertedToPresentationBeans(cases, locale), Long.valueOf(cases.size()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1743,7 +1743,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	public PagedDataCollection<CasePresentation> getClosedCases(Collection<Group> groups) {
 		try {
 			Collection<Case> closedCases = getCasesBusiness().getClosedCases(groups);
-			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
+			List<CasePresentation> presentationBeans = getConvertedToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<>(presentationBeans);
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -1756,7 +1756,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	public PagedDataCollection<CasePresentation> getMyCases(User user) {
 		try {
 			Collection<GeneralCase> closedCases = getCasesBusiness().getMyCases(user);
-			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
+			List<CasePresentation> presentationBeans = getConvertedToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<>(presentationBeans);
 		}
 		catch (RemoteException re) {
