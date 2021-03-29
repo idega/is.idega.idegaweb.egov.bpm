@@ -383,6 +383,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		cell.setCellStyle(bigStyle);
 
 		cell = row.createCell(cellIndex++);
+		cell.setCellValue(localizeCases("created_date", "Created date"));
+		cell.setCellStyle(bigStyle);
+
+		cell = row.createCell(cellIndex++);
 		cell.setCellValue(localizeCases("sender", "Sender"));
 		cell.setCellStyle(bigStyle);
 
@@ -620,6 +624,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					cell = row.createCell(cellIndex++);
 					cell.setCellStyle(normalStyle);
 					cell.setCellValue(theCase.getCaseStatusLocalized());
+
+					cell = row.createCell(cellIndex++);
+					cell.setCellStyle(normalStyle);
+					IWTimestamp created = new IWTimestamp(theCase.getCreated());
+					cell.setCellValue(created.getLocaleDateAndTime(locale, DateFormat.SHORT, DateFormat.SHORT));
 
 					cell = row.createCell(cellIndex++);
 					cell.setCellStyle(normalStyle);
