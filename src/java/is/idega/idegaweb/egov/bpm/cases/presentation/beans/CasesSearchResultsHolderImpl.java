@@ -82,10 +82,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsHolderImpl.class.getName());
 	private static final int DEFAULT_CELL_WIDTH = 40 * 256;
 
-	private Map<String, CasesSearchResults> allResults = new HashMap<String, CasesSearchResults>();
-	private Map<String, List<CasePresentation>> externalData = new HashMap<String, List<CasePresentation>>();
+	private Map<String, CasesSearchResults> allResults = new HashMap<>();
+	private Map<String, List<CasePresentation>> externalData = new HashMap<>();
 
-	private List<String> concatenatedData = new ArrayList<String>();
+	private List<String> concatenatedData = new ArrayList<>();
 
 	private MemoryFileBuffer memory;
 
@@ -169,7 +169,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				if (data == null) {
 					return externalData;
 				} else {
-					List<CasePresentation> allData = new ArrayList<CasePresentation>(data);
+					List<CasePresentation> allData = new ArrayList<>(data);
 					allData.addAll(externalData);
 					return allData;
 				}
@@ -585,13 +585,19 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			if (ListUtil.isEmpty(exportColumns) && searchCriteria != null) {
 				Collection<String> visibleVariables = getVisibleVariablesBean().getVariablesByComponentId(searchCriteria.getInstanceId().substring(5));
 				if (!ListUtil.isEmpty(visibleVariables)) {
-					exportColumns = new ArrayList<String>(visibleVariables);
+					exportColumns = new ArrayList<>(visibleVariables);
 				}
 			}
 
 			int lastCellNumber = 0;
 			if (ListUtil.isEmpty(exportColumns)) {
 				List<AdvancedProperty> availableVariables = getAvailableVariablesByProcessDefinition(locale, processName, isAdmin);
+				if (ListUtil.isEmpty(availableVariables)) {
+					List<CasePresentation> theCases = casesByProcessDefinition.get(processName);
+					if (!ListUtil.isEmpty(theCases)) {
+						availableVariables = theCases.get(0).getExternalData();
+					}
+				}
 				if (!exportContacts) {
 					createHeaders(sheet, bigStyle, processName, isAdmin, standardFieldsLabels, availableVariables);
 				}
@@ -602,7 +608,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					if (exportContacts) {
 						createHeaders(sheet, bigStyle, processName, isAdmin, standardFieldsLabels, availableVariables);
 					}
-					fileCellsIndexes = new ArrayList<Integer>();
+					fileCellsIndexes = new ArrayList<>();
 					HSSFRow row = sheet.createRow(++rowNumber);
 					int cellIndex = 0;
 
@@ -890,7 +896,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (criteria == null)
 			return null;
 
-		List<String> labels = new ArrayList<String>();
+		List<String> labels = new ArrayList<>();
 		if (!StringUtil.isEmpty(criteria.getDescription())) {
 			labels.add(localizeCases("description", "Description"));
 		}
@@ -916,7 +922,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return null;
 		}
 
-		List<String> values = new ArrayList<String>();
+		List<String> values = new ArrayList<>();
 		if (!StringUtil.isEmpty(criteria.getDescription())) {
 			values.add(theCase.getSubject());
 		}
@@ -1082,7 +1088,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	private Map<String, List<CasePresentation>> getCasesByProcessDefinition(Collection<CasePresentation> cases) {
 		boolean putToMap = false;
-		Map<String, List<CasePresentation>> casesByCategories = new HashMap<String, List<CasePresentation>>();
+		Map<String, List<CasePresentation>> casesByCategories = new HashMap<>();
 		for (CasePresentation theCase: cases) {
 			String processName = theCase.isBpm() ? theCase.getProcessName() : theCase.getCategoryId();
 			putToMap = false;
@@ -1093,7 +1099,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 			List<CasePresentation> casesByProcessDefinition = casesByCategories.get(processName);
 			if (ListUtil.isEmpty(casesByProcessDefinition)) {
-				casesByProcessDefinition = new ArrayList<CasePresentation>();
+				casesByProcessDefinition = new ArrayList<>();
 			}
 			if (!casesByProcessDefinition.contains(theCase)) {
 				casesByProcessDefinition.add(theCase);
@@ -1142,7 +1148,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		CasePresentation nextCase = null;
 
 		if (!StringUtil.isEmpty(processDefinitionName)) {
-			List<CasePresentation> casesFromTheSameProcessDefinition = new ArrayList<CasePresentation>();
+			List<CasePresentation> casesFromTheSameProcessDefinition = new ArrayList<>();
 			for (CasePresentation theCase: cases) {
 				if (processDefinitionName.equals(theCase.getProcessName())) {
 					casesFromTheSameProcessDefinition.add(theCase);
@@ -1229,7 +1235,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		concatenatedData.add(id);
 		List<CasePresentation> data = this.externalData.get(id);
 		if (data == null) {
-			data = new ArrayList<CasePresentation>(externalData);
+			data = new ArrayList<>(externalData);
 			this.externalData.put(id, data);
 		} else {
 			data.addAll(externalData);
