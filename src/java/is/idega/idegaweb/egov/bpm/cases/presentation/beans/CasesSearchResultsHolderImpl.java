@@ -31,6 +31,7 @@ import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.block.process.presentation.beans.CasesSearchResults;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.variables.VisibleVariablesBean;
+import com.idega.bpm.model.VariableInstance;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
 import com.idega.business.IBOLookupException;
@@ -46,7 +47,6 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.io.MemoryFileBuffer;
 import com.idega.io.MemoryOutputStream;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
-import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
@@ -279,7 +279,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessDefinition(Locale locale, String processDefinition, boolean isAdmin) {
-		Collection<VariableInstanceInfo> variablesByProcessDefinition = null;
+		Collection<VariableInstance> variablesByProcessDefinition = null;
 		try {
 			variablesByProcessDefinition = getNumber(processDefinition) == null ? getVariablesQuerier()
 					.getVariablesByProcessDefinition(processDefinition) : null;
@@ -292,7 +292,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	@Transactional(readOnly=true)
 	private List<AdvancedProperty> getAvailableVariablesByProcessInstanceId(Locale locale, Long processInstanceId, boolean isAdmin) {
-		Collection<VariableInstanceInfo> variablesByProcessInstance = null;
+		Collection<VariableInstance> variablesByProcessInstance = null;
 		try {
 			variablesByProcessInstance = getVariablesQuerier().getFullVariablesByProcessInstanceId(processInstanceId, false);
 		} catch(Exception e) {
@@ -303,7 +303,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Transactional(readOnly=true)
-	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin,
+	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, Locale locale, boolean isAdmin,
 			boolean useRealValue) {
 		if (ListUtil.isEmpty(variables))
 			return null;

@@ -18,6 +18,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.bpm.model.VariableInstance;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
 import com.idega.core.business.DefaultSpringBean;
@@ -26,7 +27,6 @@ import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.bean.BPMProcessVariable;
-import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.bean.VariableInstanceType;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.exe.BPMFactory;
@@ -64,13 +64,13 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 	private VariableInstanceQuerier variablesQuerier;
 
 	@Override
-	public List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
+	public List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
 		IWResourceBundle iwrb = getBundle().getResourceBundle(locale);
 		return getAvailableVariables(variables, iwrb, locale, isAdmin, useRealValue);
 	}
 
 	@Transactional(readOnly=true)
-	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, IWResourceBundle iwrb, Locale locale, boolean isAdmin,
+	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, IWResourceBundle iwrb, Locale locale, boolean isAdmin,
 			boolean useRealValue) {
 
 		if (ListUtil.isEmpty(variables))
@@ -82,14 +82,14 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		String name = null;
 		String type = null;
 		String localizedName = null;
-		List<String> addedVariables = new ArrayList<String>();
-		List<AdvancedProperty> availableVariables = new ArrayList<AdvancedProperty>();
-		for (VariableInstanceInfo variable: variables) {
+		List<String> addedVariables = new ArrayList<>();
+		List<AdvancedProperty> availableVariables = new ArrayList<>();
+		for (VariableInstance variable: variables) {
 			name = variable.getName();
 			if (StringUtil.isEmpty(name) || addedVariables.contains(name))
 				continue;
 
-			VariableInstanceType varType = variable.getType();
+			VariableInstanceType varType = variable.getTypeOfVariable();
 			type = varType == null ? null : varType.getTypeKeys().get(0);
 			if (StringUtil.isEmpty(type))
 				continue;
@@ -140,7 +140,7 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 			return null;
 		}
 
-		Collection<VariableInstanceInfo> variables = null;
+		Collection<VariableInstance> variables = null;
 		try {
 			String procDefName = procDef.getProcessDefinitionName();
 			variables = getVariablesQuerier().getVariablesByProcessDefinition(procDefName);
@@ -161,12 +161,12 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		List<AdvancedProperty> availableVariables = getAvailableVariables(variables, iwrb, iwc.getCurrentLocale(), isAdmin, false);
 		if (ListUtil.isEmpty(availableVariables)) {
 			LOGGER.info("No variables found for process: " + procDef.getProcessDefinitionName());
-			processVariables = new ArrayList<SelectItem>();
+			processVariables = new ArrayList<>();
 			return null;
 		}
 		availableVariables.add(0, new AdvancedProperty(String.valueOf(-1), iwrb.getLocalizedString("cases_search.select_variable", "Select variable")));
 
-		processVariables = new ArrayList<SelectItem>();
+		processVariables = new ArrayList<>();
 		for (AdvancedProperty variable: availableVariables) {
 			processVariables.add(new SelectItem(variable.getId(), variable.getValue()));
 		}
@@ -197,8 +197,8 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		return localizedName;
 	}
 
-	private String getVariableRealValue(VariableInstanceInfo variable, Locale locale) {
-		Serializable value = variable.getValue();
+	private String getVariableRealValue(VariableInstance variable, Locale locale) {
+		Serializable value = variable.getVariableValue();
 		if (value == null)
 			return null;	//	Invalid value
 
@@ -206,7 +206,7 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		if (resolver != null)
 			return resolver.getPresentation(variable);
 
-		BPMProcessVariable bpmVariable = new BPMProcessVariable(variable.getName(), value.toString(), variable.getType().getTypeKeys().get(0));
+		BPMProcessVariable bpmVariable = new BPMProcessVariable(variable.getName(), value.toString(), variable.getTypeOfVariable().getTypeKeys().get(0));
 		Serializable realValue = bpmVariable.getRealValue();
 		if (realValue == null)
 			return null;

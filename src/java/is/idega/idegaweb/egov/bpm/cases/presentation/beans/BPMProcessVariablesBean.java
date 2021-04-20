@@ -8,7 +8,6 @@ import java.util.Locale;
 import javax.faces.model.SelectItem;
 
 import com.idega.builder.bean.AdvancedProperty;
-import com.idega.jbpm.bean.VariableInstanceInfo;
 
 public interface BPMProcessVariablesBean extends Serializable {
 
@@ -30,7 +29,7 @@ public interface BPMProcessVariablesBean extends Serializable {
 
 	public String getAddVariableImage();
 
-	public List<AdvancedProperty> getAvailableVariables(Collection<VariableInstanceInfo> variables, Locale locale, boolean isAdmin, boolean useRealValue);
+	public List<AdvancedProperty> getAvailableVariables(Collection<com.idega.bpm.model.VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue);
 
 	public String getVariableLocalizedName(String name, Locale locale);
 }
