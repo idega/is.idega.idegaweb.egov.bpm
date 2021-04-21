@@ -12,9 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.bpm.model.VariableInstance;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
-import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.bean.VariableInstanceInfo;
 import com.idega.jbpm.identity.BPMUserFactory;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
@@ -62,14 +62,14 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 			return values;
 		}
 
-		values = new ArrayList<AdvancedProperty>();
+		values = new ArrayList<>();
 		for (Integer id: ids) {
 			values.add(new AdvancedProperty(String.valueOf(id), getUserName(id)));
 		}
 
-		List<AdvancedProperty> sorted = new ArrayList<AdvancedProperty>(values);
+		List<AdvancedProperty> sorted = new ArrayList<>(values);
 		Collections.sort(sorted, new AdvancedPropertyComparator(getCurrentLocale()));
-		values = new ArrayList<AdvancedProperty>(sorted);
+		values = new ArrayList<>(sorted);
 
 		return values;
 	}
@@ -106,8 +106,8 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 	}
 
 	@Override
-	public String getPresentation(BPMProcessVariable variable) {
-		return (variable == null || variable.getValue() == null) ? CoreConstants.EMPTY : getPresentation(variable.getValue());
+	public String getPresentation(VariableInstance variable) {
+		return (variable == null || variable.getVariableValue() == null) ? CoreConstants.EMPTY : getPresentation((String) variable.getVariableValue());
 	}
 
 	@Override
@@ -177,7 +177,7 @@ public class BPMCasesHandlersResolver extends MultipleSelectionVariablesResolver
 		}
 
 		try {
-			List<String> ids = new ArrayList<String>();
+			List<String> ids = new ArrayList<>();
 			boolean numeric = true;
 			for (String id: usersIds) {
 				if (StringUtil.isEmpty(id)) {

@@ -2671,7 +2671,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		query.append(getExceptOwnersIdsQueryPart(exceptOwnerIds, "pc.".concat(CaseBMPBean.COLUMN_USER), true, false));
-		query.append(" AND bcpi.uuid is null ");
+		if (ListUtil.isEmpty(caseManagerTypes) || !caseManagerTypes.contains(ProcessConstants.BPM_2_CASE)) {
+			query.append(" AND bcpi.uuid is null ");
+		}
 
 		String sql = query.toString();
 		sql = StringHandler.replace(sql, "case_created", caseCreatedColumn);

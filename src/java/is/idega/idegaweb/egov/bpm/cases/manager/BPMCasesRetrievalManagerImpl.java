@@ -61,7 +61,6 @@ import com.idega.data.IDOLookupException;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
-import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseTypesProcDefBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
@@ -175,18 +174,34 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				(Integer) theCase.getPrimaryKey() :
 				Integer.valueOf((theCase.getPrimaryKey().toString()));
 
-		CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
-
-		return cpi == null ? null : cpi.getProcInstId();
+		return getProcessInstanceIdByCaseId(caseId);
 	}
 
 	@Override
 	public Long getProcessInstanceIdByCaseId(Object id) {
-		Integer caseId = id instanceof Integer ? (Integer) id : Integer.valueOf(id.toString());
+		if (id == null) {
+			getLogger().warning("Case ID is not provided");
+			return null;
+		}
 
-		CaseProcInstBind cpi = getCasesBPMDAO().getCaseProcInstBindByCaseId(caseId);
+		Integer caseId = null;
+		if (id instanceof Number) {
+			caseId = ((Number) id).intValue();
 
-		return cpi == null ? null : cpi.getProcInstId();
+		} else if (StringHandler.isNumeric(id.toString())) {
+			caseId = Integer.valueOf(id.toString());
+		}
+		if (caseId == null) {
+			getLogger().warning("Invalid case ID " + id);
+			return null;
+		}
+
+		try {
+			return getCasesBPMDAO().getProcessIdByCaseId(caseId);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting proc. inst. ID for case with ID " + id, e);
+		}
+		return null;
 	}
 
 	/*
@@ -785,7 +800,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 				cases = getCaseBusiness().getCasesByIds(casesIds);
 			}
 
-			List<CasePresentation> casesPresentation = convertToPresentationBeans(cases, locale);
+			List<CasePresentation> casesPresentation = getConvertedToPresentationBeans(cases, locale);
 			if (!ListUtil.isEmpty(casesPresentation) && getSettings().getBoolean("extra_cases_sorting", Boolean.FALSE)) {
 				Collections.sort(casesPresentation, new CasePresentationComparator());
 			}
@@ -1720,7 +1735,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 
 	@Override
 	public PagedDataCollection<CasePresentation> getCasesByEntities(Collection<Case> cases, Locale locale) {
-		return new PagedDataCollection<>(convertToPresentationBeans(cases, locale), Long.valueOf(cases.size()));
+		return new PagedDataCollection<>(getConvertedToPresentationBeans(cases, locale), Long.valueOf(cases.size()));
 	}
 
 	@SuppressWarnings("unchecked")
@@ -1728,7 +1743,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	public PagedDataCollection<CasePresentation> getClosedCases(Collection<Group> groups) {
 		try {
 			Collection<Case> closedCases = getCasesBusiness().getClosedCases(groups);
-			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
+			List<CasePresentation> presentationBeans = getConvertedToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<>(presentationBeans);
 		} catch (RemoteException e) {
 			e.printStackTrace();
@@ -1741,7 +1756,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	public PagedDataCollection<CasePresentation> getMyCases(User user) {
 		try {
 			Collection<GeneralCase> closedCases = getCasesBusiness().getMyCases(user);
-			List<CasePresentation> presentationBeans = convertToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
+			List<CasePresentation> presentationBeans = getConvertedToPresentationBeans(closedCases, CoreUtil.getIWContext().getCurrentLocale());
 			return new PagedDataCollection<>(presentationBeans);
 		}
 		catch (RemoteException re) {
@@ -1984,13 +1999,18 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	private String getCaseId(Long processInstanceId) {
-		CaseProcInstBind bind = null;
-		try {
-			bind = getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(processInstanceId);
-		} catch(Exception e) {
-			e.printStackTrace();
+		if (processInstanceId == null) {
+			getLogger().warning("Proc. inst. ID is not provided");
+			return null;
 		}
-		return bind == null ? null : bind.getCaseId().toString();
+
+		Integer caseId = null;
+		try {
+			caseId = getCasesBPMDAO().getCaseIdByProcessId(processInstanceId);
+		} catch(Exception e) {
+			getLogger().log(Level.WARNING, "Error getting case ID by proc. inst. ID " + processInstanceId, e);
+		}
+		return caseId == null ? null : String.valueOf(caseId);
 	}
 
 	@Override
@@ -2029,7 +2049,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	private boolean isCacheUpdateTurnedOn() {
-		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.TRUE);
+		return getApplication().getSettings().getBoolean("update_cases_list_cache", Boolean.FALSE);
 	}
 
 	private Map<String, Boolean> casesBeingUpdated = new HashMap<>();
@@ -2217,23 +2237,27 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			return;
 		}
 
-		CaseProcInstBind bind = null;
+		Integer caseId = null;
 		try {
-			bind = piId instanceof Number || StringHandler.isNumeric(piId.toString()) ?
-					getCasesBPMDAO().getCaseProcInstBindByProcessInstanceId(Long.valueOf(piId.toString())) :
-					getCasesBPMDAO().findByUUID(piId.toString());
+			if (piId instanceof Number || StringHandler.isNumeric(piId.toString())) {
+				caseId = getCasesBPMDAO().getCaseIdByProcessId(Long.valueOf(piId.toString()));
+
+			} else {
+				List<Integer> ids = getCasesBPMDAO().findCasesIdsByUUIDs(Arrays.asList(piId.toString()));
+				caseId = ListUtil.isEmpty(ids) ? null : ids.iterator().next();
+			}
 		} catch (Exception e) {}
-		if (bind == null) {
+		if (caseId == null) {
 			getLogger().warning("Bind for process instance " + piId + " was not created yet!");
 			return;
 		}
 
 		Case theCase = null;
 		try {
-			theCase = getCaseBusiness().getCase(bind.getCaseId());
+			theCase = getCaseBusiness().getCase(caseId);
 		} catch (Exception e) {}
 		if (theCase == null) {
-			getLogger().warning("Case can not be found by ID " + bind.getCaseId() + " for process instance " + piId);
+			getLogger().warning("Case can not be found by ID " + caseId + " for process instance " + piId);
 			return;
 		}
 

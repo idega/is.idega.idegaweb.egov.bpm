@@ -1,5 +1,6 @@
 package is.idega.idegaweb.egov.bpm.business;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -64,7 +65,7 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 			return Collections.emptyMap();
 		}
 
-		Map<Long, String> casesWithLinks = new HashMap<Long, String>(relations.size());
+		Map<Long, String> casesWithLinks = new HashMap<>(relations.size());
 		String pageURIToAssetsView = BuilderLogic.getInstance().getFullPageUrlByPageType(
 				iwc, "bpm_assets_view", true);
 		String baseUri = getCurrentPageUri(iwc);
@@ -177,7 +178,12 @@ public class TaskViewerHelperImp implements TaskViewerHelper {
 			TaskInstanceW gradingTIW = piw.getSingleUnfinishedTaskInstanceForTask(taskName);
 
 			if (gradingTIW != null) {
-				return String.valueOf(gradingTIW.getTaskInstanceId());
+				Serializable id = gradingTIW.getTaskInstanceId();
+				return id == null ?
+						null :
+						id instanceof String ?
+								(String) id :
+								String.valueOf(id);
 			} else {
 				LOGGER.log(Level.WARNING, "No grading task found for processInstance="+processInstanceId);
 
