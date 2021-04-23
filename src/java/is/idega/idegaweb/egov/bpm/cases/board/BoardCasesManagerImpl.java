@@ -51,6 +51,7 @@ import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.NoEmailFoundException;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.data.Group;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
@@ -410,7 +411,28 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					}
 
 					view = new CaseBoardView(theCase.getPrimaryKey().toString(), processInstanceId);
-					view.setHandler(theCase.getHandledBy());
+
+					//Set the handler
+					User handlerUser = theCase.getHandledBy();
+					if (handlerUser == null) {
+						Collection<User> handlers = null;
+
+						Group handlerGroup = theCase.getHandler();
+						if (handlerGroup == null) {
+							getLogger().warning("Unknown handler group for case " + theCase);
+						} else {
+							try {
+								handlers = getUserBusiness().getUsersInGroup(handlerGroup);
+								if (!ListUtil.isEmpty(handlers)) {
+									handlerUser = handlers.iterator().next();
+								}
+							} catch (Exception ehg) {
+								getLogger().log(Level.WARNING, "Could not find the handlers by handler group: " + handlerGroup, ehg);
+							}
+						}
+					}
+					view.setHandler(handlerUser);
+
 					Serializable procInst = getCaseProcessInstanceRelation().getProcessInstance(processesIdsAndCases, processInstanceId);
 					if (procInst instanceof ProcessInstance) {
 						view.setProcessInstance((ProcessInstance) procInst);
@@ -1024,6 +1046,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					} else if (isEqual(id, CaseBoardBean.CASE_OWNER_GENDER)) {
 						//	Gender
 						String value = caseBoard.getValue(CaseBoardBean.CASE_OWNER_GENDER);
+						if (StringUtil.isEmpty(value)) {
+							value = caseBoard.getValue("string_responsiblePersonGender");
+						}
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CaseBoardBean.CASE_OWNER_GENDER, localize(value, value))));
 
 					} else {
@@ -1287,7 +1312,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		if (indexOfTotal < 0) {
 			indexOfTotal = getIndexOfColumn(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN, uuid, casesType);
 		}
-		indexOfSuggestion = indexOfSuggestion == null ? (indexOfTotal + 3) : indexOfSuggestion;
+		indexOfSuggestion = indexOfSuggestion == null ? (indexOfTotal + 1) : indexOfSuggestion; //FIXME: Was (indexOfTotal + 3), which is not correctly set. Something is worng here.
 		indexOfDecision = indexOfDecision == null ? (indexOfSuggestion + 1) : indexOfDecision;
 		if (indexOfTotal < 0) {
 			indexOfTotal = indexOfSuggestion - 1;
@@ -1599,6 +1624,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 		List<String> customColumns = getCustomColumns(uuid);
 		return !ListUtil.isEmpty(customColumns);
+	}
+
+	private UserBusiness getUserBusiness() {
+		return getServiceInstance(UserBusiness.class);
 	}
 
 }
