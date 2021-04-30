@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -18,6 +19,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.idega.bpm.BPMConstants;
 import com.idega.bpm.model.VariableInstance;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.builder.business.AdvancedPropertyComparator;
@@ -34,6 +36,7 @@ import com.idega.jbpm.exe.ProcessDefinitionW;
 import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
+import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
@@ -66,12 +69,28 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 	@Override
 	public List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
 		IWResourceBundle iwrb = getBundle().getResourceBundle(locale);
-		return getAvailableVariables(variables, iwrb, locale, isAdmin, useRealValue);
+		return getAvailableVariables(variables, Arrays.asList(iwrb), locale, isAdmin, useRealValue);
+	}
+
+	@Override
+	public List<AdvancedProperty> getAllAvailableVariables(
+			Collection<IWResourceBundle> bundles,
+			Collection<com.idega.bpm.model.VariableInstance> variables,
+			Locale locale,
+			boolean isAdmin,
+			boolean useRealValue
+	) {
+		return getAvailableVariables(variables, bundles, locale, isAdmin, useRealValue);
 	}
 
 	@Transactional(readOnly=true)
-	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, IWResourceBundle iwrb, Locale locale, boolean isAdmin,
-			boolean useRealValue) {
+	private List<AdvancedProperty> getAvailableVariables(
+			Collection<VariableInstance> variables,
+			Collection<IWResourceBundle> bundles,
+			Locale locale,
+			boolean isAdmin,
+			boolean useRealValue
+	) {
 
 		if (ListUtil.isEmpty(variables))
 			return null;
@@ -94,7 +113,13 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 			if (StringUtil.isEmpty(type))
 				continue;
 
-			localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
+			for (IWResourceBundle iwrb: bundles) {
+				localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
+				if (!StringUtil.isEmpty(localizedName)) {
+					break;
+				}
+			}
+
 			if (StringUtil.isEmpty(localizedName))
 				continue;
 			if (!isAdmin && localizedName.equals(name))
@@ -158,7 +183,7 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		}
 		IWResourceBundle iwrb = getBundle().getResourceBundle(iwc);
 		boolean isAdmin = iwc.isSuperAdmin();
-		List<AdvancedProperty> availableVariables = getAvailableVariables(variables, iwrb, iwc.getCurrentLocale(), isAdmin, false);
+		List<AdvancedProperty> availableVariables = getAvailableVariables(variables, Arrays.asList(iwrb), iwc.getCurrentLocale(), isAdmin, false);
 		if (ListUtil.isEmpty(availableVariables)) {
 			LOGGER.info("No variables found for process: " + procDef.getProcessDefinitionName());
 			processVariables = new ArrayList<>();
@@ -179,8 +204,34 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		return getVariableLocalizedName(name, getBundle().getResourceBundle(locale), false);
 	}
 
+	@Override
+	public String getVariableLocalizedName(Collection<IWResourceBundle> bundles, String name, Locale locale) {
+		bundles = ListUtil.isEmpty(bundles) ? Arrays.asList(getBundle().getResourceBundle(locale)) : bundles;
+		for (IWResourceBundle iwrb: bundles) {
+			String localizedName = getVariableLocalizedName(name, iwrb, false);
+			if (!StringUtil.isEmpty(localizedName)) {
+				return localizedName;
+			}
+		}
+		return null;
+	}
+
 	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
-		String localizedName = iwrb.getLocalizedString(new StringBuilder(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX).append(name).toString(), isAdmin ? name : null);
+		List<String> prefixes = Arrays.asList(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX, BPMConstants.BPMN_VARIABLE_PREFIX);
+		for (String prefix: prefixes) {
+			String localizedName = getVariableLocalizedName(prefix, name, iwrb, isAdmin);
+			if (!StringUtil.isEmpty(localizedName)) {
+				return localizedName;
+			}
+		}
+		return null;
+	}
+
+	private String getVariableLocalizedName(String prefix, String name, IWResourceBundle iwrb, boolean isAdmin) {
+		String localizedName = iwrb.getLocalizedString(
+				new StringBuilder(StringUtil.isEmpty(prefix) ? CoreConstants.EMPTY : prefix).append(name).toString(),
+				isAdmin ? name : null
+		);
 
 		if (StringUtil.isEmpty(localizedName)) {
 			return isAdmin ? name : null;	//	No translation found
