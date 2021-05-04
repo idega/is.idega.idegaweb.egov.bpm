@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -42,16 +43,21 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 		boolean exportContacts = "y".equals(iwc.getParameter(EXPORT_CONTACTS));
 		boolean showCompany = "y".equals(iwc.getParameter(SHOW_USER_COMPANY));
 
+		String id = null, instanceId = null;
 		if (iwc.isParameterSet(ID_PARAMETER)) {
-			String id = iwc.getParameter(ID_PARAMETER);
+			id = iwc.getParameter(ID_PARAMETER);
 			memory = searchResultHolder.getExportedSearchResults(id, exportContacts, showCompany);
 			fileName = iwrb.getLocalizedString("exported_search_results_in_excel_file_name", "Exported search results");
 		} else if (iwc.isParameterSet(ALL_CASES_DATA)) {
-			String instanceId = iwc.getParameter(ALL_CASES_DATA);
+			instanceId = iwc.getParameter(ALL_CASES_DATA);
 			memory = searchResultHolder.getExportedCases(instanceId, exportContacts, showCompany);
 			fileName = iwrb.getLocalizedString("exported_all_cases_data", "Exported cases");
-		} else
+		}
+
+		if (memory == null) {
+			Logger.getLogger(CasesSearchResultsExporter.class.getName()).warning("Can not export cases. ID: " + id + ", instance ID: " + instanceId);
 			return;
+		}
 
 		memory.setMimeType(MimeTypeUtil.MIME_TYPE_EXCEL_2);
 		setAsDownload(iwc, fileName.concat(".xls"),	memory.length());
