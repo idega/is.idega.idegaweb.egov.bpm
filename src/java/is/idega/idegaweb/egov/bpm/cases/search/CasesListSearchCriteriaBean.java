@@ -191,7 +191,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	}
 
 	public Set<String> getRoles() {
-		return roles == null ? null : new HashSet<String>(StringUtil.getValuesFromString(roles, CoreConstants.COMMA));
+		return roles == null ? null : new HashSet<>(StringUtil.getValuesFromString(roles, CoreConstants.COMMA));
 	}
 
 	public void setRoles(String roles) {
@@ -221,7 +221,9 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Component ID: " + componentId).append("\n")
 			.append("Criterias ID: " + criteriasId).append("\n")
 			.append("Address: " + getAddress()).append("\n")
-			.append("Clear results: " + clearResults)
+			.append("Variables: " + getProcessVariables()).append("\n")
+			.append("Free text: " + getFreeVariableText()).append("\n")
+			.append("Clear results: " + clearResults).append("\n")
 			.append("Search: " + search)
 		.toString();
 	}
@@ -305,8 +307,5 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	public void setFreeVariableText(String freeVariableText) {
 		this.freeVariableText = freeVariableText;
 	}
-
-
-
 
 }
