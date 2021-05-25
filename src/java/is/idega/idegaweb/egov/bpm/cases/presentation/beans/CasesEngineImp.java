@@ -374,7 +374,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				.append(ListUtil.isEmpty(criterias.getProcessVariables()) ? "none" : criterias.getProcessVariables())
 				.append(", address: ").append(criterias.getAddress())
 				.append(", process instance IDs: ").append(ListUtil.isEmpty(piIds) ? "none" :
-					piIds.size() >= 1000 ? new ArrayList<Long>(piIds).subList(0, 999) + " ..." : piIds)
+					piIds.size() >= 1000 ? new ArrayList<>(piIds).subList(0, 999) + " ..." : piIds)
 		.toString());
 
 		IWContext iwc = CoreUtil.getIWContext();
@@ -388,7 +388,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		PagedDataCollection<CasePresentation> cases = null;
 		if (criterias.isNothingFound()) {
 			Collection<CasePresentation> emptyList = Collections.emptyList();
-			cases = new PagedDataCollection<CasePresentation>(emptyList);
+			cases = new PagedDataCollection<>(emptyList);
 		} else {
 			cases = getCasesByQuery(iwc, criterias);
 			if (criterias.isClearResults()) {
@@ -484,7 +484,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias) {
-		List<AdvancedProperty> searchFields = new ArrayList<AdvancedProperty>();
+		List<AdvancedProperty> searchFields = new ArrayList<>();
 
 		Locale locale = iwc.getCurrentLocale();
 		IWResourceBundle iwrb = getResourceBundle(iwc);
@@ -568,7 +568,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private List<CasesListSearchFilter> getFilters(ServletContext servletContext, CasesListSearchCriteriaBean criterias) {
-		List<CasesListSearchFilter> filtersList = new ArrayList<CasesListSearchFilter>();
+		List<CasesListSearchFilter> filtersList = new ArrayList<>();
 
 		try {
 			WebApplicationContext webAppContext = WebApplicationContextUtils.getWebApplicationContext(servletContext);
@@ -614,7 +614,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return Collections.emptyList();
 		}
 
-		List<Long> subscribedGroupsIds = new ArrayList<Long>();
+		List<Long> subscribedGroupsIds = new ArrayList<>();
 		for (String id : collection) {
 			subscribedGroupsIds.add(Long.valueOf(id));
 		}
@@ -793,8 +793,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
 			} else if (usePaging) {
 
-				List<String> variablesToLoad = new ArrayList<String>();
-				List<String> defaultVariables = new ArrayList<String>();
+				List<String> variablesToLoad = new ArrayList<>();
+				List<String> defaultVariables = new ArrayList<>();
 				for (Method method : Case.class.getMethods()){
 					defaultVariables.add(method.getName());
 				}
@@ -823,7 +823,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					procInstCase = casesBPMDAO.getProcessInstancesAndCasesIdsByCasesIds(casesIds);
 				} catch (Exception e) {}
 
-				List<Integer> caseIds = new ArrayList<Integer>();
+				List<Integer> caseIds = new ArrayList<>();
 				Map<Integer, Long> caseProcInst = new HashMap<>();
 				for (Long key : procInstCase.keySet()){
 					caseProcInst.put(procInstCase.get(key), key);
@@ -844,7 +844,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					preLoadVariablesForCases(procInstCase, variablesToLoad);
 				}
 
-				List<Integer> sortedIds = new ArrayList<Integer>(caseIds);
+				List<Integer> sortedIds = new ArrayList<>(caseIds);
 
 				if (!criterias.isNoOrdering()) {
 					CaseComparator comparator = getCaseComparator(criterias, locale);
@@ -858,7 +858,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 				cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale);
 				if (!criterias.isNoOrdering()) {
-					List<CasePresentation> casesTmp = new ArrayList<CasePresentation>();
+					List<CasePresentation> casesTmp = new ArrayList<>();
 					for (Integer id: sortedIds){
 						for (CasePresentation cp : cases.getCollection()){
 							if (id.equals(cp.getPrimaryKey())) {
@@ -868,7 +868,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 							}
 						}
 					}
-					cases = new PagedDataCollection<CasePresentation>(casesTmp);
+					cases = new PagedDataCollection<>(casesTmp);
 				}
 			} else {
 				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
@@ -913,7 +913,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	private void preLoadCases(Map<Integer, Long> caseProcInst) {
 		Collection<Case> cases = getCasesBusiness(getIWApplicationContext()).getCasesByIds(caseProcInst.keySet());
-		Map<Integer, Case> caseProc = new HashMap<Integer, Case>();
+		Map<Integer, Case> caseProc = new HashMap<>();
 		for (Case cs : cases){
 			caseProc.put(Integer.parseInt(cs.getId()), cs);
 		}
@@ -966,7 +966,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return fake;
 		}
 
-		List<String> resources = new ArrayList<String>();
+		List<String> resources = new ArrayList<>();
 		resources.add(web2.getBundleUriToHumanizedMessagesStyleSheet());
 		resources.add(jQuery.getBundleURIToJQueryLib());
 		resources.add(web2.getBundleUriToHumanizedMessagesScript());
@@ -1051,17 +1051,17 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	private List<String> getCodes(BuilderLogic builder, String pageKey, String instanceId) {
 		String codes = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setCaseCodes:java.lang.String:");
-		return StringUtil.isEmpty(codes) ? null : new ArrayList<String>(Arrays.asList(codes.split(CoreConstants.COMMA)));
+		return StringUtil.isEmpty(codes) ? null : new ArrayList<>(Arrays.asList(codes.split(CoreConstants.COMMA)));
 	}
 
 	private List<String> getStatusesToHide(BuilderLogic builder, String pageKey, String instanceId) {
 		String hide = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToHide:java.lang.String:");
-		return StringUtil.isEmpty(hide) ? null : new ArrayList<String>(Arrays.asList(hide.split(CoreConstants.COMMA)));
+		return StringUtil.isEmpty(hide) ? null : new ArrayList<>(Arrays.asList(hide.split(CoreConstants.COMMA)));
 	}
 
 	private List<String> getStatusesToShow(BuilderLogic builder, String pageKey, String instanceId) {
 		String show = getProperty(builder, pageKey, instanceId, ":method:1:implied:void:setCaseStatusesToShow:java.lang.String:");
-		return StringUtil.isEmpty(show) ? null : new ArrayList<String>(Arrays.asList(show.split(CoreConstants.COMMA)));
+		return StringUtil.isEmpty(show) ? null : new ArrayList<>(Arrays.asList(show.split(CoreConstants.COMMA)));
 	}
 
 	private boolean isShowSubscribedOnly(BuilderLogic builder, String pageKey, String instanceId) {
@@ -1125,7 +1125,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return result;
 		}
 
-		List<CasePresentation> casesToExport = new ArrayList<CasePresentation>(cases.getCollection());
+		List<CasePresentation> casesToExport = new ArrayList<>(cases.getCollection());
 		if (!resultsHolder.setCasesToExport(instanceId, casesToExport)) {
 			result.setValue(errorMessage);
 			return result;
@@ -1216,7 +1216,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public List<AdvancedProperty> getDefaultSortingOptions(IWContext iwc) {
-		List<AdvancedProperty> defaultSortingOptions = new ArrayList<AdvancedProperty>();
+		List<AdvancedProperty> defaultSortingOptions = new ArrayList<>();
 
 		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(CasesConstants.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 
@@ -1411,7 +1411,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 			PagedDataCollection<CasePresentation> cases = getCasesByQuery(iwc, listCriterias);
 			if (cases == null) {
-				cases = new PagedDataCollection<CasePresentation>(new ArrayList<CasePresentation>());
+				cases = new PagedDataCollection<>(new ArrayList<CasePresentation>());
 			}
 
 			listCriterias.setAllDataLoaded(Boolean.TRUE);
@@ -1440,7 +1440,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			return null;
 		}
 
-		List<CasePresentation> data = new ArrayList<CasePresentation>();
+		List<CasePresentation> data = new ArrayList<>();
 		for (ExternalCasesDataExporter externalExporter: externalExporters.values()) {
 			List<CasePresentation> externalData = externalExporter.getExternalData(id);
 			resultsHolder.concatExternalData(id, externalData);
@@ -1494,10 +1494,6 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return true;
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * @see is.idega.idegaweb.egov.cases.business.CasesEngine#getAvailableProcesses(com.idega.presentation.IWContext)
-	 */
 	@Override
 	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc) {
 		return getAvailableProcesses(iwc, Arrays.asList("appTypeBPM", "bpm2CamundaAppManager"));
@@ -1505,6 +1501,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc, List<String> appTypeNames) {
+		return getAvailableProcesses(iwc, appTypeNames, null);
+	}
+
+	@Override
+	public List<AdvancedProperty> getAvailableProcesses(IWContext iwc, List<String> appTypeNames, List<String> processesNames) {
 		ApplicationBusiness appBusiness = null;
 		try {
 			appBusiness = IBOLookup.getServiceInstance(iwc, ApplicationBusiness.class);
@@ -1542,7 +1543,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 
 			Locale locale = iwc.getCurrentLocale();
-			Map<String, AdvancedProperty> results = new LinkedHashMap<String, AdvancedProperty>();
+			Map<String, AdvancedProperty> results = new LinkedHashMap<>();
 			for (CasesRetrievalManager caseManager: managers.values()) {
 				String processId = null;
 				String processName = null;
@@ -1558,6 +1559,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 						processId = null;
 						processName = app.getUrl();
 						if (StringUtil.isEmpty(processName) || results.containsKey(processName)) {
+							continue;
+						}
+
+						boolean skip = false;
+						if (!ListUtil.isEmpty(processesNames)) {
+							skip = !processesNames.contains(processName);
+						}
+						if (skip) {
 							continue;
 						}
 
@@ -1727,7 +1736,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			Map<String, Map<String, String>> statusesCache = getCache("cases_to_export_to_pdf_statuses_cache", 86400, 100);
 			exportStatuses = statusesCache.get(id);
 			if (exportStatuses == null) {
-				exportStatuses = new HashMap<String, String>();
+				exportStatuses = new HashMap<>();
 				statusesCache.put(id, exportStatuses);
 			}
 
@@ -1873,7 +1882,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			}
 			toZip = Arrays.asList(casesFolders);
 		} else {
-			toZip = new ArrayList<File>();
+			toZip = new ArrayList<>();
 			for (String identifier: casesIdentifiers) {
 				File caseFolderToZip = new File(baseDir.getAbsoluteFile() + File.separator + identifier);
 				if (!caseFolderToZip.exists() || !caseFolderToZip.canRead() || !caseFolderToZip.isDirectory()) {
