@@ -72,6 +72,7 @@ import com.idega.util.text.TextSoap;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
+import is.idega.idegaweb.egov.cases.media.ExcelExporterService;
 import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
@@ -104,6 +105,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	@Autowired
 	private VisibleVariablesBean visibleVariablesBean = null;
+
+	@Autowired
+	private ExcelExporterService excelExporterService;
 
 	protected VisibleVariablesBean getVisibleVariablesBean() {
 		if (this.visibleVariablesBean == null) {
@@ -535,7 +539,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			String id,
 			List<String> exportColumns,
 			boolean exportContacts,
-			boolean showCompany) {
+			boolean showCompany
+	) {
 		if (casesByProcessDefinition == null || ListUtil.isEmpty(casesByProcessDefinition.values())) {
 			return null;
 		}
@@ -753,9 +758,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 
 			if (lastCellNumber > 0) {
-				for (int i = 0; i < lastCellNumber; i++) {
-					sheet.autoSizeColumn(i);
-				}
+				excelExporterService.autosizeSheetColumns(sheet, lastCellNumber);
 			}
 		}
 
@@ -773,8 +776,10 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	private void addUsersToSheet(
 			HSSFWorkbook workBook,
-			HSSFSheet sheet,Collection<User> users,
-			boolean showUserCompany){
+			HSSFSheet sheet,
+			Collection<User> users,
+			boolean showUserCompany
+	) {
 		HSSFFont bigFont = workBook.createFont();
 		bigFont.setBoldweight(HSSFFont.BOLDWEIGHT_BOLD);
 		bigFont.setFontHeightInPoints((short) 16);
