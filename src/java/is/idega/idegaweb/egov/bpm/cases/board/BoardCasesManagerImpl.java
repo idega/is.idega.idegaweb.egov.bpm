@@ -1515,7 +1515,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	@Override
-	public List<AdvancedProperty> getAvailableVariables(String processName) {
+	public List<AdvancedProperty> getAvailableVariables(String processName, String casesType) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
