@@ -1533,9 +1533,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return variablesProvider.getAvailableVariables(variables, iwc.getCurrentLocale(), iwc.isSuperAdmin(), false);
 	}
 
-	protected IWContext getIWContext() {
-		return CoreUtil.getIWContext();
-	}
 
 	protected IWResourceBundle getIWResourceBundle(IWContext iwc) {
 		if (iwc == null) {
