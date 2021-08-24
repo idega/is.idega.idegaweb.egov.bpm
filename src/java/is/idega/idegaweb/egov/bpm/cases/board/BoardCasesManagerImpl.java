@@ -39,7 +39,6 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.contact.data.Email;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
-import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
@@ -1533,23 +1532,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return variablesProvider.getAvailableVariables(variables, iwc.getCurrentLocale(), iwc.isSuperAdmin(), false);
 	}
 
-
-	protected IWResourceBundle getIWResourceBundle(IWContext iwc) {
-		if (iwc == null) {
-			return null;
-		}
-
-		IWMainApplication application = IWMainApplication.getIWMainApplication(iwc);
-		if (application == null) {
-			return null;
-		}
-
-		IWBundle bundle = application.getBundle(getBundleIdentifier());
-		if (bundle == null) {
-			return null;
-		}
-
-		return bundle.getResourceBundle(iwc);
+	protected IWResourceBundle getIWResourceBundle() {
+		return getResourceBundle(getBundle(getBundleIdentifier()));
 	}
 
 	protected String getBundleIdentifier() {
