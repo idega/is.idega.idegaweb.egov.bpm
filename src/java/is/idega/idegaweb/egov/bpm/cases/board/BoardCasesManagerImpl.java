@@ -156,6 +156,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public <K extends Serializable> List<CaseBoardBean> getAllSortedCases(
+			User currentUser,
 			Collection<String> caseStatuses,
 			String processName,
 			String uuid,
@@ -169,6 +170,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	) {
 		//	Getting cases by the configuration
 		Collection<GeneralCase> cases = getCases(
+				currentUser,
 				caseStatuses,
 				processName,
 				isSubscribedOnly,
@@ -775,6 +777,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	 * @return entities by criteria or {@link Collections#emptyList()} on failure;
 	 */
 	protected Collection<GeneralCase> getCases(
+			User currentUser,
 			Collection<String> caseStatuses,
 			String processName,
 			boolean subscribedOnly,
@@ -787,7 +790,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				StringUtil.isEmpty(processName) ? null : Arrays.asList(processName),
 				null,
 				caseStatuses,
-				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null,
+				subscribedOnly && currentUser != null ? Arrays.asList(currentUser): null,
 				StringUtil.isEmpty(caseManagerType) ? null : Arrays.asList(caseManagerType),
 				dateCreatedFrom,
 				dateCreatedTo
@@ -932,6 +935,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public <K extends Serializable> CaseBoardTableBean getTableData(
+			User currentUser,
 			Date dateFrom,
 			Date dateTo,
 			Collection<String> caseStatuses,
@@ -948,6 +952,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		@SuppressWarnings("unchecked")
 		Class<K> keyType = type == null ? (Class<K>) ProcessInstance.class : type;
 		List<CaseBoardBean> boardCases = getAllSortedCases(
+				currentUser,
 				caseStatuses,
 				processName,
 				uuid,
@@ -1110,6 +1115,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	 */
 	@Override
 	public CaseBoardTableBean getTableData(
+			User currentUser,
 			Collection<String> caseStatuses,
 			String processName,
 			String uuid,
@@ -1119,6 +1125,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			String casesType
 	) {
 		return getTableData(
+				currentUser,
 				null,
 				null,
 				caseStatuses,
