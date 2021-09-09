@@ -39,7 +39,6 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.contact.data.Email;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
-import com.idega.idegaweb.IWBundle;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
@@ -168,6 +167,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public <K extends Serializable> List<CaseBoardBean> getAllSortedCases(
+			User currentUser,
 			Collection<String> caseStatuses,
 			String processName,
 			String uuid,
@@ -181,6 +181,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	) {
 		//	Getting cases by the configuration
 		Collection<GeneralCase> cases = getCases(
+				currentUser,
 				caseStatuses,
 				processName,
 				isSubscribedOnly,
@@ -789,6 +790,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	 * @return entities by criteria or {@link Collections#emptyList()} on failure;
 	 */
 	protected Collection<GeneralCase> getCases(
+			User currentUser,
 			Collection<String> caseStatuses,
 			String processName,
 			boolean subscribedOnly,
@@ -801,7 +803,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				StringUtil.isEmpty(processName) ? null : Arrays.asList(processName),
 				null,
 				caseStatuses,
-				subscribedOnly ? Arrays.asList(getIWContext().getCurrentUser()): null,
+				subscribedOnly && currentUser != null ? Arrays.asList(currentUser): null,
 				StringUtil.isEmpty(caseManagerType) ? null : Arrays.asList(caseManagerType),
 				dateCreatedFrom,
 				dateCreatedTo
@@ -946,6 +948,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public <K extends Serializable> CaseBoardTableBean getTableData(
+			User currentUser,
 			Date dateFrom,
 			Date dateTo,
 			Collection<String> caseStatuses,
@@ -962,6 +965,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		@SuppressWarnings("unchecked")
 		Class<K> keyType = type == null ? (Class<K>) ProcessInstance.class : type;
 		List<CaseBoardBean> boardCases = getAllSortedCases(
+				currentUser,
 				caseStatuses,
 				processName,
 				uuid,
@@ -1148,6 +1152,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	 */
 	@Override
 	public CaseBoardTableBean getTableData(
+			User currentUser,
 			Collection<String> caseStatuses,
 			String processName,
 			String uuid,
@@ -1157,6 +1162,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			String casesType
 	) {
 		return getTableData(
+				currentUser,
 				null,
 				null,
 				caseStatuses,
@@ -1565,26 +1571,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return variablesProvider.getAvailableVariables(variables, iwc.getCurrentLocale(), iwc.isSuperAdmin(), false);
 	}
 
-	protected IWContext getIWContext() {
-		return CoreUtil.getIWContext();
-	}
-
-	protected IWResourceBundle getIWResourceBundle(IWContext iwc) {
-		if (iwc == null) {
-			return null;
-		}
-
-		IWMainApplication application = IWMainApplication.getIWMainApplication(iwc);
-		if (application == null) {
-			return null;
-		}
-
-		IWBundle bundle = application.getBundle(getBundleIdentifier());
-		if (bundle == null) {
-			return null;
-		}
-
-		return bundle.getResourceBundle(iwc);
+	protected IWResourceBundle getIWResourceBundle() {
+		return getResourceBundle(getBundle(getBundleIdentifier()));
 	}
 
 	protected String getBundleIdentifier() {
