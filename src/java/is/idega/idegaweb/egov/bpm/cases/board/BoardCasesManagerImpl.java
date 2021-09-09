@@ -51,6 +51,7 @@ import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.NoEmailFoundException;
 import com.idega.user.business.UserBusiness;
+import com.idega.user.dao.GroupDAO;
 import com.idega.user.data.Group;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
@@ -134,12 +135,23 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	@Autowired
 	private BPMDAO bpmDAO;
 
+	@Autowired
+	private GroupDAO groupDAO;
+
 	protected BPMDAO getBPMDAO() {
 		if (this.bpmDAO == null) {
 			ELUtil.getInstance().autowire(this);
 		}
 
 		return this.bpmDAO;
+	}
+
+	protected GroupDAO getGroupDAO() {
+		if (this.groupDAO == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return this.groupDAO;
 	}
 
 	protected CaseHome getCaseHome() {
@@ -283,6 +295,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boardCase.setCategory(view.getValue(CaseBoardBean.CASE_CATEGORY));
 			boardCase.setHandler(view.getHandler());
 			boardCase.setFinancingOfTheTasks(view.getFinancingOfTheTasks());
+
+			boardCase.setProjectNature(view.getValue(CaseBoardBean.PROJECT_NATURE));
 
 			boardCase.setLinkToCase(links.get(Long.valueOf(view.getCaseId())));
 
@@ -1019,6 +1033,30 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 								)
 						);
 
+						//Get the group name for the project nature
+						} else if (isEqual(id, CasesBoardViewer.VARIABLE_PROJECT_NATURE)) {
+							String projectNatureGroupName = CoreConstants.EMPTY;
+							String projectNatureGroupNameValue = caseBoard.getValue(column.getId());
+							if (!StringUtil.isEmpty(projectNatureGroupNameValue)) {
+								try {
+									com.idega.user.data.bean.Group projectNatureGroup = getGroupDAO().findGroup(Integer.valueOf(projectNatureGroupNameValue));
+									if (projectNatureGroup != null) {
+										projectNatureGroupName = projectNatureGroup.getName();
+									}
+								} catch (Exception ePNG) {
+									getLogger().log(Level.WARNING, "Could not get the group for the project nature with group id: " + projectNatureGroupNameValue, ePNG);
+								}
+							}
+
+							rowValues.put(
+									index,
+									Arrays.asList(new AdvancedProperty(
+											column.getId(),
+											projectNatureGroupName
+										)
+									)
+							);
+
 					} else if (isEqual(id, CasesBoardViewer.WORK_ITEM)) {
 						//	Financing table
 						financingTableAdded = true;
@@ -1219,8 +1257,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				),
 
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_GRADE, "Comment"),							//	19
-				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions")						//	20, EDITABLE, text area
-																											//	21 is handler by default (if no custom columns provided)
+				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions"),						//	20, EDITABLE, text area
+				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature")						//  21
+																											//	22 is handler by default (if no custom columns provided)
 		);
 	}
 
