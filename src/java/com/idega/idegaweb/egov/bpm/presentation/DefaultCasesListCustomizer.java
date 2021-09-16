@@ -153,51 +153,52 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 			return null;
 		}
 
+		Map<String, Map<String, String>> labels = new LinkedHashMap<>();
+
 		Map<Long, List<VariableInstanceInfo>> vars = getVariablesQuerier().getGroupedVariables(getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(procInstIdsAndCasesIds.keySet(), headersKeys));
 		if (MapUtil.isEmpty(vars)) {
 			getLogger().warning("There are no values for cases " + casesIds + " and variables " + headersKeys);
-			return null;
-		}
 
-		//	Resolving labels
-		Map<String, Map<String, String>> labels = new LinkedHashMap<>();
-		Map<String, Long> mappings = new HashMap<>();
-		for (Long procId: vars.keySet()) {
-			List<VariableInstanceInfo> procVars = vars.get(procId);
-			if (ListUtil.isEmpty(procVars)) {
-				continue;
-			}
-
-			Map<String, String> caseLabels = null;
-			for (VariableInstanceInfo info: procVars) {
-				Integer caseIdTmp = procInstIdsAndCasesIds.get(procId);
-				if (caseIdTmp == null) {
+		} else {
+			//	Resolving labels
+			Map<String, Long> mappings = new HashMap<>();
+			for (Long procId: vars.keySet()) {
+				List<VariableInstanceInfo> procVars = vars.get(procId);
+				if (ListUtil.isEmpty(procVars)) {
 					continue;
 				}
 
-				String caseId = caseIdTmp.toString();
-				if (StringUtil.isEmpty(caseId)) {
-					continue;
-				}
+				Map<String, String> caseLabels = null;
+				for (VariableInstanceInfo info: procVars) {
+					Integer caseIdTmp = procInstIdsAndCasesIds.get(procId);
+					if (caseIdTmp == null) {
+						continue;
+					}
 
-				mappings.put(caseId, procId);
+					String caseId = caseIdTmp.toString();
+					if (StringUtil.isEmpty(caseId)) {
+						continue;
+					}
 
-				caseLabels = labels.get(caseId);
-				if (caseLabels == null) {
-					caseLabels = new HashMap<>();
-					labels.put(caseId, caseLabels);
-				}
-				if (caseLabels.containsKey(info.getName())) {
-					continue;
-				}
+					mappings.put(caseId, procId);
 
-				Serializable value = info.getValue();
-				if (value == null) {
-					continue;
-				}
+					caseLabels = labels.get(caseId);
+					if (caseLabels == null) {
+						caseLabels = new HashMap<>();
+						labels.put(caseId, caseLabels);
+					}
+					if (caseLabels.containsKey(info.getName())) {
+						continue;
+					}
 
-				AdvancedProperty label = getLabel(info, procInstIdsAndCasesIds);
-				caseLabels.put(label.getId(), label.getValue());
+					Serializable value = info.getValue();
+					if (value == null) {
+						continue;
+					}
+
+					AdvancedProperty label = getLabel(info, procInstIdsAndCasesIds);
+					caseLabels.put(label.getId(), label.getValue());
+				}
 			}
 		}
 
@@ -216,6 +217,16 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 					missingLabels.put(caseId, varNames);
 				}
 				varNames.add(headerKey);
+			}
+		}
+		if (MapUtil.isEmpty(labels) && MapUtil.isEmpty(missingLabels) && !ListUtil.isEmpty(headersKeys)) {
+			Map<String, String> noValue = new HashMap<>();
+			for (String headerKey: headersKeys) {
+				noValue.put(headerKey, headerKey);
+			}
+			for (String caseId: casesIds) {
+				labels.put(caseId, MapUtil.deepCopy(noValue));
+				missingLabels.put(caseId, new ArrayList<>(headersKeys));
 			}
 		}
 		if (!MapUtil.isEmpty(missingLabels)) {
