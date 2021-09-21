@@ -67,6 +67,21 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		return iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(key), key);
 	}
 
+	protected void setEmptyValues(Map<String, Map<String, String>> labels, Map<String, List<String>> missingLabels) {
+		for (String caseId: missingLabels.keySet()) {
+			List<String> varNames = missingLabels.get(caseId);
+			if (ListUtil.isEmpty(varNames)) {
+				continue;
+			}
+
+			Map<String, String> caseLabels = labels.get(caseId);
+			for (String varName: varNames) {
+				String realValue = caseLabels.get(varName);
+				caseLabels.put(varName, StringUtil.isEmpty(realValue) || varName.equals(realValue) ? CoreConstants.MINUS : realValue);
+			}
+		}
+	}
+
 	@Override
 	public List<String> getHeaders(List<String> headersKeys) {
 		if (ListUtil.isEmpty(headersKeys)) {
@@ -232,6 +247,8 @@ public abstract class DefaultCasesListCustomizer extends DefaultSpringBean imple
 		if (!MapUtil.isEmpty(missingLabels)) {
 			doResolveMissingLabels(labels, missingLabels);
 		}
+
+		setEmptyValues(labels, missingLabels);
 
 		return labels;
 	}
