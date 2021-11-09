@@ -1230,8 +1230,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return Arrays.asList(
 				new AdvancedProperty(CasesBoardViewer.WORK_ITEM, localize(CasesBoardViewer.WORK_ITEM, "Work item")),
 				new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, localize(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
-				new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, localize(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
 				new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, localize(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
+				new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, localize(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
 				new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, localize(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision"))
 		);
 	}
@@ -1264,8 +1264,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_GRADE, "Comment"),							//	19
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions"),						//	20, EDITABLE, text area
-				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature")						//  21
-																											//	22 is handler by default (if no custom columns provided)
+				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature"),						//  21
+				new AdvancedProperty(ProcessConstants.CASE_APPLIED_AMOUNT, "Applied amount")				//	22
+																											//	23 is handler by default (if no custom columns provided)
 		);
 	}
 
