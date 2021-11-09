@@ -714,7 +714,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 								variable = getVariableByName(varsForCase, column);
 								if (variable == null)
 									value = getResolver(column).getPresentation(column, theCase.getId());
-							} else if (column.equals("string_ticketMeterNumber")) {
+							} else if (
+									column.equals("string_ticketMeterNumber") ||
+									column.equals("string_ticketStreetDescription") ||
+									column.equals("list_ticketViolationsNumbers")
+							) {
 								variable = getVariableByName(varsForCase, column);
 								if (variable == null || StringUtil.isEmpty(variable.getValue())) {
 									MultipleSelectionVariablesResolver resolver = getResolver(column);

@@ -1041,7 +1041,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						} else if (isEqual(id, CasesBoardViewer.VARIABLE_PROJECT_NATURE)) {
 							String projectNatureGroupName = CoreConstants.EMPTY;
 							String projectNatureGroupNameValue = caseBoard.getValue(column.getId());
-							if (!StringUtil.isEmpty(projectNatureGroupNameValue)) {
+							if (StringHandler.isNumeric(projectNatureGroupNameValue)) {
 								try {
 									com.idega.user.data.bean.Group projectNatureGroup = getGroupDAO().findGroup(Integer.valueOf(projectNatureGroupNameValue));
 									if (projectNatureGroup != null) {
