@@ -997,7 +997,21 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 		boolean addBoardSuggestion = settings.getBoolean("cases_board_add_board_suggestion", false);
 		boolean addBoardDecision = settings.getBoolean("cases_board_add_board_descision", false);
+		boolean useAutomaticBoardDecisionAndSuggestion = settings.getBoolean("cases_board_automatic_board", false);
+		int boardDecisionSubstractIndex = 1;
 		Integer indexOfSugesstion = null, indexOfDecision = null;
+
+		List<String> customColumns = getCustomColumns(uuid);
+		boolean addToIndexOfSuggestion = false;
+		if (ListUtil.isEmpty(customColumns)) {
+			String boardDecisionSubstractIndexStr = settings.getProperty("board_decision_substract_index", "2");
+			if (!StringUtil.isEmpty(boardDecisionSubstractIndexStr)) {
+				boardDecisionSubstractIndex = Integer.valueOf(boardDecisionSubstractIndexStr).intValue();
+			}
+		} else {
+			addToIndexOfSuggestion = true;
+			boardDecisionSubstractIndex = 0;
+		}
 
 		for (CaseBoardBean caseBoard: boardCases) {
 			Serializable procInstId = caseBoard.getProcessInstanceId();
@@ -1074,12 +1088,16 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					} else if (isEqual(id, CasesBoardViewer.ESTIMATED_COST)) {
 						//	Will be added with financing table (work item)
 
-					} else if (isEqual(id, CasesBoardViewer.BOARD_SUGGESTION) && addBoardSuggestion) {
-						indexOfSugesstion = index - 1;
+					} else if (isEqual(id, CasesBoardViewer.BOARD_SUGGESTION) && addBoardSuggestion && !useAutomaticBoardDecisionAndSuggestion) {
+						if (addToIndexOfSuggestion) {
+							indexOfSugesstion = index;
+						} else {
+							indexOfSugesstion = index - 1;
+						}
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION))));
 
-					} else if (isEqual(id, CasesBoardViewer.BOARD_DECISION) && addBoardDecision) {
-						indexOfDecision = index - 1;
+					} else if (isEqual(id, CasesBoardViewer.BOARD_DECISION) && addBoardDecision && !useAutomaticBoardDecisionAndSuggestion) {
+						indexOfDecision = index - boardDecisionSubstractIndex;
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, caseBoard.getValue(CasesBoardViewer.BOARD_DECISION))));
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
@@ -1363,6 +1381,35 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		if (indexOfTotal < 0) {
 			indexOfTotal = indexOfSuggestion - 1;
 		}
+
+		//If custom columns exist, totals index should be calculated in another way
+		List<String> customColumns = getCustomColumns(uuid);
+		if (!ListUtil.isEmpty(customColumns)) {
+			indexOfTotal = 0;
+			if (indexOfSuggestion != null) {
+				indexOfTotal = indexOfSuggestion - 1;
+			}
+			if (indexOfDecision != null) {
+				if (
+						indexOfTotal >= indexOfDecision
+						||
+						(indexOfTotal == 0  && (indexOfSuggestion == null || indexOfSuggestion > indexOfDecision))
+				) {
+					indexOfTotal = indexOfDecision - 1;
+				}
+			}
+			if (indexOfTotal < 0) {
+				indexOfTotal = 0;
+			}
+			if (
+					(indexOfSuggestion != null && indexOfTotal == indexOfSuggestion)
+					||
+					(indexOfDecision != null && indexOfTotal == indexOfDecision)
+			) {
+				indexOfTotal = -1;
+			}
+		}
+
 
 		String total = localize("case_board_viewer.total_sum", "Total").concat(CoreConstants.COLON).toString();
 		for (int i = 0; i < numberOfColumns; i++) {
