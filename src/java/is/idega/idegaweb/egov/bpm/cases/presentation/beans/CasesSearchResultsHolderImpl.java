@@ -76,6 +76,7 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
 import is.idega.idegaweb.egov.cases.media.ExcelExporterService;
+import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
 import is.idega.idegaweb.egov.cases.presentation.CasesStatistics;
 import is.idega.idegaweb.egov.cases.util.CasesConstants;
 
@@ -505,7 +506,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				}
 			}
 			String value = getVariableValue(procDefVariable.getId(), variable);
-			if (StringHandler.isNumeric(value) && variable.getValue() != null && variable.getValue().startsWith(BPMConstants.GROUP_LOC_NAME_PREFIX)) {
+			if (
+					StringHandler.isNumeric(value) &&
+					(	variable.getValue() != null && variable.getValue().startsWith(BPMConstants.GROUP_LOC_NAME_PREFIX) ||
+						variable.getName() != null && CasesBoardViewer.VARIABLE_PROJECT_NATURE.equals(variable.getName())
+					)
+			) {
 				value = LocaleUtil.getLocalizedGroupName(IWMainApplication.getDefaultIWMainApplication(), locale, IWBundleStarter.IW_BUNDLE_IDENTIFIER, value);
 			}
 			HSSFCell cell = row.createCell(cellIndex++);
