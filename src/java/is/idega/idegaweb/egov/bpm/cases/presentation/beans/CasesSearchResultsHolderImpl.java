@@ -1,6 +1,7 @@
 package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import java.io.OutputStream;
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -31,6 +32,7 @@ import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.block.process.presentation.beans.CasesSearchResults;
 import com.idega.block.process.presentation.beans.CasesSearchResultsHolder;
 import com.idega.block.process.variables.VisibleVariablesBean;
+import com.idega.bpm.BPMConstants;
 import com.idega.bpm.model.VariableInstance;
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.business.IBOLookup;
@@ -63,6 +65,7 @@ import com.idega.util.CoreUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.LocaleUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.WebUtil;
@@ -295,22 +298,34 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Transactional(readOnly=true)
-	private List<AdvancedProperty> getAvailableVariablesByProcessInstanceId(Locale locale, Long processInstanceId, boolean isAdmin) {
+	private List<AdvancedProperty> getAvailableVariablesByProcessInstanceId(List<AdvancedProperty> variablesByProcessDefinition, Locale locale, Serializable processInstanceId, boolean isAdmin) {
 		Collection<VariableInstance> variablesByProcessInstance = null;
-		try {
-			variablesByProcessInstance = getVariablesQuerier().getFullVariablesByProcessInstanceId(processInstanceId, false);
-		} catch(Exception e) {
-			LOGGER.log(Level.WARNING, "Error getting variables for process instance: " + processInstanceId, e);
+
+		if (processInstanceId instanceof String && !ListUtil.isEmpty(variablesByProcessDefinition)) {
+			List<String> variablesNames = new ArrayList<>();
+			for (AdvancedProperty var: variablesByProcessDefinition) {
+				variablesNames.add(var.getId());
+			}
+			ProcessInstanceW piW = getBpmFactory().getProcessInstanceW(processInstanceId);
+			variablesByProcessInstance = piW.getVariables(variablesNames);
+		}
+
+		if (processInstanceId instanceof Number) {
+			try {
+				variablesByProcessInstance = getVariablesQuerier().getFullVariablesByProcessInstanceId(((Number) processInstanceId).longValue(), false);
+			} catch(Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting variables for process instance: " + processInstanceId, e);
+			}
 		}
 
 		return getAvailableVariables(variablesByProcessInstance, locale, isAdmin, true);
 	}
 
-	@Transactional(readOnly=true)
-	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, Locale locale, boolean isAdmin,
-			boolean useRealValue) {
-		if (ListUtil.isEmpty(variables))
+	@Transactional(readOnly = true)
+	private List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
+		if (ListUtil.isEmpty(variables)) {
 			return null;
+		}
 
 		BPMProcessVariablesBean variablesProvider = ELUtil.getInstance().getBean(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER);
 		List<AdvancedProperty> results = variablesProvider.getAvailableVariables(variables, locale, isAdmin, useRealValue);
@@ -434,37 +449,65 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 
-	private List<AdvancedProperty> getVariablesForCase(CasePresentation theCase, Locale locale, boolean isAdmin) {
+	private List<AdvancedProperty> getVariablesForCase(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, Locale locale, boolean isAdmin) {
 		List<AdvancedProperty> vars = theCase.getExternalData();
 		if (ListUtil.isEmpty(vars)) {
-			Long processInstanceId = null;
+			Serializable processInstanceId = null;
 			try {
-				processInstanceId = getCaseManagersProvider().getCaseManager().getProcessInstanceIdByCaseId(theCase.getId());
+				CaseProcInstBind bind = getCasesBinder().getCaseProcInstBindByCaseId(Integer.valueOf(theCase.getId()));
+				processInstanceId = bind.getUuid();
+				if (processInstanceId == null) {
+					processInstanceId = bind.getProcInstId();
+				}
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting process instance for case: " + theCase);
 			}
 			if (processInstanceId == null)
 				return null;
 
-			vars = getAvailableVariablesByProcessInstanceId(locale, processInstanceId, isAdmin);
+			vars = getAvailableVariablesByProcessInstanceId(variablesByProcessDefinition, locale, processInstanceId, isAdmin);
 		}
 
 		return vars;
 	}
 
-	private void addVariables(List<AdvancedProperty> variablesByProcessDefinition, CasePresentation theCase, HSSFRow row, HSSFSheet sheet,
-			HSSFCellStyle bigStyle, Locale locale, boolean isAdmin, int cellIndex, List<Integer> fileCellsIndexes, String localizedFileLabel,HSSFCellStyle normalStyle) {
-		if (ListUtil.isEmpty(variablesByProcessDefinition))
+	private void addVariables(
+			List<AdvancedProperty> variablesByProcessDefinition,
+			CasePresentation theCase,
+			HSSFRow row,
+			HSSFSheet sheet,
+			HSSFCellStyle bigStyle,
+			Locale locale,
+			boolean isAdmin,
+			int cellIndex,
+			List<Integer> fileCellsIndexes,
+			String localizedFileLabel,
+			HSSFCellStyle normalStyle
+	) {
+		if (ListUtil.isEmpty(variablesByProcessDefinition)) {
 			return;
+		}
 
 		AdvancedProperty variable = null;
-		List<AdvancedProperty> variablesByProcessInstance = getVariablesForCase(theCase, locale, isAdmin);
-		if (ListUtil.isEmpty(variablesByProcessInstance))
+		List<AdvancedProperty> variablesByProcessInstance = getVariablesForCase(variablesByProcessDefinition, theCase, locale, isAdmin);
+		if (ListUtil.isEmpty(variablesByProcessInstance)) {
 			return;
+		}
 
-		for (AdvancedProperty processVariable: variablesByProcessDefinition) {
-			variable = getVariableByValue(variablesByProcessInstance, processVariable.getValue());
-			String value = getVariableValue(processVariable.getId(), variable);
+		for (AdvancedProperty procDefVariable: variablesByProcessDefinition) {
+			variable = getVariableByValue(variablesByProcessInstance, procDefVariable.getValue());
+			if (variable == null && procDefVariable.getId() != null) {
+				for (Iterator<AdvancedProperty> iter = variablesByProcessInstance.iterator(); (iter.hasNext() && variable == null);) {
+					AdvancedProperty procInstVar = iter.next();
+					if (procInstVar.getName() != null && procDefVariable.getId().equals(procInstVar.getName())) {
+						variable = procInstVar;
+					}
+				}
+			}
+			String value = getVariableValue(procDefVariable.getId(), variable);
+			if (StringHandler.isNumeric(value) && variable.getValue() != null && variable.getValue().startsWith(BPMConstants.GROUP_LOC_NAME_PREFIX)) {
+				value = LocaleUtil.getLocalizedGroupName(IWMainApplication.getDefaultIWMainApplication(), locale, IWBundleStarter.IW_BUNDLE_IDENTIFIER, value);
+			}
 			HSSFCell cell = row.createCell(cellIndex++);
 			cell.setCellStyle(normalStyle);
 			cell.setCellValue(value);
@@ -483,8 +526,9 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return CoreConstants.EMPTY;
 
 		MultipleSelectionVariablesResolver resolver = getResolver(beanName.split(CoreConstants.AT)[0]);
-		if (resolver == null)
+		if (resolver == null) {
 			return variable.getId();
+		}
 
 		try {
 			return resolver.isValueUsedForExport() ?
@@ -591,7 +635,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			HSSFSheet sheet = createdSheets.containsKey(sheetName) ? workBook.getSheet(sheetName) : workBook.createSheet(sheetName);
 			createdSheets.put(sheetName, Boolean.TRUE);
 
-			if (ListUtil.isEmpty(exportColumns) && searchCriteria != null) {
+			if (ListUtil.isEmpty(exportColumns) && searchCriteria != null && !StringUtil.isEmpty(searchCriteria.getInstanceId())) {
 				Collection<String> visibleVariables = getVisibleVariablesBean().getVariablesByComponentId(searchCriteria.getInstanceId().substring(5));
 				if (!ListUtil.isEmpty(visibleVariables)) {
 					exportColumns = new ArrayList<>(visibleVariables);
@@ -605,6 +649,28 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					List<CasePresentation> theCases = casesByProcessDefinition.get(processName);
 					if (!ListUtil.isEmpty(theCases)) {
 						availableVariables = theCases.get(0).getExternalData();
+					}
+				}
+				if (ListUtil.isEmpty(availableVariables) && !ListUtil.isEmpty(searchCriteria.getCustomColumns())) {
+					availableVariables = new ArrayList<>();
+					List<String> customColumns = searchCriteria.getCustomColumns();
+					Collection<IWResourceBundle> resources = LocaleUtil.getEnabledResources(iwc.getIWMainApplication(), locale, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
+					if (!ListUtil.isEmpty(resources)) {
+						String prefix = BPMConstants.BPMN_VARIABLE_PREFIX;
+						for (String customColumn: customColumns) {
+							String key = prefix.concat(customColumn);
+							String localized = key;
+							for (
+									Iterator<IWResourceBundle> iter = resources.iterator();
+									(iter.hasNext() && (StringUtil.isEmpty(localized) || localized.equals(key)));
+							) {
+								IWResourceBundle iwrb = iter.next();
+								localized = iwrb.getLocalizedString(key, key);
+							}
+							if (!StringUtil.isEmpty(localized) && !localized.equals(key)) {
+								availableVariables.add(new AdvancedProperty(customColumn, localized));
+							}
+						}
 					}
 				}
 				if (!exportContacts) {
@@ -647,7 +713,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					cell.setCellStyle(normalStyle);
 					cell.setCellValue(getCaseCreatorEmail(theCase));
 
-
 					if (!ListUtil.isEmpty(standardFieldsLabels)) {
 						List<String> standardFieldsValues = getStandardFieldsValues(id, theCase);
 						if (!ListUtil.isEmpty(standardFieldsValues)) {
@@ -660,7 +725,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					}
 
 					//	Variable values
-					addVariables(availableVariables, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes, fileNameLabel,normalStyle);
+					addVariables(availableVariables, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes, fileNameLabel, normalStyle);
 
 					if (exportContacts) {
 						CaseProcInstBind bind = getCasesBinder().getCaseProcInstBindByCaseId(Integer.valueOf(theCase.getId()));
@@ -688,7 +753,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					HSSFRow row = sheet.createRow(++rowNumber);
 					int cellIndex = 0;
 
-					List<AdvancedProperty> varsForCase = getVariablesForCase(theCase, locale, isAdmin);
+					List<AdvancedProperty> varsForCase = getVariablesForCase(null, theCase, locale, isAdmin);
 
 					for (String column: exportColumns) {
 						String value = null;
@@ -747,7 +812,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						HSSFCell cell = row.createCell(cellIndex++);
 						cell.setCellStyle(normalStyle);
 						cell.setCellValue(value);
-						if(exportContacts){
+						if (exportContacts) {
 							CaseProcInstBind bind = getCasesBinder().getCaseProcInstBindByCaseId(Integer.valueOf(theCase.getId()));
 							Long processInstanceId = bind.getProcInstId();
 							ProcessManager processManager = bpmFactory.getProcessManagerByProcessInstanceId(processInstanceId);

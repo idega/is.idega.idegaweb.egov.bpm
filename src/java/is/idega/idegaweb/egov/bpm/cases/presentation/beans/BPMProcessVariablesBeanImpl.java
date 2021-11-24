@@ -40,10 +40,12 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.LocaleUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardBean;
 
 @Scope("request")
 @Service(BPMProcessVariablesBean.SPRING_BEAN_IDENTIFIER)
@@ -69,7 +71,10 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 	@Override
 	public List<AdvancedProperty> getAvailableVariables(Collection<VariableInstance> variables, Locale locale, boolean isAdmin, boolean useRealValue) {
 		IWResourceBundle iwrb = getBundle().getResourceBundle(locale);
-		return getAvailableVariables(variables, Arrays.asList(iwrb), locale, isAdmin, useRealValue);
+		Collection<IWResourceBundle> resources = LocaleUtil.getEnabledResources(getApplication(), locale, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
+		resources = ListUtil.isEmpty(resources) ? new ArrayList<>() : new ArrayList<>(resources);
+		resources.add(iwrb);
+		return getAvailableVariables(variables, resources, locale, isAdmin, useRealValue);
 	}
 
 	@Override
@@ -91,9 +96,9 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 			boolean isAdmin,
 			boolean useRealValue
 	) {
-
-		if (ListUtil.isEmpty(variables))
+		if (ListUtil.isEmpty(variables)) {
 			return null;
+		}
 
 		isAdmin = isAdmin ? isAdmin : getSettings().getBoolean("bpm_variables_all", false);
 
@@ -105,40 +110,53 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		List<AdvancedProperty> availableVariables = new ArrayList<>();
 		for (VariableInstance variable: variables) {
 			name = variable.getName();
-			if (StringUtil.isEmpty(name) || addedVariables.contains(name))
+			if (StringUtil.isEmpty(name) || addedVariables.contains(name)) {
 				continue;
+			}
 
 			VariableInstanceType varType = variable.getTypeOfVariable();
 			type = varType == null ? null : varType.getTypeKeys().get(0);
-			if (StringUtil.isEmpty(type))
+			if (StringUtil.isEmpty(type)) {
 				continue;
+			}
 
+			Object value = name.equals(CaseBoardBean.PROJECT_NATURE) ? variable.getVariableValue() : null;
 			for (IWResourceBundle iwrb: bundles) {
-				localizedName = getVariableLocalizedName(name, iwrb, isAdmin);
+				localizedName = getVariableLocalizedName(name, value, iwrb, isAdmin);
 				if (!StringUtil.isEmpty(localizedName)) {
 					break;
 				}
 			}
 
-			if (StringUtil.isEmpty(localizedName))
+			if (StringUtil.isEmpty(localizedName)) {
 				continue;
-			if (!isAdmin && localizedName.equals(name))
+			}
+			if (!isAdmin && localizedName.equals(name)) {
 				continue;
+			}
 
 			String realValue = null;
-			if (useRealValue)
+			if (useRealValue) {
 				realValue = getVariableRealValue(variable, locale);
+			}
 
 			if (!useRealValue || !StringUtil.isEmpty(realValue)) {
-				AdvancedProperty var = new AdvancedProperty(useRealValue ? realValue : new StringBuilder(name).append(at).append(type).toString(),
-						localizedName, name);
-				var.setExternalId(variable.getProcessInstanceId());
+				AdvancedProperty var = new AdvancedProperty(
+						useRealValue ? realValue : new StringBuilder(name).append(at).append(type).toString(),
+						localizedName,
+						name
+				);
+				Serializable piId = variable.getProcessInstanceId();
+				if (piId instanceof Long) {
+					var.setExternalId((Long) piId);
+				}
 				availableVariables.add(var);
 				addedVariables.add(name);
 			}
 		}
-		if (ListUtil.isEmpty(availableVariables))
+		if (ListUtil.isEmpty(availableVariables)) {
 			return null;
+		}
 
 		Collections.sort(availableVariables, new AdvancedPropertyComparator(locale));
 		return availableVariables;
@@ -201,14 +219,14 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 
 	@Override
 	public String getVariableLocalizedName(String name, Locale locale) {
-		return getVariableLocalizedName(name, getBundle().getResourceBundle(locale), false);
+		return getVariableLocalizedName(name, null, getBundle().getResourceBundle(locale), false);
 	}
 
 	@Override
 	public String getVariableLocalizedName(Collection<IWResourceBundle> bundles, String name, Locale locale) {
 		bundles = ListUtil.isEmpty(bundles) ? Arrays.asList(getBundle().getResourceBundle(locale)) : bundles;
 		for (IWResourceBundle iwrb: bundles) {
-			String localizedName = getVariableLocalizedName(name, iwrb, false);
+			String localizedName = getVariableLocalizedName(name, null, iwrb, false);
 			if (!StringUtil.isEmpty(localizedName)) {
 				return localizedName;
 			}
@@ -216,10 +234,10 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		return null;
 	}
 
-	private String getVariableLocalizedName(String name, IWResourceBundle iwrb, boolean isAdmin) {
-		List<String> prefixes = Arrays.asList(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX, BPMConstants.BPMN_VARIABLE_PREFIX);
+	private String getVariableLocalizedName(String name, Object value, IWResourceBundle iwrb, boolean isAdmin) {
+		List<String> prefixes = Arrays.asList(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX, BPMConstants.BPMN_VARIABLE_PREFIX, BPMConstants.GROUP_LOC_NAME_PREFIX);
 		for (String prefix: prefixes) {
-			String localizedName = getVariableLocalizedName(prefix, name, iwrb, isAdmin);
+			String localizedName = getVariableLocalizedName(prefix, name, value, iwrb, isAdmin);
 			if (!StringUtil.isEmpty(localizedName)) {
 				return localizedName;
 			}
@@ -227,9 +245,9 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 		return null;
 	}
 
-	private String getVariableLocalizedName(String prefix, String name, IWResourceBundle iwrb, boolean isAdmin) {
+	private String getVariableLocalizedName(String prefix, String name, Object value, IWResourceBundle iwrb, boolean isAdmin) {
 		String localizedName = iwrb.getLocalizedString(
-				new StringBuilder(StringUtil.isEmpty(prefix) ? CoreConstants.EMPTY : prefix).append(name).toString(),
+				new StringBuilder(StringUtil.isEmpty(prefix) ? CoreConstants.EMPTY : prefix).append(value == null ? name : value.toString()).toString(),
 				isAdmin ? name : null
 		);
 
