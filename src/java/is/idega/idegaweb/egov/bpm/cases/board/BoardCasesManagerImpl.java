@@ -1265,22 +1265,24 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				new AdvancedProperty(ProcessConstants.CASE_IDENTIFIER, "Case nr."),							//	6
 				new AdvancedProperty(ProcessConstants.CASE_DESCRIPTION, "Description"),						//	7
 
-				new AdvancedProperty(CaseBoardBean.CASE_OWNER_TOTAL_COST, "Total cost"),					//	8
-				new AdvancedProperty(CasesConstants.APPLIED_GRANT_AMOUNT_VARIABLE, "Applied amount"),		//	9
-
-				new AdvancedProperty("string_ownerBusinessConcept", "In a nutshell"),						//	10
+				new AdvancedProperty(CaseBoardBean.CASE_OWNER_BUSINESS_CONCEPT, "In a nutshell"),			//	8
 
 				new AdvancedProperty(CaseBoardBean.CASE_SUM_OF_NEGATIVE_GRADES, "Negative grade"),			//	11
 				new AdvancedProperty(CaseBoardBean.CASE_SUM_ALL_GRADES, "Grade"),							//	12
 
 				new AdvancedProperty(CaseBoardBean.CASE_CATEGORY, "Category"),								//	13,	EDITABLE, select
 
-				new AdvancedProperty(																		//	14, table of 5 columns
-						casesType == null || ProcessConstants.BPM_CASE.equals(casesType) ? ProcessConstants.FINANCING_OF_THE_TASKS : ProcessConstants.FINANCING_OF_THE_TASKS_STRING,
+				new AdvancedProperty(CaseBoardBean.CASE_OWNER_GRADE, "Comment"),							//	14
+				new AdvancedProperty(CaseBoardBean.CASE_OWNER_TOTAL_COST, "Total cost"),					//	15
+				new AdvancedProperty(CasesConstants.APPLIED_GRANT_AMOUNT_VARIABLE, "Applied amount"),		//	16
+
+				new AdvancedProperty(																		//	17, table of 5 columns
+						casesType == null || ProcessConstants.BPM_CASE.equals(casesType) ?
+								ProcessConstants.FINANCING_OF_THE_TASKS :
+								ProcessConstants.FINANCING_OF_THE_TASKS_STRING,
 						"Financing of the tasks"
 				),
 
-				new AdvancedProperty(CaseBoardBean.CASE_OWNER_GRADE, "Comment"),							//	19
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions"),						//	20, EDITABLE, text area
 				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature"),						//  21
 				new AdvancedProperty(ProcessConstants.CASE_APPLIED_AMOUNT, "Applied amount")				//	22
