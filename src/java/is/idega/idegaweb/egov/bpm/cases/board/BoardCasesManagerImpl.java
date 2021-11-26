@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.board;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.rmi.RemoteException;
+import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -1122,6 +1123,37 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 								value = caseBoard.getNegativeGradingSum();
 							}
 						}
+
+						//Fix the amount - add dots for string_appliedAmount
+						if (id.equalsIgnoreCase(ProcessConstants.CASE_APPLIED_AMOUNT) && !StringUtil.isEmpty(value)) {
+							NumberFormat formatter = NumberFormat.getInstance(getCurrentLocale());
+							String convertedAmount = value;
+							String strippedAmount = null;
+							try {
+								strippedAmount = value.trim().replace(CoreConstants.DOT, CoreConstants.EMPTY).replace(CoreConstants.COMMA, CoreConstants.EMPTY);
+								if (StringHandler.isNumeric(strippedAmount)) {
+									convertedAmount = formatter.format(Long.valueOf(strippedAmount));
+								}
+							} catch (Exception e) {
+								getLogger().log(Level.WARNING, "Error formatting '" + strippedAmount + "'", e);
+							}
+
+							//Putting dots
+							if (!StringUtil.isEmpty(convertedAmount) && !convertedAmount.contains(CoreConstants.DOT)) {
+								try {
+									try {
+										convertedAmount = String.format("%,d", Integer.valueOf(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
+									} catch (Exception eDotsIn) {
+										convertedAmount = NumberFormat.getInstance(getCurrentLocale()).format(Double.parseDouble(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
+									}
+								} catch (Exception eDots) {
+									getLogger().log(Level.WARNING, "Could not add the dot separators in the amount " + value, eDots);
+								}
+							}
+
+							value = convertedAmount;
+						}
+
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(columnKey, value)));
 					}
 
