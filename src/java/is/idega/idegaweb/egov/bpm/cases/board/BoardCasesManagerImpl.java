@@ -1306,7 +1306,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_GRADE, "Comment"),							//	14
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_TOTAL_COST, "Total cost"),					//	15
-				new AdvancedProperty(CasesConstants.APPLIED_GRANT_AMOUNT_VARIABLE, "Applied amount"),		//	16
+				new AdvancedProperty(ProcessConstants.CASE_APPLIED_AMOUNT, "Applied amount"),				//	16
 
 				new AdvancedProperty(																		//	17, table of 5 columns
 						casesType == null || ProcessConstants.BPM_CASE.equals(casesType) ?
@@ -1316,9 +1316,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				),
 
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions"),						//	20, EDITABLE, text area
-				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature"),						//  21
-				new AdvancedProperty(ProcessConstants.CASE_APPLIED_AMOUNT, "Applied amount")				//	22
-																											//	23 is handler by default (if no custom columns provided)
+				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature")						//  21
+																											//	22 is handler by default (if no custom columns provided)
 		);
 	}
 
