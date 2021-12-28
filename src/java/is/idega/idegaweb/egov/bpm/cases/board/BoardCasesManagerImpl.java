@@ -1014,6 +1014,21 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			boardDecisionSubstractIndex = 0;
 		}
 
+		Locale locale = getCurrentLocale();
+		List<String> numbersWithDot = StringUtil.getValuesFromString(
+				getApplicationProperty(
+						"cases_board.numbers_with_dots",
+						StringUtil.getValue(
+								Arrays.asList(
+										CaseBoardBean.CASE_OWNER_TOTAL_COST,
+										ProcessConstants.CASE_APPLIED_AMOUNT,
+										ProcessConstants.BOARD_FINANCING_SUGGESTION,
+										ProcessConstants.BOARD_FINANCING_DECISION
+								)
+						)
+				),
+				CoreConstants.COMMA
+		);
 		for (CaseBoardBean caseBoard: boardCases) {
 			Serializable procInstId = caseBoard.getProcessInstanceId();
 			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(
@@ -1125,33 +1140,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						}
 
 						//Fix the amount - add dots for string_appliedAmount
-						if (id.equalsIgnoreCase(ProcessConstants.CASE_APPLIED_AMOUNT) && !StringUtil.isEmpty(value)) {
-							NumberFormat formatter = NumberFormat.getInstance(getCurrentLocale());
-							String convertedAmount = value;
-							String strippedAmount = null;
-							try {
-								strippedAmount = value.trim().replace(CoreConstants.DOT, CoreConstants.EMPTY).replace(CoreConstants.COMMA, CoreConstants.EMPTY);
-								if (StringHandler.isNumeric(strippedAmount)) {
-									convertedAmount = formatter.format(Long.valueOf(strippedAmount));
-								}
-							} catch (Exception e) {
-								getLogger().log(Level.WARNING, "Error formatting '" + strippedAmount + "'", e);
-							}
-
-							//Putting dots
-							if (!StringUtil.isEmpty(convertedAmount) && !convertedAmount.contains(CoreConstants.DOT)) {
-								try {
-									try {
-										convertedAmount = String.format("%,d", Integer.valueOf(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
-									} catch (Exception eDotsIn) {
-										convertedAmount = NumberFormat.getInstance(getCurrentLocale()).format(Double.parseDouble(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
-									}
-								} catch (Exception eDots) {
-									getLogger().log(Level.WARNING, "Could not add the dot separators in the amount " + value, eDots);
-								}
-							}
-
-							value = convertedAmount;
+						if (!StringUtil.isEmpty(value) && numbersWithDot.contains(id)) {
+							value = getNumberWithDots(value, locale, id);
 						}
 
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(columnKey, value)));
@@ -1194,6 +1184,39 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		data.setFilledWithData(Boolean.TRUE);
 
 		return data;
+	}
+
+	private String getNumberWithDots(String value, Locale locale, String id) {
+		if (StringUtil.isEmpty(value)) {
+			return value;
+		}
+
+		NumberFormat formatter = NumberFormat.getInstance(locale);
+		String convertedAmount = value;
+		String strippedAmount = null;
+		try {
+			strippedAmount = value.trim().replace(CoreConstants.DOT, CoreConstants.EMPTY).replace(CoreConstants.COMMA, CoreConstants.EMPTY);
+			if (StringHandler.isNumeric(strippedAmount)) {
+				convertedAmount = formatter.format(Long.valueOf(strippedAmount));
+			}
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error formatting '" + strippedAmount + "' for " + id, e);
+		}
+
+		//Putting dots
+		if (!StringUtil.isEmpty(convertedAmount) && !convertedAmount.contains(CoreConstants.DOT)) {
+			try {
+				try {
+					convertedAmount = String.format("%,d", Integer.valueOf(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
+				} catch (Exception eDotsIn) {
+					convertedAmount = NumberFormat.getInstance(locale).format(Double.parseDouble(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
+				}
+			} catch (Exception eDots) {
+				getLogger().log(Level.WARNING, "Could not add the dot separators in the amount '" + value + "' for " + id, eDots);
+			}
+		}
+
+		return convertedAmount;
 	}
 
 	/*
@@ -1443,7 +1466,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			}
 		}
 
-
+		Locale locale = getCurrentLocale();
 		String total = localize("case_board_viewer.total_sum", "Total").concat(CoreConstants.COLON).toString();
 		for (int i = 0; i < numberOfColumns; i++) {
 			if (indexOfTotal > -1 && indexOfTotal == i) {
@@ -1451,10 +1474,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				values.add(total);
 			} else if (i == indexOfSuggestion) {
 				// Grant amount suggestions
-				values.add(String.valueOf(grantAmountSuggestionTotal));
+				values.add(getNumberWithDots(String.valueOf(grantAmountSuggestionTotal), locale, "grantAmountSuggestionTotal"));
 			} else if (i == indexOfDecision) {
 				// Board amount
-				values.add(String.valueOf(boardAmountTotal));
+				values.add(getNumberWithDots(String.valueOf(boardAmountTotal), locale, "boardAmountTotal"));
 			} else {
 				values.add(CoreConstants.EMPTY);
 			}
@@ -1463,10 +1486,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			values.add(total);
 		}
 		if (values.size() <= indexOfSuggestion) {
-			values.add(String.valueOf(grantAmountSuggestionTotal));
+			values.add(getNumberWithDots(String.valueOf(grantAmountSuggestionTotal), locale, "grantAmountSuggestionTotal"));
 		}
 		if (values.size() <= indexOfDecision) {
-			values.add(String.valueOf(boardAmountTotal));
+			values.add(getNumberWithDots(String.valueOf(boardAmountTotal), locale, "boardAmountTotal"));
 		}
 		values.add(CoreConstants.EMPTY);
 
