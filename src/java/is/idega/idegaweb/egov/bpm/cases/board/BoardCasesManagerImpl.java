@@ -317,7 +317,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					if (variable.equals(ProcessConstants.BOARD_FINANCING_DECISION) || variable.equals(ProcessConstants.BOARD_FINANCING_SUGGESTION)) {
 						value = String.valueOf(getNumberValue(value, false));
 					} else {
-						value = String.valueOf(getNumberValue(value, true));
+						value = String.valueOf(getNumberValue(value, false));
 					}
 				}
 
