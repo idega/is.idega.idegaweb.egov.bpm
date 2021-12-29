@@ -40,7 +40,6 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.contact.data.Email;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
-import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.bean.VariableByteArrayInstance;
@@ -561,7 +560,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		if (piId instanceof Number) {
-			if (IWMainApplication.getDefaultIWMainApplication().getSettings().getBoolean("cases_board_latest_value_db", true)) {
+			if (getSettings().getBoolean("cases_board_latest_value_db", true)) {
 				Map<Long, Map<String, VariableInstance>> data = getVariablesQuerier().getGroupedData(
 						getVariablesQuerier().getVariablesByProcessInstanceIdAndVariablesNames(variablesNames, Arrays.asList(((Number) piId).longValue()), false, true, false)
 				);
@@ -879,7 +878,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return value;
 		}
 
-		String[] symbolsToRemove = getApplication().getSettings().getProperty("cases_board_view_clean_symbols", "_,a,b,c,d").split(CoreConstants.COMMA);
+		String[] symbolsToRemove = getSettings().getProperty("cases_board_view_clean_symbols", "_,a,b,c,d").split(CoreConstants.COMMA);
 		for (String symbol: symbolsToRemove) {
 			if (StringUtil.isEmpty(symbol)) {
 				continue;
@@ -995,7 +994,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		String uniqueCaseId = "uniqueCaseId";
 		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<>(boardCases.size());
 
-		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+		IWMainApplicationSettings settings = getSettings();
 		boolean addBoardSuggestion = settings.getBoolean("cases_board_add_board_suggestion", false);
 		boolean addBoardDecision = settings.getBoolean("cases_board_add_board_descision", false);
 		boolean useAutomaticBoardDecisionAndSuggestion = settings.getBoolean("cases_board_automatic_board", false);
@@ -1110,11 +1109,35 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						} else {
 							indexOfSugesstion = index - 1;
 						}
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION))));
+						String boardSuggestionValue = caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION);
+						if (!StringUtil.isEmpty(boardSuggestionValue) && numbersWithDot.contains(CasesBoardViewer.BOARD_SUGGESTION)) {
+							boardSuggestionValue = getNumberWithDots(boardSuggestionValue, locale, CasesBoardViewer.BOARD_SUGGESTION);
+						}
+						rowValues.put(
+								index,
+								Arrays.asList(
+										new AdvancedProperty(
+												CasesBoardViewer.BOARD_SUGGESTION,
+												boardSuggestionValue
+										)
+								)
+						);
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_DECISION) && addBoardDecision && !useAutomaticBoardDecisionAndSuggestion) {
 						indexOfDecision = index - boardDecisionSubstractIndex;
-						rowValues.put(index, Arrays.asList(new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, caseBoard.getValue(CasesBoardViewer.BOARD_DECISION))));
+						String boardDecisionValue = caseBoard.getValue(CasesBoardViewer.BOARD_DECISION);
+						if (!StringUtil.isEmpty(boardDecisionValue) && numbersWithDot.contains(CasesBoardViewer.BOARD_DECISION)) {
+							boardDecisionValue = getNumberWithDots(boardDecisionValue, locale, CasesBoardViewer.BOARD_DECISION);
+						}
+						rowValues.put(
+								index,
+								Arrays.asList(
+										new AdvancedProperty(
+												CasesBoardViewer.BOARD_DECISION,
+												boardDecisionValue
+										)
+								)
+						);
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
 						//	Will be added with financing table (work item)
