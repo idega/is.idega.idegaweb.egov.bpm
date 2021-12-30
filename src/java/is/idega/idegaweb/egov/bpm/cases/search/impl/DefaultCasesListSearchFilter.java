@@ -217,7 +217,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			return null;
 		}
 
-		List<Integer> convertedValues = new ArrayList<Integer>();
+		List<Integer> convertedValues = new ArrayList<>();
 		for (Object o: values) {
 			if (o instanceof Number) {
 				convertedValues.add(((Number) o).intValue());
@@ -242,7 +242,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		List<Integer> tmp = getConvertedFromNumbers(casesIds);
 
 		Integer id = null;
-		List<Integer> filtered = new ArrayList<Integer>();
+		List<Integer> filtered = new ArrayList<>();
 		for (Object o: filterResults) {
 			if (o instanceof Number) {
 				id = ((Number) o).intValue();
@@ -262,7 +262,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			return null;
 		}
 
-		List<Integer> ids = new ArrayList<Integer>(casesIDs.size());
+		List<Integer> ids = new ArrayList<>(casesIDs.size());
 		for (Object id: casesIDs) {
 			Integer realId = null;
 
@@ -290,7 +290,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		}
 
 		Integer id = null;
-		List<Integer> ids = new ArrayList<Integer>(cases.size());
+		List<Integer> ids = new ArrayList<>(cases.size());
 		for (Case theCase: cases) {
 			try {
 				id = Integer.valueOf(theCase.getId());
@@ -363,7 +363,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		if (criterias == null || ArrayUtil.isEmpty(criterias.getStatuses()))
 			return null;
 
-		Map<String, Boolean> statuses = new HashMap<String, Boolean>();
+		Map<String, Boolean> statuses = new HashMap<>();
 		for (String status: criterias.getStatuses()) {
 			String[] statusKeys = status.split(CoreConstants.COMMA);
 			if (ArrayUtil.isEmpty(statusKeys))
@@ -393,19 +393,23 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 	}
 
 	protected String getCaseListType() {
-		return criterias instanceof CasesListSearchCriteriaBean ? ((CasesListSearchCriteriaBean) criterias).getCaseListType() : null;
+		return criterias instanceof CasesListSearchCriteriaBean ? criterias.getCaseListType() : null;
 	}
 
 	protected String getProcessId() {
-		return criterias instanceof CasesListSearchCriteriaBean ? ((CasesListSearchCriteriaBean) criterias).getProcessId() : null;
+		return criterias instanceof CasesListSearchCriteriaBean ? criterias.getProcessId() : null;
 	}
 
 	protected List<BPMProcessVariable> getProcessVariables() {
-		return criterias instanceof CasesListSearchCriteriaBean ? ((CasesListSearchCriteriaBean) criterias).getProcessVariables() : null;
+		return criterias instanceof CasesListSearchCriteriaBean ? criterias.getProcessVariables() : null;
 	}
 
 	protected String getAddress() {
-		return criterias instanceof CasesListSearchCriteriaBean ? ((CasesListSearchCriteriaBean) criterias).getAddress() : null;
+		return criterias instanceof CasesListSearchCriteriaBean ? criterias.getAddress() : null;
+	}
+
+	protected String getEvaluationProcess() {
+		return criterias instanceof CasesListSearchCriteriaBean ? criterias.getEvaluationProcess() : null;
 	}
 
 	public List<Integer> getInitialCasesIds() {

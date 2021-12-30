@@ -220,6 +220,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Page size: " + getPageSize()).append("\n")
 			.append("Component ID: " + componentId).append("\n")
 			.append("Criterias ID: " + criteriasId).append("\n")
+			.append("Process evaluation: " + getEvaluationProcess()).append("\n")
 			.append("Address: " + getAddress()).append("\n")
 			.append("Variables: " + getProcessVariables()).append("\n")
 			.append("Free text: " + getFreeVariableText()).append("\n")
