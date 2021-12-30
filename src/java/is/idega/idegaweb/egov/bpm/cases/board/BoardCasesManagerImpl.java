@@ -528,7 +528,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				}
 
 				if (!ListUtil.isEmpty(gradingVariables)) {
-					gradingTaskName = StringUtil.isEmpty(gradingTaskName) ? "Grading" : gradingTaskName;
+					gradingTaskName = StringUtil.isEmpty(gradingTaskName) ? CasesBoardViewer.GRADING_TASK_NAME : gradingTaskName;
 					Map<String, String> data = getVariablesLatestValues(processInstanceId, gradingTaskName, gradingVariables);
 					if (!MapUtil.isEmpty(data)) {
 						for (String varName: data.keySet()) {
@@ -580,7 +580,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				}
 			} else {
 				try {
-					return getBPMFactory().getProcessInstanceW(piId).getValuesForTaskInstance(StringUtil.isEmpty(taskName) ? "Grading" : taskName, variablesNames);
+					return getBPMFactory().getProcessInstanceW(piId).getValuesForTaskInstance(
+							StringUtil.isEmpty(taskName) ? CasesBoardViewer.GRADING_TASK_NAME : taskName,
+							variablesNames
+					);
 				} catch (Exception e) {
 					getLogger().log(Level.WARNING, "Error getting latest values for " + variablesNames + ", proc. inst. ID: " + piId + ", task: " + taskName, e);
 				}

@@ -99,7 +99,7 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 
 			ProcessInstanceW piw = bpmFactory.getProcessInstanceW(processInstanceId);
 
-			String taskName = "Grading";
+			String taskName = CasesBoardViewer.GRADING_TASK_NAME;
 			List<TaskInstanceW> allTasks = piw.getUnfinishedTaskInstancesForTask(taskName);
 
 			if (ListUtil.isEmpty(allTasks)) {
