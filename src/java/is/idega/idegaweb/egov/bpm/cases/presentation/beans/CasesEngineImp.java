@@ -513,6 +513,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (!StringUtil.isEmpty(criterias.getFreeVariableText())) {
 			searchFields.add(new AdvancedProperty("freeVariableText", criterias.getFreeVariableText()));
 		}
+		if (!StringUtil.isEmpty(criterias.getEvaluationProcess())) {
+			searchFields.add(new AdvancedProperty("evaluationProcess", criterias.getEvaluationProcess()));
+		}
 
 		if (!StringUtil.isEmpty(criterias.getProcessId())) {
 			String processName = null;
