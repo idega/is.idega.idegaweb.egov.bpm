@@ -483,7 +483,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias) {
+	public List<AdvancedProperty> getSearchFields(IWContext iwc, CasesListSearchCriteriaBean criterias) {
 		List<AdvancedProperty> searchFields = new ArrayList<>();
 
 		Locale locale = iwc.getCurrentLocale();
@@ -507,9 +507,11 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (!StringUtil.isEmpty(criterias.getAddress())) {
 			searchFields.add(new AdvancedProperty("address", criterias.getAddress()));
 		}
-
 		if (criterias.getSubscribersGroupId() != null) {
 			searchFields.add(new AdvancedProperty("handler_category_id", getSelectedGroup(criterias.getSubscribersGroupId())));
+		}
+		if (!StringUtil.isEmpty(criterias.getFreeVariableText())) {
+			searchFields.add(new AdvancedProperty("freeVariableText", criterias.getFreeVariableText()));
 		}
 
 		if (!StringUtil.isEmpty(criterias.getProcessId())) {
@@ -546,10 +548,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			for (BPMProcessVariable variable: criterias.getProcessVariables()) {
 				String value = variable.getValue();
 				String name = variable.getName();
-				if (CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) || CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name)
-						|| name.startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) || name.startsWith(VariableInstanceType.LIST.getPrefix())
-						|| !StringUtil.isEmpty(isResolverExist(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName()))
-						) {
+				if (
+						CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) ||
+						CaseHandlerAssignmentHandler.performerUserIdVarName.equals(name) ||
+						name.startsWith(VariableInstanceType.OBJ_LIST.getPrefix()) ||
+						name.startsWith(VariableInstanceType.LIST.getPrefix()) ||
+						!StringUtil.isEmpty(isResolverExist(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName()))
+				) {
 					MultipleSelectionVariablesResolver resolver = null;
 					try {
 						resolver = ELUtil.getInstance().getBean(MultipleSelectionVariablesResolver.BEAN_NAME_PREFIX + variable.getName());
@@ -564,6 +569,12 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				);
 			}
 		}
+		return searchFields;
+	}
+
+	@Override
+	public void addSearchQueryToSession(IWContext iwc, CasesListSearchCriteriaBean criterias) {
+		List<AdvancedProperty> searchFields = getSearchFields(iwc, criterias);
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE, searchFields);
 	}
 
@@ -1029,7 +1040,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		return resultsHolder;
 	}
 
-	private boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, CasesListSearchCriteriaBean criterias) {
+	@Override
+	public boolean setSearchResults(IWContext iwc, Collection<CasePresentation> cases, CasesListSearchCriteriaBean criterias) {
 		iwc.setSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE, criterias);
 
 		CasesSearchResultsHolder resultsHolder = null;
@@ -1207,9 +1219,15 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public boolean clearSearchResults(String id) {
-		IWContext iwc = CoreUtil.getIWContext();
-		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE);
-		iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE);
+		return clearSearchResults(id, CoreUtil.getIWContext());
+	}
+
+	@Override
+	public boolean clearSearchResults(String id, IWContext iwc) {
+		if (iwc != null) {
+			iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_QUERY_BEAN_ATTRIBUTE);
+			iwc.removeSessionAttribute(GeneralCasesListBuilder.USER_CASES_SEARCH_SETTINGS_ATTRIBUTE);
+		}
 		setCasesPagerAttributes(-1, -1);
 		return getSearchResultsHolder().clearSearchResults(id);
 	}
