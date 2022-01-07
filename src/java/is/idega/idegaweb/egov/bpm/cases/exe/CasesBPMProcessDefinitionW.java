@@ -292,7 +292,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			if (genCase != null) {
 				CaseCode caseCode = genCase.getCaseCode();
 				if (caseCode == null || CasesConstants.CASE_CODE_KEY.equals(caseCode.getCode())) {
-					is.idega.idegaweb.egov.application.data.bean.Application application = getApplicationDAO().findByUri(procDefName);
+					is.idega.idegaweb.egov.application.data.bean.Application application = getProcessApplication(procDefName);
 					if (application != null) {
 						CaseCodeModel caseCodeModel = application.getCaseCode();
 						if (caseCodeModel != null) {
@@ -874,6 +874,14 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	private Boolean available = null;
 
+	public is.idega.idegaweb.egov.application.data.bean.Application getProcessApplication() {
+		return getProcessApplication(getProcessDefinitionName());
+	}
+
+	private is.idega.idegaweb.egov.application.data.bean.Application getProcessApplication(String name) {
+		return getApplicationDAO().findByUri(name);
+	}
+
 	@Override
 	public boolean isAvailable(IWContext iwc) {
 		if (available != null) {
@@ -883,7 +891,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		String name = null;
 		try {
 			name = getProcessDefinitionName();
-			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getApplicationDAO().findByUri(name);
+			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getProcessApplication(name);
 			if (egovApp == null) {
 				getLogger().warning("Failed to find application by URI '" + name + "', proc. def. ID: " + getProcessDefinitionId());
 			}
@@ -904,7 +912,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		String name = null;
 		try {
 			name = getProcessDefinitionName();
-			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getApplicationDAO().findByUri(name);
+			is.idega.idegaweb.egov.application.data.bean.Application egovApp = getProcessApplication(name);
 			return ApplicationUtil.getRedirectUrl(iwc.getIWMainApplication(), iwc, iwc.getRequest(), getApplicationTypesManager(), egovApp, egovApp.getId().toString(), iwc.isLoggedOn());
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting redirect URL for unavailable BPM process (name: " + name + ", ID: " + getProcessDefinitionId() + ")", e);
