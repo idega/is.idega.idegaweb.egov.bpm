@@ -40,7 +40,6 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.contact.data.Email;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
-import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.bean.VariableByteArrayInstance;
 import com.idega.jbpm.data.VariableInstanceQuerier;
@@ -506,17 +505,17 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 								taskIndex++;
 							}
 						}
-					} else if (ProcessConstants.BOARD_FINANCING_SUGGESTION.equals(variable.getName())) {
+					} else if (ProcessConstants.BOARD_FINANCING_SUGGESTION.equals(variable.getName()) && isBoardSuggestionEnabled()) {
 						fillWithBoardInfoOnTheTasks(variable, view, CasesBoardViewer.BOARD_SUGGESTION);
-					} else if (ProcessConstants.BOARD_FINANCING_DECISION.equals(variable.getName())) {
+					} else if (ProcessConstants.BOARD_FINANCING_DECISION.equals(variable.getName()) && isBoardDecisionEnabled()) {
 						fillWithBoardInfoOnTheTasks(variable, view, CasesBoardViewer.BOARD_DECISION);
 					}
 
-				} else if (ProcessConstants.BOARD_FINANCING_SUGGESTION.equals(variable.getName())) {
+				} else if (ProcessConstants.BOARD_FINANCING_SUGGESTION.equals(variable.getName()) && isBoardSuggestionEnabled()) {
 					fillWithBoardInfoOnTheTasks(variable, view, CasesBoardViewer.BOARD_SUGGESTION);
 					view.addVariable(variable.getName(), value.toString());
 
-				} else if (ProcessConstants.BOARD_FINANCING_DECISION.equals(variable.getName())) {
+				} else if (ProcessConstants.BOARD_FINANCING_DECISION.equals(variable.getName()) && isBoardDecisionEnabled()) {
 					fillWithBoardInfoOnTheTasks(variable, view, CasesBoardViewer.BOARD_DECISION);
 					view.addVariable(variable.getName(), value.toString());
 
@@ -950,6 +949,26 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	}
 
 	@Override
+	public boolean isBoardSuggestionEnabled() {
+		return getSettings().getBoolean("cases_board_add_board_suggestion", false);
+	}
+
+	@Override
+	public boolean isBoardProposalEnabled() {
+		return getSettings().getBoolean("cases_board_add_board_proposal", false);
+	}
+
+	@Override
+	public boolean isBoardDecisionEnabled() {
+		return getSettings().getBoolean("cases_board_add_board_descision", false);
+	}
+
+	@Override
+	public boolean isAutomaticBoardDecisionAndSuggestion() {
+		return getSettings().getBoolean("cases_board_automatic_board", false);
+	}
+
+	@Override
 	public <K extends Serializable> CaseBoardTableBean getTableData(
 			User currentUser,
 			Date dateFrom,
@@ -997,24 +1016,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		String uniqueCaseId = "uniqueCaseId";
 		List<CaseBoardTableBodyRowBean> bodyRows = new ArrayList<>(boardCases.size());
 
-		IWMainApplicationSettings settings = getSettings();
-		boolean addBoardSuggestion = settings.getBoolean("cases_board_add_board_suggestion", false);
-		boolean addBoardDecision = settings.getBoolean("cases_board_add_board_descision", false);
-		boolean useAutomaticBoardDecisionAndSuggestion = settings.getBoolean("cases_board_automatic_board", false);
-		int boardDecisionSubstractIndex = 1;
+		boolean addBoardSuggestion = isBoardSuggestionEnabled();
+		boolean addBoardDecision = isBoardDecisionEnabled();
+		boolean useAutomaticBoardDecisionAndSuggestion = isAutomaticBoardDecisionAndSuggestion();
 		Integer indexOfSugesstion = null, indexOfDecision = null;
-
-		List<String> customColumns = getCustomColumns(uuid);
-		boolean addToIndexOfSuggestion = false;
-		if (ListUtil.isEmpty(customColumns)) {
-			String boardDecisionSubstractIndexStr = settings.getProperty("board_decision_substract_index", "2");
-			if (!StringUtil.isEmpty(boardDecisionSubstractIndexStr)) {
-				boardDecisionSubstractIndex = Integer.valueOf(boardDecisionSubstractIndexStr).intValue();
-			}
-		} else {
-			addToIndexOfSuggestion = true;
-			boardDecisionSubstractIndex = 0;
-		}
 
 		Locale locale = getCurrentLocale();
 		List<String> numbersWithDot = StringUtil.getValuesFromString(
@@ -1093,7 +1098,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 									)
 							);
 
-					} else if (isEqual(id, CasesBoardViewer.WORK_ITEM)) {
+					} else if (isEqual(id, CasesBoardViewer.WORK_ITEM) && (StringUtil.isEmpty(casesType) || ProcessConstants.BPM_CASE.equals(casesType))) {
 						//	Financing table
 						financingTableAdded = true;
 						rowBean.setFinancingInfo(caseBoard.getFinancingOfTheTasks());
@@ -1104,14 +1109,12 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						)));
 
 					} else if (isEqual(id, CasesBoardViewer.ESTIMATED_COST)) {
+						financingTableAdded = true;
 						//	Will be added with financing table (work item)
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_SUGGESTION) && addBoardSuggestion && !useAutomaticBoardDecisionAndSuggestion) {
-						if (addToIndexOfSuggestion) {
-							indexOfSugesstion = index;
-						} else {
-							indexOfSugesstion = index - 1;
-						}
+						financingTableAdded = true;
+						indexOfSugesstion = index;
 						String boardSuggestionValue = caseBoard.getValue(CasesBoardViewer.BOARD_SUGGESTION);
 						if (!StringUtil.isEmpty(boardSuggestionValue) && numbersWithDot.contains(CasesBoardViewer.BOARD_SUGGESTION)) {
 							boardSuggestionValue = getNumberWithDots(boardSuggestionValue, locale, CasesBoardViewer.BOARD_SUGGESTION);
@@ -1127,7 +1130,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						);
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_DECISION) && addBoardDecision && !useAutomaticBoardDecisionAndSuggestion) {
-						indexOfDecision = index - boardDecisionSubstractIndex;
+						financingTableAdded = true;
+						indexOfDecision = index;
 						String boardDecisionValue = caseBoard.getValue(CasesBoardViewer.BOARD_DECISION);
 						if (!StringUtil.isEmpty(boardDecisionValue) && numbersWithDot.contains(CasesBoardViewer.BOARD_DECISION)) {
 							boardDecisionValue = getNumberWithDots(boardDecisionValue, locale, CasesBoardViewer.BOARD_DECISION);
@@ -1143,6 +1147,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						);
 
 					} else if (isEqual(id, CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT)) {
+						financingTableAdded = true;
 						//	Will be added with financing table (work item)
 
 					} else if (isEqual(id, CaseBoardBean.CASE_OWNER_GENDER)) {
@@ -1195,7 +1200,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		// Footer
 		data.setFooterValues(
 				getFooterValues(
-						data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? 3 : 0),
+						data.getBodyBeans().get(0).getValues().keySet().size() + (financingTableAdded ? (StringUtil.isEmpty(casesType) || ProcessConstants.BPM_CASE.equals(casesType) ? 3 : 1) : 0),
 						null,
 						indexOfSugesstion,
 						indexOfDecision,
@@ -1232,10 +1237,13 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		//Putting dots
 		if (!StringUtil.isEmpty(convertedAmount) && !convertedAmount.contains(CoreConstants.DOT)) {
 			try {
+				if (convertedAmount.indexOf(CoreConstants.COMMA) != -1) {
+					convertedAmount = StringHandler.replace(convertedAmount, CoreConstants.COMMA, CoreConstants.EMPTY);
+				}
 				try {
 					convertedAmount = String.format("%,d", Integer.valueOf(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
 				} catch (Exception eDotsIn) {
-					convertedAmount = NumberFormat.getInstance(locale).format(Double.parseDouble(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
+					convertedAmount = formatter.format(Double.parseDouble(convertedAmount)).replace(CoreConstants.COMMA, CoreConstants.DOT);
 				}
 			} catch (Exception eDots) {
 				getLogger().log(Level.WARNING, "Could not add the dot separators in the amount '" + value + "' for " + id, eDots);
@@ -1325,14 +1333,22 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return null;
 	}
 
-	private List<AdvancedProperty> getFinancingTableHeaders() {
-		return Arrays.asList(
-				new AdvancedProperty(CasesBoardViewer.WORK_ITEM, localize(CasesBoardViewer.WORK_ITEM, "Work item")),
-				new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, localize(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")),
-				new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, localize(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")),
-				new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, localize(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")),
-				new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, localize(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision"))
-		);
+	private List<AdvancedProperty> getFinancingTableHeaders(String casesType) {
+		List<AdvancedProperty> headers = new ArrayList<>();
+		if (!StringUtil.isEmpty(casesType) && ProcessConstants.BPM_CASE.equals(casesType)) {
+			headers.add(new AdvancedProperty(CasesBoardViewer.WORK_ITEM, localize(CasesBoardViewer.WORK_ITEM, "Work item")));
+			headers.add(new AdvancedProperty(CasesBoardViewer.ESTIMATED_COST, localize(CasesBoardViewer.ESTIMATED_COST, "Estimated cost")));
+		}
+		if (isBoardSuggestionEnabled()) {
+			headers.add(new AdvancedProperty(CasesBoardViewer.BOARD_SUGGESTION, localize(CasesBoardViewer.BOARD_SUGGESTION.toLowerCase(), "Handler suggestions")));
+		}
+		if (isBoardProposalEnabled()) {
+			headers.add(new AdvancedProperty(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, localize(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, "Proposed funding")));
+		}
+		if (isBoardDecisionEnabled()) {
+			headers.add(new AdvancedProperty(CasesBoardViewer.BOARD_DECISION, localize(CasesBoardViewer.BOARD_DECISION.toLowerCase(), "Board decision")));
+		}
+		return headers;
 	}
 
 	protected List<AdvancedProperty> getStructure(String casesType) {
@@ -1348,25 +1364,25 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_BUSINESS_CONCEPT, "In a nutshell"),			//	8
 
-				new AdvancedProperty(CaseBoardBean.CASE_SUM_OF_NEGATIVE_GRADES, "Negative grade"),			//	11
-				new AdvancedProperty(CaseBoardBean.CASE_SUM_ALL_GRADES, "Grade"),							//	12
+				new AdvancedProperty(CaseBoardBean.CASE_SUM_OF_NEGATIVE_GRADES, "Negative grade"),			//	9
+				new AdvancedProperty(CaseBoardBean.CASE_SUM_ALL_GRADES, "Grade"),							//	10
 
-				new AdvancedProperty(CaseBoardBean.CASE_CATEGORY, "Category"),								//	13,	EDITABLE, select
+				new AdvancedProperty(CaseBoardBean.CASE_CATEGORY, "Category"),								//	11,	EDITABLE, select
 
-				new AdvancedProperty(CaseBoardBean.CASE_OWNER_GRADE, "Comment"),							//	14
-				new AdvancedProperty(CaseBoardBean.CASE_OWNER_TOTAL_COST, "Total cost"),					//	15
-				new AdvancedProperty(ProcessConstants.CASE_APPLIED_AMOUNT, "Applied amount"),				//	16
+				new AdvancedProperty(CaseBoardBean.CASE_OWNER_GRADE, "Comment"),							//	12
+				new AdvancedProperty(CaseBoardBean.CASE_OWNER_TOTAL_COST, "Total cost"),					//	13
+				new AdvancedProperty(ProcessConstants.CASE_APPLIED_AMOUNT, "Applied amount"),				//	14
 
-				new AdvancedProperty(																		//	17, table of 5 columns
-						casesType == null || ProcessConstants.BPM_CASE.equals(casesType) ?
+				new AdvancedProperty(																		//	15	board suggestion, table of 2 (15th-16th) columns
+						casesType == null || ProcessConstants.BPM_CASE.equals(casesType) ?					//	16	@link(ProcessConstants.BOARD_FINANCING_DECISION) board decision
 								ProcessConstants.FINANCING_OF_THE_TASKS :
 								ProcessConstants.FINANCING_OF_THE_TASKS_STRING,
 						"Financing of the tasks"
 				),
 
-				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions"),						//	20, EDITABLE, text area
-				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature")						//  21
-																											//	22 is handler by default (if no custom columns provided)
+				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions"),						//	17, EDITABLE, text area
+				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature")						//  18
+				//	handlerUserId																			//	19 is handler by default (if no custom columns provided)
 		);
 	}
 
@@ -1380,7 +1396,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			List<AdvancedProperty> variables = getStructure(casesType);
 			for (AdvancedProperty header: variables) {
 				if (ProcessConstants.FINANCING_OF_THE_TASKS_VARIABLES.contains(header.getId())) {
-					List<AdvancedProperty> financingTableHeaders = getFinancingTableHeaders();
+					List<AdvancedProperty> financingTableHeaders = getFinancingTableHeaders(casesType);
 					columns.put(index, financingTableHeaders);
 					index += financingTableHeaders.size();
 
@@ -1404,8 +1420,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			IWResourceBundle bpmIWRB = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 			for (String column: customColumns) {
 				if (CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN.equals(column)) {
-					columns.put(index, getFinancingTableHeaders());
+					columns.put(index, getFinancingTableHeaders(casesType));
 				} else if (
+						CasesBoardViewer.WORK_ITEM.equals(column) ||
 						CasesBoardViewer.ESTIMATED_COST.equals(column) ||
 						CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT.equals(column) ||
 						CasesBoardViewer.BOARD_SUGGESTION.equals(column) ||
@@ -1448,17 +1465,20 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	) {
 		List<String> values = new ArrayList<>();
 
-		indexOfTotal = indexOfTotal == null ?
-				getIndexOfColumn(
-						StringUtil.isEmpty(casesType) || ProcessConstants.BPM_CASE.equals(casesType) ?
-								ProcessConstants.FINANCING_OF_THE_TASKS : ProcessConstants.FINANCING_OF_THE_TASKS_STRING,
-						uuid,
-						casesType
-				) : indexOfTotal;
+		if (indexOfTotal == null) {
+			indexOfTotal = getIndexOfColumn(
+					StringUtil.isEmpty(casesType) || ProcessConstants.BPM_CASE.equals(casesType) ?
+							ProcessConstants.FINANCING_OF_THE_TASKS :
+							ProcessConstants.FINANCING_OF_THE_TASKS_STRING,
+					uuid,
+					casesType
+			);
+			indexOfTotal = indexOfTotal > 0 ? (indexOfTotal - 1) : indexOfTotal;
+		}
 		if (indexOfTotal < 0) {
 			indexOfTotal = getIndexOfColumn(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN, uuid, casesType);
 		}
-		indexOfSuggestion = indexOfSuggestion == null ? (indexOfTotal + 1) : indexOfSuggestion; //FIXME: Was (indexOfTotal + 3), which is not correctly set. Something is worng here.
+		indexOfSuggestion = indexOfSuggestion == null ? (indexOfTotal + 1) : indexOfSuggestion;
 		indexOfDecision = indexOfDecision == null ? (indexOfSuggestion + 1) : indexOfDecision;
 		if (indexOfTotal < 0) {
 			indexOfTotal = indexOfSuggestion - 1;
@@ -1500,10 +1520,21 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				values.add(total);
 			} else if (i == indexOfSuggestion) {
 				// Grant amount suggestions
-				values.add(getNumberWithDots(String.valueOf(grantAmountSuggestionTotal), locale, "grantAmountSuggestionTotal"));
+				if (isBoardSuggestionEnabled()) {
+					values.add(getNumberWithDots(String.valueOf(grantAmountSuggestionTotal), locale, "grantAmountSuggestionTotal"));
+				}
+
+				if (i == indexOfDecision) {
+					// Board amount
+					if (isBoardDecisionEnabled()) {
+						values.add(getNumberWithDots(String.valueOf(boardAmountTotal), locale, "boardAmountTotal"));
+					}
+				}
 			} else if (i == indexOfDecision) {
 				// Board amount
-				values.add(getNumberWithDots(String.valueOf(boardAmountTotal), locale, "boardAmountTotal"));
+				if (isBoardDecisionEnabled()) {
+					values.add(getNumberWithDots(String.valueOf(boardAmountTotal), locale, "boardAmountTotal"));
+				}
 			} else {
 				values.add(CoreConstants.EMPTY);
 			}
@@ -1512,10 +1543,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			values.add(total);
 		}
 		if (values.size() <= indexOfSuggestion) {
-			values.add(getNumberWithDots(String.valueOf(grantAmountSuggestionTotal), locale, "grantAmountSuggestionTotal"));
+			if (isBoardSuggestionEnabled()) {
+				values.add(getNumberWithDots(String.valueOf(grantAmountSuggestionTotal), locale, "grantAmountSuggestionTotal"));
+			}
 		}
 		if (values.size() <= indexOfDecision) {
-			values.add(getNumberWithDots(String.valueOf(boardAmountTotal), locale, "boardAmountTotal"));
+			if (isBoardDecisionEnabled()) {
+				values.add(getNumberWithDots(String.valueOf(boardAmountTotal), locale, "boardAmountTotal"));
+			}
 		}
 		values.add(CoreConstants.EMPTY);
 
@@ -1738,14 +1773,20 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			cells.put(CasesBoardViewer.WORK_ITEM, taskName);
 			cells.put(CasesBoardViewer.ESTIMATED_COST, String.valueOf(cost));
 
-			String suggestion = taskInfo.get(CasesBoardViewer.BOARD_SUGGESTION);
-			cells.put(CasesBoardViewer.BOARD_SUGGESTION, StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
+			if (isBoardSuggestionEnabled()) {
+				String suggestion = taskInfo.get(CasesBoardViewer.BOARD_SUGGESTION);
+				cells.put(CasesBoardViewer.BOARD_SUGGESTION, StringUtil.isEmpty(suggestion) ? CoreConstants.MINUS : suggestion);
+			}
 
-			String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
-			cells.put(CasesBoardViewer.BOARD_DECISION, StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
+			if (isBoardDecisionEnabled()) {
+				String decision = taskInfo.get(CasesBoardViewer.BOARD_DECISION);
+				cells.put(CasesBoardViewer.BOARD_DECISION, StringUtil.isEmpty(decision) ? CoreConstants.MINUS : decision);
+			}
 
-			String proposal = taskInfo.get(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT);
-			cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
+			if (isBoardProposalEnabled()) {
+				String proposal = taskInfo.get(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT);
+				cells.put(CasesBoardViewer.BOARD_PROPOSAL_FOR_GRANT, StringUtil.isEmpty(proposal) ? CoreConstants.MINUS : proposal);
+			}
 
 			valuesToReplace.put(tasksIndex, cells);
 			tasksIndex++;
