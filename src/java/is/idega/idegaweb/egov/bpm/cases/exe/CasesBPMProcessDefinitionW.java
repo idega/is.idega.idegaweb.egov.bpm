@@ -490,7 +490,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 	@Transactional(readOnly = false)
 	@Override
-	public <T extends Serializable> T startProcess(IWContext iwc, final ViewSubmission viewSubmission) {
+	public <T extends Serializable> T startProcess(final ViewSubmission viewSubmission) {
 		final Long processDefinitionId = viewSubmission.getProcessDefinitionId();
 
 		if (!processDefinitionId.equals(getProcessDefinitionId())) {
@@ -575,7 +575,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		} finally {
 			if (piId != null) {
 				Long pdId = getProcessDefinitionId();
-				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(pdId), pdId, piId, variables);
+				notifyAboutNewProcess(getBPMDAO().getProcessDefinitionNameByProcessDefinitionId(pdId), piId, variables);
 			}
 		}
 	}

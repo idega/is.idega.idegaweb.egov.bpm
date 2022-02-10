@@ -28,9 +28,7 @@ import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.variables.BinaryVariable;
-import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
-import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.StringUtil;
 import com.idega.util.URIUtil;
@@ -96,10 +94,9 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 
 			Integer fileHash = realProperties.getHash();
 			if (file == null && fileHash != null) {
-				IWContext iwc = CoreUtil.getIWContext();
 				ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(realProperties.getTaskId());
 				TaskInstanceW tiw = processManager.getTaskInstance(realProperties.getTaskId());
-				List<BinaryVariable> attachments = tiw.getAttachments(iwc);
+				List<BinaryVariable> attachments = tiw.getAttachments();
 				if (!ListUtil.isEmpty(attachments)) {
 					for (Iterator<BinaryVariable> variablesIter = attachments.iterator(); (variablesIter.hasNext() && file == null);) {
 						BinaryVariable attachment = variablesIter.next();
@@ -136,7 +133,7 @@ public class ProcessAttachmentDownloadNotifier extends FileDownloadNotifier impl
 			return null;
 		}
 
-		Map<String, String> linksForUsers = new HashMap<String, String>();
+		Map<String, String> linksForUsers = new HashMap<>();
 		for (User user: users) {
 			CaseUserImpl caseUser = null;
 			try {

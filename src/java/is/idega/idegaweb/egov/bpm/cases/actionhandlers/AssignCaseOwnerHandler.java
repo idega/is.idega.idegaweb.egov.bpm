@@ -36,7 +36,6 @@ import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.UserBusiness;
 import com.idega.user.data.User;
-import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -142,14 +141,13 @@ public class AssignCaseOwnerHandler extends DefaultSpringBean implements ActionH
 		genCase.store();
 
 		final User taskOwner = ownerUser;
-		IWContext iwc = CoreUtil.getIWContext();
 		getBpmContext().execute(new JbpmCallback<Void>() {
 			@Override
 			public Void doInJbpm(JbpmContext context) throws JbpmException {
 				TaskInstance taskInstance = getBpmFactory()
 				        .getProcessManagerByProcessInstanceId(getProcessInstanceId())
 				        .getProcessInstance(getProcessInstanceId())
-				        .getStartTaskInstance(iwc).getTaskInstance(context);
+				        .getStartTaskInstance().getTaskInstance(context);
 
 				if (taskOwner != null) {
 					taskInstance.setActorId(taskOwner.getId());

@@ -113,7 +113,7 @@ public class BPMFileDownloadsStatistics extends FileDownloadStatisticsViewer {
 
 		ProcessManager processManager = bpmFactory.getProcessManagerByTaskInstanceId(taskID);
 		TaskInstanceW tiw = processManager.getTaskInstance(taskID);
-		List<BinaryVariable> attachments = tiw.getAttachments(iwc);
+		List<BinaryVariable> attachments = tiw.getAttachments();
 		if (!ListUtil.isEmpty(attachments)) {
 			for (Iterator<BinaryVariable> variablesIter = attachments.iterator(); (variablesIter.hasNext() && file == null);) {
 				BinaryVariable attachment = variablesIter.next();

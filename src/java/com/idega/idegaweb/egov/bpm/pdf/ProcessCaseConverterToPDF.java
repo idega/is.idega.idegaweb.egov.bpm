@@ -173,7 +173,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 				request = iwc.getRequest();
 			}
 
-			List<CasePDF> pdfs = new ArrayList<CasePDF>();
+			List<CasePDF> pdfs = new ArrayList<>();
 			for (TaskInstanceW tiW: finishedTasks) {
 				String taskInstanceId = null;
 				try {
@@ -234,7 +234,7 @@ public class ProcessCaseConverterToPDF extends DefaultSpringBean implements Case
 					pdfs.add(casePDF);
 
 					if (loadAttachments) {
-						List<BinaryVariable> attachments = tiW.getAttachments(iwc);
+						List<BinaryVariable> attachments = tiW.getAttachments();
 						if (!ListUtil.isEmpty(attachments)) {
 							for (BinaryVariable attachment: attachments) {
 								InputStream stream = attachmentsHandler.getBinaryVariableContent(attachment);
