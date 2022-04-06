@@ -414,7 +414,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		for (VariableInstance variable: variables) {
 			Serializable value = variable.getVariableValue();
 			if (variable.getName() != null && value != null && variable.getProcessInstanceId() != null) {
-				K processInstanceId = variable.getProcessInstanceId();
+				Long piId = variable.getProcessInstanceId();
+				@SuppressWarnings("unchecked")
+				K processInstanceId = (K) piId;
 				CaseBoardView view = getCaseView(views, processInstanceId);
 				if (view == null) {
 					GeneralCase theCase = getCaseProcessInstanceRelation().getCase(processesIdsAndCases, processInstanceId);
@@ -671,7 +673,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		Map<String, String> values = new HashMap<>();
 		List<Map<String, String>> object = new ArrayList<>();
 		for (VariableInstance variable: variables) {
-			String procInstId = variable.getProcessInstanceId();
+			Long piId = variable.getProcessInstanceId();
+			String procInstId = piId.toString();
 			if (!processInstanceId.equals(procInstId)) {
 				continue;
 			}
