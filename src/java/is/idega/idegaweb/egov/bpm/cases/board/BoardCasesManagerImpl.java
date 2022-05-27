@@ -243,7 +243,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			String casesType,
 			Class<K> type
 	) {
-		List<String> variablesToQuery = new ArrayList<>(getVariables(uuid, casesType));
+		Set<String> variablesToQuery = new HashSet<>(getVariables(uuid, casesType));
 		if (variablesToQuery.contains(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN)) {
 			variablesToQuery.remove(CasesBoardViewCustomizer.FINANCING_TABLE_COLUMN);
 			if (StringUtil.isEmpty(casesType) || ProcessConstants.BPM_CASE.equals(casesType)) {
@@ -968,6 +968,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return getSettings().getBoolean("cases_board_automatic_board", false);
 	}
 
+	protected String getBoardFinancingSuggestionVariable() {
+		return ProcessConstants.BOARD_FINANCING_SUGGESTION;
+	}
+
 	@Override
 	public <K extends Serializable> CaseBoardTableBean getTableData(
 			User currentUser,
@@ -1182,9 +1186,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					if (isEqual(id, ProcessConstants.BOARD_FINANCING_DECISION)) {
 						// Calculating board amounts
 						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
-					} else if (isEqual(id, ProcessConstants.BOARD_FINANCING_SUGGESTION)) {
+					} else if (isEqual(id, getBoardFinancingSuggestionVariable())) {
 						// Calculating grant amount suggestions
-						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion());
+						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(getBoardFinancingSuggestionVariable()));
 					}
 
 					index++;
@@ -1453,6 +1457,12 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return getColumns(uuid, casesType);
 	}
 
+	protected String getIndexColumnName(String casesType) {
+		return StringUtil.isEmpty(casesType) || ProcessConstants.BPM_CASE.equals(casesType) ?
+				ProcessConstants.FINANCING_OF_THE_TASKS :
+				ProcessConstants.FINANCING_OF_THE_TASKS_STRING;
+	}
+
 	protected List<String> getFooterValues(
 			int numberOfColumns,
 			Integer indexOfTotal,
@@ -1466,10 +1476,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		List<String> values = new ArrayList<>();
 
 		if (indexOfTotal == null) {
+			String indexColumnName = getIndexColumnName(casesType);
 			indexOfTotal = getIndexOfColumn(
-					StringUtil.isEmpty(casesType) || ProcessConstants.BPM_CASE.equals(casesType) ?
-							ProcessConstants.FINANCING_OF_THE_TASKS :
-							ProcessConstants.FINANCING_OF_THE_TASKS_STRING,
+					indexColumnName,
 					uuid,
 					casesType
 			);
