@@ -14,7 +14,7 @@ import com.idega.idegaweb.egov.bpm.view.BPMViewManager;
  */
 public class IWBundleStarter implements IWBundleStartable {
 
-	public static final String IW_BUNDLE_IDENTIFIER = "is.idega.idegaweb.egov.bpm";
+	public static final String IW_BUNDLE_IDENTIFIER = BPMConstants.IW_BUNDLE_IDENTIFIER;
 
 	@Override
 	public void start(IWBundle starterBundle) {
@@ -25,4 +25,5 @@ public class IWBundleStarter implements IWBundleStartable {
 	@Override
 	public void stop(IWBundle starterBundle) {
 	}
+
 }
