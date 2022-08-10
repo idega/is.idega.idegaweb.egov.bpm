@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.block.process.business.CaseConstants;
 import com.idega.block.process.business.CaseManagersProvider;
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.presentation.beans.CasePresentation;
 import com.idega.block.process.presentation.beans.CasesSearchCriteriaBean;
 import com.idega.block.process.presentation.beans.CasesSearchResults;
@@ -797,7 +798,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 											resolver.getPresentation(column, theCase.getId()) :
 											resolver.getKeyPresentation(Integer.valueOf(theCase.getId()), null);
 								}
-							} else if ("string_caseStatus".equals(column)) {
+							} else if (ProcessConstants.CASE_STATUS.equals(column)) {
 								value = theCase.getCaseStatusLocalized();
 							} else if (column.equalsIgnoreCase("date_range") || column.equalsIgnoreCase("dateRange")) {
 								CasesSearchCriteriaBean criteria = getSearchCriteria(id);
