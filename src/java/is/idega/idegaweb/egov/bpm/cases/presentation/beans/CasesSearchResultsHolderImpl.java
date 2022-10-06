@@ -658,7 +658,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						availableVariables = theCases.get(0).getExternalData();
 					}
 				}
-				if (ListUtil.isEmpty(availableVariables) && !ListUtil.isEmpty(searchCriteria.getCustomColumns())) {
+				if (ListUtil.isEmpty(availableVariables) && searchCriteria != null && !ListUtil.isEmpty(searchCriteria.getCustomColumns())) {
 					availableVariables = new ArrayList<>();
 					List<String> customColumns = searchCriteria.getCustomColumns();
 					Collection<IWResourceBundle> resources = LocaleUtil.getEnabledResources(iwc.getIWMainApplication(), locale, IWBundleStarter.IW_BUNDLE_IDENTIFIER);
