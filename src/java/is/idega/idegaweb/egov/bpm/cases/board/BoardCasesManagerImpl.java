@@ -3,6 +3,7 @@ package is.idega.idegaweb.egov.bpm.cases.board;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.rmi.RemoteException;
+import java.sql.Timestamp;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -72,6 +73,7 @@ import is.idega.idegaweb.egov.cases.business.BoardCasesComparator;
 import is.idega.idegaweb.egov.cases.business.BoardCasesManager;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.data.GeneralCaseBMPBean;
+import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewCustomizer;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
 import is.idega.idegaweb.egov.cases.presentation.beans.CaseBoardBean;
@@ -166,8 +168,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public <K extends Serializable> List<CaseBoardBean> getAllSortedCases(
+			IWContext iwc,
 			User currentUser,
 			Collection<String> caseStatuses,
+			List<String> caseCodes,
 			String processName,
 			String uuid,
 			boolean isSubscribedOnly,
@@ -180,8 +184,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	) {
 		//	Getting cases by the configuration
 		Collection<GeneralCase> cases = getCases(
+				iwc,
 				currentUser,
 				caseStatuses,
+				caseCodes,
 				processName,
 				isSubscribedOnly,
 				StringUtil.isEmpty(casesType) ? ProcessConstants.BPM_CASE : casesType,
@@ -214,7 +220,6 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			sortingPreferences = prefs;
 		}
 		if (ListUtil.isEmpty(sortingPreferences)) {
-			IWContext iwc = CoreUtil.getIWContext();
 			if (iwc != null && iwc.isParameterSet("sorting")) {
 				sortingPreferences = Arrays.asList(iwc.getParameter("sorting").split(CoreConstants.HASH));
 			}
@@ -792,8 +797,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	 * @return entities by criteria or {@link Collections#emptyList()} on failure;
 	 */
 	protected Collection<GeneralCase> getCases(
+			IWContext iwc,
 			User currentUser,
 			Collection<String> caseStatuses,
+			List<String> caseCodes,
 			String processName,
 			boolean subscribedOnly,
 			String caseManagerType,
@@ -974,10 +981,12 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 	@Override
 	public <K extends Serializable> CaseBoardTableBean getTableData(
+			IWContext iwc,
 			User currentUser,
 			Date dateFrom,
 			Date dateTo,
 			Collection<String> caseStatuses,
+			List<String> caseCodes,
 			String processName,
 			String uuid,
 			boolean isSubscribedOnly,
@@ -991,8 +1000,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		@SuppressWarnings("unchecked")
 		Class<K> keyType = type == null ? (Class<K>) ProcessInstance.class : type;
 		List<CaseBoardBean> boardCases = getAllSortedCases(
+				iwc,
 				currentUser,
 				caseStatuses,
+				caseCodes,
 				processName,
 				uuid,
 				isSubscribedOnly,
@@ -1263,8 +1274,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 	 */
 	@Override
 	public CaseBoardTableBean getTableData(
+			IWContext iwc,
 			User currentUser,
 			Collection<String> caseStatuses,
+			List<String> caseCodes,
 			String processName,
 			String uuid,
 			boolean isSubscribedOnly,
@@ -1273,10 +1286,12 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			String casesType
 	) {
 		return getTableData(
+				iwc,
 				currentUser,
 				null,
 				null,
 				caseStatuses,
+				caseCodes,
 				processName,
 				uuid,
 				isSubscribedOnly,
