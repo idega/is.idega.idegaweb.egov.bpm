@@ -808,29 +808,74 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			Date dateCreatedTo,
 			String casesType
 	) {
-		Collection<Case> allCases = getCaseManager(casesType).getCases(
-				StringUtil.isEmpty(processName) ? null : Arrays.asList(processName),
-				null,
-				caseStatuses,
-				subscribedOnly && currentUser != null ? Arrays.asList(currentUser): null,
-				StringUtil.isEmpty(caseManagerType) ? null : Arrays.asList(caseManagerType),
-				dateCreatedFrom,
-				dateCreatedTo
-		);
-		if (ListUtil.isEmpty(allCases)) {
-			return null;
-		}
-
-		Collection<GeneralCase> bpmCases = new ArrayList<>();
-		for (Case theCase: allCases) {
-			if (!(theCase instanceof GeneralCase) || theCase.isClosed()) {
-				continue;
+		try {
+			List<Integer> casesIds = getCaseManager(casesType).getCaseIds(
+					iwc,
+					currentUser,
+					CasesRetrievalManager.CASE_LIST_TYPE_OPEN,										//	List type
+					caseCodes,																		//	Case codes
+					null,																			//	Statuses to hide
+					ListUtil.isEmpty(caseStatuses) ? null : new ArrayList<>(caseStatuses),			//	Statuses to show
+					subscribedOnly,
+					false,
+					0,
+					Integer.MAX_VALUE,
+					null,
+					null,
+					null,
+					null,
+					null
+			);
+			if (ListUtil.isEmpty(casesIds)) {
+				return null;
 			}
 
-			bpmCases.add((GeneralCase) theCase);
-		}
+			GeneralCaseHome generalCaseHome = (GeneralCaseHome) IDOLookup.getHome(GeneralCase.class);
+			Collection<GeneralCase> cases = generalCaseHome.findAllByIds(casesIds);
+			if (ListUtil.isEmpty(cases)) {
+				return null;
+			}
 
-		return bpmCases;
+			Collection<Case> allCases = null;
+			if (dateCreatedFrom == null && dateCreatedTo == null) {
+				allCases = new ArrayList<>(cases);
+			} else {
+				allCases = new ArrayList<>();
+				for (Case theCase: cases) {
+					Timestamp caseCreated = theCase == null ? null : theCase.getCreated();
+					if (caseCreated == null) {
+						continue;
+					}
+
+					long caseTimestamp = caseCreated.getTime();
+					if (dateCreatedFrom != null && caseTimestamp < dateCreatedFrom.getTime()) {
+						continue;
+					}
+					if (dateCreatedTo != null && caseTimestamp > dateCreatedTo.getTime()) {
+						continue;
+					}
+
+					allCases.add(theCase);
+				}
+			}
+			if (ListUtil.isEmpty(allCases)) {
+				return null;
+			}
+
+			Collection<GeneralCase> bpmCases = new ArrayList<>();
+			for (Case theCase: allCases) {
+				if (!(theCase instanceof GeneralCase) || theCase.isClosed()) {
+					continue;
+				}
+
+				bpmCases.add((GeneralCase) theCase);
+			}
+
+			return bpmCases;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting cases for " + currentUser + ". Statuses: " + caseStatuses, e);
+		}
+		return null;
 	}
 
 	/**
