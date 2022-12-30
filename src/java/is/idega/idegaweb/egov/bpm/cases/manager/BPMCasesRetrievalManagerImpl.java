@@ -1164,11 +1164,39 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 					        dataTo
 					);
 		default:
-			getLogger().warning("Unknown cases list type: '" + type + "'");
-			break;
-		}
+			getLogger().warning("Unknown cases list type: '" + type + "', will handle it as open cases");
+			return isSuperAdmin ?
+					getCasesBPMDAO().getOpenCasesIdsForAdmin(
+							caseCodes,
+							statusesToShow,
+							statusesToHide,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							from,
+							to,
+					        dataFrom,
+					        dataTo
+					) :
+					getCasesBPMDAO().getOpenCasesIds(
+							user,
+							caseCodes,
+							statusesToShow,
+							statusesToHide,
+							groups,
+							roles,
+							onlySubscribedCases,
+							caseId,
+							procInstIds,
+							handlerCategoryIDs,
+							exceptOwnersIds,
+							from,
+							to,
+					        dataFrom,
+					        dataTo
+					);
 
-		return null;
+		}
 	}
 
 	private Collection<Long> getHandlerCategoryIDs(User user, Collection<Long> handlerCategoryIDs) {
