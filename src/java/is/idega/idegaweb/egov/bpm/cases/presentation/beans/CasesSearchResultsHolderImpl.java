@@ -189,13 +189,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public boolean doExport(String id, boolean exportContacts, boolean showCompany) {
+	public boolean doExport(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
 		Collection<CasePresentation> cases = getCases(id, true);
 		if (ListUtil.isEmpty(cases)) {
 			return false;
 		}
 
-		memory = getExportedData(id, exportContacts, showCompany);
+		memory = getExportedData(id, exportContacts, showCompany, addDefaultFields);
 
 		return memory == null ? false : true;
 	}
@@ -385,7 +385,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			String processName,
 			boolean isAdmin,
 			List<String> standardFieldsInfo,
-			List<AdvancedProperty> availableVariables
+			List<AdvancedProperty> availableVariables,
+			boolean addDefaultFields
 	) {
 		int cellRow = sheet.getLastRowNum() + 2;
 		if (cellRow == 2) {
@@ -393,31 +394,35 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 		int cellIndex = 0;
 
-		//	Default header labels
 		HSSFRow row = sheet.createRow(cellRow++);
-		HSSFCell cell = row.createCell(cellIndex++);
-		cell.setCellValue(localizeCases("case_nr", "Case nr."));
-		cell.setCellStyle(bigStyle);
+		HSSFCell cell = null;
 
-		cell = row.createCell(cellIndex++);
-		cell.setCellValue(localizeCases("status", "Status"));
-		cell.setCellStyle(bigStyle);
+		if (addDefaultFields) {
+			//	Default header labels
+			cell = row.createCell(cellIndex++);
+			cell.setCellValue(localizeCases("case_nr", "Case nr."));
+			cell.setCellStyle(bigStyle);
 
-		cell = row.createCell(cellIndex++);
-		cell.setCellValue(localizeCases("created_date", "Created date"));
-		cell.setCellStyle(bigStyle);
+			cell = row.createCell(cellIndex++);
+			cell.setCellValue(localizeCases("status", "Status"));
+			cell.setCellStyle(bigStyle);
 
-		cell = row.createCell(cellIndex++);
-		cell.setCellValue(localizeCases("sender", "Sender"));
-		cell.setCellStyle(bigStyle);
+			cell = row.createCell(cellIndex++);
+			cell.setCellValue(localizeCases("created_date", "Created date"));
+			cell.setCellStyle(bigStyle);
 
-		cell = row.createCell(cellIndex++);
-		cell.setCellValue(localizeCases("personal_id", "Personal ID"));
-		cell.setCellStyle(bigStyle);
+			cell = row.createCell(cellIndex++);
+			cell.setCellValue(localizeCases("sender", "Sender"));
+			cell.setCellStyle(bigStyle);
 
-		cell = row.createCell(cellIndex++);
-		cell.setCellValue(localizeCases("sender_e-mail", "E-mail"));
-		cell.setCellStyle(bigStyle);
+			cell = row.createCell(cellIndex++);
+			cell.setCellValue(localizeCases("personal_id", "Personal ID"));
+			cell.setCellStyle(bigStyle);
+
+			cell = row.createCell(cellIndex++);
+			cell.setCellValue(localizeCases("sender_e-mail", "E-mail"));
+			cell.setCellStyle(bigStyle);
+		}
 
 		if (!ListUtil.isEmpty(standardFieldsInfo)) {
 			for (String standardFieldLabel: standardFieldsInfo) {
@@ -574,14 +579,15 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 
-	private MemoryFileBuffer getExportedData(String id, boolean exportContacts, boolean showCompany) {
+	private MemoryFileBuffer getExportedData(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
 		CasesSearchCriteriaBean criteria = getSearchCriteria(id);
 		return getExportedData(
 				getCasesByProcessDefinition(id),
 				id,
 				criteria == null ? null : criteria.getExportColumns(),
 				exportContacts,
-				showCompany
+				showCompany,
+				addDefaultFields
 		);
 	}
 
@@ -590,7 +596,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			String id,
 			List<String> exportColumns,
 			boolean exportContacts,
-			boolean showCompany
+			boolean showCompany,
+			boolean addDefaultFields
 	) {
 		if (casesByProcessDefinition == null || ListUtil.isEmpty(casesByProcessDefinition.values())) {
 			return null;
@@ -681,52 +688,54 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					}
 				}
 				if (!exportContacts) {
-					createHeaders(sheet, bigStyle, processName, isAdmin, standardFieldsLabels, availableVariables);
+					createHeaders(sheet, bigStyle, processName, isAdmin, standardFieldsLabels, availableVariables, addDefaultFields);
 				}
 				List<Integer> fileCellsIndexes = null;
 				int rowNumber = 0;
 
 				for (CasePresentation theCase: cases) {
 					if (exportContacts) {
-						createHeaders(sheet, bigStyle, processName, isAdmin, standardFieldsLabels, availableVariables);
+						createHeaders(sheet, bigStyle, processName, isAdmin, standardFieldsLabels, availableVariables, addDefaultFields);
 					}
 					fileCellsIndexes = new ArrayList<>();
 					HSSFRow row = sheet.createRow(++rowNumber);
 					int cellIndex = 0;
 
-					//	Default header values
-					HSSFCell cell = row.createCell(cellIndex++);
-					cell.setCellStyle(normalStyle);
-					cell.setCellValue(theCase.getCaseIdentifier());
+					if (addDefaultFields) {
+						//	Default header values
+						HSSFCell cell = row.createCell(cellIndex++);
+						cell.setCellStyle(normalStyle);
+						cell.setCellValue(theCase.getCaseIdentifier());
 
-					cell = row.createCell(cellIndex++);
-					cell.setCellStyle(normalStyle);
-					cell.setCellValue(theCase.getCaseStatusLocalized());
+						cell = row.createCell(cellIndex++);
+						cell.setCellStyle(normalStyle);
+						cell.setCellValue(theCase.getCaseStatusLocalized());
 
-					cell = row.createCell(cellIndex++);
-					cell.setCellStyle(normalStyle);
-					IWTimestamp created = new IWTimestamp(theCase.getCreated());
-					cell.setCellValue(created.getLocaleDateAndTime(locale, DateFormat.SHORT, DateFormat.SHORT));
+						cell = row.createCell(cellIndex++);
+						cell.setCellStyle(normalStyle);
+						IWTimestamp created = new IWTimestamp(theCase.getCreated());
+						cell.setCellValue(created.getLocaleDateAndTime(locale, DateFormat.SHORT, DateFormat.SHORT));
 
-					cell = row.createCell(cellIndex++);
-					cell.setCellStyle(normalStyle);
-					cell.setCellValue(getCaseCreator(theCase));
+						cell = row.createCell(cellIndex++);
+						cell.setCellStyle(normalStyle);
+						cell.setCellValue(getCaseCreator(theCase));
 
-					cell = row.createCell(cellIndex++);
-					cell.setCellStyle(normalStyle);
-					cell.setCellValue(getCaseCreatorPersonalId(theCase));
+						cell = row.createCell(cellIndex++);
+						cell.setCellStyle(normalStyle);
+						cell.setCellValue(getCaseCreatorPersonalId(theCase));
 
-					cell = row.createCell(cellIndex++);
-					cell.setCellStyle(normalStyle);
-					cell.setCellValue(getCaseCreatorEmail(theCase));
+						cell = row.createCell(cellIndex++);
+						cell.setCellStyle(normalStyle);
+						cell.setCellValue(getCaseCreatorEmail(theCase));
 
-					if (!ListUtil.isEmpty(standardFieldsLabels)) {
-						List<String> standardFieldsValues = getStandardFieldsValues(id, theCase);
-						if (!ListUtil.isEmpty(standardFieldsValues)) {
-							for (String standardFieldValue: standardFieldsValues) {
-								cell = row.createCell(cellIndex++);
-								cell.setCellStyle(normalStyle);
-								cell.setCellValue(standardFieldValue);
+						if (!ListUtil.isEmpty(standardFieldsLabels)) {
+							List<String> standardFieldsValues = getStandardFieldsValues(id, theCase);
+							if (!ListUtil.isEmpty(standardFieldsValues)) {
+								for (String standardFieldValue: standardFieldsValues) {
+									cell = row.createCell(cellIndex++);
+									cell.setCellStyle(normalStyle);
+									cell.setCellValue(standardFieldValue);
+								}
 							}
 						}
 					}
@@ -1114,11 +1123,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public MemoryFileBuffer getExportedSearchResults(String id, boolean exportContacts, boolean showCompany) {
+	public MemoryFileBuffer getExportedSearchResults(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
 		if (memory != null)
 			return memory;
 
-		if (doExport(id, exportContacts, showCompany)) {
+		if (doExport(id, exportContacts, showCompany, addDefaultFields)) {
 			return memory;
 		}
 
@@ -1149,7 +1158,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public MemoryFileBuffer getExportedCases(String id, boolean exportContacts, boolean showCompany) {
+	public MemoryFileBuffer getExportedCases(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
 		if (StringUtil.isEmpty(id)) {
 			LOGGER.warning("Key is not provided");
 			return null;
@@ -1164,7 +1173,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		Map<String, List<CasePresentation>> casesByProcDef = getCasesByProcessDefinition(cases);
 		CasesSearchCriteriaBean bean = getSearchCriteria(id);
 
-		return getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns(), exportContacts, showCompany);
+		return getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns(), exportContacts, showCompany, addDefaultFields);
 	}
 
 	private Map<String, List<CasePresentation>> getCasesByProcessDefinition(String id) {

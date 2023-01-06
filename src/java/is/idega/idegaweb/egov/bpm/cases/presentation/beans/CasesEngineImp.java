@@ -1165,15 +1165,20 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public AdvancedProperty getExportedSearchResults(String id, boolean exportContacts, boolean showCompany) {
-		return getSearchResults(id, exportContacts, showCompany, null);
+		return getExportedSearchResults(id, exportContacts, showCompany, true);
+	}
+
+	@Override
+	public AdvancedProperty getExportedSearchResults(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
+		return getSearchResults(id, exportContacts, showCompany, addDefaultFields, null);
 	}
 
 	@Override
 	public <T extends MediaWritable> AdvancedProperty getSearchResultsWithExporter(String id, Class<T> exporter) {
-		return getSearchResults(id, false, false, exporter);
+		return getSearchResults(id, false, false, true, exporter);
 	}
 
-	private <T extends MediaWritable> AdvancedProperty getSearchResults(String pageURI, boolean exportContacts, boolean showCompany, Class<T> exporter) {
+	private <T extends MediaWritable> AdvancedProperty getSearchResults(String pageURI, boolean exportContacts, boolean showCompany, boolean addDefaultFields, Class<T> exporter) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -1207,7 +1212,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		getExternalSearchResults(resultsHolder, pageURI);
 		if (exporter == null) {
-			if (!resultsHolder.doExport(pageURI, exportContacts, showCompany)) {
+			if (!resultsHolder.doExport(pageURI, exportContacts, showCompany, addDefaultFields)) {
 				result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 				return result;
 			}
