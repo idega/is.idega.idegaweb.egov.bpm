@@ -591,8 +591,13 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				return filtersList;
 			}
 
+			String filtersToSkip = getSettings().getProperty("cases.skip_search_filters");
 			for (Object filterObject: filters.values()) {
 				CasesListSearchFilter filter = (CasesListSearchFilter) filterObject;
+				if (!StringUtil.isEmpty(filtersToSkip) && filtersToSkip.indexOf(filter.getClass().getName()) != -1) {
+					continue;
+				}
+
 				filter.setCriterias(criterias);
 				filtersList.add(filter);
 			}
@@ -755,7 +760,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			getLogger().info("Found cases IDs (" + casesIds.size() + ": " + casesIds + ") by search and after narrowed results");
 		}
 		start = System.currentTimeMillis();
-		LOGGER.info("Search was executed in " + (start - end) + " ms");
+		LOGGER.info("Search was executed in " + (start - end) + " ms. " + (ListUtil.isEmpty(casesIds) ? "Nothing found" : "Found " + casesIds.size() + " ID(s)") + " by criteria:\n" +
+				criterias);
 
 		if (ListUtil.isEmpty(casesIds)) {
 			return null;
