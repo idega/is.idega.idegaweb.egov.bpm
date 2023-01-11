@@ -1123,6 +1123,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
+	public MemoryFileBuffer getExportedSearchResults(String id, boolean exportContacts, boolean showCompany) {
+		return getExportedSearchResults(id, exportContacts, showCompany, true);
+	}
+
+	@Override
 	public MemoryFileBuffer getExportedSearchResults(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
 		if (memory != null)
 			return memory;
