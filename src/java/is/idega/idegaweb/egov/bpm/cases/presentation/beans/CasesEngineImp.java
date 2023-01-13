@@ -732,7 +732,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		List<Integer> casesIds = new ArrayList<>(casesIDs);
 
 		long end = System.currentTimeMillis();
-		LOGGER.info("Cases IDs were resolved in " + (end - start) + " ms");
+		LOGGER.info("Cases IDs (totally " + casesIds.size() + ") were resolved in " + (end - start) + " ms");
+		start = System.currentTimeMillis();
 
 		if (!StringUtil.isEmpty(criterias.getStatusId())) {
 			criterias.setStatuses(new String[] {criterias.getStatusId()});
@@ -747,6 +748,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 			for (CasesListSearchFilter filter: filters) {
 				casesIds = filter.doFilter(casesIds);
+				if (ListUtil.isEmpty(casesIds)) {
+					getLogger().warning("Nothing found by filter " + filter.getClass().getName() + ". Criteria:\n" + criterias);
+				}
 			}
 		} else {
 			//	Selecting cases IDs by provided process instance IDs
@@ -759,14 +763,15 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, casesIdsByProcInstIds);
 			getLogger().info("Found cases IDs (" + casesIds.size() + ": " + casesIds + ") by search and after narrowed results");
 		}
-		start = System.currentTimeMillis();
-		LOGGER.info("Search was executed in " + (start - end) + " ms. " + (ListUtil.isEmpty(casesIds) ? "Nothing found" : "Found " + casesIds.size() + " ID(s)") + " by criteria:\n" +
+		end = System.currentTimeMillis();
+		LOGGER.info("Search was executed in " + (end - start) + " ms. " + (ListUtil.isEmpty(casesIds) ? "Nothing found" : "Found " + casesIds.size() + " ID(s)") + " by criteria:\n" +
 				criterias);
 
 		if (ListUtil.isEmpty(casesIds)) {
 			return null;
 		}
 
+		start = System.currentTimeMillis();
 		boolean usePaging = isPagingTurnedOn();
 		boolean noSortingOptions = ListUtil.isEmpty(criterias.getSortingOptions());
 		if (usePaging && !criterias.isNoOrdering()) {
