@@ -219,7 +219,17 @@ public class BPMProcessVariablesBeanImpl extends DefaultSpringBean implements BP
 
 	@Override
 	public String getVariableLocalizedName(String name, Locale locale) {
-		return getVariableLocalizedName(name, null, getBundle().getResourceBundle(locale), false);
+		IWBundle bundle = getBundle();
+		Collection<IWResourceBundle> iwResourceBundles = LocaleUtil.getEnabledResources(getApplication(), locale, bundle.getBundleIdentifier());
+		iwResourceBundles = ListUtil.isEmpty(iwResourceBundles) ? new ArrayList<>() : new ArrayList<>(iwResourceBundles);
+		iwResourceBundles.add(bundle.getResourceBundle(locale));
+		for (IWResourceBundle iwrb: iwResourceBundles) {
+			String locName = getVariableLocalizedName(name, null, iwrb, false);
+			if (!StringUtil.isEmpty(locName)) {
+				return locName;
+			}
+		}
+		return null;
 	}
 
 	@Override
