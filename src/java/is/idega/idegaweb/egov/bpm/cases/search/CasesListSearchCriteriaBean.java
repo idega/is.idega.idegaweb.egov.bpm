@@ -50,6 +50,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	private String freeVariableText;
 
+	private Set<Integer> casesIDs;
+
 	public String getProcessId() {
 		return processId;
 	}
@@ -307,6 +309,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setFreeVariableText(String freeVariableText) {
 		this.freeVariableText = freeVariableText;
+	}
+
+	public Set<Integer> getCasesIDs() {
+		return casesIDs;
+	}
+
+	public void setCasesIDs(Set<Integer> casesIDs) {
+		this.casesIDs = casesIDs;
 	}
 
 }

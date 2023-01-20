@@ -665,107 +665,114 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				criterias.getCaseListType();
 
 		Collection<Long> handlerCategoryIDs = null;
-		Set<Integer> casesIDs = new HashSet<>();
-		try {
-			if (criterias.isShowAllCases()) {
-				CasesBusiness casesBusiness = getCasesBusiness(iwc);
-				Collection<CaseStatus> statuses = casesBusiness.getCaseStatuses();
-				StringBuffer allStatuses = null;
-				if (!ListUtil.isEmpty(statuses)) {
-					allStatuses = new StringBuffer();
-					for (Iterator<CaseStatus> statusesIter = statuses.iterator(); statusesIter.hasNext();) {
-						allStatuses.append(statusesIter.next().getStatus());
-						if (statusesIter.hasNext()) {
-							allStatuses.append(CoreConstants.COMMA);
+
+		List<Integer> casesIds = null;
+		if (ListUtil.isEmpty(criterias.getCasesIDs())) {
+			Set<Integer> casesIDs = new HashSet<>();
+			try {
+				if (criterias.isShowAllCases()) {
+					CasesBusiness casesBusiness = getCasesBusiness(iwc);
+					Collection<CaseStatus> statuses = casesBusiness.getCaseStatuses();
+					StringBuffer allStatuses = null;
+					if (!ListUtil.isEmpty(statuses)) {
+						allStatuses = new StringBuffer();
+						for (Iterator<CaseStatus> statusesIter = statuses.iterator(); statusesIter.hasNext();) {
+							allStatuses.append(statusesIter.next().getStatus());
+							if (statusesIter.hasNext()) {
+								allStatuses.append(CoreConstants.COMMA);
+							}
 						}
 					}
+
+					criterias.setStatusesToShow(allStatuses == null ? null : allStatuses.toString());
+					criterias.setStatusesToHide(null);
 				}
 
-				criterias.setStatusesToShow(allStatuses == null ? null : allStatuses.toString());
-				criterias.setStatusesToHide(null);
-			}
+				handlerCategoryIDs = criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId());
 
-			handlerCategoryIDs = criterias.getSubscribersGroupId() == null ? null : Arrays.asList(criterias.getSubscribersGroupId());
-
-			List<CasesRetrievalManager> retrievalManagers = getCaseManagersProvider().getCaseManagers();
-			if (ListUtil.isEmpty(retrievalManagers)) {
-				return null;
-			}
-			final User user = currentUser;
-			final Collection<Long> handlerCategoryIds = handlerCategoryIDs;
-			retrievalManagers.parallelStream().forEach(retrievalManager -> {
-				try {
-					List<Integer> ids = retrievalManager.getCasePrimaryKeys(
-							iwc,
-							user,
-							casesProcessorType,
-							criterias.getCaseCodesInList(),
-							criterias.getStatusesToHideInList(),
-							criterias.getStatusesToShowInList(),
-							criterias.isOnlySubscribedCases(),
-							criterias.isShowAllCases(),
-							criterias.getProcInstIds(),
-							criterias.getRoles(),
-							handlerCategoryIds,
-							null,
-							true,
-							null
-					);
-					if (!ListUtil.isEmpty(ids)) {
-						casesIDs.addAll(ids);
+				List<CasesRetrievalManager> retrievalManagers = getCaseManagersProvider().getCaseManagers();
+				if (ListUtil.isEmpty(retrievalManagers)) {
+					return null;
+				}
+				final User user = currentUser;
+				final Collection<Long> handlerCategoryIds = handlerCategoryIDs;
+				retrievalManagers.parallelStream().forEach(retrievalManager -> {
+					try {
+						List<Integer> ids = retrievalManager.getCasePrimaryKeys(
+								iwc,
+								user,
+								casesProcessorType,
+								criterias.getCaseCodesInList(),
+								criterias.getStatusesToHideInList(),
+								criterias.getStatusesToShowInList(),
+								criterias.isOnlySubscribedCases(),
+								criterias.isShowAllCases(),
+								criterias.getProcInstIds(),
+								criterias.getRoles(),
+								handlerCategoryIds,
+								null,
+								true,
+								null
+						);
+						if (!ListUtil.isEmpty(ids)) {
+							casesIDs.addAll(ids);
+						}
+					} catch (Exception e) {
+						getLogger().log(Level.WARNING, "Unable to get casess IDs using retrieval manager " + retrievalManager.getClass().getName(), e);
 					}
-				} catch (Exception e) {
-					getLogger().log(Level.WARNING, "Unable to get casess IDs using retrieval manager " + retrievalManager.getClass().getName(), e);
-				}
-			});
-		} catch (Exception e) {
-			LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
-		}
-		if (ListUtil.isEmpty(casesIDs)) {
-			LOGGER.warning("No primary keys for cases found, terminating search. Parameters: current user: " + currentUser + ", cases processor type: " + casesProcessorType +
-					", case codes: " + criterias.getCaseCodesInList() + ", statuses to hide: " + criterias.getStatusesToHideInList() + ", statuses to show: " + criterias.getStatusesToShowInList() +
-					", only subscribed cases: " + criterias.isOnlySubscribedCases() + ", show all cases: " + criterias.isShowAllCases() + ", proc. inst. IDs: " + criterias.getProcInstIds() +
-					", roles: " + criterias.getRoles() + ", handler category IDs: " + handlerCategoryIDs + ", search query: " + true);
-			return null;
-		}
+				});
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Some error occured getting cases by criterias: " + criterias, e);
+			}
 
-		List<Integer> casesIds = new ArrayList<>(casesIDs);
-
-		long end = System.currentTimeMillis();
-		LOGGER.info("Cases IDs (totally " + casesIds.size() + ") were resolved in " + (end - start) + " ms");
-		start = System.currentTimeMillis();
-
-		if (!StringUtil.isEmpty(criterias.getStatusId())) {
-			criterias.setStatuses(new String[] {criterias.getStatusId()});
-		}
-
-		if (ListUtil.isEmpty(criterias.getProcInstIds())) {
-			//	Filtering out the initial set of cases IDs by filters
-			List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criterias);
-			if (ListUtil.isEmpty(filters)) {
+			if (ListUtil.isEmpty(casesIDs)) {
+				LOGGER.warning("No primary keys for cases found, terminating search. Parameters: current user: " + currentUser + ", cases processor type: " + casesProcessorType +
+						", case codes: " + criterias.getCaseCodesInList() + ", statuses to hide: " + criterias.getStatusesToHideInList() + ", statuses to show: " + criterias.getStatusesToShowInList() +
+						", only subscribed cases: " + criterias.isOnlySubscribedCases() + ", show all cases: " + criterias.isShowAllCases() + ", proc. inst. IDs: " + criterias.getProcInstIds() +
+						", roles: " + criterias.getRoles() + ", handler category IDs: " + handlerCategoryIDs + ", search query: " + true);
 				return null;
 			}
 
-			for (CasesListSearchFilter filter: filters) {
-				casesIds = filter.doFilter(casesIds);
-				if (ListUtil.isEmpty(casesIds)) {
-					getLogger().warning("Nothing found by filter " + filter.getClass().getName() + ". Criteria:\n" + criterias);
-				}
+			casesIds = new ArrayList<>(casesIDs);
+
+			long end = System.currentTimeMillis();
+			LOGGER.info("Cases IDs (totally " + casesIds.size() + ") were resolved in " + (end - start) + " ms");
+			start = System.currentTimeMillis();
+
+			if (!StringUtil.isEmpty(criterias.getStatusId())) {
+				criterias.setStatuses(new String[] {criterias.getStatusId()});
 			}
+
+			if (ListUtil.isEmpty(criterias.getProcInstIds())) {
+				//	Filtering out the initial set of cases IDs by filters
+				List<CasesListSearchFilter> filters = getFilters(iwc.getServletContext(), criterias);
+				if (ListUtil.isEmpty(filters)) {
+					return null;
+				}
+
+				for (CasesListSearchFilter filter: filters) {
+					casesIds = filter.doFilter(casesIds);
+					if (ListUtil.isEmpty(casesIds)) {
+						getLogger().warning("Nothing found by filter " + filter.getClass().getName() + ". Criteria:\n" + criterias);
+					}
+				}
+			} else {
+				//	Selecting cases IDs by provided process instance IDs
+				List<Integer> casesIdsByProcInstIds = casesBPMDAO.getCasesIdsByProcInstIds(criterias.getProcInstIds());
+				if (ListUtil.isEmpty(casesIdsByProcInstIds)) {
+					return null;
+				}
+
+				//	Making sure user will see cases that are available to her/him only
+				casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, casesIdsByProcInstIds);
+				getLogger().info("Found cases IDs (" + casesIds.size() + ": " + casesIds + ") by search and after narrowed results");
+			}
+			end = System.currentTimeMillis();
+			LOGGER.info("Search was executed in " + (end - start) + " ms. " + (ListUtil.isEmpty(casesIds) ? "Nothing found" : "Found " + casesIds.size() + " ID(s)") + " by criteria:\n" +
+					criterias);
 		} else {
-			//	Selecting cases IDs by provided process instance IDs
-			List<Integer> casesIdsByProcInstIds = casesBPMDAO.getCasesIdsByProcInstIds(criterias.getProcInstIds());
-			if (ListUtil.isEmpty(casesIdsByProcInstIds)) {
-				return null;
-			}
-
-			//	Making sure user will see cases that are available to her/him only
-			casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, casesIdsByProcInstIds);
-			getLogger().info("Found cases IDs (" + casesIds.size() + ": " + casesIds + ") by search and after narrowed results");
+			casesIds = new ArrayList<>(criterias.getCasesIDs());
 		}
-		end = System.currentTimeMillis();
-		LOGGER.info("Search was executed in " + (end - start) + " ms. " + (ListUtil.isEmpty(casesIds) ? "Nothing found" : "Found " + casesIds.size() + " ID(s)") + " by criteria:\n" +
-				criterias);
 
 		if (ListUtil.isEmpty(casesIds)) {
 			return null;
@@ -920,9 +927,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				statusMap.put(statusKey, iwrb.getLocalizedString(key, statusKey));
 			}
 			getCasesListVariableCache().addCache(STATUS_MAP_CACHE, statusMap);
-		} catch (Exception e) {
-		}
-
+		} catch (Exception e) {}
 	}
 
 	private void preLoadVariablesForCases(Map<Long, Integer> procInstCase, List<String> variables) {
