@@ -11,6 +11,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.idega.block.process.business.ProcessConstants;
 import com.idega.core.business.DefaultSpringBean;
 import com.idega.idegaweb.egov.bpm.data.CaseState;
 import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
@@ -34,18 +35,18 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 	public static final String SET_STATE_INQUEUE_ACTION = "setStateInqueue";
 	public static final String SET_ALL_STATES_CANCELLED_ACTION = "setAllStatesCancelled";
 	public static final String SET_ALL_STATES_FINISHED_ACTION = "setAllStatesFinished";
-	
+
 	public static final String CASE_ID_VARIABLE_NAME = "caseIdentifier";
-	public static final String DEFAULT_CASE_ID_VARIABLE_NAME = "string_caseIdentifier";
-	
+	public static final String DEFAULT_CASE_ID_VARIABLE_NAME = ProcessConstants.CASE_IDENTIFIER;
+
 	public static final long MILLISECONDS_PER_DAY = 1000L * 60 * 60 * 24;
-	
+
 	private Map<String, List<String>> actionMap;
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
-	
+
+
 	@Override
 	public void execute(ExecutionContext ctx) throws Exception {
 		if (this.actionMap==null) return;
@@ -86,7 +87,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 				}
 			}
 		}
-		
+
 		if (this.actionMap.containsKey(SET_STATE_ACTIVE_ACTION)){
 			List<String> stateList = this.actionMap.get(SET_STATE_ACTIVE_ACTION);
 			if (!ListUtil.isEmpty(stateList)){
@@ -99,7 +100,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 				}
 			}
 		}
-		
+
 		if (this.actionMap.containsKey(SET_STATE_CANCELLED_ACTION)){
 			List<String> stateList = this.actionMap.get(SET_STATE_CANCELLED_ACTION);
 			if (!ListUtil.isEmpty(stateList)){
@@ -112,7 +113,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 				}
 			}
 		}
-		
+
 		if (this.actionMap.containsKey(SET_STATE_SUSPENDED_ACTION)){
 			List<String> stateList = this.actionMap.get(SET_STATE_SUSPENDED_ACTION);
 			if (!ListUtil.isEmpty(stateList)){
@@ -124,7 +125,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 				}
 			}
 		}
-		
+
 		if (this.actionMap.containsKey(SET_STATE_INQUEUE_ACTION)){
 			List<String> stateList = this.actionMap.get(SET_STATE_INQUEUE_ACTION);
 			if (!ListUtil.isEmpty(stateList)){
@@ -136,7 +137,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 				}
 			}
 		}
-		
+
 		if (this.actionMap.containsKey(SET_STATE_FINISHED_ACTION)){
 			List<String> stateList = this.actionMap.get(SET_STATE_FINISHED_ACTION);
 			if (!ListUtil.isEmpty(stateList)){
@@ -149,7 +150,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 				}
 			}
 		}
-		
+
 		if (this.actionMap.containsKey(SET_ALL_STATES_CANCELLED_ACTION)){
 			List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcess(ctx.getProcessInstance().getId());
 			for (CaseStateInstance state : caseStates){
@@ -159,7 +160,7 @@ public class CaseStateHandler extends DefaultSpringBean implements ActionHandler
 				getCasesBPMDAO().saveCasesStateInstance(state);
 			}
 		}
-		
+
 		if (this.actionMap.containsKey(SET_ALL_STATES_FINISHED_ACTION)){
 			List<CaseStateInstance> caseStates = getCasesBPMDAO().getStateInstancesForProcess(ctx.getProcessInstance().getId());
 			for (CaseStateInstance state : caseStates){
