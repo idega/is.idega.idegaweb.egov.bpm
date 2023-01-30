@@ -609,14 +609,14 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias) {
-		return getCasesByQuery(criterias, false);
+	public PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesSearchCriteriaBean criterias) {
+		return getCasesByQuery(iwc, criterias, false);
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCasesByQuery(CasesSearchCriteriaBean criterias, boolean isFirstPageIndexIsZero) {
+	public PagedDataCollection<CasePresentation> getCasesByQuery(IWContext iwc, CasesSearchCriteriaBean criterias, boolean isFirstPageIndexIsZero) {
 		if (criterias instanceof CasesListSearchCriteriaBean) {
-			return getCasesByQuery(CoreUtil.getIWContext(), (CasesListSearchCriteriaBean) criterias, isFirstPageIndexIsZero);
+			return getCasesByQuery(iwc == null ? CoreUtil.getIWContext() : iwc, (CasesListSearchCriteriaBean) criterias, isFirstPageIndexIsZero);
 		}
 
 		getLogger().warning("Unable to get cases by query " + criterias + " because it is not instance of " +
@@ -654,7 +654,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			boolean isFirstPageIndexIsZero
 	) {
 		User currentUser = null;
-		if (!iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
+		if (iwc == null || !iwc.isLoggedOn() || (currentUser = iwc.getCurrentUser()) == null) {
 			LOGGER.info("Not logged in, skipping searching");
 			return null;
 		}
@@ -727,9 +727,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 			if (ListUtil.isEmpty(casesIDs)) {
 				LOGGER.warning("No primary keys for cases found, terminating search. Parameters: current user: " + currentUser + ", cases processor type: " + casesProcessorType +
-						", case codes: " + criterias.getCaseCodesInList() + ", statuses to hide: " + criterias.getStatusesToHideInList() + ", statuses to show: " + criterias.getStatusesToShowInList() +
-						", only subscribed cases: " + criterias.isOnlySubscribedCases() + ", show all cases: " + criterias.isShowAllCases() + ", proc. inst. IDs: " + criterias.getProcInstIds() +
-						", roles: " + criterias.getRoles() + ", handler category IDs: " + handlerCategoryIDs + ", search query: " + true);
+						", case codes: " + criterias.getCaseCodesInList() + ", statuses to hide: " + criterias.getStatusesToHideInList() + ", statuses to show: " +
+						criterias.getStatusesToShowInList() + ", only subscribed cases: " + criterias.isOnlySubscribedCases() + ", show all cases: " + criterias.isShowAllCases() +
+						", proc. inst. IDs: " + criterias.getProcInstIds() + ", roles: " + criterias.getRoles() + ", handler category IDs: " + handlerCategoryIDs + ", search query: " +
+						true);
 				return null;
 			}
 
