@@ -490,31 +490,31 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		IWResourceBundle iwrb = getResourceBundle(iwc);
 
 		if (!StringUtil.isEmpty(criterias.getCaseNumber())) {
-			searchFields.add(new AdvancedProperty("case_nr", criterias.getCaseNumber()));
+			searchFields.add(new AdvancedProperty("case_nr", criterias.getCaseNumber(), "case_nr"));
 		}
 		if (!StringUtil.isEmpty(criterias.getDescription())) {
-			searchFields.add(new AdvancedProperty("description", criterias.getDescription()));
+			searchFields.add(new AdvancedProperty("description", criterias.getDescription(), "description"));
 		}
 		if (!StringUtil.isEmpty(criterias.getName())) {
-			searchFields.add(new AdvancedProperty("name", criterias.getName()));
+			searchFields.add(new AdvancedProperty("name", criterias.getName(), "name"));
 		}
 		if (!StringUtil.isEmpty(criterias.getPersonalId())) {
-			searchFields.add(new AdvancedProperty("personal_id", criterias.getPersonalId()));
+			searchFields.add(new AdvancedProperty("personal_id", criterias.getPersonalId(), "personal_id"));
 		}
 		if (!StringUtil.isEmpty(criterias.getContact())) {
-			searchFields.add(new AdvancedProperty("contact", criterias.getContact()));
+			searchFields.add(new AdvancedProperty("contact", criterias.getContact(), "contact"));
 		}
 		if (!StringUtil.isEmpty(criterias.getAddress())) {
-			searchFields.add(new AdvancedProperty("address", criterias.getAddress()));
+			searchFields.add(new AdvancedProperty("address", criterias.getAddress(), "address"));
 		}
 		if (criterias.getSubscribersGroupId() != null) {
-			searchFields.add(new AdvancedProperty("handler_category_id", getSelectedGroup(criterias.getSubscribersGroupId())));
+			searchFields.add(new AdvancedProperty("handler_category_id", getSelectedGroup(criterias.getSubscribersGroupId()), "handler_category_id"));
 		}
 		if (!StringUtil.isEmpty(criterias.getFreeVariableText())) {
-			searchFields.add(new AdvancedProperty("freeVariableText", criterias.getFreeVariableText()));
+			searchFields.add(new AdvancedProperty("freeVariableText", criterias.getFreeVariableText(), "freeVariableText"));
 		}
 		if (!StringUtil.isEmpty(criterias.getEvaluationProcess())) {
-			searchFields.add(new AdvancedProperty("evaluationProcess", criterias.getEvaluationProcess()));
+			searchFields.add(new AdvancedProperty("evaluationProcess", criterias.getEvaluationProcess(), "evaluationProcess"));
 		}
 
 		if (!StringUtil.isEmpty(criterias.getProcessId())) {
@@ -526,7 +526,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			} catch(Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting process name by: " + criterias.getProcessId());
 			}
-			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ? "general_cases" : processName));
+			searchFields.add(new AdvancedProperty("cases_search_select_process", StringUtil.isEmpty(processName) ? "general_cases" : processName, "cases_search_select_process"));
 		}
 		if (!StringUtil.isEmpty(criterias.getStatusId())) {
 			String status = null;
@@ -539,17 +539,22 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting status name by: " + criterias.getStatusId(), e);
 			}
-			searchFields.add(new AdvancedProperty("status", StringUtil.isEmpty(status) ?
-					iwrb.getLocalizedString("unknown_status", "Unknown") :
-					status)
+			searchFields.add(
+					new AdvancedProperty(
+							"status", StringUtil.isEmpty(status) ?
+									iwrb.getLocalizedString("unknown_status", "Unknown") :
+									status,
+							criterias.getStatusId()
+					)
 			);
 		}
 		if (!StringUtil.isEmpty(criterias.getDateRange())) {
-			searchFields.add(new AdvancedProperty("date_range", criterias.getDateRange()));
+			searchFields.add(new AdvancedProperty("date_range", criterias.getDateRange(), "date_range"));
 		}
 		if (!ListUtil.isEmpty(criterias.getProcessVariables())) {
 			for (BPMProcessVariable variable: criterias.getProcessVariables()) {
 				String value = variable.getValue();
+				String originalValue = value;
 				String name = variable.getName();
 				if (
 						CaseHandlerAssignmentHandler.handlerUserIdVarName.equals(name) ||
@@ -567,9 +572,15 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					}
 				}
 
-				searchFields.add(new AdvancedProperty(
-						iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(variable.getName()), variable.getName()), value)
+				AdvancedProperty searchField = new AdvancedProperty(
+						iwrb.getLocalizedString(JBPMConstants.VARIABLE_LOCALIZATION_PREFIX.concat(variable.getName()), variable.getName()),
+						value,
+						variable.getName()
 				);
+				if (!variable.isFlexible() || variable.isMultiple()) {
+					searchField.setOriginalValue(originalValue);
+				}
+				searchFields.add(searchField);
 			}
 		}
 		return searchFields;
