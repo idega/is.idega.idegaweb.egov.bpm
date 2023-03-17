@@ -580,6 +580,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				if (!variable.isFlexible() || variable.isMultiple()) {
 					searchField.setOriginalValue(originalValue);
 				}
+				if (variable.isMultiple()) {
+					searchField.setSelected(true);
+				}
 				searchFields.add(searchField);
 			}
 		}
