@@ -202,3 +202,5 @@ bpm_variable.string_ownerEmailAddress=Málshefjandi netfang
 bpm_variable.string_sellerName=Gagnaðili
 bpm_variable.string_sellerPersonalId=Gagnaðili kennitala
 bpm_variable.string_sellerEmailAddress=Gagnaðili netfang
+bpm_variable.string_officerNumber=Númer stöðuvarðar
+bpm_variable.string_ticketStreetName=Götuheiti
