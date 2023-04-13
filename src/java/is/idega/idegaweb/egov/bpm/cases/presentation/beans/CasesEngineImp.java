@@ -968,9 +968,17 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	private <T> List<T> getSubList(List<T> list, int startIndex, int count, int totalCount) {
 		if (startIndex + count < totalCount) {
 			return list.subList(startIndex, (startIndex + count));
-		} else {
-			return list.subList(startIndex, totalCount);
+
 		}
+
+		if (
+				startIndex >= list.size() ||
+				startIndex >= totalCount
+		) {
+			startIndex = 0;
+		}
+
+		return list.subList(startIndex, totalCount);
 	}
 
 	private CaseComparator getCaseComparator(CasesListSearchCriteriaBean criterias, Locale locale) {
