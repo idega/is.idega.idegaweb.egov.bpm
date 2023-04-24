@@ -28,7 +28,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					statusesToHide,
 					roles,
 					customView,
-					caseManagerType;
+					caseManagerType,
+					assigned;
 
 	private List<BPMProcessVariable> processVariables;
 
@@ -317,6 +318,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setCasesIDs(Set<Integer> casesIDs) {
 		this.casesIDs = casesIDs;
+	}
+
+	public String getAssigned() {
+		return assigned;
+	}
+
+	public void setAssigned(String assigned) {
+		this.assigned = assigned;
 	}
 
 }

@@ -15,6 +15,10 @@ public interface BPMConstants {
 								PLACEHOLDER_EXPENSES_WORK_COMPONENT = "#{expensesWorkComponent}",
 								PLACEHOLDER_EXPENSES_ESTIMATED_COST = "#{expensesEstimatedCost}",
 								PLACEHOLDER_EXPENSES_EXPECTED_GRANT = "#{expensesExpectedGrant}",
-								PLACEHOLDER_EXPENSES_PROPOSAL_FOR_A_GRANT = "#{expensesProposalForAGrant}";
+								PLACEHOLDER_EXPENSES_PROPOSAL_FOR_A_GRANT = "#{expensesProposalForAGrant}",
+
+								ALL = "all",
+								ASSIGNED_TO_ME = "assigned_to_me",
+								ASSIGNED_TO_OTHERS = "assigned_to_others";
 
 }

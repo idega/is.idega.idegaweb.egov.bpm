@@ -516,6 +516,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		if (!StringUtil.isEmpty(criterias.getEvaluationProcess())) {
 			searchFields.add(new AdvancedProperty("evaluationProcess", criterias.getEvaluationProcess(), "evaluationProcess"));
 		}
+		if (!StringUtil.isEmpty(criterias.getAssigned())) {
+			searchFields.add(new AdvancedProperty("assigned", criterias.getAssigned(), "assigned"));
+		}
 
 		if (!StringUtil.isEmpty(criterias.getProcessId())) {
 			String processName = null;
@@ -726,7 +729,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 								handlerCategoryIds,
 								null,
 								true,
-								null
+								null,
+								criterias.getAssigned()
 						);
 						if (!ListUtil.isEmpty(ids)) {
 							casesIDs.addAll(ids);
