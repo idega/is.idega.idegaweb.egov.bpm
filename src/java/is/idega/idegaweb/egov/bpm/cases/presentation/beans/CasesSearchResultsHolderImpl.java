@@ -610,7 +610,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				if (size > numberOfRows) {
 					numberOfRows = size;
 				}
-				values.add(new ArrayList<> (valuesForVar));
+				values.add(new ArrayList<>(valuesForVar));
 			}
 		}
 
@@ -649,9 +649,22 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			} else {
 				HSSFCell cell = row.createCell(cellIndex++);
 				cell.setCellStyle(normalStyle);
-				cell.setCellValue(value.toString());
+				cell.setCellValue(getRealValue(value.toString()));
 			}
 		}
+	}
+
+	private String getRealValue(String value) {
+		if (StringUtil.isEmpty(value)) {
+			return value;
+		}
+
+		int forSeparator = value.indexOf(is.idega.idegaweb.egov.bpm.BPMConstants.FOR);
+		if (forSeparator > 0) {
+			value = value.substring(0, forSeparator);
+		}
+
+		return value;
 	}
 
 	private MultipleSelectionVariablesResolver getResolver(String name) {

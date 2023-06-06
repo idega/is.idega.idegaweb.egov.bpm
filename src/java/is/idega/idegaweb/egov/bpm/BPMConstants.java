@@ -19,6 +19,8 @@ public interface BPMConstants {
 
 								ALL = "all",
 								ASSIGNED_TO_ME = "assigned_to_me",
-								ASSIGNED_TO_OTHERS = "assigned_to_others";
+								ASSIGNED_TO_OTHERS = "assigned_to_others",
+
+								FOR = "#for#";
 
 }
