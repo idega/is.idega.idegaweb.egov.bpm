@@ -421,6 +421,6 @@ public class CaseProcInstBind implements Serializable {
 
 	@Override
 	public String toString() {
-		return "Case ID: " + getCaseId() + ", proc. inst. ID: " + getProcInstId();
+		return "Case ID: " + getCaseId() + ", proc. inst. ID: " + getProcInstId() + ", UUID: " + getUuid();
 	}
 }
