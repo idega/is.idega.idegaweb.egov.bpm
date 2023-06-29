@@ -48,6 +48,7 @@ import org.chiba.web.WebFactory;
 import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 
+import com.idega.business.IBOLookup;
 import com.idega.chiba.web.session.impl.IdegaXFormHttpSession;
 import com.idega.core.builder.data.ICDomain;
 import com.idega.core.file.util.MimeTypeUtil;
@@ -55,15 +56,18 @@ import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.presentation.IWContext;
+import com.idega.user.business.UserBusiness;
+import com.idega.user.dao.UserDAO;
 import com.idega.user.data.bean.User;
 import com.idega.util.CoreConstants;
 import com.idega.util.RequestUtil;
+import com.idega.util.expression.ELUtil;
 
 public class IWContextMockUp extends IWContext {
 
 	private static final long serialVersionUID = -4508560923047512886L;
 
-	private Map<String, Object> contextAttributes = new HashMap<String, Object>();
+	private Map<String, Object> contextAttributes = new HashMap<>();
 
 	private HttpServletRequest request;
 	private HttpServletResponse response;
@@ -78,8 +82,51 @@ public class IWContextMockUp extends IWContext {
 
 	private ELContext elContext;
 
+	private User loggedInUser;
+
+	private com.idega.user.data.User currentUser;
+
 	public IWContextMockUp() {
 		setCurrentInstance(this);
+	}
+
+	@Override
+	public User getLoggedInUser() {
+		if (loggedInUser == null && currentUser != null) {
+			try {
+				UserDAO userDAO = ELUtil.getInstance().getBean(UserDAO.class);
+				loggedInUser = userDAO.getUser((Integer) currentUser.getPrimaryKey());
+			} catch (Exception e) {}
+		}
+		return loggedInUser;
+	}
+
+	public void setLoggedInUser(User loggedInUser) {
+		this.loggedInUser = loggedInUser;
+	}
+
+	@Override
+	public com.idega.user.data.User getCurrentUser() {
+		if (currentUser == null && loggedInUser != null) {
+			try {
+				UserBusiness userBusiness = IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), UserBusiness.class);
+				currentUser = userBusiness.getUser(loggedInUser.getId());
+			} catch (Exception e) {}
+		}
+		return currentUser;
+	}
+
+	public void setCurrentUser(com.idega.user.data.User currentUser) {
+		this.currentUser = currentUser;
+	}
+
+	@Override
+	public boolean isLoggedOn() {
+		if (getLoggedInUser() != null || getCurrentUser() != null) {
+			return true;
+		}
+
+		return false;
 	}
 
 	@Override
@@ -500,7 +547,7 @@ public class IWContextMockUp extends IWContext {
 					return null;
 				}
 
-				private List<String> parameterNames = new ArrayList<String>();
+				private List<String> parameterNames = new ArrayList<>();
 				@Override
 				public Enumeration<String> getParameterNames() {
 					return Collections.enumeration(parameterNames);
@@ -879,7 +926,7 @@ public class IWContextMockUp extends IWContext {
 
 	private class HttpServletRequestMockUp extends HttpServletRequestWrapper {
 
-		private Map<String, Object> requestAttributes = new HashMap<String, Object>();
+		private Map<String, Object> requestAttributes = new HashMap<>();
 
 		private HttpServletRequestMockUp(HttpServletRequest request) {
 			super(request);
