@@ -2,6 +2,8 @@ package is.idega.idegaweb.egov.bpm.cases;
 
 import com.idega.block.process.business.ProcessConstants;
 
+import is.idega.idegaweb.egov.cases.presentation.beans.CasesListBuilderImpl;
+
 /**
  * @author <a href="civilis@idega.com">Vytautas Čivilis</a>
  * @version $Revision: 1.17 $ Last modified: $Date: 2009/06/23 10:22:01 $ by $Author: valdas $
@@ -14,7 +16,7 @@ public class CasesBPMProcessConstants {
 	public static final String caseIdVariableName = "string_caseId";
 	public static final String caseTypeNameVariableName = "string_caseTypeName";
 	public static final String caseCategoryNameVariableName = "string_caseCategoryName";
-	public static final String caseCreatedDateVariableName = "string_caseCreatedDateString";
+	public static final String caseCreatedDateVariableName = CasesListBuilderImpl.VARIABLE_CREATION_DATE;
 	public static final String caseAllocateToVariableName = "string_allocateTo";
 	public static final String casePerformerIdVariableName = "string_performerId";
 	public static final String caseStatusVariableName = ProcessConstants.CASE_STATUS;
