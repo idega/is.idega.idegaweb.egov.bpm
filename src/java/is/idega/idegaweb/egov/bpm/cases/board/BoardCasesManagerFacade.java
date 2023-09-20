@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.idega.builder.bean.AdvancedProperty;
 import com.idega.core.business.DefaultSpringBean;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
@@ -35,9 +36,11 @@ import is.idega.idegaweb.egov.bpm.business.TaskViewerHelper;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
 
 @Transactional
-@Service("boardCasesManagerBean")
+@Service(BoardCasesManagerFacade.BOARD_CASES_MANAGER_BEAN)
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 public class BoardCasesManagerFacade extends DefaultSpringBean {
+
+	public static final String BOARD_CASES_MANAGER_BEAN = "boardCasesManagerBean";
 
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
@@ -173,6 +176,11 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 		return null;
 	}
 
+	public boolean canSaveColumnsCustomizationAsAppProp(IWMainApplicationSettings settings) {
+		settings = settings == null ? getSettings() : settings;
+		return settings.getBoolean("cases_board.save_columns_as_app_prop", true);
+	}
+
 	public String saveCustomizedColumns(String uuid, List<String> columns) {
 		String errorMessage = "Some error occurred. Reload a page and try again";
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
@@ -186,17 +194,33 @@ public class BoardCasesManagerFacade extends DefaultSpringBean {
 		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		iwc.setSessionAttribute(CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid, columns);
+		String key = CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid;
+		iwc.setSessionAttribute(key, columns);
+
+		IWMainApplicationSettings settings = getSettings();
+		if (canSaveColumnsCustomizationAsAppProp(settings)) {
+			String value = StringUtil.getValue(columns);
+			settings.setProperty(key, value);
+		}
+
 		return null;
 	}
 
 	public String resetCustomizedColumns(String uuid) {
 		IWResourceBundle iwrb = getResourceBundle(getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER));
-		if (StringUtil.isEmpty(uuid))
+		if (StringUtil.isEmpty(uuid)) {
 			return iwrb.getLocalizedString("error_resetting_custom_columns", "Some error occurred. Reload a page and try again");
+		}
 
 		IWContext iwc = CoreUtil.getIWContext();
-		iwc.removeSessionAttribute(CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid);
+		String key = CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid;
+		iwc.removeSessionAttribute(key);
+
+		IWMainApplicationSettings settings = getSettings();
+		if (canSaveColumnsCustomizationAsAppProp(settings)) {
+			settings.removeProperty(key);
+		}
+
 		return null;
 	}
 

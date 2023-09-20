@@ -41,6 +41,7 @@ import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.contact.data.Email;
 import com.idega.data.IDOLookup;
 import com.idega.data.IDOLookupException;
+import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.jbpm.bean.VariableByteArrayInstance;
 import com.idega.jbpm.data.VariableInstanceQuerier;
@@ -1387,8 +1388,23 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			return Collections.emptyList();
 		}
 
+		String key = CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid;
+		try {
+			IWMainApplicationSettings settings = getSettings();
+			BoardCasesManagerFacade boardCasesManagerFacade = ELUtil.getInstance().getBean(BoardCasesManagerFacade.BOARD_CASES_MANAGER_BEAN);
+			if (boardCasesManagerFacade != null && boardCasesManagerFacade.canSaveColumnsCustomizationAsAppProp(settings)) {
+				String prop = settings.getProperty(key);
+				List<String> columns = StringUtil.getValuesFromString(prop, CoreConstants.COMMA);
+				if (!ListUtil.isEmpty(columns)) {
+					return columns;
+				}
+			}
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting custom columns from app properties by key " + key, e);
+		}
+
 		IWContext iwc = CoreUtil.getIWContext();
-		Object customColumns = iwc.getSessionAttribute(CasesBoardViewer.PARAMETER_CUSTOM_COLUMNS + uuid);
+		Object customColumns = iwc.getSessionAttribute(key);
 		if (customColumns instanceof List<?>) {
 			@SuppressWarnings("unchecked")
 			List<String> columns = (List<String>) customColumns;
