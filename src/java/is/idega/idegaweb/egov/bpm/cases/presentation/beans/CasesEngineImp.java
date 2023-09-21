@@ -1555,10 +1555,10 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		page = page <= 0 ? 1 : page;
 		pageSize = pageSize <= 0 ? 20 : pageSize;
 
-		String key = "userCases";
+		String key = ProcessConstants.USER_CASES;
 		IWContext iwc = CoreUtil.getIWContext();
-		iwc.setSessionAttribute(ListNavigator.PARAMETER_CURRENT_PAGE + "_" + key, page);
-		iwc.setSessionAttribute(ListNavigator.PARAMETER_NUMBER_OF_ENTRIES + "_" + key, pageSize);
+		iwc.setSessionAttribute(ListNavigator.PARAMETER_CURRENT_PAGE + CoreConstants.UNDER + key, page);
+		iwc.setSessionAttribute(ListNavigator.PARAMETER_NUMBER_OF_ENTRIES + CoreConstants.UNDER + key, pageSize);
 
 		return true;
 	}
