@@ -38,6 +38,10 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 
 	@Override
 	public void init(HttpServletRequest req, IWContext iwc) {
+		if (iwc == null || !iwc.isLoggedOn()) {
+			return;
+		}
+
 		String fileName = null;
 		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 
@@ -68,7 +72,7 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 	}
 
 	@Override
-	public void writeTo(OutputStream streamOut) throws IOException {
+	public void writeTo(IWContext iwc, OutputStream streamOut) throws IOException {
 		InputStream streamIn = new ByteArrayInputStream(memory.buffer());
 		FileUtil.streamToOutputStream(streamIn, streamOut);
 

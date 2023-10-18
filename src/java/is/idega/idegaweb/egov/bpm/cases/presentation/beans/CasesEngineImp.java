@@ -1932,8 +1932,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				Boolean.FALSE.toString(),
 				iwrb.getLocalizedString("unable_to_download_zipped_cases", "Unable to download exported case(s)")
 		);
-
-		if (StringUtil.isEmpty(id)) {
+		IWContext iwc = CoreUtil.getIWContext();
+		if (StringUtil.isEmpty(id) || iwc == null || !iwc.isLoggedOn()) {
 			return result;
 		}
 

@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.media;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,6 +25,8 @@ import com.idega.user.data.User;
 import com.idega.util.FileUtil;
 import com.idega.util.expression.ELUtil;
 
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+
 public class ProcessUsersExporter extends DownloadWriter implements MediaWritable {
 
 	public static final String PROCESS_INSTANCE_ID = "pr-inst-id";
@@ -34,20 +34,23 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 
 	@Autowired
 	private BPMFactory bpmFactory;
-	
+
 	@Autowired
 	private ProcessArtifacts processArtifacts;
-	
+
 	private MemoryFileBuffer memory = null;
-	
+
 	@Override
 	public String getMimeType() {
 		return MimeTypeUtil.MIME_TYPE_EXCEL_2;
 	}
 
-	
 	@Override
 	public void init(HttpServletRequest req, IWContext iwc) {
+		if (iwc == null || !iwc.isLoggedOn()) {
+			return;
+		}
+
 		ELUtil.getInstance().autowire(this);
 		String id = iwc.getParameter(PROCESS_INSTANCE_ID);
 		long processInstanceId = Long.valueOf(id);
@@ -57,19 +60,18 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 		IWResourceBundle iwrb = iwc.getIWMainApplication().getBundle(IWBundleStarter.IW_BUNDLE_IDENTIFIER).getResourceBundle(iwc);
 
 		String fileName = iwrb.getLocalizedString("exported_contacts", "Exported contacts");
-		
+
 		CasesSearchResultsHolder searchResultHolder = ELUtil.getInstance().getBean(CasesSearchResultsHolder.SPRING_BEAN_IDENTIFIER);
 		boolean showCompany = "y".equals(iwc.getParameter(SHOW_USER_COMPANY));
-		
+
 		memory = searchResultHolder.getUsersExport(users, iwc.getCurrentLocale(), showCompany);
-		
 
 		memory.setMimeType(MimeTypeUtil.MIME_TYPE_EXCEL_2);
 		setAsDownload(iwc, fileName.concat(".xls"),	memory.length());
 	}
-	
+
 	@Override
-	public void writeTo(OutputStream streamOut) throws IOException {
+	public void writeTo(IWContext iwc, OutputStream streamOut) throws IOException {
 		InputStream streamIn = new ByteArrayInputStream(memory.buffer());
 		FileUtil.streamToOutputStream(streamIn, streamOut);
 
