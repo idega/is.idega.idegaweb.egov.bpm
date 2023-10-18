@@ -195,6 +195,16 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
+	public boolean doExport(String id) {
+		return doExport(id, false, false, false);
+	}
+
+	@Override
+	public boolean doExport(String id, boolean exportContacts, boolean showCompany) {
+		return doExport(id, exportContacts, showCompany, false);
+	}
+
+	@Override
 	public boolean doExport(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
 		Collection<CasePresentation> cases = getCases(id, true);
 		if (ListUtil.isEmpty(cases)) {
