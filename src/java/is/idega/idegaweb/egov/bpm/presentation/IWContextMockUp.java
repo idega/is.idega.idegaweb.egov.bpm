@@ -91,6 +91,11 @@ public class IWContextMockUp extends IWContext {
 	}
 
 	@Override
+	public IWMainApplication getIWMainApplication() {
+		return IWMainApplication.getDefaultIWMainApplication();
+	}
+
+	@Override
 	public User getLoggedInUser() {
 		if (loggedInUser == null && currentUser != null) {
 			try {
