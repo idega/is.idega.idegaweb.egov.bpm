@@ -37,12 +37,14 @@ import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
+import com.idega.block.process.data.CaseHome;
 import com.idega.business.IBOLookup;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.core.persistence.Param;
 import com.idega.core.persistence.impl.GenericDaoImpl;
 import com.idega.core.user.data.User;
+import com.idega.data.IDOLookup;
 import com.idega.data.MetaDataBMPBean;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWApplicationContext;
@@ -1597,16 +1599,22 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames) {
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames) {
 		return getProcessInstancesByCaseStatusesAndProcessDefinitionNames(caseStatuses, procDefNames, null, null, false);
 	}
 	@Override
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Integer firstResult, Integer maxResults, boolean newestOnTop) {
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+			List<String> caseStatuses,
+			List<String> procDefNames,
+			Integer firstResult,
+			Integer maxResults,
+			boolean newestOnTop
+	) {
 		return getProcessInstancesByCaseStatusesAndProcessDefinitionNames(caseStatuses, procDefNames, null, false, firstResult, maxResults, newestOnTop);
 	}
 
 	@Override
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,
 			Integer firstResult,
@@ -1630,7 +1638,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,
 			com.idega.user.data.bean.User user,
@@ -1652,7 +1660,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(caseStatuses, procDefNames, user, onlySubscribed, null, null, false, true);
 	}
 
-	private <T> T getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
+	private <T extends Serializable> T getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,
 			com.idega.user.data.bean.User user,
@@ -1748,7 +1756,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		);
 	}
 
-	private <T> T getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
+	private <T extends Serializable> T getProcessInstancesOrCountByCaseStatusesAndProcessDefinitionNamesOrCaseCodes(
 			List<String> caseStatuses,
 			List<String> procDefNames,
 			List<String> caseCodes,
@@ -1882,14 +1890,63 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, procDefNames, null, null, metadata, offset, maxCount, endDate);
 	}
+
 	@Override
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses,
-			List<Long> procInstIds) {
+	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses, List<T> procInstIds) {
 		if (ListUtil.isEmpty(caseStatuses) || ListUtil.isEmpty(procInstIds)) {
 			return Collections.emptyMap();
 		}
 
-		return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, null, procInstIds, null, null, -1, -1, null);
+		try {
+			if (Long.class.getName().equals(procInstIds.get(0).getClass().getName())) {
+				return getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(caseStatuses, null, procInstIds, null, null, -1, -1, null);
+			}
+
+			@SuppressWarnings("unchecked")
+			Collection<Integer> casesIds = findCasesIdsByUUIDs((List<String>) procInstIds);
+			if (ListUtil.isEmpty(casesIds)) {
+				return Collections.emptyMap();
+			}
+
+			CaseHome caseHome = (CaseHome) IDOLookup.getHome(Case.class);
+			Collection<Integer> casesIdsByStatuses = caseHome.findIDsByCriteria(
+					null,
+					null,
+					null,
+					ArrayUtil.convertListToArray(caseStatuses),
+					null,
+					null,
+					null,
+					null,
+					false,
+					null,
+					null,
+					null,
+					null,
+					casesIds,
+					null
+			);
+			if (ListUtil.isEmpty(casesIdsByStatuses)) {
+				return Collections.emptyMap();
+			}
+
+			Map<Integer, String> ids = getUUIDsByCasesIds(casesIdsByStatuses);
+			if (MapUtil.isEmpty(ids)) {
+				return Collections.emptyMap();
+			}
+
+			Map<String, Integer> results = new HashMap<>();
+			for (Map.Entry<Integer, String> entry: ids.entrySet()) {
+				results.put(entry.getValue(), entry.getKey());
+			}
+			@SuppressWarnings("unchecked")
+			Map<T, Integer> result = (Map<T, Integer>) results;
+			return result;
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting proc. inst. and cases IDs by statuses " + caseStatuses + " and proc. inst. IDs " + procInstIds, e);
+		}
+
+		return Collections.emptyMap();
 	}
 
 	@Override
@@ -1925,11 +1982,11 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return null;
 	}
 
-	private Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(
+	private <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcess(
 			List<String> caseStatuses,
 			List<String> procDefNames,
-			List<Long> procInstIds,
-			Map<Long, Integer> results,
+			List<T> procInstIds,
+			Map<T, Integer> results,
 			Param metadata,
 			int offset,
 			int maxCount,
@@ -1965,7 +2022,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			}
 			procDefNames = null;
 		} else {
-			List<Long> usedIds = null;
+			List<T> usedIds = null;
 			if (procInstIds.size() > 1000) {
 				usedIds = new ArrayList<>(procInstIds.subList(0, 1000));
 				procInstIds = new ArrayList<>(procInstIds.subList(1000,	procInstIds.size()));
@@ -1973,7 +2030,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				usedIds = new ArrayList<>(procInstIds);
 				procInstIds = null;
 			}
-			for (Iterator<Long> procInstIdsIter = usedIds.iterator(); procInstIdsIter.hasNext();) {
+			for (Iterator<T> procInstIdsIter = usedIds.iterator(); procInstIdsIter.hasNext();) {
 				processesProp.append(procInstIdsIter.next());
 				if (procInstIdsIter.hasNext()) {
 					processesProp.append(CoreConstants.COMMA).append(CoreConstants.SPACE);
@@ -2041,8 +2098,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 			Serializable piId = ids[0];
 			Serializable caseId = ids[1];
-			if (piId instanceof Number && caseId instanceof Number) {
-				results.put(((Number) piId).longValue(), ((Number) caseId).intValue());
+			if (piId != null && caseId instanceof Number) {
+				@SuppressWarnings("unchecked")
+				T key = (T) piId;
+				results.put(key, ((Number) caseId).intValue());
 			}
 		}
 
@@ -2060,19 +2119,29 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public Long getProcessInstanceIdByCaseSubject(String subject) {
-		return getProcessInstanceIdByCaseSubjectAndStatus(subject, null);
+		return getProcessInstanceIdByCaseSubjectAndStatus(subject, null, Long.class);
 	}
 
 	@Override
-	public Long getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus) {
+	public <T extends Serializable> T getProcessInstanceIdByCaseSubject(String subject, Class<T> resultType) {
+		return getProcessInstanceIdByCaseSubjectAndStatus(subject, null, resultType);
+	}
+
+	@Override
+	public String getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus) {
+		return getProcessInstanceIdByCaseSubjectAndStatus(subject, caseStatus, String.class);
+	}
+
+	private <T extends Serializable> T getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus, Class<T> resultType) {
 		if (StringUtil.isEmpty(subject)) {
 			LOGGER.warning("Case subject is not provided!");
 			return null;
 		}
 
 		List<Serializable[]> data = null;
-		String query = "select b." + CaseProcInstBind.procInstIdColumnName + " from " + CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.TABLE_NAME + " c where" +
-				" c." + CaseBMPBean.COLUMN_CASE_SUBJECT + " = '" + subject + "' ";
+		boolean uuid = resultType != null && String.class.getName().equals(resultType.getName());
+		String query = "select b." + (uuid ? CaseProcInstBind.COLUMN_UUID : CaseProcInstBind.procInstIdColumnName) + " from " +
+				CaseProcInstBind.TABLE_NAME + " b, " + CaseBMPBean.TABLE_NAME + " c where c." + CaseBMPBean.COLUMN_CASE_SUBJECT + " = '" + subject + "' ";
 		if (!StringUtil.isEmpty(caseStatus)) {
 			query = query + " and c." + CaseBMPBean.COLUMN_CASE_STATUS + " = '" + caseStatus + "' ";
 		}
@@ -2092,8 +2161,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		Serializable id = ids[0];
-		if (id instanceof Number) {
-			return ((Number) id).longValue();
+		if (id != null) {
+			if (uuid) {
+				@SuppressWarnings("unchecked")
+				T result = (T) id;
+				return result;
+			}
+
+			if (id instanceof Number) {
+				Long numericId = ((Number) id).longValue();
+				@SuppressWarnings("unchecked")
+				T result = (T) numericId;
+				return result;
+			}
 		}
 
 		return null;
@@ -2328,14 +2408,24 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public List<Long> getProcessInstancesByCasesIds(Collection<Integer> casesIds) {
+	public <T extends Serializable> List<T> getProcessInstancesByCasesIds(Collection<Integer> casesIds) {
+		List<Long> ids = getProcessInstancesByCasesIds(casesIds, Long.class);
+		@SuppressWarnings("unchecked")
+		List<T> results = (List<T>) ids;
+		return results;
+	}
+
+	@Override
+	public <T extends Serializable> List<T> getProcessInstancesByCasesIds(Collection<Integer> casesIds, Class<T> resultType) {
 		if (ListUtil.isEmpty(casesIds)) {
 			return Collections.emptyList();
 		}
 
-		List<Long> ids = getResultList(
-				CaseProcInstBind.getProcInstIds_BY_CASES_IDS_QUERY_NAME,
-				Long.class,
+		List<T> ids = getResultList(
+				resultType.getName().equals(Long.class.getName()) ?
+						CaseProcInstBind.getProcInstIds_BY_CASES_IDS_QUERY_NAME :
+						CaseProcInstBind.getUniqueIds_BY_CASES_IDS_QUERY_NAME,
+				resultType,
 				new Param(CaseProcInstBind.casesIdsParam, casesIds)
 		);
 
@@ -2343,15 +2433,26 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds) {
+	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds) {
+		Map<Long, Integer> ids = getProcessInstancesAndCasesIdsByCasesIds(casesIds, Long.class);
+		@SuppressWarnings("unchecked")
+		Map<T, Integer> results = (Map<T, Integer>) ids;
+		return results;
+	}
+
+	@Override
+	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds, Class<T> resultType) {
 		List<CaseProcInstBind> binds = getCasesProcInstBindsByCasesIds(casesIds);
 		if (ListUtil.isEmpty(binds)) {
 			return Collections.emptyMap();
 		}
 
-		Map<Long, Integer> results = new HashMap<>();
+		boolean uuids = resultType.getName().equals(String.class.getName());
+		Map<T, Integer> results = new HashMap<>();
 		for (CaseProcInstBind bind: binds) {
-			results.put(bind.getProcInstId(), bind.getCaseId());
+			@SuppressWarnings("unchecked")
+			T key = uuids ? (T) bind.getUuid() : (T) bind.getProcInstId();
+			results.put(key, bind.getCaseId());
 		}
 		return results;
 	}

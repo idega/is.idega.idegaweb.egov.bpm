@@ -1,5 +1,6 @@
 package com.idega.idegaweb.egov.bpm.data.dao;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.Collections;
@@ -234,15 +235,15 @@ public interface CasesBPMDAO extends GenericDao {
 			boolean onlySubscribed
 	);
 
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames);
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,
 			Integer firstResult,
 			Integer maxResults,
 			boolean newestOnTop
 	);
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,
 			Integer firstResult,
@@ -267,7 +268,7 @@ public interface CasesBPMDAO extends GenericDao {
 			List<String> caseCodes
 	);
 
-	public List<Long> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
+	public <T extends Serializable> List<T> getProcessInstancesByCaseStatusesAndProcessDefinitionNames(
 			List<String> caseStatuses,
 			List<String> procDefNames,
 			com.idega.user.data.bean.User user,
@@ -278,14 +279,19 @@ public interface CasesBPMDAO extends GenericDao {
 	);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses,List<String> procDefNames);
 	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessDefinitionNames(List<String> caseStatuses, List<String> procDefNames, Param metadata, int offset, int maxCount, String endDate);
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses, List<Long> procInstIds);
 
-	public List<Long> getProcessInstancesByCasesIds(Collection<Integer> casesIds);
-	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds);
+	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCaseStatusesAndProcessInstanceIds(List<String> caseStatuses, List<T> procInstIds);
+
+	public <T extends Serializable> List<T> getProcessInstancesByCasesIds(Collection<Integer> casesIds);
+	public <T extends Serializable> List<T> getProcessInstancesByCasesIds(Collection<Integer> casesIds, Class<T> resultType);
+
+	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds);
+	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds, Class<T> resultType);
 
 	public Long getProcessInstanceIdByCaseSubject(String subject);
+	public <T extends Serializable> T getProcessInstanceIdByCaseSubject(String subject, Class<T> resultType);
 
-	public Long getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus);
+	public String getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus);
 
 	public List<Integer> getCasesIdsByHandlersAndProcessDefinition(List<Integer> handlersIds, String procDefName);
 
