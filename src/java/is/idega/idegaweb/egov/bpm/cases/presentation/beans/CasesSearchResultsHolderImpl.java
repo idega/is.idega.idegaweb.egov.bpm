@@ -2,6 +2,7 @@ package is.idega.idegaweb.egov.bpm.cases.presentation.beans;
 
 import java.io.OutputStream;
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -604,6 +605,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					switch (name) {
 					case ProcessConstants.CASE_IDENTIFIER:
 						value = theCase.getCaseIdentifier();
+						break;
+
+					case "date_payForParkingDate":
+						Timestamp created = theCase.getCreated();
+						if (created != null) {
+							value = new IWTimestamp(created).getLocaleDateAndTime(locale, DateFormat.MEDIUM, DateFormat.MEDIUM);
+						}
 						break;
 
 					default:
