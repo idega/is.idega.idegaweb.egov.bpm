@@ -688,7 +688,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		if (variable == null)
 			return CoreConstants.EMPTY;
 
-		MultipleSelectionVariablesResolver resolver = getResolver(beanName.split(CoreConstants.AT)[0]);
+		MultipleSelectionVariablesResolver resolver =
+				StringUtil.isEmpty(beanName) ||
+				beanName.indexOf(CoreConstants.AT) == -1 ||
+				(StringUtil.isEmpty(variable.getName()) || variable.getName().toLowerCase().indexOf("mail") != -1) ?
+						null :
+						getResolver(beanName.split(CoreConstants.AT)[0]);
 		if (resolver == null) {
 			return variable.getId();
 		}
