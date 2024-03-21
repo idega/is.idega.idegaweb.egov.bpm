@@ -1261,7 +1261,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		getExternalSearchResults(resultsHolder, pageURI);
 		if (exporter == null) {
-			if (!resultsHolder.doExport(pageURI, exportContacts, showCompany, addDefaultFields)) {
+			if (!resultsHolder.doExport(pageURI, exportContacts, showCompany, addDefaultFields, category)) {
 				result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 				return result;
 			}

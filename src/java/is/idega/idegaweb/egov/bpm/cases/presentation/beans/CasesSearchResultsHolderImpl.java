@@ -209,12 +209,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	@Override
 	public boolean doExport(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
+		return doExport(id, exportContacts, showCompany, addDefaultFields, null);
+	}
+
+	@Override
+	public boolean doExport(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category) {
 		Collection<CasePresentation> cases = getCases(id, true);
 		if (ListUtil.isEmpty(cases)) {
 			return false;
 		}
 
-		memory = getExportedData(id, exportContacts, showCompany, addDefaultFields, null);
+		memory = getExportedData(id, exportContacts, showCompany, addDefaultFields, category);
 
 		return memory == null ? false : true;
 	}
