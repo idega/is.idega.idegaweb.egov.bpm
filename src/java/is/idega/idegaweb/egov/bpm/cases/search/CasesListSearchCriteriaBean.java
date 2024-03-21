@@ -47,7 +47,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					showUserCompany = false,
 					showTimeSpentOnCase = false,
 					showCaseSubstatus = false,
-					search = false;
+					search = false,
+					convertFromPresentationToObject = true;
 
 	private String freeVariableText;
 
@@ -326,6 +327,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setAssigned(String assigned) {
 		this.assigned = assigned;
+	}
+
+	public boolean isConvertFromPresentationToObject() {
+		return convertFromPresentationToObject;
+	}
+
+	public void setConvertFromPresentationToObject(boolean convertFromPresentationToObject) {
+		this.convertFromPresentationToObject = convertFromPresentationToObject;
 	}
 
 }

@@ -1214,15 +1214,20 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public AdvancedProperty getExportedSearchResults(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields) {
-		return getSearchResults(id, exportContacts, showCompany, addDefaultFields, null);
+		return getExportedSearchResults(id, exportContacts, showCompany, addDefaultFields, null);
+	}
+
+	@Override
+	public AdvancedProperty getExportedSearchResults(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category) {
+		return getSearchResults(id, exportContacts, showCompany, addDefaultFields, category, null);
 	}
 
 	@Override
 	public <T extends MediaWritable> AdvancedProperty getSearchResultsWithExporter(String id, Class<T> exporter) {
-		return getSearchResults(id, false, false, true, exporter);
+		return getSearchResults(id, false, false, true, null, exporter);
 	}
 
-	private <T extends MediaWritable> AdvancedProperty getSearchResults(String pageURI, boolean exportContacts, boolean showCompany, boolean addDefaultFields, Class<T> exporter) {
+	private <T extends MediaWritable> AdvancedProperty getSearchResults(String pageURI, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category, Class<T> exporter) {
 		IWContext iwc = CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
@@ -1266,6 +1271,9 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 		URIUtil uriUtil = new URIUtil(iwc.getIWMainApplication().getMediaServletURI());
 		uriUtil.setParameter(MediaWritable.PRM_WRITABLE_CLASS, IWMainApplication.getEncryptedClassName(exporter == null ? CasesSearchResultsExporter.class : exporter));
 		uriUtil.setParameter(CasesSearchResultsExporter.ID_PARAMETER, pageURI);
+		if (!StringUtil.isEmpty(category)) {
+			uriUtil.setParameter(CasesSearchResultsExporter.CATEGORY, category);
+		}
 		result.setValue(uriUtil.getUri());
 
 		return result;
@@ -1482,6 +1490,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	private Collection<CasePresentation> getReLoadedCases(CasesSearchResultsHolder resultsHolder, CasesSearchCriteriaBean criterias, String id) {
 		if (criterias instanceof CasesListSearchCriteriaBean) {
+			long start = System.currentTimeMillis();
 			IWContext iwc = CoreUtil.getIWContext();
 			CasesListSearchCriteriaBean listCriterias = (CasesListSearchCriteriaBean) criterias;
 
@@ -1501,6 +1510,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				}
 			}
 
+			CoreUtil.doDebug(iwc, start, System.currentTimeMillis(), "CasesEngineImp.getReLoadedCases");
 			return cases.getCollection();
 		}
 
@@ -1511,22 +1521,27 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	}
 
 	private Collection<CasePresentation> getExternalSearchResults(CasesSearchResultsHolder resultsHolder, String id) {
-		Map<String, ? extends ExternalCasesDataExporter> externalExporters = getBeansOfType(ExternalCasesDataExporter.class);
-		if (externalExporters == null || externalExporters.isEmpty()) {
-			return null;
-		}
-
-		List<CasePresentation> data = new ArrayList<>();
-		for (ExternalCasesDataExporter externalExporter: externalExporters.values()) {
-			List<CasePresentation> externalData = externalExporter.getExternalData(id);
-			resultsHolder.concatExternalData(id, externalData);
-
-			if (!ListUtil.isEmpty(externalData)) {
-				data.addAll(externalData);
+		long start = System.currentTimeMillis();
+		try {
+			Map<String, ? extends ExternalCasesDataExporter> externalExporters = getBeansOfType(ExternalCasesDataExporter.class);
+			if (externalExporters == null || externalExporters.isEmpty()) {
+				return null;
 			}
-		}
 
-		return data;
+			List<CasePresentation> data = new ArrayList<>();
+			for (ExternalCasesDataExporter externalExporter: externalExporters.values()) {
+				List<CasePresentation> externalData = externalExporter.getExternalData(id);
+				resultsHolder.concatExternalData(id, externalData);
+
+				if (!ListUtil.isEmpty(externalData)) {
+					data.addAll(externalData);
+				}
+			}
+
+			return data;
+		} finally {
+			CoreUtil.doDebug(start, System.currentTimeMillis(), "CasesEngineImp.getExternalSearchResults");
+		}
 	}
 
 	@Override
