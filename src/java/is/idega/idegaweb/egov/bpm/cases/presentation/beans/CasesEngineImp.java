@@ -181,9 +181,16 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 	public static final String VARIABLE_INFO_CACHE_NAME = "variableInfoCache";
 	public static final String CASE_PROC_ID_BIND = "caseProcInstIdBind";
 	public static final String STATUS_MAP_CACHE = "statusMapCache";
+
 	protected CasesRetrievalManager getCasesRetrievalManager() {
 		if (this.casesRetrievalManager == null) {
-			this.casesRetrievalManager = getCaseManagersProvider().getCaseManager();
+			String manager = getSettings().getProperty(ProcessConstants.MAIN_AND_ONLY_CASES_MANAGER);
+			if (!StringUtil.isEmpty(manager)) {
+				this.casesRetrievalManager = ELUtil.getInstance().getBean(manager);
+			}
+			if (this.casesRetrievalManager == null) {
+				this.casesRetrievalManager = getCaseManagersProvider().getCaseManager();
+			}
 		}
 
 		return this.casesRetrievalManager;
