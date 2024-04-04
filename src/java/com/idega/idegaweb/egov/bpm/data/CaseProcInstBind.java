@@ -80,6 +80,11 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 	@NamedQuery(
 			name = CaseProcInstBind.QUERY_FIND_ALL_UUIDS,
 			query = "select cp.uuid from CaseProcInstBind cp where cp.uuid is not null"
+	),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS,
+			query = "select cp.uuid, pc.created, pc.caseStatus from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
+					"and pc.caseCode = :caseCode and pc.created >= :from and pc.created <= :to and pc.id = cp.caseId order by pc.created"
 	)
 })
 
@@ -300,7 +305,8 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getProcInstIdsByCaseStatusesAndProcDefNamesNewestOnTop = "CaseProcInstBind.getProcInstIdsByCaseStatusNewestOnTop";
 	public static final String getCountedProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getCountedProcInstIdsByCaseStatus",
 								QUERY_GET_CASE_ID_BY_PROC_INST_ID = "CaseProcInstBind.getCaseIdByProcInstId",
-								QUERY_FIND_ALL_UUIDS = "CaseProcInstBind.findAllUUIDs";
+								QUERY_FIND_ALL_UUIDS = "CaseProcInstBind.findAllUUIDs",
+								QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS = "CaseProcInstBind.findProcInstUUIDsCaseCreatedAndCaseStatus";
 
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
