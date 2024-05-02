@@ -85,6 +85,16 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS,
 			query = "select cp.uuid, pc.created, pc.caseStatus, pc.uniqueId from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
 					"and pc.caseCode = :caseCode and pc.created >= :from and pc.created <= :to and pc.id = cp.caseId order by pc.created"
+	),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASE_CODE,
+			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
+					"and pc.caseCode = :caseCode and pc.caseStatus in (:statuses) and pc.id = cp.caseId"
+	),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASE_CODE,
+			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
+					"and pc.caseCode = :caseCode and pc.id = cp.caseId"
 	)
 })
 
@@ -306,7 +316,9 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCountedProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getCountedProcInstIdsByCaseStatus",
 								QUERY_GET_CASE_ID_BY_PROC_INST_ID = "CaseProcInstBind.getCaseIdByProcInstId",
 								QUERY_FIND_ALL_UUIDS = "CaseProcInstBind.findAllUUIDs",
-								QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS = "CaseProcInstBind.findProcInstUUIDsCaseCreatedAndCaseStatus";
+								QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS = "CaseProcInstBind.findProcInstUUIDsCaseCreatedAndCaseStatus",
+								QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseStatusesAndCode",
+								QUERY_GET_PROC_INST_UUID_BY_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseCode";
 
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
