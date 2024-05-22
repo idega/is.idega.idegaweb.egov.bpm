@@ -262,6 +262,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_SUGGESTION);
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_DECISION);
+		variablesToQuery.add(ProcessConstants.VARIABLE_SHORT_DESCRIPTION_OF_PROJECT_FOR_PUBLIC);
 		List<String> allVariables = new ArrayList<>(variablesToQuery);
 		allVariables.addAll(getGradingVariables());
 
