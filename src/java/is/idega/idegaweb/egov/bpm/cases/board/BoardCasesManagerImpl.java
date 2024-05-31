@@ -263,6 +263,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_SUGGESTION);
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_DECISION);
 		variablesToQuery.add(ProcessConstants.VARIABLE_SHORT_DESCRIPTION_OF_PROJECT_FOR_PUBLIC);
+		variablesToQuery.add(CaseBoardBean.EXPENSES_PROPOSAL_FOR_A_GRANT);
 		List<String> allVariables = new ArrayList<>(variablesToQuery);
 		allVariables.addAll(getGradingVariables());
 
@@ -416,6 +417,8 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 			getLogger().warning("Didn't find any variables values for processes " + processesIdsAndCases.keySet() + " and variables names " + variablesNames);
 			return null;
 		}
+
+		getLogger().info("Found variables: " + variables);
 
 		List<CaseBoardView> views = new ArrayList<>();
 		for (VariableInstance variable: variables) {
