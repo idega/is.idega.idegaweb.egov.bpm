@@ -231,6 +231,22 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return boardCases;
 	}
 
+	protected List<String> getCustomVariables() {
+		String appPropName = getAppPropNameForCustomVariables();
+		if (StringUtil.isEmpty(appPropName)) {
+			return null;
+		}
+
+		return StringUtil.getValuesFromString(
+				getSettings().getProperty(appPropName),
+				CoreConstants.COMMA
+		);
+	}
+
+	protected String getAppPropNameForCustomVariables() {
+		return null;
+	}
+
 	/**
 	 *
 	 * @param <K> expected {@link Long} or {@link String}
@@ -264,6 +280,19 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		variablesToQuery.add(ProcessConstants.BOARD_FINANCING_DECISION);
 		variablesToQuery.add(ProcessConstants.VARIABLE_SHORT_DESCRIPTION_OF_PROJECT_FOR_PUBLIC);
 		variablesToQuery.add(CaseBoardBean.EXPENSES_PROPOSAL_FOR_A_GRANT);
+		variablesToQuery.add(CaseHandlerAssignmentHandler.handlerUserIdVarName);
+
+		List<String> customVariables = getCustomVariables();
+		if (!ListUtil.isEmpty(customVariables)) {
+			for (String customVariable: customVariables) {
+				if (StringUtil.isEmpty(customVariable)) {
+					continue;
+				}
+
+				variablesToQuery.add(customVariable);
+			}
+		}
+
 		List<String> allVariables = new ArrayList<>(variablesToQuery);
 		allVariables.addAll(getGradingVariables());
 
@@ -1476,7 +1505,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 
 				new AdvancedProperty(CaseBoardBean.CASE_OWNER_ANSWER, "Restrictions"),						//	17, EDITABLE, text area
 				new AdvancedProperty(CaseBoardBean.PROJECT_NATURE, "Project nature")						//  18
-				//	handlerUserId																			//	19 is handler by default (if no custom columns provided)
+				//	CaseHandlerAssignmentHandler.handlerUserIdVarName										//	19 is handler by default (if no custom columns provided)
 		);
 	}
 
