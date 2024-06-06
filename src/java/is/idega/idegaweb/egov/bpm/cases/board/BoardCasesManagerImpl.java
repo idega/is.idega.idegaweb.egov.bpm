@@ -1239,13 +1239,23 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(columnKey, value)));
 					}
 
+					boolean amountRequestedUseExpensesExpectedGrant = getSettings().getBoolean("board.amount_requested_use_expenses_expected_grant", false);
 					//	Calculations
 					if (isEqual(id, ProcessConstants.BOARD_FINANCING_DECISION)) {
 						// Calculating board amounts
 						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
-					} else if (isEqual(id, getBoardFinancingSuggestionVariable())) {
-						// Calculating grant amount suggestions
-						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(getBoardFinancingSuggestionVariable()));
+					} else {
+						if (amountRequestedUseExpensesExpectedGrant) {
+							if (isEqual(id, getBoardFinancingSuggestionVariable())) {
+								// Calculating grant amount suggestions
+								grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(getBoardFinancingSuggestionVariable()));
+							}
+						} else {
+							if (isEqual(id, CaseBoardBean.EXPENSES_EXPECTED_GRANT)) {
+								// Calculating grant amount suggestions
+								grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(CaseBoardBean.EXPENSES_EXPECTED_GRANT));
+							}
+						}
 					}
 
 					index++;
