@@ -683,7 +683,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			} else {
 				XSSFCell cell = row.createCell(cellIndex++);
 				cell.setCellStyle(normalStyle);
-				cell.setCellValue(getRealValue(value.toString()));
+				cell.setCellValue(value == null ? CoreConstants.EMPTY : getRealValue(value.toString()));
 			}
 		}
 		return cellIndex;
