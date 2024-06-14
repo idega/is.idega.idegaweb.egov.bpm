@@ -1272,23 +1272,21 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(columnKey, value)));
 					}
 
-					boolean amountRequestedUseExpensesExpectedGrant = getSettings().getBoolean("board.amount_requested_use_expenses_expected_grant", false);
+					boolean totalsUseExpensesExpectedGrant = getSettings().getBoolean("board.totals_use_expenses_expected_grant", true);
+					boolean totalsUseProposalForAGrant = getSettings().getBoolean("board.totals_use_expenses_expected_grant", true);
 					//	Calculations
-					if (isEqual(id, ProcessConstants.BOARD_FINANCING_DECISION)) {
+					if (totalsUseProposalForAGrant == true && isEqual(id, CaseBoardBean.EXPENSES_PROPOSAL_FOR_A_GRANT)) {
 						// Calculating board amounts
 						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
-					} else {
-						if (amountRequestedUseExpensesExpectedGrant) {
-							if (isEqual(id, getBoardFinancingSuggestionVariable())) {
-								// Calculating grant amount suggestions
-								grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(getBoardFinancingSuggestionVariable()));
-							}
-						} else {
-							if (isEqual(id, CaseBoardBean.EXPENSES_EXPECTED_GRANT)) {
-								// Calculating grant amount suggestions
-								grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(CaseBoardBean.EXPENSES_EXPECTED_GRANT));
-							}
-						}
+					} else if (totalsUseProposalForAGrant == false && isEqual(id, ProcessConstants.BOARD_FINANCING_DECISION)) {
+						// Calculating board amounts
+						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
+					} else if (totalsUseExpensesExpectedGrant == true && isEqual(id, CaseBoardBean.EXPENSES_EXPECTED_GRANT)) {
+						// Calculating grant amount suggestions
+						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(CaseBoardBean.EXPENSES_EXPECTED_GRANT));
+					} else if (totalsUseExpensesExpectedGrant == false && isEqual(id, getBoardFinancingSuggestionVariable())) {
+						// Calculating grant amount suggestions
+						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(getBoardFinancingSuggestionVariable()));
 					}
 
 					index++;
