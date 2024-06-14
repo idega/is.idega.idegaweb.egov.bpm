@@ -522,10 +522,18 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		//	Labels of variables
 		if (!ListUtil.isEmpty(availableVariables)) {
+			Map<String, Boolean> addedVariables = new HashMap<>();
 			for (AdvancedProperty variable: availableVariables) {
+				String name = variable == null ? null : variable.getName();
+				if (StringUtil.isEmpty(name) || addedVariables.containsKey(name)) {
+					continue;
+				}
+
 				cell = row.createCell(cellIndex++);
 				cell.setCellValue(variable.getValue());
 				cell.setCellStyle(bigStyle);
+
+				addedVariables.put(name, Boolean.TRUE);
 			}
 		}
 
@@ -596,6 +604,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		int numberOfRows = -1;
 		List<Serializable> values = new ArrayList<>();
 
+		Map<String, Boolean> addedVariables = new HashMap<>();
 		for (AdvancedProperty procDefVariable: variablesByProcessDefinition) {
 			variable = getVariableByValue(variablesByProcessInstance, procDefVariable.getValue());
 			if (variable == null && procDefVariable.getId() != null) {
@@ -606,6 +615,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					}
 				}
 			}
+
+			String varName = variable == null ? null : variable.getName();
+			if (!StringUtil.isEmpty(varName) && addedVariables.containsKey(varName)) {
+				continue;
+			}
+			addedVariables.put(varName, Boolean.TRUE);
+
 			String value = getVariableValue(procDefVariable.getId(), variable, null, null);
 			if (
 					StringHandler.isNumeric(value) &&
@@ -683,7 +699,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			} else {
 				XSSFCell cell = row.createCell(cellIndex++);
 				cell.setCellStyle(normalStyle);
-				cell.setCellValue(getRealValue(value.toString()));
+				cell.setCellValue(value == null ? CoreConstants.EMPTY : getRealValue(value.toString()));
 			}
 		}
 		return cellIndex;
