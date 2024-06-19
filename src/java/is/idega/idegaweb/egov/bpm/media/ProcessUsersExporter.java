@@ -1,8 +1,6 @@
 package is.idega.idegaweb.egov.bpm.media;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Collection;
 
@@ -15,14 +13,12 @@ import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.io.DownloadWriter;
 import com.idega.io.MediaWritable;
-import com.idega.io.MemoryFileBuffer;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.ProcessManager;
 import com.idega.presentation.IWContext;
 import com.idega.user.data.User;
-import com.idega.util.FileUtil;
 import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
@@ -38,11 +34,11 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 	@Autowired
 	private ProcessArtifacts processArtifacts;
 
-	private MemoryFileBuffer memory = null;
+	private byte[] memory = null;
 
 	@Override
 	public String getMimeType() {
-		return MimeTypeUtil.MIME_TYPE_EXCEL_2;
+		return MimeTypeUtil.MIME_TYPE_EXCEL_X;
 	}
 
 	@Override
@@ -66,18 +62,18 @@ public class ProcessUsersExporter extends DownloadWriter implements MediaWritabl
 
 		memory = searchResultHolder.getUsersExport(users, iwc.getCurrentLocale(), showCompany);
 
-		memory.setMimeType(MimeTypeUtil.MIME_TYPE_EXCEL_2);
-		setAsDownload(iwc, fileName.concat(".xls"),	memory.length());
+		setAsDownload(iwc, fileName.concat(".xlsx"), memory.length);
 	}
 
 	@Override
 	public void writeTo(IWContext iwc, OutputStream streamOut) throws IOException {
-		InputStream streamIn = new ByteArrayInputStream(memory.buffer());
-		FileUtil.streamToOutputStream(streamIn, streamOut);
+		if (memory == null) {
+			return;
+		}
 
+		streamOut.write(memory);
 		streamOut.flush();
 		streamOut.close();
-		streamIn.close();
 	}
 
 }
