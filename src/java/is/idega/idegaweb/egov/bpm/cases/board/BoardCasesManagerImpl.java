@@ -1578,6 +1578,12 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					uuid,
 					casesType
 			);
+
+			int expectedGrantColumn = getIndexOfColumn(CaseBoardBean.EXPENSES_EXPECTED_GRANT, uuid, casesType);
+			if (expectedGrantColumn + 1 == indexOfTotal) {
+				indexOfTotal--;
+			}
+
 			indexOfTotal = indexOfTotal > 0 ? (indexOfTotal - 1) : indexOfTotal;
 		}
 		if (indexOfTotal < 0) {
