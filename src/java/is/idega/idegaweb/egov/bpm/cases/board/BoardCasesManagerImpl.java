@@ -729,6 +729,24 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return getNumberValue(value, false);
 	}
 
+	private String[] getNumbers(String value) {
+		if (StringUtil.isEmpty(value)) {
+			return null;
+		}
+
+		if (value.startsWith(CoreConstants.SQUARE_BRACKET_LEFT) && value.endsWith(CoreConstants.SQUARE_BRACKET_RIGHT)) {
+			try {
+				return CoreConstants.GSON.fromJson(value, String[].class);
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error converting '" + value + "' to array of strings", e);
+				return new String[] {value};
+			}
+		}
+
+		getLogger().warning("Unable to convert '" + value + "' to array of string");
+		return new String[] {value};
+	}
+
 	protected Long getNumberValue(String value, boolean dropThousands) {
 		if (StringUtil.isEmpty(getStringValue(value))) {
 			return Long.valueOf(0);
@@ -748,7 +766,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		long total = 0;
-		String amounts[] = value.split(CoreConstants.HASH);
+		String amounts[] = value.indexOf(CoreConstants.HASH) == -1 && value.startsWith(CoreConstants.SQUARE_BRACKET_LEFT) && value.endsWith(CoreConstants.SQUARE_BRACKET_RIGHT) ?
+				getNumbers(value) :
+				value.split(CoreConstants.HASH);
 		boolean logInfo = amounts.length > 2;
 		for (String amount: amounts) {
 			amount = StringHandler.replace(amount, CoreConstants.HASH, CoreConstants.EMPTY);
