@@ -204,3 +204,7 @@ bpm_variable.string_sellerPersonalId=Gagnaðili kennitala
 bpm_variable.string_sellerEmailAddress=Gagnaðili netfang
 bpm_variable.string_officerNumber=Númer stöðuvarðar
 bpm_variable.string_ticketStreetName=Götuheiti
+bpm_variable.officerIsMeterMaid=Tegund álagningaraðila
+bpm_variable.string_ticketViolationsLabels=Tegund brots
+bpm_variable.string_protestDecisionSubReason=Aðalástæða
+bpm_variable.string_letterText=Ástaða niðurfellingar eða höfnunar
