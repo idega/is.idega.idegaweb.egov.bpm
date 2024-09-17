@@ -618,6 +618,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 			String varName = variable == null ? null : variable.getName();
 			if (!StringUtil.isEmpty(varName) && addedVariables.containsKey(varName)) {
+				values.add(CoreConstants.MINUS);
 				continue;
 			}
 			addedVariables.put(varName, Boolean.TRUE);
