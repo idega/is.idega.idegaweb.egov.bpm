@@ -623,7 +623,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 			addedVariables.put(varName, Boolean.TRUE);
 
-			String value = getVariableValue(procDefVariable.getId(), variable, null, null);
+			String value = getVariableValue(StringUtil.isEmpty(procDefVariable.getOriginalValue()) ? procDefVariable.getId() : procDefVariable.getOriginalValue(), variable, null, null);
 			if (
 					StringHandler.isNumeric(value) &&
 					(	variable.getValue() != null && variable.getValue().startsWith(BPMConstants.GROUP_LOC_NAME_PREFIX) ||
@@ -760,6 +760,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		try {
 			resolver.setProcessData(processData);
+			resolver.setMetaData(variable.getMetaData());
 			if (searchCriteria instanceof CasesListSearchCriteriaBean) {
 				CasesListSearchCriteriaBean criteria = (CasesListSearchCriteriaBean) searchCriteria;
 				resolver.setSearchByVariables(criteria.getProcessVariables());
