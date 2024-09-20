@@ -858,6 +858,7 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					null,
 					null,
 					null,
+					null,
 					null
 			);
 			if (ListUtil.isEmpty(casesIds)) {

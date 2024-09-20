@@ -906,7 +906,8 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 			List<Integer> exceptOwnersIds,
 			List<String> exceptCaseCodes,
 			List<Integer> userIdsToUseInSearch,
-			Boolean onlyCasesRequiringAction
+			Boolean onlyCasesRequiringAction,
+			String orderStr
 	) throws Exception {
 		return getCasesIds(user, type, caseCodes, statusesToHide, statusesToShow, onlySubscribedCases, showAllCases, null, null, null, null, false, page, pageSize, exceptOwnersIds);
 	}
@@ -1756,7 +1757,7 @@ public class BPMCasesRetrievalManagerImpl	extends CasesRetrievalManagerImpl
 	}
 
 	@Override
-	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale) {
+	public PagedDataCollection<CasePresentation> getCasesByIds(List<Integer> ids, Locale locale, String orderStr) {
 		Collection<Case> cases = getCasesBusiness().getCasesByIds(ids);
 		return getCasesByEntities(cases, locale);
 	}

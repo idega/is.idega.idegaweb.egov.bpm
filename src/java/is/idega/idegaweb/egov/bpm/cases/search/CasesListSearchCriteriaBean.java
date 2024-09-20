@@ -54,6 +54,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	private Set<Integer> casesIDs;
 
+	private String orderStr;
+
 	public String getProcessId() {
 		return processId;
 	}
@@ -336,5 +338,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 	public void setConvertFromPresentationToObject(boolean convertFromPresentationToObject) {
 		this.convertFromPresentationToObject = convertFromPresentationToObject;
 	}
+
+	public String getOrderStr() {
+		return orderStr;
+	}
+
+	public void setOrderStr(String orderStr) {
+		this.orderStr = orderStr;
+	}
+
 
 }

@@ -737,7 +737,8 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 								null,
 								true,
 								null,
-								criterias.getAssigned()
+								criterias.getAssigned(),
+								criterias.getOrderStr()
 						);
 						if (!ListUtil.isEmpty(ids)) {
 							casesIDs.addAll(ids);
@@ -848,7 +849,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 			if (usePaging && noSortingOptions) {
 				//	No need to load all the cases, just for one page
 				casesIds = getSubList(casesIds, startIndex, count, totalCount);
-				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
+				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale, criterias.getOrderStr());
 			} else if (usePaging) {
 
 				List<String> variablesToLoad = new ArrayList<>();
@@ -914,7 +915,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					sortedIds = getSubList(sortedIds, startIndex, count, totalCount);
 				}
 
-				cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale);
+				cases = getCasesRetrievalManager().getCasesByIds(sortedIds, locale, criterias.getOrderStr());
 				if (!criterias.isNoOrdering()) {
 					List<CasePresentation> casesTmp = new ArrayList<>();
 					for (Integer id: sortedIds){
@@ -929,7 +930,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 					cases = new PagedDataCollection<>(casesTmp);
 				}
 			} else {
-				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale);
+				cases = getCasesRetrievalManager().getCasesByIds(casesIds, locale, criterias.getOrderStr());
 			}
 		}
 		if (cases == null || ListUtil.isEmpty(cases.getCollection())) {
