@@ -762,6 +762,24 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return getNumberValue(value, false);
 	}
 
+	private String[] getNumbers(String value) {
+		if (StringUtil.isEmpty(value)) {
+			return null;
+		}
+
+		if (value.startsWith(CoreConstants.SQUARE_BRACKET_LEFT) && value.endsWith(CoreConstants.SQUARE_BRACKET_RIGHT)) {
+			try {
+				return CoreConstants.GSON.fromJson(value, String[].class);
+			} catch (Exception e) {
+				getLogger().log(Level.WARNING, "Error converting '" + value + "' to array of strings", e);
+				return new String[] {value};
+			}
+		}
+
+		getLogger().warning("Unable to convert '" + value + "' to array of string");
+		return new String[] {value};
+	}
+
 	protected Long getNumberValue(String value, boolean dropThousands) {
 		if (StringUtil.isEmpty(getStringValue(value))) {
 			return Long.valueOf(0);
@@ -781,7 +799,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		}
 
 		long total = 0;
-		String amounts[] = value.split(CoreConstants.HASH);
+		String amounts[] = value.indexOf(CoreConstants.HASH) == -1 && value.startsWith(CoreConstants.SQUARE_BRACKET_LEFT) && value.endsWith(CoreConstants.SQUARE_BRACKET_RIGHT) ?
+				getNumbers(value) :
+				value.split(CoreConstants.HASH);
 		boolean logInfo = amounts.length > 2;
 		for (String amount: amounts) {
 			amount = StringHandler.replace(amount, CoreConstants.HASH, CoreConstants.EMPTY);
@@ -1059,6 +1079,10 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		return ProcessConstants.BOARD_FINANCING_SUGGESTION;
 	}
 
+	protected String getBoardFinancingExpensesVariable() {
+		return ProcessConstants.BOARD_FINANCING_DECISION;
+	}
+
 	@Override
 	public <K extends Serializable> CaseBoardTableBean getTableData(
 			IWContext iwc,
@@ -1131,6 +1155,9 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 				),
 				CoreConstants.COMMA
 		);
+
+		IWMainApplicationSettings settings = getSettings();
+
 		for (CaseBoardBean caseBoard: boardCases) {
 			Serializable procInstId = caseBoard.getProcessInstanceId();
 			CaseBoardTableBodyRowBean rowBean = new CaseBoardTableBodyRowBean(
@@ -1273,19 +1300,22 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 						rowValues.put(index, Arrays.asList(new AdvancedProperty(columnKey, value)));
 					}
 
-					boolean totalsUseExpensesExpectedGrant = getSettings().getBoolean("board.totals_use_expenses_expected_grant", true);
-					boolean totalsUseProposalForAGrant = getSettings().getBoolean("board.totals_use_expenses_expected_grant", true);
+					boolean totalsUseExpensesExpectedGrant = useExpensesExpectedGrant(settings);
+					boolean totalsUseProposalForAGrant = useProposalForAGrant(settings);
 					//	Calculations
-					if (totalsUseProposalForAGrant == true && isEqual(id, CaseBoardBean.EXPENSES_PROPOSAL_FOR_A_GRANT)) {
+					if (totalsUseProposalForAGrant && isEqual(id, CaseBoardBean.EXPENSES_PROPOSAL_FOR_A_GRANT)) {
 						// Calculating board amounts
-						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
-					} else if (totalsUseProposalForAGrant == false && isEqual(id, ProcessConstants.BOARD_FINANCING_DECISION)) {
+						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount(CaseBoardBean.EXPENSES_PROPOSAL_FOR_A_GRANT));
+
+					} else if (!totalsUseProposalForAGrant && isEqual(id, getBoardFinancingExpensesVariable())) {
 						// Calculating board amounts
-						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount());
-					} else if (totalsUseExpensesExpectedGrant == true && isEqual(id, CaseBoardBean.EXPENSES_EXPECTED_GRANT)) {
+						boardAmountTotal = boardAmountTotal.add(caseBoard.getBoardAmount(getBoardFinancingExpensesVariable()));
+
+					} else if (totalsUseExpensesExpectedGrant && isEqual(id, CaseBoardBean.EXPENSES_EXPECTED_GRANT)) {
 						// Calculating grant amount suggestions
 						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(CaseBoardBean.EXPENSES_EXPECTED_GRANT));
-					} else if (totalsUseExpensesExpectedGrant == false && isEqual(id, getBoardFinancingSuggestionVariable())) {
+
+					} else if (!totalsUseExpensesExpectedGrant && isEqual(id, getBoardFinancingSuggestionVariable())) {
 						// Calculating grant amount suggestions
 						grantAmountSuggestionTotal = grantAmountSuggestionTotal.add(caseBoard.getGrantAmountSuggestion(getBoardFinancingSuggestionVariable()));
 					}
@@ -1318,6 +1348,14 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 		data.setFilledWithData(Boolean.TRUE);
 
 		return data;
+	}
+
+	private boolean useExpensesExpectedGrant(IWMainApplicationSettings settings) {
+		return settings.getBoolean("board.totals_use_expenses_expected_grant", true);
+	}
+
+	private boolean useProposalForAGrant(IWMainApplicationSettings settings) {
+		return settings.getBoolean("board.totals_use_proposal_for_grant", true);
 	}
 
 	private String getNumberWithDots(String value, Locale locale, String id) {
@@ -1600,6 +1638,12 @@ public class BoardCasesManagerImpl extends DefaultSpringBean implements BoardCas
 					uuid,
 					casesType
 			);
+
+			int expectedGrantColumn = getIndexOfColumn(CaseBoardBean.EXPENSES_EXPECTED_GRANT, uuid, casesType);
+			if (expectedGrantColumn + 1 == indexOfTotal) {
+				indexOfTotal--;
+			}
+
 			indexOfTotal = indexOfTotal > 0 ? (indexOfTotal - 1) : indexOfTotal;
 		}
 		if (indexOfTotal < 0) {

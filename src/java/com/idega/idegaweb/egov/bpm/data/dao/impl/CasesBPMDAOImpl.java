@@ -3111,11 +3111,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
-		return getResultListByInlineQuery(
-				"select c.caseId FROM " + CaseProcInstBind.class.getName() + " c WHERE c.uuid in (:" + CaseProcInstBind.uuidProp + ")",
-				Integer.class,
-				new Param(CaseProcInstBind.uuidProp, uuids)
-		);
+		return getResultList(CaseProcInstBind.QUERY_FIND_CASES_IDS_BY_UUIDS, Integer.class, new Param(CaseProcInstBind.uuidProp, uuids));
 	}
 
 	@Override
