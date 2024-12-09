@@ -50,6 +50,7 @@ import com.idega.idegaweb.IWMainApplicationSettings;
 import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
+import com.idega.io.MemoryFileBuffer;
 import com.idega.jbpm.artifacts.presentation.ProcessArtifacts;
 import com.idega.jbpm.bean.BPMProcessVariable;
 import com.idega.jbpm.data.VariableInstanceQuerier;
@@ -80,7 +81,6 @@ import is.idega.idegaweb.egov.application.ApplicationUtil;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
 import is.idega.idegaweb.egov.cases.presentation.CasesBoardViewer;
@@ -759,12 +759,12 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		}
 
 		try {
-			resolver.setProcessData(processData);
-			resolver.setMetaData(variable.getMetaData());
-			if (searchCriteria instanceof CasesListSearchCriteriaBean) {
-				CasesListSearchCriteriaBean criteria = (CasesListSearchCriteriaBean) searchCriteria;
-				resolver.setSearchByVariables(criteria.getProcessVariables());
-			}
+//			resolver.setProcessData(processData);
+//			resolver.setMetaData(variable.getMetaData());
+//			if (searchCriteria instanceof CasesListSearchCriteriaBean) {
+//				CasesListSearchCriteriaBean criteria = (CasesListSearchCriteriaBean) searchCriteria;
+//				resolver.setSearchByVariables(criteria.getProcessVariables());
+//			}
 			String value = resolver.isValueUsedForExport() ?
 					resolver.getPresentation(variable.getName(), variable.getId(), variable.getExternalId()) :
 					resolver.getKeyPresentation(variable.getExternalId(), variable.getId());
@@ -1388,8 +1388,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public byte[] getExportedSearchResults(String id, boolean exportContacts, boolean showCompany) {
-		return getExportedSearchResults(id, exportContacts, showCompany, true);
+	public MemoryFileBuffer getExportedSearchResults(String id, boolean exportContacts, boolean showCompany) {
+		return new MemoryFileBuffer();
 	}
 
 	@Override

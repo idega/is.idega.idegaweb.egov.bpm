@@ -2128,8 +2128,8 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public String getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus) {
-		return getProcessInstanceIdByCaseSubjectAndStatus(subject, caseStatus, String.class);
+	public Long getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus) {
+		return getProcessInstanceIdByCaseSubjectAndStatus(subject, caseStatus, Long.class);
 	}
 
 	private <T extends Serializable> T getProcessInstanceIdByCaseSubjectAndStatus(String subject, String caseStatus, Class<T> resultType) {
