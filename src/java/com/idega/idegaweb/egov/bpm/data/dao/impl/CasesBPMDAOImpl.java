@@ -2433,11 +2433,17 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	}
 
 	@Override
-	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds) {
-		Map<Long, Integer> ids = getProcessInstancesAndCasesIdsByCasesIds(casesIds, Long.class);
-		@SuppressWarnings("unchecked")
-		Map<T, Integer> results = (Map<T, Integer>) ids;
-		return results;
+	public Map<Long, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds) {
+		List<CaseProcInstBind> binds = getCasesProcInstBindsByCasesIds(casesIds);
+	    if (ListUtil.isEmpty(binds)) {
+	    	return Collections.emptyMap();
+	    }
+
+	    Map<Long, Integer> results = new HashMap<>();
+	    for (CaseProcInstBind bind : binds) {
+	    	results.put(bind.getProcInstId(), bind.getCaseId());
+	    }
+	    return results;
 	}
 
 	@Override
