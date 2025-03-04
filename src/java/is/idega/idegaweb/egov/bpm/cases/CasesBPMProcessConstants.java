@@ -28,6 +28,7 @@ public class CasesBPMProcessConstants {
 	public static final String caseCategoryIdActionVariableName = "caseCategoryId";
 	public static final String caseTypeActionVariableName = "caseType";
 	public static final String caseCreationDateParam = "caseCreationDate";
+	public static final String caseUniqueIdParam = "caseUniqueId";
 
 	// case status variable names
 	public static final String caseStatusClosedVariableName = "string_caseStatusClosed";

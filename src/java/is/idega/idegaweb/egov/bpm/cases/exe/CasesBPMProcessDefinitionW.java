@@ -149,6 +149,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			String caseStatusKey = null;
 			String realCaseCreationDate = null;
 			String caseIdentifier = null;
+			String uniqueId = null;
 			if (!MapUtil.isEmpty(parameters)) {
 				caseId = parameters.containsKey(com.idega.block.process.business.ProcessConstants.CASE_ID) ?
 						parameters.get(com.idega.block.process.business.ProcessConstants.CASE_ID).toString() : null;
@@ -167,8 +168,11 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 
 				caseIdentifier = parameters.containsKey(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER) ?
 						parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER).toString() : null;
+
+				uniqueId = parameters.containsKey(CasesBPMProcessConstants.caseUniqueIdParam) ?
+						parameters.get(CasesBPMProcessConstants.caseUniqueIdParam).toString() : null;
 			}
-			return getCase(caseId, procDefName, casesBusiness, author, iwma, caseStatusKey, realCaseCreationDate, caseIdentifier);
+			return getCase(caseId, procDefName, casesBusiness, author, iwma, caseStatusKey, realCaseCreationDate, caseIdentifier, uniqueId);
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error preparing process by parameters: " + parameters, e);
 		}
@@ -241,7 +245,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 			IWMainApplication iwma,
 			String caseStatusKey,
 			String realCaseCreationDate,
-			String caseIdentifier
+			String caseIdentifier,
+			String uniqueId
 	) {
 		IWResourceBundle iwrb = null;
 		GeneralCase genCase = null;
@@ -288,6 +293,11 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 						new IWTimestamp(caseCreated).getTimestamp(),
 						handlerGroupId
 			);
+
+			if (genCase != null && !StringUtil.isEmpty(uniqueId)) {
+				genCase.setUniqueId(uniqueId);
+				genCase.store();
+			}
 
 			if (genCase != null) {
 				CaseCode caseCode = genCase.getCaseCode();
@@ -415,6 +425,8 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		final Integer caseIdentifierNumber = Integer.parseInt(parameters.get(CasesBPMProcessConstants.caseIdentifierNumberParam));
 		final String caseIdentifier = theCase == null ? parameters.get(com.idega.block.process.business.ProcessConstants.CASE_IDENTIFIER) :
 														theCase.getCaseIdentifier();
+		final String uniqueId = theCase == null ?	parameters.get(CasesBPMProcessConstants.caseUniqueIdParam) :
+													theCase.getUniqueId();
 		final String realCaseCreationDate = theCase == null ?	parameters.get(CasesBPMProcessConstants.caseCreationDateParam) :
 																String.valueOf(theCase.getCreated());
 
@@ -423,7 +435,7 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		UserBusiness userBusiness = getUserBusiness(iwac);
 		User user = userId == null ? null : userBusiness.getUser(userId);
 
-		GeneralCase genCase = getCase(caseId, procDefName, casesBusiness, user, iwma, caseStatusKey, realCaseCreationDate, caseIdentifier);
+		GeneralCase genCase = getCase(caseId, procDefName, casesBusiness, user, iwma, caseStatusKey, realCaseCreationDate, caseIdentifier, uniqueId);
 		getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + piId);
 
 		Timestamp caseCreated = genCase.getCreated();
