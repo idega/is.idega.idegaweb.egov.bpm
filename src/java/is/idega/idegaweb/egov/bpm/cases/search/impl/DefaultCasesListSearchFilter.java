@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -24,6 +25,7 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -239,14 +241,19 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			return null;
 		}
 
-		List<Integer> tmp = getConvertedFromNumbers(casesIds);
+		Map<Integer, Boolean> tmp = new HashMap<>();
+		for (Object o: casesIds) {
+			if (o instanceof Number) {
+				tmp.put(((Number) o).intValue(), Boolean.TRUE);
+			}
+		}
 
 		Integer id = null;
 		List<Integer> filtered = new ArrayList<>();
 		for (Object o: filterResults) {
 			if (o instanceof Number) {
 				id = ((Number) o).intValue();
-				if (tmp.contains(id)) {
+				if (tmp.containsKey(id)) {
 					filtered.add(id);
 				}
 			} else {
@@ -262,26 +269,31 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 			return null;
 		}
 
-		List<Integer> ids = new ArrayList<>(casesIDs.size());
+		Map<Integer, Boolean> ids = new LinkedHashMap<>();
 		for (Object id: casesIDs) {
 			Integer realId = null;
 
-			if (id instanceof Number) {
+			if (id instanceof Integer) {
+				realId = (Integer) id;
+
+			} else if (id instanceof Number) {
 				realId = ((Number) id).intValue();
+
 			} else if (id != null) {
-				try {
-					realId = Integer.valueOf(id.toString());
-				} catch(Exception e) {
-					e.printStackTrace();
+				String tmp = id.toString();
+				if (StringHandler.isNumeric(tmp)) {
+					try {
+						realId = Integer.valueOf(tmp);
+					} catch(Exception e) {}
 				}
 			}
 
-			if (realId != null && !ids.contains(realId)) {
-				ids.add(realId);
+			if (realId != null) {
+				ids.put(realId, Boolean.TRUE);
 			}
 		}
 
-		return ids;
+		return new ArrayList<>(ids.keySet());
 	}
 
 	protected List<Integer> getCasesIds(Collection<Case> cases) {
