@@ -998,7 +998,6 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				}
 
 				for (CasePresentation theCase: cases.values()) {
-
 					if (exportContacts) {
 						rowNumber = doCreateHeaders(
 								rowNumber,
@@ -1089,7 +1088,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 										varsForCase,
 										column.indexOf(CasesBPMProcessConstants.userIdActionVariableName) == 0 ? CasesBPMProcessConstants.userIdActionVariableName : column
 								);
-								value = StringUtil.isEmpty(valueTmp) ? "-" : valueTmp;
+								value = StringUtil.isEmpty(valueTmp) ? CoreConstants.MINUS : valueTmp;
 
 							} else {
 								variable = getVariableByName(varsForCase, column);
@@ -1652,13 +1651,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return true;
 	}
 
-
 	private String getVariableValueByName(List<AdvancedProperty> variables, String name) {
 		if (ListUtil.isEmpty(variables) || StringUtil.isEmpty(name))
 			return null;
 
 		for (AdvancedProperty variable: variables) {
-			if (name.equals(variable.getName())) {
+			String varName = variable == null ? null : variable.getName();
+			if (StringUtil.isEmpty(varName)) {
+				continue;
+			}
+
+			if (name.equals(varName)) {
 				return variable.getId();
 			}
 		}
