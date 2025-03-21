@@ -21,6 +21,7 @@ public interface BPMConstants {
 								ASSIGNED_TO_ME = "assigned_to_me",
 								ASSIGNED_TO_OTHERS = "assigned_to_others",
 
-								FOR = "#for#";
+								FOR = "#for#",
+								VARIABLE_NUMBER_OF_MISSED_PAYMENTS = "numberOfMissedPayments";
 
 }

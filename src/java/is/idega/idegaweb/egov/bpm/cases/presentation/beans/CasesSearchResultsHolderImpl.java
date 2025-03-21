@@ -80,6 +80,7 @@ import is.idega.idegaweb.egov.application.ApplicationUtil;
 import is.idega.idegaweb.egov.application.data.Application;
 import is.idega.idegaweb.egov.application.data.ApplicationHome;
 import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 import is.idega.idegaweb.egov.bpm.cases.search.CasesListSearchCriteriaBean;
 import is.idega.idegaweb.egov.cases.data.CaseCategory;
 import is.idega.idegaweb.egov.cases.data.CaseCategoryHome;
@@ -997,6 +998,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				}
 
 				for (CasePresentation theCase: cases.values()) {
+
 					if (exportContacts) {
 						rowNumber = doCreateHeaders(
 								rowNumber,
@@ -1077,6 +1079,17 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 								if (criteria != null && !StringUtil.isEmpty(criteria.getDateRange())) {
 									value = criteria.getDateRange();
 								}
+
+							} else if (
+									column.equalsIgnoreCase(CasesBPMProcessConstants.userIdActionVariableName)
+									|| column.indexOf(CasesBPMProcessConstants.userIdActionVariableName) == 0
+									|| column.equalsIgnoreCase(is.idega.idegaweb.egov.bpm.BPMConstants.VARIABLE_NUMBER_OF_MISSED_PAYMENTS)
+							) {
+								String valueTmp = getVariableValueByName(
+										varsForCase,
+										column.indexOf(CasesBPMProcessConstants.userIdActionVariableName) == 0 ? CasesBPMProcessConstants.userIdActionVariableName : column
+								);
+								value = StringUtil.isEmpty(valueTmp) ? "-" : valueTmp;
 
 							} else {
 								variable = getVariableByName(varsForCase, column);
@@ -1637,6 +1650,20 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 		externalData.put(id, cases);
 		return true;
+	}
+
+
+	private String getVariableValueByName(List<AdvancedProperty> variables, String name) {
+		if (ListUtil.isEmpty(variables) || StringUtil.isEmpty(name))
+			return null;
+
+		for (AdvancedProperty variable: variables) {
+			if (name.equals(variable.getName())) {
+				return variable.getId();
+			}
+		}
+
+		return null;
 	}
 
 }
