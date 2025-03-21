@@ -52,7 +52,6 @@ import com.idega.business.IBOLookup;
 import com.idega.chiba.web.session.impl.IdegaXFormHttpSession;
 import com.idega.core.builder.data.ICDomain;
 import com.idega.core.file.util.MimeTypeUtil;
-import com.idega.core.localisation.business.ICLocaleBusiness;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.jbpm.identity.BPMUserImpl;
 import com.idega.presentation.IWContext;
@@ -60,6 +59,7 @@ import com.idega.user.business.UserBusiness;
 import com.idega.user.dao.UserDAO;
 import com.idega.user.data.bean.User;
 import com.idega.util.CoreConstants;
+import com.idega.util.LocaleUtil;
 import com.idega.util.RequestUtil;
 import com.idega.util.expression.ELUtil;
 
@@ -160,7 +160,7 @@ public class IWContextMockUp extends IWContext {
 	@Override
 	public Locale getCurrentLocale() {
 		Locale locale = IWMainApplication.getDefaultIWMainApplication().getDefaultLocale();
-		return locale == null ? ICLocaleBusiness.getLocaleFromLocaleString("is_IS") : locale;
+		return locale == null ? LocaleUtil.getIcelandicLocale() : locale;
 	}
 
 	@Override
