@@ -1485,7 +1485,13 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			return null;
 		}
 
-		return externalData.remove(id);
+		if (externalData.containsKey(id)) {
+			return externalData.remove(id);
+		}
+
+		CasesSearchResults results = allResults.remove(id);
+		Collection<CasePresentation> cases = results == null ? null : results.getCases();
+		return ListUtil.isEmpty(cases) ? null : new ArrayList<>(cases);
 	}
 
 	@Override
