@@ -44,6 +44,7 @@ import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
 import com.idega.block.process.data.CaseHome;
+import com.idega.block.process.event.CaseDeletedEvent;
 import com.idega.business.IBOLookup;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.localisation.business.ICLocaleBusiness;
@@ -3369,6 +3370,15 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO, Appl
 					}
 				}
 			}
+
+		} else if (event instanceof CaseDeletedEvent) {
+			if (!isBPMCacheOn()) {
+				return;
+			}
+
+			ALL_IDS_BY_PROC_INSTANCES.clear();
+			ALL_IDS_BY_CASES_IDS.clear();
+			doLoadIds();
 		}
 	}
 
