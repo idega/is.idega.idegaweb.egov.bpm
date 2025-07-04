@@ -23,6 +23,8 @@ public interface BPMConstants {
 
 								FOR = "#for#",
 								VARIABLE_NUMBER_OF_MISSED_PAYMENTS = "numberOfMissedPayments",
-								VARIABLE_PROCESS_RULING_ATTACHMENTS = "files_processRullingAttachments";
+								VARIABLE_PROCESS_RULING_ATTACHMENTS = "files_processRullingAttachments",
+
+								CASES_EXPORT_EXTRA_DATA = "cases_export_extra_data";
 
 }

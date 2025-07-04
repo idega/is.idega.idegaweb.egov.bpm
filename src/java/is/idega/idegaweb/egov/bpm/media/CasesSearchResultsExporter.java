@@ -56,12 +56,12 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 		if (iwc.isParameterSet(ID_PARAMETER)) {
 			id = iwc.getParameter(ID_PARAMETER);
 			fileName = iwrb.getLocalizedString("exported_search_results_in_excel_file_name", "Exported search results");
-			success = searchResultHolder.doExportCases(id, exportContacts, showCompany, addDefaultFields, category, iwc.getResponse(), fileName.concat(".xlsx"));
+			success = searchResultHolder.doExportCases(id, exportContacts, showCompany, addDefaultFields, category, req, iwc.getResponse(), fileName.concat(".xlsx"));
 
 		} else if (iwc.isParameterSet(ALL_CASES_DATA)) {
 			instanceId = iwc.getParameter(ALL_CASES_DATA);
 			fileName = iwrb.getLocalizedString("exported_all_cases_data", "Exported cases");
-			success = searchResultHolder.doExportCases(instanceId, exportContacts, showCompany, addDefaultFields, category, iwc.getResponse(), fileName.concat(".xlsx"));
+			success = searchResultHolder.doExportCases(instanceId, exportContacts, showCompany, addDefaultFields, category, req, iwc.getResponse(), fileName.concat(".xlsx"));
 		}
 
 		if (success == null && memory == null) {

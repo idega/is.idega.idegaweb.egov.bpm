@@ -26,6 +26,8 @@ import javax.ejb.FinderException;
 import javax.faces.component.UIComponent;
 import javax.faces.component.UIViewRoot;
 import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 import org.jdom2.Document;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -1220,16 +1222,42 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 	@Override
 	public AdvancedProperty getExportedSearchResults(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category) {
-		return getSearchResults(id, exportContacts, showCompany, addDefaultFields, category, null);
+		return getExportedSearchResults(id, exportContacts, showCompany, addDefaultFields, category, null, null, null);
+	}
+
+	@Override
+	public AdvancedProperty getExportedSearchResults(
+			String id,
+			boolean exportContacts,
+			boolean showCompany,
+			boolean addDefaultFields,
+			String category,
+			HttpServletRequest request,
+			HttpServletResponse response,
+			ServletContext context
+	) {
+		return getSearchResults(id, exportContacts, showCompany, addDefaultFields, category, null, request, response, context);
 	}
 
 	@Override
 	public <T extends MediaWritable> AdvancedProperty getSearchResultsWithExporter(String id, Class<T> exporter) {
-		return getSearchResults(id, false, false, true, null, exporter);
+		return getSearchResults(id, false, false, true, null, exporter, null, null, null);
 	}
 
-	private <T extends MediaWritable> AdvancedProperty getSearchResults(String pageURI, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category, Class<T> exporter) {
-		IWContext iwc = CoreUtil.getIWContext();
+	private <T extends MediaWritable> AdvancedProperty getSearchResults(
+			String pageURI,
+			boolean exportContacts,
+			boolean showCompany,
+			boolean addDefaultFields,
+			String category,
+			Class<T> exporter,
+			HttpServletRequest request,
+			HttpServletResponse response,
+			ServletContext context
+	) {
+		IWContext iwc = request != null && response != null && context != null ?
+				new IWContext(request, response, context) :
+				CoreUtil.getIWContext();
 		if (iwc == null) {
 			return null;
 		}
@@ -1262,7 +1290,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 
 		getExternalSearchResults(resultsHolder, pageURI);
 		if (exporter == null) {
-			if (!resultsHolder.doExport(pageURI, exportContacts, showCompany, addDefaultFields, category)) {
+			if (!resultsHolder.doExport(pageURI, exportContacts, showCompany, addDefaultFields, category, request == null ? iwc.getRequest() : request)) {
 				result.setValue(getResourceBundle(iwc).getLocalizedString("unable_to_export_search_results", "Sorry, unable to export search results to Excel"));
 				return result;
 			}

@@ -17,7 +17,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
@@ -216,13 +218,18 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 	@Override
 	public boolean doExport(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category) {
+		return doExport(id, exportContacts, showCompany, addDefaultFields, category, null);
+	}
+
+	@Override
+	public boolean doExport(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category, HttpServletRequest request) {
 		Collection<CasePresentation> cases = getCases(id, true);
 		if (ListUtil.isEmpty(cases)) {
 			return false;
 		}
 
 		try {
-			memory = getExportedData(id, exportContacts, showCompany, addDefaultFields, category);
+			memory = getExportedData(id, exportContacts, showCompany, addDefaultFields, category, request);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error exporting data by " + id, e);
 		}
@@ -595,6 +602,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	private int addVariables(
+			HttpServletRequest request,
 			List<AdvancedProperty> variablesByProcessDefinition,
 			CasePresentation theCase,
 			SXSSFRow row,
@@ -640,7 +648,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 			addedVariables.put(varName, Boolean.TRUE);
 
-			String value = getVariableValue(StringUtil.isEmpty(procDefVariable.getOriginalValue()) ? procDefVariable.getId() : procDefVariable.getOriginalValue(), variable, null, null);
+			String value = getVariableValue(request, StringUtil.isEmpty(procDefVariable.getOriginalValue()) ? procDefVariable.getId() : procDefVariable.getOriginalValue(), variable, null, null);
 			if (
 					StringHandler.isNumeric(value) &&
 					(	variable.getValue() != null && variable.getValue().startsWith(BPMConstants.GROUP_LOC_NAME_PREFIX) ||
@@ -760,7 +768,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 
-	private String getVariableValue(String beanName, AdvancedProperty variable, Map<String, VariableInstance> processData, CasesSearchCriteriaBean searchCriteria) {
+	private String getVariableValue(HttpServletRequest request, String beanName, AdvancedProperty variable, Map<String, VariableInstance> processData, CasesSearchCriteriaBean searchCriteria) {
 		if (variable == null) {
 			return CoreConstants.EMPTY;
 		}
@@ -778,6 +786,11 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		try {
 			resolver.setProcessData(processData);
 			resolver.setMetaData(variable.getMetaData());
+
+			HttpSession session = request == null ? null : request.getSession();
+			if (session != null) {
+				resolver.setExtraValue(session.getAttribute(is.idega.idegaweb.egov.bpm.BPMConstants.CASES_EXPORT_EXTRA_DATA));
+			}
 			if (searchCriteria instanceof CasesListSearchCriteriaBean) {
 				CasesListSearchCriteriaBean criteria = (CasesListSearchCriteriaBean) searchCriteria;
 				resolver.setSearchByVariables(criteria.getProcessVariables());
@@ -820,7 +833,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		return null;
 	}
 
-	private byte[] getExportedData(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category) throws IOException {
+	private byte[] getExportedData(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category, HttpServletRequest request) throws IOException {
 		CasesSearchCriteriaBean criteria = getSearchCriteria(id);
 		return getExportedData(
 				getCasesByProcessDefinition(id, category),
@@ -830,6 +843,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				showCompany,
 				addDefaultFields,
 				category,
+				request,
 				null,
 				null
 		);
@@ -843,6 +857,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			boolean showCompany,
 			boolean addDefaultFields,
 			String category,
+			HttpServletRequest request,
 			HttpServletResponse response,
 			String fileName
 	) throws IOException {
@@ -1004,7 +1019,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					}
 
 					//	Variable values
-					cellIndex = addVariables(availableVariables, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes, fileNameLabel, normalStyle, rowNumber);
+					cellIndex = addVariables(request, availableVariables, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes, fileNameLabel, normalStyle, rowNumber);
 					rowNumber++;
 
 					if (exportContacts) {
@@ -1121,7 +1136,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 							}
 
 							if (value == null) {
-								value = getVariableValue(column, variable, processData, searchCriteria);
+								value = getVariableValue(request, column, variable, processData, searchCriteria);
 							}
 							if ("string_ownerGender".equals(column)) {
 								value = localizeBPM(value, value);
@@ -1516,7 +1531,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 		CasesSearchCriteriaBean bean = getSearchCriteria(id);
 
 		try {
-			return getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns(), exportContacts, showCompany, addDefaultFields, category, null, null);
+			return getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns(), exportContacts, showCompany, addDefaultFields, category, null, null, null);
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error exporting cases by " + id, e);
 		}
@@ -1524,7 +1539,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 	}
 
 	@Override
-	public boolean doExportCases(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category, HttpServletResponse response, String fileName) {
+	public boolean doExportCases(String id, boolean exportContacts, boolean showCompany, boolean addDefaultFields, String category, HttpServletRequest request, HttpServletResponse response, String fileName) {
 		if (StringUtil.isEmpty(id)) {
 			LOGGER.warning("ID is not provided");
 			return false;
@@ -1545,7 +1560,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 			Map<String, Map<String, CasePresentation>> casesByProcDef = getCasesByProcessDefinition(cases, category);
 			CasesSearchCriteriaBean bean = getSearchCriteria(id);
-			getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns(), exportContacts, showCompany, addDefaultFields, category, response, fileName);
+			getExportedData(casesByProcDef, null, bean == null ? null : bean.getExportColumns(), exportContacts, showCompany, addDefaultFields, category, request, response, fileName);
 			return true;
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error exporting cases (total: " + (cases == null ? "unknown" : cases.size()) + ") to response's output stream", e);
