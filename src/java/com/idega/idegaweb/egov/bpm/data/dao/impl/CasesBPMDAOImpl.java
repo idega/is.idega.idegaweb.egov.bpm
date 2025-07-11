@@ -15,9 +15,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import javax.persistence.TypedQuery;
 
@@ -29,6 +33,8 @@ import org.jbpm.graph.exe.ProcessInstance;
 import org.jbpm.graph.exe.Token;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +44,7 @@ import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.data.CaseBMPBean;
 import com.idega.block.process.data.CaseHome;
+import com.idega.block.process.event.CaseDeletedEvent;
 import com.idega.business.IBOLookup;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.localisation.business.ICLocaleBusiness;
@@ -49,6 +56,7 @@ import com.idega.data.MetaDataBMPBean;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWApplicationContext;
 import com.idega.idegaweb.IWMainApplication;
+import com.idega.idegaweb.IWMainApplicationStartedEvent;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.CaseState;
 import com.idega.idegaweb.egov.bpm.data.CaseStateInstance;
@@ -64,6 +72,7 @@ import com.idega.jbpm.data.NativeIdentityBind;
 import com.idega.jbpm.data.NativeIdentityBind.IdentityType;
 import com.idega.jbpm.data.VariableInstanceQuerier;
 import com.idega.jbpm.data.impl.VariableInstanceQuerierImpl;
+import com.idega.jbpm.event.ProcessInstanceCreatedEvent;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.presentation.IWContext;
 import com.idega.user.business.GroupBusiness;
@@ -91,7 +100,7 @@ import is.idega.idegaweb.egov.cases.data.CaseType;
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 @Repository(CasesBPMDAO.REPOSITORY_NAME)
 @Transactional(readOnly = true)
-public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
+public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO, ApplicationListener<ApplicationEvent> {
 
 	private static final Logger LOGGER = Logger.getLogger(CasesBPMDAOImpl.class.getName());
 
@@ -103,6 +112,9 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Autowired(required = false)
 	private BPMFactory bpmFactory;
+
+	private Map<String, Integer> ALL_IDS_BY_PROC_INSTANCES = new ConcurrentHashMap<>();
+	private Map<Integer, String> ALL_IDS_BY_CASES_IDS = new ConcurrentHashMap<>();
 
 	@Override
 	public List<CaseTypesProcDefBind> getAllCaseTypes() {
@@ -1557,7 +1569,7 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 				List<String> allStatuses = caseBusiness.getAllCasesStatuses();
 				useProcDef = !allStatuses.contains(caseCodes.iterator().next());
 			} catch (Exception e) {
-				LOGGER.log(Level.WARNING, "", e);
+				LOGGER.log(Level.WARNING, "Error getting all statuses of cases", e);
 			}
 		}
 
@@ -2421,8 +2433,21 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return Collections.emptyList();
 		}
 
+		boolean longs = resultType.getName().equals(Long.class.getName());
+
+		if (!longs && isBPMCacheOn() && !MapUtil.isEmpty(ALL_IDS_BY_CASES_IDS)) {
+			List<String> uuids = casesIds.stream()
+										.map(ALL_IDS_BY_CASES_IDS::get)
+										.filter(Objects::nonNull)
+										.collect(Collectors.toList());
+
+			@SuppressWarnings("unchecked")
+			List<T> ids = (List<T>) uuids;
+			return ids;
+		}
+
 		List<T> ids = getResultList(
-				resultType.getName().equals(Long.class.getName()) ?
+				 longs ?
 						CaseProcInstBind.getProcInstIds_BY_CASES_IDS_QUERY_NAME :
 						CaseProcInstBind.getUniqueIds_BY_CASES_IDS_QUERY_NAME,
 				resultType,
@@ -2442,12 +2467,27 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 
 	@Override
 	public <T extends Serializable> Map<T, Integer> getProcessInstancesAndCasesIdsByCasesIds(List<Integer> casesIds, Class<T> resultType) {
+		boolean uuids = resultType.getName().equals(String.class.getName());
+
+		if (uuids && !ListUtil.isEmpty(casesIds) && isBPMCacheOn() && !MapUtil.isEmpty(ALL_IDS_BY_CASES_IDS)) {
+			Map<String, Integer> tmp = casesIds.stream()
+													.filter(ALL_IDS_BY_CASES_IDS::containsKey)
+													.collect(
+															Collectors.toMap(
+																	ALL_IDS_BY_CASES_IDS::get,
+																	Function.identity()
+															)
+													);
+			@SuppressWarnings("unchecked")
+			Map<T, Integer> results = (Map<T, Integer>) tmp;
+			return results;
+		}
+
 		List<CaseProcInstBind> binds = getCasesProcInstBindsByCasesIds(casesIds);
 		if (ListUtil.isEmpty(binds)) {
 			return Collections.emptyMap();
 		}
 
-		boolean uuids = resultType.getName().equals(String.class.getName());
 		Map<T, Integer> results = new HashMap<>();
 		for (CaseProcInstBind bind: binds) {
 			@SuppressWarnings("unchecked")
@@ -3111,6 +3151,13 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 			return null;
 		}
 
+		if (isBPMCacheOn() && !MapUtil.isEmpty(ALL_IDS_BY_PROC_INSTANCES)) {
+			return uuids.stream()
+						.map(ALL_IDS_BY_PROC_INSTANCES::get)	// lookup each key
+						.filter(Objects::nonNull)				// ignore keys not in the map
+						.collect(Collectors.toList());
+		}
+
 		return getResultList(CaseProcInstBind.QUERY_FIND_CASES_IDS_BY_UUIDS, Integer.class, new Param(CaseProcInstBind.uuidProp, uuids));
 	}
 
@@ -3121,6 +3168,19 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		try {
+			if (isBPMCacheOn() && !MapUtil.isEmpty(ALL_IDS_BY_CASES_IDS)) {
+				return casesIds.stream()
+								.filter(ALL_IDS_BY_CASES_IDS::containsKey)
+								.collect(
+										Collectors.toMap(
+												Function.identity(),
+												ALL_IDS_BY_CASES_IDS::get,
+												(v1, v2) -> v1,            // merge function to handle duplicates
+												LinkedHashMap::new         // preserve order
+										)
+								);
+			}
+
 			List<Object[]> allData = getResultListByInlineQuery(
 					"select c.caseId, c.uuid FROM " + CaseProcInstBind.class.getName() + " c WHERE c.caseId in (:" + CaseProcInstBind.caseIdProp + ")",
 					Object[].class,
@@ -3229,6 +3289,10 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 	@Override
 	public List<String> getAllUUIDs() {
 		try {
+			if (isBPMCacheOn() && !MapUtil.isEmpty(ALL_IDS_BY_PROC_INSTANCES)) {
+				return new ArrayList<>(ALL_IDS_BY_PROC_INSTANCES.keySet());
+			}
+
 			return getResultList(CaseProcInstBind.QUERY_FIND_ALL_UUIDS, String.class);
 		} catch (Exception e) {
 			getLogger().log(Level.WARNING, "Error getting UUIDs", e);
@@ -3285,6 +3349,90 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		}
 
 		return cps;
+	}
+
+	private boolean isBPMCacheOn() {
+		return isBPMCacheOn(IWMainApplication.getDefaultIWMainApplication());
+	}
+
+	private boolean isBPMCacheOn(IWMainApplication iwma) {
+		iwma = iwma == null ?
+				IWMainApplication.getDefaultIWMainApplication() :
+				iwma;
+		return iwma.getSettings().getBoolean("bpm.cache_ids", true);
+	}
+
+	@Override
+	public void onApplicationEvent(ApplicationEvent event) {
+		if (event instanceof IWMainApplicationStartedEvent) {
+			if (!isBPMCacheOn(((IWMainApplicationStartedEvent) event).getIWMA())) {
+				return;
+			}
+
+			doLoadIds();
+
+		} else if (event instanceof ProcessInstanceCreatedEvent) {
+			if (!isBPMCacheOn()) {
+				return;
+			}
+
+			ProcessInstanceCreatedEvent procInstCreatedEvent = (ProcessInstanceCreatedEvent) event;
+			Serializable id = procInstCreatedEvent.getProcessInstanceId();
+			if (id instanceof String) {
+				String procInstId = (String) id;
+
+				List<Integer> ids = getResultList(CaseProcInstBind.QUERY_FIND_CASES_IDS_BY_UUIDS, Integer.class, new Param(CaseProcInstBind.uuidProp, Arrays.asList(procInstId)));
+				if (!ListUtil.isEmpty(ids)) {
+					Integer caseId = ids.iterator().next();
+
+					if (caseId != null) {
+						ALL_IDS_BY_PROC_INSTANCES.put(procInstId, caseId);
+						ALL_IDS_BY_CASES_IDS.put(caseId, procInstId);
+					}
+				}
+			}
+
+		} else if (event instanceof CaseDeletedEvent) {
+			if (!isBPMCacheOn()) {
+				return;
+			}
+
+			ALL_IDS_BY_PROC_INSTANCES.clear();
+			ALL_IDS_BY_CASES_IDS.clear();
+			doLoadIds();
+		}
+	}
+
+	private void doLoadIds() {
+		List<Object[]> allData = getAllProcInstUUIDsAndCasesIds();
+		if (ListUtil.isEmpty(allData)) {
+			return;
+		}
+
+		for (Object[] data: allData) {
+			if (ArrayUtil.isEmpty(data) || data.length < 2) {
+				continue;
+			}
+
+			Object o1 = data[0];
+			Object o2 = data[1];
+			if (o1 instanceof String && o2 instanceof Integer) {
+				String procInstId = (String) o1;
+				Integer caseId = (Integer) o2;
+
+				ALL_IDS_BY_PROC_INSTANCES.put(procInstId, caseId);
+				ALL_IDS_BY_CASES_IDS.put(caseId, procInstId);
+			}
+		}
+	}
+
+	private List<Object[]> getAllProcInstUUIDsAndCasesIds() {
+		try {
+			return getResultList(CaseProcInstBind.QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS, Object[].class);
+		} catch (Exception e) {
+			getLogger().log(Level.WARNING, "Error getting all proc. inst. UUIDs and cases IDs", e);
+		}
+		return null;
 	}
 
 }

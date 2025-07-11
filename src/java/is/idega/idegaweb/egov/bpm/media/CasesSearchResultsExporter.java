@@ -19,6 +19,8 @@ import is.idega.idegaweb.egov.bpm.IWBundleStarter;
 
 public class CasesSearchResultsExporter extends DownloadWriter implements MediaWritable {
 
+	private static final Logger LOGGER = Logger.getLogger(CasesSearchResultsExporter.class.getName());
+
 	public static final String	ID_PARAMETER = "casesSearchResultsExportId",
 								ALL_CASES_DATA = "allCasesExportedId",
 								EXPORT_CONTACTS = "is-export-contacts",
@@ -50,22 +52,30 @@ public class CasesSearchResultsExporter extends DownloadWriter implements MediaW
 		String category = iwc.getParameter(CATEGORY);
 
 		String id = null, instanceId = null;
+		Boolean success = null;
 		if (iwc.isParameterSet(ID_PARAMETER)) {
 			id = iwc.getParameter(ID_PARAMETER);
-			memory = searchResultHolder.getExportedSearchResults(id, exportContacts, showCompany, addDefaultFields, category);
 			fileName = iwrb.getLocalizedString("exported_search_results_in_excel_file_name", "Exported search results");
+			success = searchResultHolder.doExportCases(id, exportContacts, showCompany, addDefaultFields, category, req, iwc.getResponse(), fileName.concat(".xlsx"));
+
 		} else if (iwc.isParameterSet(ALL_CASES_DATA)) {
 			instanceId = iwc.getParameter(ALL_CASES_DATA);
-			memory = searchResultHolder.getExportedCases(instanceId, exportContacts, showCompany, addDefaultFields, category);
 			fileName = iwrb.getLocalizedString("exported_all_cases_data", "Exported cases");
+			success = searchResultHolder.doExportCases(instanceId, exportContacts, showCompany, addDefaultFields, category, req, iwc.getResponse(), fileName.concat(".xlsx"));
 		}
 
-		if (memory == null) {
-			Logger.getLogger(CasesSearchResultsExporter.class.getName()).warning("Can not export cases. ID: " + id + ", instance ID: " + instanceId);
+		if (success == null && memory == null) {
+			LOGGER.warning("Can not export cases. ID: " + id + ", instance ID: " + instanceId);
+			return;
+		}
+		if (!success) {
+			LOGGER.warning("Failed to export cases. ID: " + id + ", instance ID: " + instanceId);
 			return;
 		}
 
-		setAsDownload(iwc, fileName.concat(".xlsx"), memory.length);
+		if (memory != null) {
+			setAsDownload(iwc, fileName.concat(".xlsx"), memory.length);
+		}
 	}
 
 	@Override
