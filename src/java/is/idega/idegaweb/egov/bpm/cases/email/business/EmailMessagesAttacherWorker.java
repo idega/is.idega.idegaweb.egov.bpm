@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.email.business;
 
-import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -42,8 +40,12 @@ import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.parser.EmailParser;
 import com.idega.block.process.variables.Variable;
+import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
+import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.converter.util.StringConverterUtility;
+import com.idega.core.file.util.MimeTypeUtil;
+import com.idega.core.idgenerator.business.UUIDGenerator;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWMainApplication;
@@ -53,10 +55,16 @@ import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
+import com.idega.jbpm.utils.JBPMConstants;
 import com.idega.jbpm.variables.BinaryVariable;
+import com.idega.jbpm.variables.BinaryVariablesHandler;
 import com.idega.jbpm.variables.VariablesHandler;
+import com.idega.jbpm.variables.impl.BinaryVariableImpl;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
+import com.idega.presentation.IWContext;
+import com.idega.repository.RepositoryService;
+import com.idega.repository.jcr.JCRItem;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -68,6 +76,8 @@ import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
+
+import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
 
 /**
  * Resolves messages to attach and attaches
@@ -86,6 +96,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 	@Autowired
 	private BPMContext idegaJbpmContext;
+
 	@Autowired
 	private BPMFactory bpmFactory;
 
@@ -93,6 +104,12 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	private VariablesHandler variablesHandler;
 
 	private ApplicationEmailEvent emailEvent;
+
+	@Autowired
+	private BinaryVariablesHandler attachmentsHandler;
+
+	@Autowired
+	private RepositoryService repository;
 
 	public EmailMessagesAttacherWorker(ApplicationEmailEvent emailEvent) {
 		this.emailEvent = emailEvent;
@@ -152,10 +169,18 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return;
 		}
 
+		Integer bpmVersion = IWMainApplication.getDefaultIWMainApplication().getSettings().getInt(is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_BPM_VERSION, 2);
+
 		for (final BPMEmailMessage message: allParsedMessages) {
 			try {
-				if (!doAttachMessageIfNeeded(message)) {
-					//	TODO: save message and try attach later?
+				if (bpmVersion.intValue() == 1) {
+					if (!doAttachMessageIfNeeded(message)) {
+						//	TODO: save message and try attach later?
+					}
+				} else {
+					if (!doAttachMessageBPM2(message)) {
+						// Email is being sent in case failure of adding message to the case
+					}
 				}
 			} catch (Exception e) {
 				LOGGER.log(Level.WARNING, "Error attaching message " + message, e);
@@ -737,6 +762,357 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			ELUtil.getInstance().autowire(this);
 		}
 		return variablesHandler;
+	}
+
+
+	public boolean doAttachMessageBPM2(BPMEmailMessage message) {
+
+		boolean result = false;
+
+		//*** Validation ***
+
+		if (message == null || message.isParsed()) {
+			return true;
+		}
+
+		Long procInstId = message.getProcessInstanceId();
+		String procInstUUID = message.getProcessInstanceUUID();
+		if (procInstId == null && StringUtil.isEmpty(procInstUUID)) {
+			LOGGER.warning("Proc. inst. ID is unknown for message " + message);
+			return false;
+		}
+
+		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+
+		IWContext iwc = CoreUtil.getIWContext();
+
+		//*** Prepare data ***
+
+		String subject = message.getSubject();
+		String text = message.getBody();
+		if (text == null) {
+			text = CoreConstants.EMPTY;
+		}
+		String senderPersonalName = message.getSenderName();
+		String fromAddress = message.getFromAddress();
+
+
+		Map<String, InputStream> attachments = message.getAttachments();
+		if (attachments == null) {
+			attachments = new HashMap<String, InputStream>(1);
+		}
+		Collection<File> fileAttachments = message.getAttachedFiles();
+
+
+		//*** Create a new task with the email data ***
+
+		result = doSubmitAttachDocumentsTask(
+				iwc,
+				procInstId,
+				procInstUUID,
+				subject,
+				text,
+				senderPersonalName,
+				fromAddress,
+				attachments,
+				fileAttachments,
+				settings,
+				message
+		);
+
+		message.setParsed(result);
+
+		return result;
+	}
+
+
+	public boolean doSubmitAttachDocumentsTask(
+			IWContext iwc,
+			Long processInstanceId,
+			String procInstUUID,
+			String subject,
+			String text,
+			String senderPersonalName,
+			String fromAddress,
+			Map<String, InputStream> attachments,
+			Collection<File> attachedFiles,
+			IWMainApplicationSettings settings,
+			BPMEmailMessage message
+	) {
+		boolean success = false;
+		String formName = CoreConstants.EMPTY;
+		Map<String, Object> variables = new HashMap<>();
+
+		try {
+
+			if (processInstanceId == null && StringUtil.isEmpty(procInstUUID)) {
+				LOGGER.warning("Failed to submit task " + formName + " for found email message: " + message + ". Proc. inst. is null");
+				return false;
+			}
+
+			formName = settings.getProperty(is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_ATTACH_DOCUMENTS_TASK_FORM_NAME, is.idega.idegaweb.egov.bpm.BPMConstants.ATTACH_DOCUMENTS_DEFAULT_TASK_FORM_NAME);
+
+			ProcessInstanceW piW = null;
+			try {
+				if (!StringUtil.isEmpty(procInstUUID)) {
+					piW = getBpmFactory().getProcessInstanceW(procInstUUID);
+				} else {
+					piW = getBpmFactory().getProcessInstanceW(processInstanceId);
+				}
+				//piW = getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).processInstanceId(processInstanceId);
+			} catch(Exception e) {
+				LOGGER.log(Level.WARNING, "Error getting process instance by procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId, e);
+			}
+			if (piW == null) {
+				LOGGER.warning("Failed to submit task " + formName + " for found email message: " + message + ". Proc. inst. is null");
+				return false;
+			}
+
+			//*** Prepare variables for the task ***
+			String uuid = UUIDGenerator.getInstance().generateId();
+			String uploadPath = getBinaryVariablesHandler().getFolderForBinaryVariable(uuid);
+			variables.put(
+					is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_MESSAGE_RECEIVED_DATE,
+					new IWTimestamp().getDateString(IWTimestamp.DATE_TIME_PATTERN)
+			); //new Date(System.currentTimeMillis())   //new IWTimestamp().getLocaleDate(CoreUtil.getCurrentLocale(), DateFormat.MEDIUM)
+			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_SENDERPERSONAL_NAME, senderPersonalName);
+			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_FROM_ADDRESS, fromAddress);
+			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_SUBJECT, subject);
+			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_TEXT, text);
+			String jsonForFileVariable = getJsonForFileVariables(attachments, uploadPath);
+			if (!StringUtil.isEmpty(jsonForFileVariable)) {
+				variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_ADDITIONALLY_ADDED_FILES, jsonForFileVariable);
+			}
+
+			//**** Submit a new task ****
+
+			if (piW == null || variables == null) {
+				LOGGER.warning("Process instance (" + piW + ") and/or variables (" + variables + ") not provided. Can not submit task " + formName);
+				return success;
+			}
+
+			com.idega.user.data.bean.User adminUser = null;
+			try {
+				IWMainApplication iwma = IWMainApplication.getDefaultIWMainApplication();
+				AccessController controller = iwma.getAccessController();
+				adminUser = controller.getAdministratorUser();
+			} catch (Exception eAdminUser) {
+				LOGGER.log(Level.WARNING, "Could not get the admin user from iwma.", eAdminUser);
+			}
+
+			TaskInstanceW tiW = piW.doSubmitTask(iwc, formName, variables, adminUser);
+
+			if (tiW != null) {
+				LOGGER.info("Successfully submitted task " + formName + " for found email message: " + message + ". Proc. inst.: " + piW);
+				success = true;
+
+			} else {
+				LOGGER.warning("Failed to submit task " + formName + " for found email message: " + message + ". Proc. inst.: " + piW);
+				success = false;
+			}
+		} catch (Throwable t) {
+			String error = "Error submitting task " + formName + " for found email message: " + message + ". Proc. inst.: " + processInstanceId + ". Variables: " + variables;
+			LOGGER.log(Level.WARNING, error, t);
+			CoreUtil.sendExceptionNotification(error, t);
+		}
+		return success;
+	}
+
+
+	@SuppressWarnings("unused")
+	private TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
+		if (piw == null || StringUtil.isEmpty(taskName)) {
+			return null;
+		}
+
+		List<TaskInstanceW> submittedTasks = piw.getSubmittedTaskInstances(CoreUtil.getIWContext());
+		if (ListUtil.isEmpty(submittedTasks)) {
+			return null;
+		}
+
+		TaskInstanceW latestTask = null;
+		for (TaskInstanceW taskInstance: submittedTasks) {
+			TaskInstance ti = taskInstance.getTaskInstance();
+			java.util.Date created = ti.getCreate();
+
+			if (taskName.equals(ti.getName())) {
+				if (latestTask == null) {
+					latestTask = taskInstance;
+				} else if (created.after(latestTask.getCreate())) {
+					latestTask = taskInstance;
+				}
+			}
+		}
+
+		return latestTask;
+	}
+
+	@SuppressWarnings("unused")
+	private boolean addFileAttachmentsToTheTask(
+			TaskInstanceW taskInstance,
+			Map<String, InputStream> attachments,
+			Collection<File> attachedFiles,
+			Map<String, Object> variables,
+			String formName,
+			IWContext iwc
+	) {
+		try {
+			if (!ListUtil.isEmpty(attachedFiles)) {
+				for (File attachedFile: attachedFiles) {
+					if (attachedFile != null) {
+						attachments.put(attachedFile.getName(), new FileInputStream(attachedFile));
+					}
+				}
+			}
+			if (!MapUtil.isEmpty(attachments)) {
+				Variable variable = new Variable(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_ADDITIONALLY_ADDED_FILES, VariableDataType.FILE);
+
+				//Get path to put files in repository
+				String uploadPath = getBinaryVariablesHandler().getFolderForBinaryVariable(taskInstance.getTaskInstanceId());
+				if (uploadPath.endsWith(CoreConstants.SLASH)) {
+					uploadPath = uploadPath.substring(0, uploadPath.length() - 1);
+				}
+
+				//Attach variables
+				InputStream fileStream = null;
+				for (String fileName : attachments.keySet()) {
+					fileStream = attachments.get(fileName);
+					try {
+						BinaryVariable attachment = null;
+
+						try {
+							attachment = taskInstance.addAttachment(
+									variable,
+									fileName,
+									fileName,
+									fileStream,
+									uploadPath,
+									false,
+									null,
+									true
+							);
+						} catch (Exception e) {
+							LOGGER.log(Level.WARNING, "Unable to set binary variable for task instance: " + taskInstance.getTaskInstanceId(), e);
+						}
+
+						if (attachment == null) {
+							LOGGER.warning("Failed to add attachment " + fileName + " for task inst. with ID: " + taskInstance.getTaskInstanceId());
+						} else {
+							if (!attachment.isPersisted()) {
+								attachment.persist();
+							}
+						}
+					} catch (Exception e) {
+						LOGGER.log(Level.SEVERE, "Unable to add attachment for task instance: " + taskInstance.getTaskInstanceId() + ", file name: " + fileName, e);
+					} finally {
+						IOUtil.closeInputStream(fileStream);
+						if (!ListUtil.isEmpty(attachedFiles)) {
+							for (File attachedFile: attachedFiles) {
+								attachedFile.delete();
+							}
+						}
+					}
+				}
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Do not know for which task to attach file(s). " + " Task instance (" + taskInstance.getTaskInstanceId() + "), variables (" + variables + "). Submit task " + formName, e);
+		}
+		return true;
+	}
+
+	private BinaryVariablesHandler getBinaryVariablesHandler() {
+		if (attachmentsHandler == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return attachmentsHandler;
+	}
+
+
+	private String getJsonForFileVariables(Map<String, InputStream> attachments, String filesFolder) {
+		String json = null;
+		List<String> data = null;
+
+		try {
+			if (StringUtil.isEmpty(filesFolder) || MapUtil.isEmpty(attachments)) {
+				return null;
+			}
+
+			data = new ArrayList<>();
+
+			if (!filesFolder.endsWith(CoreConstants.SLASH)) {
+				filesFolder = filesFolder.concat(CoreConstants.SLASH);
+			}
+
+			for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
+				if (
+						entry != null
+						&& !StringUtil.isEmpty(entry.getKey())
+						&& entry.getValue() != null
+				) {
+					String fileName = entry.getKey();
+					InputStream fileIs = entry.getValue();
+
+					BinaryVariable binVar = new BinaryVariableImpl();
+
+					binVar.setFileName(fileName);
+					binVar.setDate(new Date(System.currentTimeMillis()));
+
+					binVar.setIdentifier(filesFolder + fileName);
+
+					binVar.setDescription(fileName);
+					binVar.setStorageType("repository");
+
+					String mimeType = MimeTypeUtil.resolveMimeTypeFromFileName(fileName);
+					binVar.setMimeType(mimeType);
+
+					JCRItem file = null;
+					try {
+						file = getRepositoryService().getRepositoryItemAsRootUser(binVar.getIdentifier());
+					} catch (Exception e) {
+						LOGGER.log(Level.WARNING, "Error getting file: " + binVar.getIdentifier(), e);
+					}
+					if (file == null) {
+						try {
+							getRepositoryService().uploadFileAndCreateFoldersFromStringAsRoot(filesFolder, fileName, fileIs, mimeType);
+							file = getRepositoryService().getRepositoryItemAsRootUser(binVar.getIdentifier());
+						} catch (Exception e) {}
+					}
+					Long length = file == null ? null : file.getLength();
+					if (length == null) {
+						try {
+							length = getRepositoryService().getLength(binVar.getIdentifier(), IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser());
+						} catch (Exception e) {}
+					}
+					if (length != null && length >= 0) {
+						binVar.setContentLength(length);
+					}
+
+					Map<String, Object> metadata = new HashMap<>();
+					metadata.put(JBPMConstants.OVERWRITE, Boolean.FALSE);
+					metadata.put(JBPMConstants.PATH_IN_REPOSITORY, filesFolder + fileName);
+					binVar.setMetadata(metadata);
+					binVar.setPersistedToRepository(true);
+
+					String variableJson = getBinaryVariablesHandler().getBinVarJSONConverter().convertToJSON(binVar);
+					data.add(variableJson);
+				}
+			}
+
+			json = getBinaryVariablesHandler().getBinVarJSONConverter().convertToJSON(data);
+
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error while trying to create json from process file variables.", e);
+		}
+		return json;
+	}
+
+
+	private RepositoryService getRepositoryService() {
+		if (repository == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+
+		return repository;
 	}
 
 }

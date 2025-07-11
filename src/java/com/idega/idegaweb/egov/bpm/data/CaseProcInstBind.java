@@ -61,6 +61,7 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 	),
 	@NamedQuery(name=CaseProcInstBind.getByDateCreatedAndCaseIdentifierId, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.dateCreatedProp+" in(:"+CaseProcInstBind.dateCreatedProp+") and cp."+CaseProcInstBind.caseIdentierIDProp+" in(:"+CaseProcInstBind.caseIdentierIDProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getByCaseIdentifier, query="select cp, pi from CaseProcInstBind cp, org.jbpm.graph.exe.ProcessInstance pi where cp."+CaseProcInstBind.caseIdentifierProp +" in(:"+CaseProcInstBind.caseIdentifierProp+") and pi.id = cp."+CaseProcInstBind.procInstIdProp),
+	@NamedQuery(name=CaseProcInstBind.getByCaseIdentifierSimple, query="select cp.caseIdentifier, cp.procInstId, cp.uuid from CaseProcInstBind cp where cp.caseIdentifier in (:" + CaseProcInstBind.caseIdentifierProp + ") "),
 	@NamedQuery(name=CaseProcInstBind.getCaseIdByProcessInstanceId, query="select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp."+ CaseProcInstBind.procInstIdProp + " = :" + CaseProcInstBind.procInstIdProp),
 	@NamedQuery(name=CaseProcInstBind.getCaseIdsByProcessInstanceIds, query = "select cp." + CaseProcInstBind.caseIdProp + " from CaseProcInstBind cp where cp." + CaseProcInstBind.procInstIdProp + " in (:" + CaseProcInstBind.processInstanceIdsProp + ") group by cp." + CaseProcInstBind.caseIdProp + " order by cp." + CaseProcInstBind.dateCreatedProp + " desc"),
 	@NamedQuery(name=CaseProcInstBind.getSubprocessTokensByPI, query="select tkn from org.jbpm.graph.exe.Token tkn where tkn.processInstance = :"+CaseProcInstBind.procInstIdProp+" and tkn.subProcessInstance is not null"),
@@ -315,6 +316,7 @@ public class CaseProcInstBind implements Serializable {
 	public static final String getCaseIdsByUserIds = "CaseProcInstBind.getCaseIdsByUserIds";
 	public static final String getCaseIdsByDateRange = "CaseProcInstBind.getCaseIdsByDateRange";
 	public static final String getByCaseIdentifier = "CaseProcInstBind.getByCaseIdentifier";
+	public static final String getByCaseIdentifierSimple = "CaseProcInstBind.getByCaseIdentifierSimple";
 	public static final String getProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getProcInstIdsByCaseStatus";
 	public static final String getProcInstIdsByCaseStatusesAndProcDefNamesNewestOnTop = "CaseProcInstBind.getProcInstIdsByCaseStatusNewestOnTop";
 	public static final String getCountedProcInstIdsByCaseStatusesAndProcDefNames = "CaseProcInstBind.getCountedProcInstIdsByCaseStatus",

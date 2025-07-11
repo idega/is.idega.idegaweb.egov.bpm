@@ -3266,4 +3266,25 @@ public class CasesBPMDAOImpl extends GenericDaoImpl implements CasesBPMDAO {
 		return null;
 	}
 
+
+	@Override
+	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifierSimple(Collection<String> identifiers) {
+		List<Object[]> cps = null;
+
+		if (identifiers != null && !identifiers.isEmpty()) {
+
+			@SuppressWarnings("unchecked")
+			List<Object[]> u = getEntityManager().createNamedQuery(
+			    CaseProcInstBind.getByCaseIdentifierSimple).setParameter(
+			    CaseProcInstBind.caseIdentifierProp, identifiers)
+			        .getResultList();
+
+			cps = u;
+		} else {
+			cps = new ArrayList<>(0);
+		}
+
+		return cps;
+	}
+
 }

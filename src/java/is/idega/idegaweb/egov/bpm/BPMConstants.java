@@ -23,6 +23,20 @@ public interface BPMConstants {
 
 								FOR = "#for#",
 								VARIABLE_NUMBER_OF_MISSED_PAYMENTS = "numberOfMissedPayments",
-								VARIABLE_PROCESS_RULING_ATTACHMENTS = "files_processRullingAttachments";
+								VARIABLE_PROCESS_RULING_ATTACHMENTS = "files_processRullingAttachments",
+
+								APP_PROPERTY_BPM_VERSION = "bpm.version",
+
+								PDF_FROM_EMAIL_CONTENT_FILE_NAME = "PDF_FROM_EMAIL_CONTENT_FILE_NAME",
+
+								BPM2_VARIABLE_NAME_EMAIL_SENDERPERSONAL_NAME = "string_emailSenderPersonalName",
+								BPM2_VARIABLE_NAME_FROM_ADDRESS = "string_fromAddress",
+								BPM2_VARIABLE_NAME_SUBJECT = "string_subject",
+								BPM2_VARIABLE_NAME_EMAIL_TEXT = "string_emailText",
+								BPM2_VARIABLE_NAME_EMAIL_MESSAGE_RECEIVED_DATE = "date_emailMessageReceivedDate",
+								BPM2_VARIABLE_NAME_ADDITIONALLY_ADDED_FILES = "files_additionallyAddedFiles",
+
+								APP_PROPERTY_ATTACH_DOCUMENTS_TASK_FORM_NAME = "ATTACH_DOCUMENTS_TASK_FORM_NAME",
+								ATTACH_DOCUMENTS_DEFAULT_TASK_FORM_NAME = "attach_files_form";
 
 }

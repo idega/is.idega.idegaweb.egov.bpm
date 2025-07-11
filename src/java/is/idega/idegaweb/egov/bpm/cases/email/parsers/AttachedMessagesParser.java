@@ -1,7 +1,5 @@
 package is.idega.idegaweb.egov.bpm.cases.email.parsers;
 
-import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -26,20 +24,24 @@ import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.parser.DefaultMessageParser;
 import com.idega.block.email.parser.EmailParser;
 import com.idega.core.messaging.EmailMessage;
+import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.egov.bpm.data.CaseProcInstBind;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.util.ListUtil;
+import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
+
+import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
 
 @Service
 @Scope(BeanDefinition.SCOPE_SINGLETON)
 public class AttachedMessagesParser extends DefaultMessageParser implements EmailParser {
-	
+
 	private static final Logger LOGGER = Logger.getLogger(AttachedMessagesParser.class.getName());
-	
+
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
-	
+
 	@Override
 	protected EmailMessage getNewMessage() {
 		return new BPMEmailMessage();
@@ -50,7 +52,7 @@ public class AttachedMessagesParser extends DefaultMessageParser implements Emai
 		if (messagesInfo == null || messagesInfo.isEmpty()) {
 			return null;
 		}
-		
+
 		List<String> identifiersToResolve = new ArrayList<String>();
 		for (String identifier: messagesInfo.keySet()) {
 			if (!StringUtil.isEmpty(identifier) && !identifiersToResolve.contains(identifier)) {
@@ -60,21 +62,22 @@ public class AttachedMessagesParser extends DefaultMessageParser implements Emai
 		if (ListUtil.isEmpty(identifiersToResolve)) {
 			return null;
 		}
-		
-		Map<String, Long> identifiers = getResolvedProcessesInstances(identifiersToResolve);
+
+		Map<String, String> identifiers = getResolvedProcessesInstances(identifiersToResolve);
+
 		if (identifiers == null || identifiers.isEmpty()) {
 			return null;
 		}
-		
+
 		Map<String, Collection<? extends EmailMessage>> parsedMessages = new HashMap<String, Collection<? extends EmailMessage>>();
-		
+
 		for (Entry<String, FoundMessagesInfo> messagesEntry: messagesInfo.entrySet()) {
 			String identifier = messagesEntry.getKey();
 			FoundMessagesInfo info = messagesEntry.getValue();
 			if (info.getParserType() != getMessageParserType()) {
 				continue;
 			}
-			
+
 			for (Message message: info.getMessages()) {
 				EmailMessage parsedMessage = null;
 				try {
@@ -84,8 +87,15 @@ public class AttachedMessagesParser extends DefaultMessageParser implements Emai
 				}
 				if (parsedMessage instanceof BPMEmailMessage) {
 					BPMEmailMessage bpmMessage = (BPMEmailMessage) parsedMessage;
-					bpmMessage.setProcessInstanceId(identifiers.get(identifier));
-					
+					String procInstIdentifier = identifiers.get(identifier);
+					if (!StringUtil.isEmpty(procInstIdentifier)) {
+						if (StringHandler.isNumeric(procInstIdentifier)) {
+							bpmMessage.setProcessInstanceId(Long.valueOf(procInstIdentifier));
+						} else {
+							bpmMessage.setProcessInstanceUUID(procInstIdentifier);
+						}
+					}
+
 					@SuppressWarnings("unchecked")
 					Collection<BPMEmailMessage> messagesByProcess = (Collection<BPMEmailMessage>) parsedMessages.get(identifier);
 					if (messagesByProcess == null) {
@@ -98,28 +108,48 @@ public class AttachedMessagesParser extends DefaultMessageParser implements Emai
 				}
 			}
 		}
-		
+
 		return parsedMessages;
 	}
-	
-	private Map<String, Long> getResolvedProcessesInstances(List<String> identifiers) {
+
+	private Map<String, String> getResolvedProcessesInstances(List<String> identifiers) {
 		if (ListUtil.isEmpty(identifiers)) {
 			return null;
 		}
-		
-		List<Object[]> cps = getCasesBPMDAO().getCaseProcInstBindProcessInstanceByCaseIdentifier(identifiers);
-		if (ListUtil.isEmpty(cps)) {
-			return null;
+
+		Map<String, String> resolvedIdentifiers = new HashMap<>();
+
+		Integer bpmVersion = IWMainApplication.getDefaultIWMainApplication().getSettings().getInt(is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_BPM_VERSION, 2);
+
+		if (bpmVersion.intValue() == 1) {
+			List<Object[]> cps = getCasesBPMDAO().getCaseProcInstBindProcessInstanceByCaseIdentifier(identifiers);
+			if (ListUtil.isEmpty(cps)) {
+				return null;
+			}
+
+			for (Object[] objects : cps) {
+				CaseProcInstBind cp = (CaseProcInstBind) objects[0];
+				ProcessInstance pi = (ProcessInstance) objects[1];
+
+				if (pi != null) {
+					resolvedIdentifiers.put(cp.getCaseIdentifier(), String.valueOf(pi.getId()));
+				}
+			}
+		} else {
+			List<Object[]> cps = getCasesBPMDAO().getCaseProcInstBindProcessInstanceByCaseIdentifierSimple(identifiers);
+			if (ListUtil.isEmpty(cps)) {
+				return null;
+			}
+
+			for (Object[] objects : cps) {
+				String caseIdentifier = (String) objects[0];
+				//Long processInstanceId = (Long) objects[1];
+				String processInstanceUUID = (String) objects[2];
+
+				resolvedIdentifiers.put(caseIdentifier, processInstanceUUID);
+			}
 		}
-		
-		Map<String, Long> resolvedIdentifiers = new HashMap<String, Long>(cps.size());
-		for (Object[] objects : cps) {
-			CaseProcInstBind cp = (CaseProcInstBind) objects[0];
-			ProcessInstance pi = (ProcessInstance) objects[1];
-			
-			resolvedIdentifiers.put(cp.getCaseIdentifier(), pi.getId());
-		}
-		
+
 		return resolvedIdentifiers;
 	}
 
@@ -131,6 +161,7 @@ public class AttachedMessagesParser extends DefaultMessageParser implements Emai
 		this.casesBPMDAO = casesBPMDAO;
 	}
 
+	@Override
 	public MessageParserType getMessageParserType() {
 		return MessageParserType.BPM;
 	}

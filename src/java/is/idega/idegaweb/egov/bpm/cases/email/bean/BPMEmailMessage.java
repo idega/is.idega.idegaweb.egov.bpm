@@ -15,6 +15,7 @@ public class BPMEmailMessage extends EmailMessage {
 
 	private Long processInstanceId;
 	private Long taskInstanceId;
+	private String processInstanceUUID;
 
 	private Map<String, InputStream> attachments;
 
@@ -72,6 +73,16 @@ public class BPMEmailMessage extends EmailMessage {
 	@Override
 	public void setAttachments(Map<String, InputStream> attachments) {
 		this.attachments = attachments;
+	}
+
+
+
+	public String getProcessInstanceUUID() {
+		return processInstanceUUID;
+	}
+
+	public void setProcessInstanceUUID(String processInstanceUUID) {
+		this.processInstanceUUID = processInstanceUUID;
 	}
 
 	@Override

@@ -602,4 +602,6 @@ public interface CasesBPMDAO extends GenericDao {
 			com.idega.user.data.bean.User userCreatedBy
 	);
 
+	public List<Object[]> getCaseProcInstBindProcessInstanceByCaseIdentifierSimple(Collection<String> identifiers);
+
 }
