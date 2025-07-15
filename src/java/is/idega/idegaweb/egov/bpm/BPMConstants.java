@@ -37,7 +37,7 @@ public interface BPMConstants {
 								BPM2_VARIABLE_NAME_ADDITIONALLY_ADDED_FILES = "files_additionallyAddedFiles",
 
 								APP_PROPERTY_ATTACH_DOCUMENTS_TASK_FORM_NAME = "ATTACH_DOCUMENTS_TASK_FORM_NAME",
-								ATTACH_DOCUMENTS_DEFAULT_TASK_FORM_NAME = "attach_files_form";
+								ATTACH_DOCUMENTS_DEFAULT_TASK_FORM_NAME = "attach_files_form",
 
 								CASES_EXPORT_EXTRA_DATA = "cases_export_extra_data";
 
