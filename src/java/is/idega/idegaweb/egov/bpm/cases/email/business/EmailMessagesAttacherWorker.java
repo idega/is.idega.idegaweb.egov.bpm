@@ -123,7 +123,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	}
 
 	private void parseAndAttachMessages() {
-		Map<String, FoundMessagesInfo> messagesToParse = new HashMap<String, FoundMessagesInfo>();
+		Map<String, FoundMessagesInfo> messagesToParse = new HashMap<>();
 
 		Map<String, FoundMessagesInfo> messagesInfo = emailEvent.getMessages();
 		if (messagesInfo != null && !messagesInfo.isEmpty()) {
@@ -151,7 +151,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		EmailParams params = emailEvent.getEmailParams();
 
-		Collection<BPMEmailMessage> allParsedMessages = new ArrayList<BPMEmailMessage>();
+		Collection<BPMEmailMessage> allParsedMessages = new ArrayList<>();
 		for (Object bean: parsersProviders.values()) {
 			if (bean instanceof EmailsParsersProvider) {
 				for (EmailParser parser: ((EmailsParsersProvider) bean).getAllParsers()) {
@@ -205,14 +205,14 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 
 		//	Proc. inst. ID -> task inst. ID -> name -> value
-		Map<Long, Map<Long, Map<String, String>>> results = new HashMap<Long, Map<Long, Map<String, String>>>();
+		Map<Long, Map<Long, Map<String, String>>> results = new HashMap<>();
 		for (Long subProcInstId: subProcInstIds) {
 			List<Long> tiIds = getBpmFactory().getBPMDAO().getIdsOfFinishedTaskInstancesForTask(subProcInstId, FETCH_EMAILS_TASK_NAME);
 			if (ListUtil.isEmpty(tiIds)) {
 				continue;
 			}
 
-			Map<Long, Map<String, String>> dataForSubProcInst = new HashMap<Long, Map<String, String>>();
+			Map<Long, Map<String, String>> dataForSubProcInst = new HashMap<>();
 			for (Long tiId: tiIds) {
 				for (String name: names) {
 					String value = getVariableValue(tiId, name);
@@ -222,7 +222,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 					Map<String, String> taskData = dataForSubProcInst.get(tiId);
 					if (taskData == null) {
-						taskData = new HashMap<String, String>();
+						taskData = new HashMap<>();
 						dataForSubProcInst.put(tiId, taskData);
 					}
 					taskData.put(name, value);
@@ -311,9 +311,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		if (!MapUtil.isEmpty(groupedVars)) {
 			//	Checking if current message is not attached already
 
-			Map<String, Boolean>	subjectsComparisons = new HashMap<String, Boolean>(),
-									fromComparisons = new HashMap<String, Boolean>(),
-									addressesComparisons = new HashMap<String, Boolean>();
+			Map<String, Boolean>	subjectsComparisons = new HashMap<>(),
+									fromComparisons = new HashMap<>(),
+									addressesComparisons = new HashMap<>();
 
 			String[] patterns = settings.getProperty("bpm.emails_cont_rep_patt", "…" + CoreConstants.COMMA + "¿").split(CoreConstants.COMMA);
 			String[] encodedPatterns = settings.getProperty("bpm.emails_cont_rep_enc_patt", "u2026" + CoreConstants.COMMA + "u00BF").split(CoreConstants.COMMA);
@@ -432,7 +432,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		Map<String, InputStream> attachments = message.getAttachments();
 		if (attachments == null) {
-			attachments = new HashMap<String, InputStream>(1);
+			attachments = new HashMap<>(1);
 		}
 		boolean result = doAttachEmailToProcess(
 				fetchEmailsSubProcInstIds.get(0),
@@ -485,14 +485,14 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			bfr1 = new BufferedReader(new FileReader(file1));
 
 			String content = null;
-			content1 = new ArrayList<String>();
+			content1 = new ArrayList<>();
 			while ((content = bfr1.readLine()) != null) {
 				content = getRidOfInvalidSymbols(content, patterns, encodedPatterns);
 				content1.add(content);
 			}
 
 			bfr2 = new BufferedReader(new FileReader(file2));
-			content2 = new ArrayList<String>();
+			content2 = new ArrayList<>();
 			while ((content = bfr2.readLine()) != null) {
 				content = getRidOfInvalidSymbols(content, patterns, encodedPatterns);
 				content2.add(content);
@@ -576,7 +576,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			return Boolean.FALSE;
 		}
 
-		final Map<String, Object> newVars = new HashMap<String, Object>();
+		final Map<String, Object> newVars = new HashMap<>();
 		newVars.put(BPMConstants.VAR_SUBJECT, subject);
 		newVars.put(BPMConstants.VAR_TEXT, text);
 		newVars.put(BPMConstants.VAR_FROM, senderPersonalName);
@@ -670,7 +670,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 
 		//	Checking variables
-		Map<String, Object> reSubmit = new HashMap<String, Object>();
+		Map<String, Object> reSubmit = new HashMap<>();
 		for (String varName: newVars.keySet()) {
 			Object value = getVariableValue(ti.getId(), varName);
 			if (value == null || StringUtil.isEmpty(value.toString())) {
@@ -764,8 +764,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return variablesHandler;
 	}
 
-
-	public boolean doAttachMessageBPM2(BPMEmailMessage message) {
+	private boolean doAttachMessageBPM2(BPMEmailMessage message) {
 
 		boolean result = false;
 
@@ -799,7 +798,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		Map<String, InputStream> attachments = message.getAttachments();
 		if (attachments == null) {
-			attachments = new HashMap<String, InputStream>(1);
+			attachments = new HashMap<>(1);
 		}
 		Collection<File> fileAttachments = message.getAttachedFiles();
 
@@ -825,8 +824,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return result;
 	}
 
-
-	public boolean doSubmitAttachDocumentsTask(
+	private boolean doSubmitAttachDocumentsTask(
 			IWContext iwc,
 			Long processInstanceId,
 			String procInstUUID,
@@ -859,7 +857,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				} else {
 					piW = getBpmFactory().getProcessInstanceW(processInstanceId);
 				}
-				//piW = getBpmFactory().getProcessManagerByProcessInstanceId(processInstanceId).processInstanceId(processInstanceId);
 			} catch(Exception e) {
 				LOGGER.log(Level.WARNING, "Error getting process instance by procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId, e);
 			}
@@ -918,9 +915,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return success;
 	}
 
-
-	@SuppressWarnings("unused")
-	private TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
+	TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
 		if (piw == null || StringUtil.isEmpty(taskName)) {
 			return null;
 		}
@@ -947,8 +942,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return latestTask;
 	}
 
-	@SuppressWarnings("unused")
-	private boolean addFileAttachmentsToTheTask(
+	boolean addFileAttachmentsToTheTask(
 			TaskInstanceW taskInstance,
 			Map<String, InputStream> attachments,
 			Collection<File> attachedFiles,
@@ -1027,7 +1021,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return attachmentsHandler;
 	}
 
-
 	private String getJsonForFileVariables(Map<String, InputStream> attachments, String filesFolder) {
 		String json = null;
 		List<String> data = null;
@@ -1105,7 +1098,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 		return json;
 	}
-
 
 	private RepositoryService getRepositoryService() {
 		if (repository == null) {
