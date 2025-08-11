@@ -4,4 +4,6 @@ public interface IdentifierGenerator {
 
 	public int getMaxIdentifierValue();
 
+	public Object[] getNewCaseIdentifier(String name);
+
 }

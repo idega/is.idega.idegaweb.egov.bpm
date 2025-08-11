@@ -75,4 +75,9 @@ public class ApplicationIdentifier extends DefaultSpringBean implements Identifi
 		return 99999;
 	}
 
+	@Override
+	public Object[] getNewCaseIdentifier(String name) {
+		return null;
+	}
+
 }
