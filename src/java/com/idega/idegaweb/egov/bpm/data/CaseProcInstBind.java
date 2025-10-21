@@ -110,7 +110,8 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 @SqlResultSetMappings({
 	@SqlResultSetMapping(name="caseId", columns=@ColumnResult(name="caseId")),
 	@SqlResultSetMapping(name=CaseProcInstBind.procInstIdProp, columns=@ColumnResult(name=CaseProcInstBind.procInstIdProp)),
-	@SqlResultSetMapping(name="case_proc_bind", entities=@EntityResult(entityClass=CaseProcInstBind.class))
+	@SqlResultSetMapping(name="case_proc_bind", entities=@EntityResult(entityClass=CaseProcInstBind.class)),
+	@SqlResultSetMapping(name="uuid", columns={@ColumnResult(name ="uuid")})
 })
 @NamedNativeQueries({
 			@NamedNativeQuery(name=CaseProcInstBind.getProcInstIdsByCaseStatusesAndProcDefNames, resultSetMapping=CaseProcInstBind.procInstIdProp,
@@ -276,7 +277,22 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 				"select cp.case_id caseId from " + CaseProcInstBind.TABLE_NAME + " cp inner join JBPM_PROCESSINSTANCE pi on cp." +
 				CaseProcInstBind.procInstIdColumnName + " = pi.id_ where pi.start_ between :" + CaseProcInstBind.caseStartDateProp + " and :" +
 				CaseProcInstBind.caseEndDateProp
-			)
+			),
+			@NamedNativeQuery(
+				    name = CaseProcInstBind.QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODE_AND_CASE_STATUSES,
+				    query = "SELECT b.uuid FROM " + CaseProcInstBind.TABLE_NAME + " b " +
+				        "WHERE EXISTS (" +
+				        "  SELECT 1 FROM " + CaseBMPBean.TABLE_NAME + " pcOuter " +
+				        "  JOIN " + CaseBMPBean.TABLE_NAME + " pcInner ON pcOuter.case_subject = pcInner.case_subject " +
+				        "  WHERE pcInner.proc_case_id IN (:procCaseIds) " +
+				        "    AND pcOuter.case_code = :caseCode " +
+				        "    AND pcOuter.case_status in (:casesStatuses) " +
+				        "    AND pcOuter.proc_case_id NOT IN (:procCaseIds) " +
+				        "    AND b.case_id = pcOuter.proc_case_id" +
+				        "    AND pcOuter.CREATED < pcInner.CREATED" +
+				        ") order by b.date_created desc",
+				    resultSetMapping = "uuid"
+				)
 	}
 )
 @Cacheable
@@ -330,7 +346,8 @@ public class CaseProcInstBind implements Serializable {
 								QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS = "CaseProcInstBind.findProcInstUUIDsCaseCreatedAndCaseStatus",
 								QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseStatusesAndCode",
 								QUERY_GET_PROC_INST_UUID_BY_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseCode",
-								QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS = "CaseProcInstBind.getProcInstUUIDsAndCasesIds";
+								QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS = "CaseProcInstBind.getProcInstUUIDsAndCasesIds",
+								QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODE_AND_CASE_STATUSES = "CaseProcInstBind.findByOtherUUIDsByCasesIdsAndCaseCodeAndCaseStatuses";
 
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
