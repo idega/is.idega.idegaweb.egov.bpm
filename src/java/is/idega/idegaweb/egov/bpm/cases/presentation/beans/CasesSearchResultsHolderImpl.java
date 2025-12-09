@@ -666,7 +666,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 						value = theCase.getCaseIdentifier();
 						break;
 
-					case "date_payForParkingDate":
+					case ProcessConstants.VARIABLE_PAY_FOR_PARKING_DATE:
 						Timestamp created = theCase.getCreated();
 						if (created != null) {
 							value = new IWTimestamp(created).getLocaleDateAndTime(locale, DateFormat.MEDIUM, DateFormat.MEDIUM);
