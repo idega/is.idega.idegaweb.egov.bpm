@@ -279,13 +279,13 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 				CaseProcInstBind.caseEndDateProp
 			),
 			@NamedNativeQuery(
-				    name = CaseProcInstBind.QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODE_AND_CASE_STATUSES,
+				    name = CaseProcInstBind.QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODES_AND_CASE_STATUSES,
 				    query = "SELECT b.uuid FROM " + CaseProcInstBind.TABLE_NAME + " b " +
 				        "WHERE EXISTS (" +
 				        "  SELECT 1 FROM " + CaseBMPBean.TABLE_NAME + " pcOuter " +
 				        "  JOIN " + CaseBMPBean.TABLE_NAME + " pcInner ON pcOuter.case_subject = pcInner.case_subject " +
 				        "  WHERE pcInner.proc_case_id IN (:procCaseIds) " +
-				        "    AND pcOuter.case_code = :caseCode " +
+				        "    AND pcOuter.case_code in (:caseCodes) " +
 				        "    AND pcOuter.case_status in (:casesStatuses) " +
 				        "    AND pcOuter.proc_case_id NOT IN (:procCaseIds) " +
 				        "    AND b.case_id = pcOuter.proc_case_id" +
@@ -347,7 +347,7 @@ public class CaseProcInstBind implements Serializable {
 								QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseStatusesAndCode",
 								QUERY_GET_PROC_INST_UUID_BY_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseCode",
 								QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS = "CaseProcInstBind.getProcInstUUIDsAndCasesIds",
-								QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODE_AND_CASE_STATUSES = "CaseProcInstBind.findByOtherUUIDsByCasesIdsAndCaseCodeAndCaseStatuses";
+								QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODES_AND_CASE_STATUSES = "CaseProcInstBind.findByOtherUUIDsByCasesIdsAndCaseCodeAndCaseStatuses";
 
 	public static final String subProcessNameParam = "subProcessName";
 	public static final String caseIdParam = "caseId";
