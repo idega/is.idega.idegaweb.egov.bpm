@@ -1,9 +1,11 @@
 package is.idega.idegaweb.egov.bpm.cases.email.business;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.sql.SQLException;
@@ -19,6 +21,8 @@ import java.util.Map.Entry;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.IOUtils;
 import org.jbpm.JbpmContext;
 import org.jbpm.JbpmException;
 import org.jbpm.context.exe.VariableInstance;
@@ -39,17 +43,25 @@ import com.idega.block.email.business.EmailsParsersProvider;
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.parser.EmailParser;
+import com.idega.block.process.business.CaseBusiness;
+import com.idega.block.process.data.Case;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
+import com.idega.business.IBOLookup;
+import com.idega.business.IBOLookupException;
+import com.idega.business.IBORuntimeException;
 import com.idega.core.accesscontrol.business.AccessController;
+import com.idega.core.contact.data.Email;
 import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.core.idgenerator.business.UUIDGenerator;
 import com.idega.core.messaging.EmailMessage;
+import com.idega.data.IDOLookup;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
+import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
@@ -65,6 +77,7 @@ import com.idega.jbpm.view.ViewSubmission;
 import com.idega.presentation.IWContext;
 import com.idega.repository.RepositoryService;
 import com.idega.repository.jcr.JCRItem;
+import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
@@ -72,12 +85,16 @@ import com.idega.util.FileUtil;
 import com.idega.util.IOUtil;
 import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
+import com.idega.util.SendMail;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
 import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
+import is.idega.idegaweb.egov.cases.business.CasesBusiness;
+import is.idega.idegaweb.egov.cases.data.GeneralCase;
+import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
 
 /**
  * Resolves messages to attach and attaches
@@ -110,6 +127,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 	@Autowired
 	private RepositoryService repository;
+
+	@Autowired
+	private CasesBPMDAO casesBPMDAO;
 
 	public EmailMessagesAttacherWorker(ApplicationEmailEvent emailEvent) {
 		this.emailEvent = emailEvent;
@@ -802,6 +822,21 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 		Collection<File> fileAttachments = message.getAttachedFiles();
 
+		Map<String, byte[]> attachmentBytes = new HashMap<>();
+
+		if (!MapUtils.isEmpty(attachments)) {
+			for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
+			    InputStream is = entry.getValue();
+			    try {
+			        byte[] data = IOUtils.toByteArray(is);
+			        attachmentBytes.put(entry.getKey(), data);
+			    } catch (IOException ex) {
+			        LOGGER.log(Level.WARNING, "Failed to read attachment: " + entry.getKey(), ex);
+			    } finally {
+			        IOUtil.closeInputStream(is);
+			    }
+			}
+		}
 
 		//*** Create a new task with the email data ***
 
@@ -813,7 +848,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				text,
 				senderPersonalName,
 				fromAddress,
-				attachments,
+				attachmentBytes,
 				fileAttachments,
 				settings,
 				message
@@ -821,8 +856,176 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		message.setParsed(result);
 
+		//*** Send email message to the handler, if needed ***
+		try {
+			boolean resendAutomaticallyParsedEmailToHandler = settings.getBoolean("msg.resend_automaticly_parsed_message_to_handler", true);
+			if (resendAutomaticallyParsedEmailToHandler) {
+				resendMessageToHandler(iwc, procInstId, procInstUUID, subject, text, senderPersonalName, fromAddress, attachmentBytes, fileAttachments, settings);
+			}
+		} catch (Exception eRS) {
+			LOGGER.log(Level.WARNING, "Could not resend the email message to the handler. Proc instance: " + (StringUtil.isEmpty(procInstUUID) ? procInstId : procInstUUID), eRS);
+		}
+
 		return result;
 	}
+
+	private void resendMessageToHandler(
+			IWContext iwc,
+			Long processInstanceId,
+			String procInstUUID,
+			String subject,
+			String text,
+			String senderPersonalName,
+			String fromAddress,
+			Map<String, byte[]> attachments,
+			Collection<File> attachedFiles,
+			IWMainApplicationSettings settings
+	) {
+
+		// *** Get the case ***
+		ProcessInstanceW piW = null;
+		try {
+			if (!StringUtil.isEmpty(procInstUUID)) {
+				piW = getBpmFactory().getProcessInstanceW(procInstUUID);
+			} else {
+				piW = getBpmFactory().getProcessInstanceW(processInstanceId);
+			}
+		} catch(Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting process instance by procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId, e);
+		}
+		if (piW == null) {
+			LOGGER.warning("Could not resend the email message to the handler. Proc. inst. is null. procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId );
+			return;
+		}
+
+		Serializable piId = piW.getProcessInstanceId();
+		if (piId == null) {
+			LOGGER.warning("Could not resend the email message to the handler. Proc. inst. id is null. procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId);
+			return;
+		}
+
+		Integer caseId = null;
+		try {
+			if (piId instanceof Number || StringHandler.isNumeric(piId.toString())) {
+				caseId = getCasesBPMDAO().getCaseIdByProcessId(Long.valueOf(piId.toString()));
+
+			} else {
+				List<Integer> ids = getCasesBPMDAO().findCasesIdsByUUIDs(Arrays.asList(piId.toString()));
+				caseId = ListUtil.isEmpty(ids) ? null : ids.iterator().next();
+			}
+		} catch (Exception e) {}
+		if (caseId == null) {
+			LOGGER.warning("Could not resend the email message to the handler. Case is not found by procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId);
+			return;
+		}
+
+		Case theCase = null;
+		try {
+			theCase = getCaseBusiness().getCase(caseId);
+		} catch (Exception e) {}
+		if (theCase == null) {
+			LOGGER.warning("Could not resend the email message to the handler. Case is not found by procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId);
+			return;
+		}
+
+		// *** Get the handler ***
+		User handler = null;
+		try {
+			GeneralCaseHome generalCaseHome = (GeneralCaseHome) IDOLookup.getHome(GeneralCase.class);
+			GeneralCase generalCase = generalCaseHome.findByPrimaryKey(theCase.getPrimaryKey());
+			if (generalCase != null) {
+				handler = generalCase.getHandledBy();
+			}
+		} catch (Exception e) {
+			LOGGER.log(Level.WARNING, "Error getting assigned handler to the case: " + theCase + ". To resend the parsed message.", e);
+		}
+
+		if (handler != null) {
+			Collection<Email> emails = null;
+			String handlerEmailAddress = null;
+			try {
+				emails = handler.getEmails();
+			} catch (Exception e) {}
+			if (!ListUtil.isEmpty(emails)) {
+				for (Email email: emails) {
+					String address = email == null ? null : email.getEmailAddress();
+					if (StringUtil.isEmpty(address)) {
+						continue;
+					}
+
+					handlerEmailAddress = address.trim().toLowerCase();
+					break;
+				}
+			}
+
+			if (StringUtil.isEmpty(handlerEmailAddress)) {
+				LOGGER.warning("Could not resend the email message to the handler: " + handler + ". Email address was not found. procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId);
+				return;
+			}
+
+			if (
+					ListUtil.isEmpty(attachedFiles)
+					&& !MapUtil.isEmpty(attachments)
+			) {
+				attachedFiles = addAttachmentsAsFiles(attachments);
+			}
+			File[] fileArray = ListUtil.isEmpty(attachedFiles) ? null : ArrayUtil.convertListToArray(attachedFiles);
+
+			//Improve text
+			if (!StringUtil.isEmpty(text)) {
+				text = text.replace("<img ", "<img hidden ");
+				text = text.replace("\n", "<br />");
+			}
+
+			//Send email
+			try {
+				SendMail.send(
+						fromAddress,
+						handlerEmailAddress,
+						null,
+						null,
+						null,
+						null,
+						subject,
+						text,
+						MimeTypeUtil.MIME_TYPE_HTML,
+						false,
+						false,
+						fileArray
+				);
+			} catch (Exception e) {
+				LOGGER.log(Level.WARNING, "Could not resend the email message to the handler: " + handler + ". Send email failed. procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId, e);
+			}
+		}
+	}
+
+	private List<File> addAttachmentsAsFiles(Map<String, byte[]> attachments) {
+		if (attachments == null || attachments.isEmpty()) {
+			return null;
+		}
+
+		List<File> fileAttachments = new ArrayList<>();
+		String tmpDir = System.getProperty("java.io.tmpdir");
+
+		for (String name: attachments.keySet()) {
+			File attachment = null;
+			InputStream stream = new ByteArrayInputStream(attachments.get(name));
+			try {
+				attachment = new File(tmpDir.concat(File.separator).concat(name));
+				if (!attachment.exists()) {
+					attachment.createNewFile();
+				}
+				FileUtil.streamToFile(stream, attachment);
+				fileAttachments.add(attachment);
+			} catch(IOException e) {
+				LOGGER.log(Level.WARNING, "Could not put the files into the list while resending the email message to the handler.", e);
+			} finally {
+				IOUtil.closeInputStream(stream);
+			}
+		}
+		return fileAttachments;
+	}
+
 
 	private boolean doSubmitAttachDocumentsTask(
 			IWContext iwc,
@@ -832,7 +1035,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String text,
 			String senderPersonalName,
 			String fromAddress,
-			Map<String, InputStream> attachments,
+			Map<String, byte[]> attachments,
 			Collection<File> attachedFiles,
 			IWMainApplicationSettings settings,
 			BPMEmailMessage message
@@ -1021,7 +1224,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return attachmentsHandler;
 	}
 
-	private String getJsonForFileVariables(Map<String, InputStream> attachments, String filesFolder) {
+	private String getJsonForFileVariables(Map<String, byte[]> attachments, String filesFolder) {
 		String json = null;
 		List<String> data = null;
 
@@ -1036,14 +1239,14 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				filesFolder = filesFolder.concat(CoreConstants.SLASH);
 			}
 
-			for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
+			for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
 				if (
 						entry != null
 						&& !StringUtil.isEmpty(entry.getKey())
 						&& entry.getValue() != null
 				) {
 					String fileName = entry.getKey();
-					InputStream fileIs = entry.getValue();
+					InputStream fileIs = new ByteArrayInputStream(entry.getValue());
 
 					BinaryVariable binVar = new BinaryVariableImpl();
 
@@ -1106,5 +1309,23 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		return repository;
 	}
+
+
+	private CasesBPMDAO getCasesBPMDAO() {
+		if (casesBPMDAO == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return casesBPMDAO;
+	}
+
+	private CaseBusiness getCaseBusiness() {
+		try {
+			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
+		}
+		catch (IBOLookupException ile) {
+			throw new IBORuntimeException(ile);
+		}
+	}
+
 
 }
