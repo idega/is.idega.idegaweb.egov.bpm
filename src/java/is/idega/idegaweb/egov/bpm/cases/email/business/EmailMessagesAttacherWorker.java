@@ -984,7 +984,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 						handlerEmailAddress,
 						null,
 						null,
-						null,
+						fromAddress,
 						null,
 						subject,
 						text,
