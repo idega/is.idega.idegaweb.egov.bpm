@@ -26,6 +26,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.CaseBMPBean;
+import com.idega.block.process.data.CaseLogBMPBean;
 import com.idega.block.process.data.bean.Case;
 import com.idega.jbpm.data.BPMVariableData;
 
@@ -284,9 +285,10 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 				        "WHERE EXISTS (" +
 				        "  SELECT 1 FROM " + CaseBMPBean.TABLE_NAME + " pcOuter " +
 				        "  JOIN " + CaseBMPBean.TABLE_NAME + " pcInner ON pcOuter.case_subject = pcInner.case_subject " +
+				        "  JOIN " + CaseLogBMPBean.TABLE_NAME + " l on pcInner.proc_case_id = l.CASE_ID" +
 				        "  WHERE pcInner.proc_case_id IN (:procCaseIds) " +
 				        "    AND pcOuter.case_code in (:caseCodes) " +
-				        "    AND pcOuter.case_status in (:casesStatuses) " +
+				        "    AND (l.CASE_STATUS_AFTER in (:casesStatuses) OR pcOuter.case_status in (:casesStatuses)) " +
 				        "    AND pcOuter.proc_case_id NOT IN (:procCaseIds) " +
 				        "    AND b.case_id = pcOuter.proc_case_id" +
 				        "    AND pcOuter.CREATED < pcInner.CREATED" +
