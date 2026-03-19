@@ -98,9 +98,19 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 					"and pc.caseCode = :caseCode and pc.caseStatus in (:statuses) and pc.id = cp.caseId"
 	),
 	@NamedQuery(
+			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASES_CODES,
+			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
+					"and pc.caseCode in (:casesCodes) and pc.caseStatus in (:statuses) and pc.id = cp.caseId"
+	),
+	@NamedQuery(
 			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASE_CODE,
 			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
 					"and pc.caseCode = :caseCode and pc.id = cp.caseId"
+	),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASES_CODES,
+			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
+					"and pc.caseCode in (:casesCodes) and pc.id = cp.caseId"
 	),
 	@NamedQuery(
 			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS,
@@ -347,7 +357,9 @@ public class CaseProcInstBind implements Serializable {
 								QUERY_FIND_CASES_IDS_BY_UUIDS = "CaseProcInstBind.findCasesIdsByUUIDs",
 								QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS = "CaseProcInstBind.findProcInstUUIDsCaseCreatedAndCaseStatus",
 								QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseStatusesAndCode",
+								QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASES_CODES = "CaseProcInstBind.findProcInstUUIDsByCaseStatusesAndCasesCodes",
 								QUERY_GET_PROC_INST_UUID_BY_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseCode",
+								QUERY_GET_PROC_INST_UUID_BY_CASES_CODES = "CaseProcInstBind.findProcInstUUIDsByCasesCodes",
 								QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS = "CaseProcInstBind.getProcInstUUIDsAndCasesIds",
 								QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODES_AND_CASE_STATUSES = "CaseProcInstBind.findByOtherUUIDsByCasesIdsAndCaseCodeAndCaseStatuses";
 
