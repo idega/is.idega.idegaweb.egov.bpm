@@ -31,6 +31,8 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 					caseManagerType,
 					assigned;
 
+	private List<String> casesCodes;
+
 	private List<BPMProcessVariable> processVariables;
 
 	private boolean usePDFDownloadColumn = true,
@@ -219,6 +221,7 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 			.append("Date to: " + getDateTo()).append("\n")
 			.append("Statuses: " + getStatuses()).append("\n")
 			.append("Case codes: " + caseCodes).append("\n")
+			.append("Cases codes: " + getCasesCodes()).append("\n")
 			.append("Statuses to show: " + statusesToShow).append("\n")
 			.append("Statuses to hide: " + statusesToHide).append("\n")
 			.append("Roles: " + roles).append("\n")
@@ -345,6 +348,14 @@ public class CasesListSearchCriteriaBean extends CasesSearchCriteriaBean {
 
 	public void setOrderStr(String orderStr) {
 		this.orderStr = orderStr;
+	}
+
+	public List<String> getCasesCodes() {
+		return casesCodes;
+	}
+
+	public void setCasesCodes(List<String> casesCodes) {
+		this.casesCodes = casesCodes;
 	}
 
 }

@@ -26,6 +26,7 @@ import org.hibernate.annotations.CacheConcurrencyStrategy;
 
 import com.idega.block.process.business.ProcessConstants;
 import com.idega.block.process.data.CaseBMPBean;
+import com.idega.block.process.data.CaseLogBMPBean;
 import com.idega.block.process.data.bean.Case;
 import com.idega.jbpm.data.BPMVariableData;
 
@@ -97,9 +98,19 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 					"and pc.caseCode = :caseCode and pc.caseStatus in (:statuses) and pc.id = cp.caseId"
 	),
 	@NamedQuery(
+			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASES_CODES,
+			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
+					"and pc.caseCode in (:casesCodes) and pc.caseStatus in (:statuses) and pc.id = cp.caseId"
+	),
+	@NamedQuery(
 			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASE_CODE,
 			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
 					"and pc.caseCode = :caseCode and pc.id = cp.caseId"
+	),
+	@NamedQuery(
+			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUID_BY_CASES_CODES,
+			query = "select cp.uuid from com.idega.idegaweb.egov.bpm.data.CaseProcInstBind cp, com.idega.block.process.data.bean.Case pc where cp.uuid is not null " +
+					"and pc.caseCode in (:casesCodes) and pc.id = cp.caseId"
 	),
 	@NamedQuery(
 			name = CaseProcInstBind.QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS,
@@ -284,9 +295,10 @@ import is.idega.idegaweb.egov.bpm.cases.CasesBPMProcessConstants;
 				        "WHERE EXISTS (" +
 				        "  SELECT 1 FROM " + CaseBMPBean.TABLE_NAME + " pcOuter " +
 				        "  JOIN " + CaseBMPBean.TABLE_NAME + " pcInner ON pcOuter.case_subject = pcInner.case_subject " +
+				        "  JOIN " + CaseLogBMPBean.TABLE_NAME + " l on pcInner.proc_case_id = l.CASE_ID" +
 				        "  WHERE pcInner.proc_case_id IN (:procCaseIds) " +
 				        "    AND pcOuter.case_code in (:caseCodes) " +
-				        "    AND pcOuter.case_status in (:casesStatuses) " +
+				        "    AND (l.CASE_STATUS_AFTER in (:casesStatuses) OR pcOuter.case_status in (:casesStatuses)) " +
 				        "    AND pcOuter.proc_case_id NOT IN (:procCaseIds) " +
 				        "    AND b.case_id = pcOuter.proc_case_id" +
 				        "    AND pcOuter.CREATED < pcInner.CREATED" +
@@ -345,7 +357,9 @@ public class CaseProcInstBind implements Serializable {
 								QUERY_FIND_CASES_IDS_BY_UUIDS = "CaseProcInstBind.findCasesIdsByUUIDs",
 								QUERY_GET_PROC_INST_UUID_CASE_CREATED_AND_CASE_STATUS = "CaseProcInstBind.findProcInstUUIDsCaseCreatedAndCaseStatus",
 								QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseStatusesAndCode",
+								QUERY_GET_PROC_INST_UUID_BY_CASE_STATUSES_AND_CASES_CODES = "CaseProcInstBind.findProcInstUUIDsByCaseStatusesAndCasesCodes",
 								QUERY_GET_PROC_INST_UUID_BY_CASE_CODE = "CaseProcInstBind.findProcInstUUIDsByCaseCode",
+								QUERY_GET_PROC_INST_UUID_BY_CASES_CODES = "CaseProcInstBind.findProcInstUUIDsByCasesCodes",
 								QUERY_GET_PROC_INST_UUIDS_AND_CASES_IDS = "CaseProcInstBind.getProcInstUUIDsAndCasesIds",
 								QUERY_GET_OTHER_UUIDS_BY_CASES_IDS_AND_CASE_CODES_AND_CASE_STATUSES = "CaseProcInstBind.findByOtherUUIDsByCasesIdsAndCaseCodeAndCaseStatuses";
 

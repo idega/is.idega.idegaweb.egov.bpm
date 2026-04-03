@@ -5,6 +5,7 @@ import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -23,7 +24,6 @@ import com.idega.user.business.UserBusiness;
 import com.idega.util.ArrayUtil;
 import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
-import com.idega.util.IWTimestamp;
 import com.idega.util.ListUtil;
 import com.idega.util.StringHandler;
 import com.idega.util.StringUtil;
@@ -388,11 +388,11 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return ArrayUtil.convertListToArray(statuses.keySet());
 	}
 
-	protected IWTimestamp getDateFrom() {
+	protected Date getDateFrom() {
 		return criterias == null ? null : criterias.getDateFrom();
 	}
 
-	protected IWTimestamp getDateTo() {
+	protected Date getDateTo() {
 		return criterias == null ? null : criterias.getDateTo();
 	}
 
