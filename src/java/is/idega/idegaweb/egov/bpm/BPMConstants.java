@@ -39,6 +39,11 @@ public interface BPMConstants {
 								APP_PROPERTY_ATTACH_DOCUMENTS_TASK_FORM_NAME = "ATTACH_DOCUMENTS_TASK_FORM_NAME",
 								ATTACH_DOCUMENTS_DEFAULT_TASK_FORM_NAME = "attach_files_form",
 
-								CASES_EXPORT_EXTRA_DATA = "cases_export_extra_data";
+								CASES_EXPORT_EXTRA_DATA = "cases_export_extra_data",
+
+								APP_PROPERTY_FILTER_OUT_SMALL_IMAGE_FILES_WHILE_PARSING_MESSAGES = "filter_out_small_image_files_while_parsing_messages",
+								APP_PROPERTY_FILTER_OUT_ALL_IMAGE_FILES_WHILE_PARSING_MESSAGES = "filter_out_all_image_files_while_parsing_messages",
+
+								APP_PROPERTY_MIN_IMAGE_SIZE_IN_BYTES_WHILE_PARSING_MESSAGES = "min_image_size_in_bytes_while_parsing_messages";
 
 }

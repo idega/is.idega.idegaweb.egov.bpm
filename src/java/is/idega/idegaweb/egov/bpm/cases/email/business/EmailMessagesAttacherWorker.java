@@ -825,13 +825,81 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		Map<String, byte[]> attachmentBytes = new HashMap<>();
 
 		if (!MapUtils.isEmpty(attachments)) {
+			boolean filterOutSmallImageFilesWhileParsingMessages = settings.getBoolean(is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_FILTER_OUT_SMALL_IMAGE_FILES_WHILE_PARSING_MESSAGES, true);
+			int minImageSizeInBytesWhileParsingMessages = settings.getInt(is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_MIN_IMAGE_SIZE_IN_BYTES_WHILE_PARSING_MESSAGES, 100000);
+			boolean filterOutAllmageFilesWhileParsingMessages = settings.getBoolean(is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_FILTER_OUT_ALL_IMAGE_FILES_WHILE_PARSING_MESSAGES, false);
+
 			for (Map.Entry<String, InputStream> entry : attachments.entrySet()) {
 			    InputStream is = entry.getValue();
+			    String fileName = entry.getKey();
+
 			    try {
 			        byte[] data = IOUtils.toByteArray(is);
+
+				    //Fiter small images
+				    if (filterOutSmallImageFilesWhileParsingMessages) {
+				    	int fileLength = data.length;
+				    	String fileExtension = CoreConstants.EMPTY;
+				    	if (!StringUtil.isEmpty(fileName)) {
+				    	    int lastDotIndex = fileName.lastIndexOf('.');
+
+				    	    if (lastDotIndex > 0 && lastDotIndex < fileName.length() - 1) {
+				    	        fileExtension = fileName.substring(lastDotIndex + 1);
+				    	    }
+				    	}
+				    	if (StringUtil.isEmpty(fileExtension)) {
+				    		LOGGER.info("Email messages parser. Skipping the attachment, not adding to the email. Attachment extension is not found. File name: " + fileName);
+				    		continue;
+				    	}
+						boolean isImageFile = fileExtension.equalsIgnoreCase("gif")
+								|| fileExtension.equalsIgnoreCase("ico")
+								|| fileExtension.equalsIgnoreCase("jpg")
+								|| fileExtension.equalsIgnoreCase("jpeg")
+								|| fileExtension.equalsIgnoreCase("png")
+								|| fileExtension.equalsIgnoreCase("bmp")
+								|| fileExtension.equalsIgnoreCase("webp")
+								|| fileExtension.equalsIgnoreCase("avif")
+								|| fileExtension.equalsIgnoreCase("heic")
+								|| fileExtension.equalsIgnoreCase("heif")
+								|| fileExtension.equalsIgnoreCase("tiff")
+								|| fileExtension.equalsIgnoreCase("tif")
+								|| fileExtension.equalsIgnoreCase("raw")
+								|| fileExtension.equalsIgnoreCase("cr2")
+								|| fileExtension.equalsIgnoreCase("nef")
+								|| fileExtension.equalsIgnoreCase("arw")
+								|| fileExtension.equalsIgnoreCase("svg")
+								|| fileExtension.equalsIgnoreCase("jp2")
+								|| fileExtension.equalsIgnoreCase("apng")
+								|| fileExtension.equalsIgnoreCase("jfif")
+								|| fileExtension.equalsIgnoreCase("dds")
+								|| fileExtension.equalsIgnoreCase("exr")
+								|| fileExtension.equalsIgnoreCase("hdr");
+						if (
+								isImageFile
+								&& filterOutAllmageFilesWhileParsingMessages
+						) {
+				    		LOGGER.info("Email messages parser. Skipping the attachment, not adding to the email. Attachment an image and app property set not to attach images. "
+				    				+ "File name: " + fileName
+				    				+ ". File size: " + fileLength);
+				    		continue;
+						}
+
+				    	if (
+				    			(
+			    					fileLength == 0
+			    					|| fileLength < minImageSizeInBytesWhileParsingMessages
+			    				)
+				    			&& isImageFile
+				    	) {
+				    		LOGGER.info("Email messages parser. Skipping the attachment, not adding to the email. Attachment an image and file size is too small. "
+				    				+ "File name: " + fileName
+				    				+ ". File size: " + fileLength);
+				    		continue;
+				    	}
+				    }
 			        attachmentBytes.put(entry.getKey(), data);
 			    } catch (IOException ex) {
-			        LOGGER.log(Level.WARNING, "Failed to read attachment: " + entry.getKey(), ex);
+			        LOGGER.log(Level.WARNING, "Failed to read attachment: " + fileName, ex);
 			    } finally {
 			        IOUtil.closeInputStream(is);
 			    }
