@@ -25,6 +25,8 @@ public interface BPMConstants {
 								VARIABLE_NUMBER_OF_MISSED_PAYMENTS = "numberOfMissedPayments",
 								VARIABLE_PROCESS_RULING_ATTACHMENTS = "files_processRullingAttachments",
 
+								VARIABLE_TICKET_DATE = "date_ticketDate",
+
 								APP_PROPERTY_BPM_VERSION = "bpm.version",
 
 								PDF_FROM_EMAIL_CONTENT_FILE_NAME = "PDF_FROM_EMAIL_CONTENT_FILE_NAME",
