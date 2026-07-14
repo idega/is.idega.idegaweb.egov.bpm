@@ -433,7 +433,14 @@ public class CasesBPMProcessDefinitionW extends DefaultBPMProcessDefinitionW {
 		IWMainApplication iwma = iwac.getIWMainApplication();
 
 		UserBusiness userBusiness = getUserBusiness(iwac);
-		User user = userId == null ? null : userBusiness.getUser(userId);
+		User user = null;
+		if (userId != null) {
+			try {
+				user = userBusiness.getUser(userId);
+			} catch (Exception e) {
+				getLogger().warning("Error getting user by ID " + userId);
+			}
+		}
 
 		GeneralCase genCase = getCase(caseId, procDefName, casesBusiness, user, iwma, caseStatusKey, realCaseCreationDate, caseIdentifier, uniqueId);
 		getLogger().info("Case (id=" + genCase.getPrimaryKey() + ") created for process instance " + piId);
