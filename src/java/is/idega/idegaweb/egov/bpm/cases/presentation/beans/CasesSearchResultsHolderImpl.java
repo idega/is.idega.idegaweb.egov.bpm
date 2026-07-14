@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -23,6 +25,7 @@ import javax.servlet.http.HttpSession;
 
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.Font;
+import org.apache.poi.ss.util.DateFormatConverter;
 import org.apache.poi.xssf.streaming.SXSSFCell;
 import org.apache.poi.xssf.streaming.SXSSFRow;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
@@ -66,6 +69,7 @@ import com.idega.jbpm.exe.ProcessManager;
 import com.idega.jbpm.identity.RolesManager;
 import com.idega.jbpm.variables.MultipleSelectionVariablesResolver;
 import com.idega.presentation.IWContext;
+import com.idega.presentation.ui.handlers.IWDatePickerHandler;
 import com.idega.user.business.NoEmailFoundException;
 import com.idega.user.business.NoPhoneFoundException;
 import com.idega.user.business.UserBusiness;
@@ -614,6 +618,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			List<Integer> fileCellsIndexes,
 			String localizedFileLabel,
 			CellStyle normalStyle,
+			CellStyle dateStyle,
 			int rowNumber
 	) {
 		if (ListUtil.isEmpty(variablesByProcessDefinition)) {
@@ -681,7 +686,22 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 			List<String> valuesForVar = ListUtil.getListFromJSON(value);
 			if (valuesForVar == null) {
-				values.add(value);
+				Serializable toExport = value;
+				if (!StringUtil.isEmpty(value) && !CoreConstants.MINUS.equals(value) && !StringUtil.isEmpty(varName)) {
+					switch (varName) {
+					case is.idega.idegaweb.egov.bpm.BPMConstants.VARIABLE_TICKET_DATE:
+						Date date = IWDatePickerHandler.getParsedDate(value);
+						if (date != null) {
+							toExport = date;
+						}
+						break;
+
+					default:
+						break;
+					}
+				}
+
+				values.add(toExport);
 			} else {
 				int size = valuesForVar.size();
 				if (size > numberOfRows) {
@@ -725,7 +745,14 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			} else {
 				SXSSFCell cell = row.createCell(cellIndex++);
 				cell.setCellStyle(normalStyle);
-				cell.setCellValue(value == null ? CoreConstants.EMPTY : getRealValue(value.toString()));
+				if (value instanceof Date) {
+					cell.setCellValue((Date) value);
+					if (dateStyle != null) {
+						cell.setCellStyle(dateStyle);
+					}
+				} else {
+					cell.setCellValue(value == null ? CoreConstants.EMPTY : getRealValue(value.toString()));
+				}
 			}
 		}
 		return cellIndex;
@@ -899,6 +926,33 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			locale = Locale.ENGLISH;
 		}
 
+		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
+
+		CellStyle dateStyle = workBook.createCellStyle();
+		String excelPattern = null;
+		if (settings.getBoolean("excel.date_locale_format", true)) {
+			DateFormat df = DateFormat.getDateTimeInstance(DateFormat.MEDIUM, DateFormat.MEDIUM, locale);
+			String pattern = null;
+			if (df instanceof SimpleDateFormat) {
+				pattern = ((SimpleDateFormat) df).toPattern();
+				excelPattern = DateFormatConverter.convert(locale, pattern);
+			}
+		}
+		if (StringUtil.isEmpty(excelPattern)) {
+			int dateType = settings.getInt("excel.date_column_format", 22);
+			if (dateType >= 14 && dateType <= 22) {
+				dateStyle.setDataFormat((short) dateType);
+			} else {
+				dateStyle = null;
+			}
+		} else {
+			dateStyle.setDataFormat(
+					workBook.getCreationHelper()
+							.createDataFormat()
+							.getFormat(excelPattern)
+			);
+		}
+
 		CasesSearchCriteriaBean searchCriteria = getSearchCriteria(id);
 		List<String> standardFieldsLabels = getStandardFieldsLabels(id);
 		Map<String, Boolean> createdSheets = new HashMap<>();
@@ -1019,7 +1073,22 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 					}
 
 					//	Variable values
-					cellIndex = addVariables(request, availableVariables, theCase, row, sheet, bigStyle, locale, isAdmin, cellIndex, fileCellsIndexes, fileNameLabel, normalStyle, rowNumber);
+					cellIndex = addVariables(
+							request,
+							availableVariables,
+							theCase,
+							row,
+							sheet,
+							bigStyle,
+							locale,
+							isAdmin,
+							cellIndex,
+							fileCellsIndexes,
+							fileNameLabel,
+							normalStyle,
+							dateStyle,
+							rowNumber
+					);
 					rowNumber++;
 
 					if (exportContacts) {
