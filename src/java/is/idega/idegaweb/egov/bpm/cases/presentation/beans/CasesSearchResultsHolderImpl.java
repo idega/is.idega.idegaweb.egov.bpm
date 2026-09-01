@@ -663,7 +663,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 				value = LocaleUtil.getLocalizedGroupName(IWMainApplication.getDefaultIWMainApplication(), locale, IWBundleStarter.IW_BUNDLE_IDENTIFIER, value);
 			}
 
-			if (StringUtil.isEmpty(value) || CoreConstants.MINUS.equals(value)) {
+			if ((StringUtil.isEmpty(value) || CoreConstants.MINUS.equals(value)) && variable != null) {
 				String name = variable.getName();
 				if (!StringUtil.isEmpty(name)) {
 					switch (name) {
