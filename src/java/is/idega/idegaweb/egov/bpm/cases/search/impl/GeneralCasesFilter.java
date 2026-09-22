@@ -72,6 +72,10 @@ public class GeneralCasesFilter extends DefaultCasesListSearchFilter {
 
 	@Override
 	protected boolean isFilterKeyDefined() {
+		if (getSettings().getBoolean("bpm.gen_case_filter_off", false)) {
+			return false;
+		}
+
 		if (StringUtil.isEmpty(getDescription()) && StringUtil.isEmpty(getName()) && StringUtil.isEmpty(getPersonalId()) &&
 				ArrayUtil.isEmpty(getStatuses()) && getDateFrom() == null && getDateTo() == null) {
 			getLogger().log(Level.INFO, "None of general criterias (description, name, personal ID, statuses, dates) are defined, not filtering by it!");
@@ -79,4 +83,5 @@ public class GeneralCasesFilter extends DefaultCasesListSearchFilter {
 		}
 		return true;
 	}
+
 }
