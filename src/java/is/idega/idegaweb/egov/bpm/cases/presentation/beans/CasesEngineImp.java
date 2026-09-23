@@ -793,7 +793,7 @@ public class CasesEngineImp extends DefaultSpringBean implements BPMCasesEngine,
 				}
 
 				//	Making sure user will see cases that are available to her/him only
-				casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, casesIdsByProcInstIds);
+				casesIds = DefaultCasesListSearchFilter.getNarrowedResults(casesIds, casesIdsByProcInstIds, getClass());
 				getLogger().info("Found cases IDs (" + casesIds.size() + ": " + casesIds + ") by search and after narrowed results");
 			}
 			end = System.currentTimeMillis();

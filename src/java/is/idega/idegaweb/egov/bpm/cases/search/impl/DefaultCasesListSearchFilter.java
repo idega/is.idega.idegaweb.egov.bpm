@@ -145,7 +145,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		setInitialCasesIds(casesIds);
 		List<Integer> cachedIds = beforeFiltering();
 		if (!ListUtil.isEmpty(cachedIds)) {
-			return getNarrowedResults(casesIds, cachedIds);
+			return getNarrowedResults(casesIds, cachedIds, getClass());
 		}
 
 		if (ListUtil.isEmpty(casesIds)) {
@@ -160,10 +160,10 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 
 		List<Integer> filtered = getSearchResults(casesIds);
 		if (ListUtil.isEmpty(filtered)) {
-			return getNarrowedResults(casesIds, filtered);
+			return getNarrowedResults(casesIds, filtered, getClass());
 		}
 
-		filtered = getNarrowedResults(casesIds, filtered);
+		filtered = getNarrowedResults(casesIds, filtered, getClass());
 		afterFiltering(getInfo(), filtered);
 
 		return filtered;
@@ -231,13 +231,13 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 		return convertedValues;
 	}
 
-	public static List<Integer> getNarrowedResults(List<? extends Number> casesIds, List<? extends Number> filterResults) {
+	public static List<Integer> getNarrowedResults(List<? extends Number> casesIds, List<? extends Number> filterResults, Class<?> theClass) {
 		if (ListUtil.isEmpty(casesIds)) {
-			getLogger(DefaultCasesListSearchFilter.class).info("There are no start data, emptying IDs");
+			getLogger(theClass).info("There are no start data, emptying IDs");
 			return null;
 		}
 		if (ListUtil.isEmpty(filterResults)) {
-			getLogger(DefaultCasesListSearchFilter.class).info("No results found, emptying IDs");
+			getLogger(theClass).info("No results found, emptying IDs");
 			return null;
 		}
 
@@ -257,7 +257,7 @@ public abstract class DefaultCasesListSearchFilter extends DefaultSpringBean imp
 					filtered.add(id);
 				}
 			} else {
-				getLogger(DefaultCasesListSearchFilter.class).warning("ID is not type of Number: " + o);
+				getLogger(theClass).warning("ID is not type of Number: " + o);
 			}
 		}
 
