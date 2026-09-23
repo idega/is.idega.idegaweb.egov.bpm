@@ -33,7 +33,7 @@ public class CaseNumberFilter extends DefaultCasesListSearchFilter {
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		String caseNumber = getCaseNumber();
 		String loweredCaseNumber = caseNumber.toLowerCase(CoreUtil.getIWContext().getCurrentLocale());
-		Set<Integer> casesByNumberIds = new HashSet<Integer>();
+		Set<Integer> casesByNumberIds = new HashSet<>();
 
 		//	"BPM" cases
 		List<Long> bpmCases = null;
@@ -129,6 +129,10 @@ public class CaseNumberFilter extends DefaultCasesListSearchFilter {
 
 	@Override
 	protected boolean isFilterKeyDefined() {
+		if (getSettings().getBoolean("bpm.case_nr_filter_off", false)) {
+			return false;
+		}
+
 		String caseNumber = getCaseNumber();
 		if (StringUtil.isEmpty(caseNumber)) {
 			getLogger().log(Level.INFO, "Case number is undefined, not filtering by it!");

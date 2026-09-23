@@ -167,12 +167,12 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 
 		getLogger().info(getInfo());
 
-		List<BPMProcessVariable> variables = new ArrayList<BPMProcessVariable>(vars);
+		List<BPMProcessVariable> variables = new ArrayList<>(vars);
 
 		Object tmp = null;
 		BPMProcessVariable handlerVariable = null;
-		List<BPMProcessVariable> varsToRemove = new ArrayList<BPMProcessVariable>();
-		Map<String, List<Serializable>> multValues = new HashMap<String, List<Serializable>>();
+		List<BPMProcessVariable> varsToRemove = new ArrayList<>();
+		Map<String, List<Serializable>> multValues = new HashMap<>();
 		for (BPMProcessVariable variable: variables) {
 			String name = variable.getName();
 
@@ -183,7 +183,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 				Collection<?> newMultipleValues = (Collection<?>) tmp;
 				List<Serializable> existingMultipleValues = multValues.get(name);
 				if (existingMultipleValues == null) {
-					existingMultipleValues = new ArrayList<Serializable>();
+					existingMultipleValues = new ArrayList<>();
 					multValues.put(name, existingMultipleValues);
 				}
 				for (Object value: newMultipleValues) {
@@ -215,10 +215,10 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 
 			if (casesIdsByMultipleValues == null) {
 				//	Just handler variable was specified
-				casesIdsByMultipleValues = new ArrayList<Integer>(casesIdsByHandlers);
+				casesIdsByMultipleValues = new ArrayList<>(casesIdsByHandlers);
 			} else {
 				//	Keeping condition AND
-				casesIdsByMultipleValues = getNarrowedResults(casesIdsByMultipleValues, casesIdsByHandlers);
+				casesIdsByMultipleValues = getNarrowedResults(casesIdsByMultipleValues, casesIdsByHandlers, getClass());
 				if (ListUtil.isEmpty(casesIdsByMultipleValues)) {
 					return null;
 				}
@@ -234,7 +234,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 		List<Integer> casesIds = null;
 		try {
 			List<Integer> casesIdsByOtherVars = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessDefinitionNameAndVariables(procDefName, variables));
-			casesIds = ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues, casesIdsByOtherVars);
+			casesIds = ListUtil.isEmpty(casesIdsByMultipleValues) ? casesIdsByOtherVars : getNarrowedResults(casesIdsByMultipleValues, casesIdsByOtherVars, getClass());
 		} catch(Exception e) {
 			getLogger().log(Level.SEVERE, "Exception while resolving cases ids by process definition id and process name. Process definition id = " +
 					processDefinitionId + ", variables: " + variables, e);
@@ -246,7 +246,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 	private List<Long> getCasesIdsByMultipleVariableValues(String processDefinitionName, Map<String, List<Serializable>> multipleValues) {
 		List<String> procDefNames = Arrays.asList(processDefinitionName);
 
-		List<Long> procInstIds = new ArrayList<Long>();
+		List<Long> procInstIds = new ArrayList<>();
 		for (String variableName: multipleValues.keySet()) {
 			Collection<VariableInstanceInfo> vars = getVariablesQuerier().getProcessVariablesByNameAndValue(variableName, multipleValues.get(variableName), procDefNames);
 			procInstIds = getProcInstIdsFromVars(vars, procInstIds);
@@ -260,7 +260,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			return null;
 		}
 
-		ids = ids == null ? new ArrayList<Long>() : ids;
+		ids = ids == null ? new ArrayList<>() : ids;
 		for (VariableInstanceInfo var: vars) {
 			Long procInstId = var.getProcessInstanceId();
 			if (procInstId == null) {
@@ -284,7 +284,7 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 			return null;
 		}
 
-		List<Integer> usersIds = new ArrayList<Integer>();
+		List<Integer> usersIds = new ArrayList<>();
 		for (String id: ids) {
 			Integer handlerId = null;
 			try {
@@ -314,6 +314,10 @@ public class ProcessesFilter extends DefaultCasesListSearchFilter {
 
 	@Override
 	protected boolean isFilterKeyDefined() {
+		if (getSettings().getBoolean("bpm.processes_filter_off", false)) {
+			return false;
+		}
+
 		String processDefinitionId = getProcessId();
 		if (StringUtil.isEmpty(processDefinitionId)) {
 			getLogger().info("Process is not defined, not filtering by it!");

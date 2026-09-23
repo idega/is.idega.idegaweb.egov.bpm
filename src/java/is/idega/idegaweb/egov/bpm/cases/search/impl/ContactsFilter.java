@@ -22,13 +22,13 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 	@Override
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		String contact = getContact();
-		List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);	
+		List<Integer> casesByContact = getCasesByContactQuery(CoreUtil.getIWContext(), contact);
 		if (ListUtil.isEmpty(casesByContact)) {
 			getLogger().log(Level.INFO, "No BPM cases found by contact: " + contact);
 		} else {
 			getLogger().log(Level.INFO, "Found BPM cases by contact: " + contact);
 		}
-			
+
 		return casesByContact;
 	}
 
@@ -36,19 +36,19 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 	protected String getInfo() {
 		return "Looking for cases by contact: " + getContact();
 	}
-	
+
 	private List<Integer> getCasesByContactQuery(IWContext iwc, String contact) {
 		if (StringUtil.isEmpty(contact))
 			return null;
-		
+
 		Collection<User> usersByContactInfo = getUserBusiness().getUsersByNameOrEmailOrPhone(contact);
 		if (ListUtil.isEmpty(usersByContactInfo)) {
 			return null;
 		}
 
 		List<Integer> casesByContactPerson = null;
-		final List<Integer> casesByContact = new ArrayList<Integer>();
-			
+		final List<Integer> casesByContact = new ArrayList<>();
+
 		for (User contactPerson: usersByContactInfo) {
 			try {
 				casesByContactPerson = getConvertedFromNumbers(getCasesBPMDAO().getCaseIdsByProcessInstanceIds(getRolesManager().getProcessInstancesIdsForUser(iwc,
@@ -56,7 +56,7 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 			} catch(Exception e) {
 				getLogger().log(Level.SEVERE, "Error getting case IDs from contact query: " + contact, e);
 			}
-			
+
 			if (!ListUtil.isEmpty(casesByContactPerson)) {
 				for (Integer caseId: casesByContactPerson) {
 					if (!casesByContact.contains(caseId)) {
@@ -65,10 +65,10 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 				}
 			}
 		}
-		
+
 		return casesByContact;
 	}
-	
+
 	@Override
 	protected String getFilterKey() {
 		return getContact();
@@ -76,6 +76,10 @@ public class ContactsFilter extends DefaultCasesListSearchFilter {
 
 	@Override
 	protected boolean isFilterKeyDefined() {
+		if (getSettings().getBoolean("bpm.contacts_filter_off", false)) {
+			return false;
+		}
+
 		String contact = getContact();
 		if (StringUtil.isEmpty(contact)) {
 			getLogger().info("Contact query is not defined, not filtering by it!");

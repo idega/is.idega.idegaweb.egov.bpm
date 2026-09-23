@@ -82,9 +82,6 @@
  */
 package is.idega.idegaweb.egov.bpm.cases.search.impl;
 
-import is.idega.idegaweb.egov.bpm.IWBundleStarter;
-import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -106,6 +103,9 @@ import com.idega.util.CoreConstants;
 import com.idega.util.CoreUtil;
 import com.idega.util.ListUtil;
 import com.idega.util.datastructures.map.MapUtil;
+
+import is.idega.idegaweb.egov.bpm.IWBundleStarter;
+import is.idega.idegaweb.egov.bpm.business.CasesSubcriberManager;
 
 /**
  * <p>You can report about problems to:
@@ -174,7 +174,7 @@ public class HandlerCategoriesFilter extends DefaultCasesListSearchFilter {
 			return casesIds;
 		}
 
-		List<Integer> ids = new ArrayList<Integer>();
+		List<Integer> ids = new ArrayList<>();
 		CasesSearchCriteriaBean criterias = getCriterias();
 		Map<String, CasesSubcriberManager> beans = getBeansOfType(CasesSubcriberManager.class);
 		if (!MapUtil.isEmpty(beans)) {
@@ -208,11 +208,12 @@ public class HandlerCategoriesFilter extends DefaultCasesListSearchFilter {
 		}
 	}
 
-	/* (non-Javadoc)
-	 * @see is.idega.idegaweb.egov.bpm.cases.search.impl.DefaultCasesListSearchFilter#isFilterKeyDefined()
-	 */
 	@Override
 	protected boolean isFilterKeyDefined() {
+		if (getSettings().getBoolean("bpm.han_cat_filter_off", false)) {
+			return false;
+		}
+
 		return getSelectedGroup() != null;
 	}
 

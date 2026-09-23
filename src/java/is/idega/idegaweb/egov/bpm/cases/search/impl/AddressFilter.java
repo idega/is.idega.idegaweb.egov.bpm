@@ -36,7 +36,7 @@ public class AddressFilter extends DefaultCasesListSearchFilter {
 	public List<Integer> getSearchResults(List<Integer> casesIds) {
 		String addressToSearch = getAddress();
 		String addressToSearchWithoutSymbols = addressToSearch.trim().replaceAll("[.,-]", "").replaceAll(" ", "");
-		List<Integer> casesByAddressIds = new ArrayList<Integer>();
+		List<Integer> casesByAddressIds = new ArrayList<>();
 		List<CaseProcInstBind> bindList = null;
 
 		//Searching for the cases
@@ -127,6 +127,10 @@ public class AddressFilter extends DefaultCasesListSearchFilter {
 
 	@Override
 	protected boolean isFilterKeyDefined() {
+		if (getSettings().getBoolean("bpm.address_filter_off", false)) {
+			return false;
+		}
+
 		String address = getAddress();
 		if (StringUtil.isEmpty(address)) {
 			getLogger().log(Level.INFO, "Address is undefined, not filtering by it!");
