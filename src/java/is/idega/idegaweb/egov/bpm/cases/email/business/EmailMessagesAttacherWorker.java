@@ -18,6 +18,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -55,7 +56,6 @@ import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.contact.data.Email;
 import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.core.file.util.MimeTypeUtil;
-import com.idega.core.idgenerator.business.UUIDGenerator;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.data.IDOLookup;
 import com.idega.data.SimpleQuerier;
@@ -65,6 +65,7 @@ import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
 import com.idega.jbpm.exe.BPMFactory;
+import com.idega.jbpm.exe.ProcessConstants;
 import com.idega.jbpm.exe.ProcessInstanceW;
 import com.idega.jbpm.exe.TaskInstanceW;
 import com.idega.jbpm.utils.JBPMConstants;
@@ -92,6 +93,7 @@ import com.idega.util.datastructures.map.MapUtil;
 import com.idega.util.expression.ELUtil;
 
 import is.idega.idegaweb.egov.bpm.cases.email.bean.BPMEmailMessage;
+import is.idega.idegaweb.egov.bpm.presentation.IWContextMockUp;
 import is.idega.idegaweb.egov.cases.business.CasesBusiness;
 import is.idega.idegaweb.egov.cases.data.GeneralCase;
 import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
@@ -803,8 +805,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		IWMainApplicationSettings settings = IWMainApplication.getDefaultIWMainApplication().getSettings();
 
-		IWContext iwc = CoreUtil.getIWContext();
-
 		//*** Prepare data ***
 
 		String subject = message.getSubject();
@@ -909,7 +909,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		//*** Create a new task with the email data ***
 
 		result = doSubmitAttachDocumentsTask(
-				iwc,
 				procInstId,
 				procInstUUID,
 				subject,
@@ -928,7 +927,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		try {
 			boolean resendAutomaticallyParsedEmailToHandler = settings.getBoolean("msg.resend_automaticly_parsed_message_to_handler", true);
 			if (resendAutomaticallyParsedEmailToHandler) {
-				resendMessageToHandler(iwc, procInstId, procInstUUID, subject, text, senderPersonalName, fromAddress, attachmentBytes, fileAttachments, settings);
+				resendMessageToHandler(procInstId, procInstUUID, subject, text, senderPersonalName, fromAddress, attachmentBytes, fileAttachments, settings);
 			}
 		} catch (Exception eRS) {
 			LOGGER.log(Level.WARNING, "Could not resend the email message to the handler. Proc instance: " + (StringUtil.isEmpty(procInstUUID) ? procInstId : procInstUUID), eRS);
@@ -938,7 +937,6 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	}
 
 	private void resendMessageToHandler(
-			IWContext iwc,
 			Long processInstanceId,
 			String procInstUUID,
 			String subject,
@@ -1094,9 +1092,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return fileAttachments;
 	}
 
-
 	private boolean doSubmitAttachDocumentsTask(
-			IWContext iwc,
 			Long processInstanceId,
 			String procInstUUID,
 			String subject,
@@ -1113,13 +1109,15 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		Map<String, Object> variables = new HashMap<>();
 
 		try {
-
 			if (processInstanceId == null && StringUtil.isEmpty(procInstUUID)) {
 				LOGGER.warning("Failed to submit task " + formName + " for found email message: " + message + ". Proc. inst. is null");
 				return false;
 			}
 
-			formName = settings.getProperty(is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_ATTACH_DOCUMENTS_TASK_FORM_NAME, is.idega.idegaweb.egov.bpm.BPMConstants.ATTACH_DOCUMENTS_DEFAULT_TASK_FORM_NAME);
+			formName = settings.getProperty(
+					is.idega.idegaweb.egov.bpm.BPMConstants.APP_PROPERTY_ATTACH_DOCUMENTS_TASK_FORM_NAME,
+					is.idega.idegaweb.egov.bpm.BPMConstants.ATTACH_DOCUMENTS_DEFAULT_TASK_FORM_NAME
+			);
 
 			ProcessInstanceW piW = null;
 			try {
@@ -1136,25 +1134,63 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				return false;
 			}
 
+			boolean fromApplicant = false;
+			Collection<com.idega.bpm.model.VariableInstance> vars = StringUtil.isEmpty(fromAddress) ? null : piW.getVariables(Arrays.asList(ProcessConstants.OWNER_EMAIL_ADDRESS));
+			if (!ListUtil.isEmpty(vars)) {
+				com.idega.bpm.model.VariableInstance var = vars.iterator().next();
+				Object value = var.getRawValue();
+				if (value != null && value.toString().equalsIgnoreCase(fromAddress)) {
+					fromApplicant = true;
+				}
+			}
+
 			//*** Prepare variables for the task ***
-			String uuid = UUIDGenerator.getInstance().generateId();
+			String uuid = UUID.randomUUID().toString();
 			String uploadPath = getBinaryVariablesHandler().getFolderForBinaryVariable(uuid);
-			variables.put(
-					is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_MESSAGE_RECEIVED_DATE,
-					new IWTimestamp().getDateString(IWTimestamp.DATE_TIME_PATTERN)
-			); //new Date(System.currentTimeMillis())   //new IWTimestamp().getLocaleDate(CoreUtil.getCurrentLocale(), DateFormat.MEDIUM)
-			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_SENDERPERSONAL_NAME, senderPersonalName);
-			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_FROM_ADDRESS, fromAddress);
-			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_SUBJECT, subject);
-			variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_TEXT, text);
 			String jsonForFileVariable = getJsonForFileVariables(attachments, uploadPath);
-			if (!StringUtil.isEmpty(jsonForFileVariable)) {
-				variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_ADDITIONALLY_ADDED_FILES, jsonForFileVariable);
+
+			String formFromApplicant = fromApplicant ? settings.getProperty("email_parser.from_appl_form") : null;
+			if (fromApplicant && !StringUtil.isEmpty(formFromApplicant)) {
+				formName = formFromApplicant;
+
+				String finalText = CoreConstants.EMPTY;
+				if (!StringUtil.isEmpty(senderPersonalName)) {
+					finalText = senderPersonalName;
+				}
+				if (StringUtil.isEmpty(fromAddress)) {
+					finalText = finalText.concat("\n");
+				} else {
+					finalText = finalText.concat(" <").concat(fromAddress).concat(">\n");
+				}
+				if (!StringUtil.isEmpty(subject)) {
+					finalText = finalText.concat(subject).concat(">\n\n");
+				}
+				if (!StringUtil.isEmpty(text)) {
+					finalText = finalText.concat(text);
+				}
+
+				variables.put(settings.getProperty("email_parser.from_appl_text_var"), finalText);
+				if (!StringUtil.isEmpty(jsonForFileVariable)) {
+					variables.put(settings.getProperty("email_parser.from_appl_files_var"), jsonForFileVariable);
+				}
+
+			} else {
+				variables.put(
+						is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_MESSAGE_RECEIVED_DATE,
+						new IWTimestamp().getDateString(IWTimestamp.DATE_TIME_PATTERN)
+				);
+				variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_SENDERPERSONAL_NAME, senderPersonalName);
+				variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_FROM_ADDRESS, fromAddress);
+				variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_SUBJECT, subject);
+				variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_EMAIL_TEXT, text);
+				if (!StringUtil.isEmpty(jsonForFileVariable)) {
+					variables.put(is.idega.idegaweb.egov.bpm.BPMConstants.BPM2_VARIABLE_NAME_ADDITIONALLY_ADDED_FILES, jsonForFileVariable);
+				}
 			}
 
 			//**** Submit a new task ****
 
-			if (piW == null || variables == null) {
+			if (piW == null || MapUtil.isEmpty(variables)) {
 				LOGGER.warning("Process instance (" + piW + ") and/or variables (" + variables + ") not provided. Can not submit task " + formName);
 				return success;
 			}
@@ -1168,6 +1204,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				LOGGER.log(Level.WARNING, "Could not get the admin user from iwma.", eAdminUser);
 			}
 
+			IWContextMockUp iwc = new IWContextMockUp();
+			iwc.setLoggedInUser(adminUser);
 			TaskInstanceW tiW = piW.doSubmitTask(iwc, formName, variables, adminUser);
 
 			if (tiW != null) {
