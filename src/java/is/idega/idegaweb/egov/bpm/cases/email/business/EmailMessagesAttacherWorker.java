@@ -44,24 +44,23 @@ import com.idega.block.email.business.EmailsParsersProvider;
 import com.idega.block.email.client.business.ApplicationEmailEvent;
 import com.idega.block.email.client.business.EmailParams;
 import com.idega.block.email.parser.EmailParser;
-import com.idega.block.process.business.CaseBusiness;
 import com.idega.block.process.data.Case;
 import com.idega.block.process.variables.Variable;
 import com.idega.block.process.variables.VariableDataType;
 import com.idega.bpm.BPMConstants;
-import com.idega.business.IBOLookup;
-import com.idega.business.IBOLookupException;
-import com.idega.business.IBORuntimeException;
 import com.idega.core.accesscontrol.business.AccessController;
+import com.idega.core.business.DefaultSpringBean;
 import com.idega.core.contact.data.Email;
 import com.idega.core.converter.util.StringConverterUtility;
 import com.idega.core.dao.ICFileDAO;
+import com.idega.core.file.data.bean.ICFile;
 import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.data.IDOLookup;
 import com.idega.data.SimpleQuerier;
 import com.idega.idegaweb.IWMainApplication;
 import com.idega.idegaweb.IWMainApplicationSettings;
+import com.idega.idegaweb.IWResourceBundle;
 import com.idega.idegaweb.egov.bpm.data.dao.CasesBPMDAO;
 import com.idega.jbpm.BPMContext;
 import com.idega.jbpm.JbpmCallback;
@@ -77,7 +76,6 @@ import com.idega.jbpm.variables.impl.BinaryVariableImpl;
 import com.idega.jbpm.view.View;
 import com.idega.jbpm.view.ViewSubmission;
 import com.idega.presentation.IWContext;
-import com.idega.repository.RepositoryService;
 import com.idega.repository.jcr.JCRItem;
 import com.idega.user.data.User;
 import com.idega.util.ArrayUtil;
@@ -108,7 +106,7 @@ import is.idega.idegaweb.egov.cases.data.GeneralCaseHome;
 
 @Service
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
-public class EmailMessagesAttacherWorker implements Runnable {
+public class EmailMessagesAttacherWorker extends DefaultSpringBean implements Runnable {
 
 	private static final Logger LOGGER = Logger.getLogger(EmailMessagesAttacherWorker.class.getName());
 
@@ -129,14 +127,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 	private BinaryVariablesHandler attachmentsHandler;
 
 	@Autowired
-	private RepositoryService repository;
-
-	@Autowired
 	private CasesBPMDAO casesBPMDAO;
 
 	@Autowired
 	private ICFileDAO fileDAO;
-
 
 	public EmailMessagesAttacherWorker(ApplicationEmailEvent emailEvent) {
 		this.emailEvent = emailEvent;
@@ -791,12 +785,29 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return variablesHandler;
 	}
 
+	private class AttachMessageResult {
+
+		boolean success;
+
+		Collection<JCRItem> files;
+
+		private AttachMessageResult(boolean success) {
+			super();
+
+			this.success = success;
+		}
+
+		private AttachMessageResult(boolean success, Collection<JCRItem> files) {
+			this(success);
+
+			this.success = success;
+			this.files = files;
+		}
+
+	}
+
 	private boolean doAttachMessageBPM2(BPMEmailMessage message) {
-
-		boolean result = false;
-
 		//*** Validation ***
-
 		if (message == null || message.isParsed()) {
 			return true;
 		}
@@ -913,7 +924,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		//*** Create a new task with the email data ***
 
-		result = doSubmitAttachDocumentsTask(
+		AttachMessageResult result = doSubmitAttachDocumentsTask(
 				procInstId,
 				procInstUUID,
 				subject,
@@ -925,20 +936,32 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				settings,
 				message
 		);
-
-		message.setParsed(result);
+		if (result != null && result.success) {
+			message.setParsed(true);
+		}
 
 		//*** Send email message to the handler, if needed ***
 		try {
 			boolean resendAutomaticallyParsedEmailToHandler = settings.getBoolean("msg.resend_automaticly_parsed_message_to_handler", true);
 			if (resendAutomaticallyParsedEmailToHandler) {
-				resendMessageToHandler(procInstId, procInstUUID, subject, text, senderPersonalName, fromAddress, attachmentBytes, fileAttachments, settings);
+				resendMessageToHandler(
+						procInstId,
+						procInstUUID,
+						subject,
+						text,
+						senderPersonalName,
+						fromAddress,
+						attachmentBytes,
+						fileAttachments,
+						settings,
+						result == null ? null : result.files
+				);
 			}
 		} catch (Exception eRS) {
 			LOGGER.log(Level.WARNING, "Could not resend the email message to the handler. Proc instance: " + (StringUtil.isEmpty(procInstUUID) ? procInstId : procInstUUID), eRS);
 		}
 
-		return result;
+		return result == null ? false : result.success;
 	}
 
 	private void resendMessageToHandler(
@@ -950,9 +973,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			String fromAddress,
 			Map<String, byte[]> attachments,
 			Collection<File> attachedFiles,
-			IWMainApplicationSettings settings
+			IWMainApplicationSettings settings,
+			Collection<JCRItem> attachedFilesToTask
 	) {
-
 		// *** Get the case ***
 		ProcessInstanceW piW = null;
 		try {
@@ -992,7 +1015,8 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 		Case theCase = null;
 		try {
-			theCase = getCaseBusiness().getCase(caseId);
+			CasesBusiness caseBusiness = getServiceInstance(CasesBusiness.class);
+			theCase = caseBusiness.getCase(caseId);
 		} catch (Exception e) {}
 		if (theCase == null) {
 			LOGGER.warning("Could not resend the email message to the handler. Case is not found by procInstUUID: " + procInstUUID + " OR processInstanceId: " + processInstanceId);
@@ -1034,14 +1058,20 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				return;
 			}
 
-			List<JCRItem> filesToAttachJcriItems = new ArrayList<>();
-			if (
-					ListUtil.isEmpty(attachedFiles)
-					&& !MapUtil.isEmpty(attachments)
-			) {
-				filesToAttachJcriItems = addAttachmentsAsFiles(attachments);
+			File[] fileArray = null;
+			if (!ListUtil.isEmpty(attachedFilesToTask)) {
+				fileArray = ArrayUtil.convertListToArray(attachedFilesToTask);
 			}
-			File[] fileArray = ListUtil.isEmpty(filesToAttachJcriItems) ? null : ArrayUtil.convertListToArray(filesToAttachJcriItems);
+			if (ArrayUtil.isEmpty(fileArray)) {
+				List<JCRItem> filesToAttachJcriItems = new ArrayList<>();
+				if (
+						ListUtil.isEmpty(attachedFiles)
+						&& !MapUtil.isEmpty(attachments)
+				) {
+					filesToAttachJcriItems = addAttachmentsAsFiles(attachments);
+				}
+				fileArray = ListUtil.isEmpty(filesToAttachJcriItems) ? null : ArrayUtil.convertListToArray(filesToAttachJcriItems);
+			}
 
 			//Improve text
 			if (!StringUtil.isEmpty(text)) {
@@ -1142,9 +1172,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return fileAttachments;
 	}
 
-
-
-	private boolean doSubmitAttachDocumentsTask(
+	private AttachMessageResult doSubmitAttachDocumentsTask(
 			Long processInstanceId,
 			String procInstUUID,
 			String subject,
@@ -1159,11 +1187,12 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		boolean success = false;
 		String formName = CoreConstants.EMPTY;
 		Map<String, Object> variables = new HashMap<>();
+		Collection<JCRItem> attachedFilesToTask = null;
 
 		try {
 			if (processInstanceId == null && StringUtil.isEmpty(procInstUUID)) {
 				LOGGER.warning("Failed to submit task " + formName + " for found email message: " + message + ". Proc. inst. is null");
-				return false;
+				return new AttachMessageResult(false);
 			}
 
 			formName = settings.getProperty(
@@ -1183,37 +1212,56 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			}
 			if (piW == null) {
 				LOGGER.warning("Failed to submit task " + formName + " for found email message: " + message + ". Proc. inst. is null");
-				return false;
+				return new AttachMessageResult(false);
 			}
 
-			boolean fromApplicant = false;
-			Collection<com.idega.bpm.model.VariableInstance> vars = StringUtil.isEmpty(fromAddress) ? null : piW.getVariables(Arrays.asList(ProcessConstants.OWNER_EMAIL_ADDRESS));
+			String toAddress = message == null ? null : message.getToAddress();
+			boolean fromApplicant = false, toApplicant = false;
+			Collection<com.idega.bpm.model.VariableInstance> vars = piW.getVariables(
+					Arrays.asList(
+							ProcessConstants.OWNER_EMAIL_ADDRESS,
+							"string_originalApplicantEmailAddress"
+					)
+			);
 			if (!ListUtil.isEmpty(vars)) {
 				com.idega.bpm.model.VariableInstance var = vars.iterator().next();
 				Object value = var.getRawValue();
-				if (value != null && value.toString().equalsIgnoreCase(fromAddress)) {
+
+				if (value != null && !StringUtil.isEmpty(fromAddress) && value.toString().equalsIgnoreCase(fromAddress)) {
 					fromApplicant = true;
+				}
+
+				if (value != null && !StringUtil.isEmpty(toAddress) && (value.toString().equalsIgnoreCase(toAddress) || toAddress.toLowerCase().indexOf(value.toString().toLowerCase()) != -1)) {
+					toApplicant = true;
 				}
 			}
 
 			//*** Prepare variables for the task ***
 			String uuid = UUID.randomUUID().toString();
 			String uploadPath = getBinaryVariablesHandler().getFolderForBinaryVariable(uuid);
-			String jsonForFileVariable = getJsonForFileVariables(attachments, uploadPath);
+			UploadedFiles uploadedFiles = getJsonForFileVariables(attachments, uploadPath);
+			String jsonForFileVariable = uploadedFiles == null ? null : uploadedFiles.json;
+			attachedFilesToTask = uploadedFiles == null ? null : uploadedFiles.files;
+
+			IWResourceBundle iwrb = getResourceBundle(getBundle(is.idega.idegaweb.egov.bpm.BPMConstants.IW_BUNDLE_IDENTIFIER));
 
 			String formFromApplicant = fromApplicant ? settings.getProperty("email_parser.from_appl_form") : null;
-			if (fromApplicant && !StringUtil.isEmpty(formFromApplicant)) {
-				formName = formFromApplicant;
+			String formToApplicant = toApplicant ? settings.getProperty("email_parser.to_appl_form") : null;
+			if (
+					(fromApplicant && !StringUtil.isEmpty(formFromApplicant)) ||
+					(toApplicant && !StringUtil.isEmpty(formToApplicant))
+			) {
+				formName = fromApplicant ? formFromApplicant : formToApplicant;
 
 				String finalText = CoreConstants.EMPTY;
 				if (!StringUtil.isEmpty(senderPersonalName)) {
 					finalText = senderPersonalName;
 				}
-				if (StringUtil.isEmpty(fromAddress)) {
-					finalText = finalText.concat("\n");
-				} else {
-					finalText = finalText.concat(" <").concat(fromAddress).concat(">\n");
+				if (!StringUtil.isEmpty(fromAddress)) {
+					finalText = finalText.concat(" <").concat(fromAddress).concat(">");
 				}
+				finalText = finalText.concat(" ").concat(iwrb.getLocalizedString("wrote", "wrote", false)).concat(":\n");
+
 				if (!StringUtil.isEmpty(subject)) {
 					finalText = finalText.concat(subject).concat(">\n\n");
 				}
@@ -1221,9 +1269,9 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					finalText = finalText.concat(text);
 				}
 
-				variables.put(settings.getProperty("email_parser.from_appl_text_var"), finalText);
+				variables.put(settings.getProperty("email_parser." + (fromApplicant ? "from" : "to") + "_appl_text_var"), finalText);
 				if (!StringUtil.isEmpty(jsonForFileVariable)) {
-					variables.put(settings.getProperty("email_parser.from_appl_files_var"), jsonForFileVariable);
+					variables.put(settings.getProperty("email_parser." + (fromApplicant ? "from" : "to") + "_appl_files_var"), jsonForFileVariable);
 				}
 
 			} else {
@@ -1244,7 +1292,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 			if (piW == null || MapUtil.isEmpty(variables)) {
 				LOGGER.warning("Process instance (" + piW + ") and/or variables (" + variables + ") not provided. Can not submit task " + formName);
-				return success;
+				return new AttachMessageResult(success);
 			}
 
 			com.idega.user.data.bean.User adminUser = null;
@@ -1273,7 +1321,7 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			LOGGER.log(Level.WARNING, error, t);
 			CoreUtil.sendExceptionNotification(error, t);
 		}
-		return success;
+		return new AttachMessageResult(success, attachedFilesToTask);
 	}
 
 	TaskInstanceW getSubmittedTaskInstance(ProcessInstanceW piw, String taskName) {
@@ -1382,9 +1430,25 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		return attachmentsHandler;
 	}
 
-	private String getJsonForFileVariables(Map<String, byte[]> attachments, String filesFolder) {
+	private class UploadedFiles {
+
+		String json = null;
+
+		Collection<JCRItem> files;
+
+		private UploadedFiles(String json, Collection<JCRItem> files) {
+			super();
+
+			this.json = json;
+			this.files = files;
+		}
+
+	}
+
+	private UploadedFiles getJsonForFileVariables(Map<String, byte[]> attachments, String filesFolder) {
 		String json = null;
 		List<String> data = null;
+		Collection<JCRItem> files = new ArrayList<>();
 
 		try {
 			if (StringUtil.isEmpty(filesFolder) || MapUtil.isEmpty(attachments)) {
@@ -1427,12 +1491,26 @@ public class EmailMessagesAttacherWorker implements Runnable {
 					}
 					if (file == null) {
 						try {
-							getRepositoryService().uploadFileAndCreateFoldersFromStringAsRoot(filesFolder, fileName, fileIs, mimeType);
-							file = getRepositoryService().getRepositoryItemAsRootUser(binVar.getIdentifier());
+							if (getRepositoryService().uploadFileAndCreateFoldersFromStringAsRoot(filesFolder, fileName, fileIs, mimeType)) {
+								file = getRepositoryService().getRepositoryItemAsRootUser(binVar.getIdentifier());
+							}
 						} catch (Exception e) {}
 					}
-					Long length = file == null ? null : file.getLength();
-					if (length == null) {
+
+					if (file == null) {
+						getLogger().warning("Failed to add file " + fileName);
+						continue;
+					}
+
+					files.add(file);
+
+					ICFile icFile = fileDAO.findByUri(file.getPath());
+					if (icFile == null) {
+						icFile = fileDAO.createFile(file.getPath());
+					}
+
+					Long length = file.getLength();
+					if (length == null || length <= 0) {
 						try {
 							length = getRepositoryService().getLength(binVar.getIdentifier(), IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser());
 						} catch (Exception e) {}
@@ -1453,21 +1531,11 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			}
 
 			json = getBinaryVariablesHandler().getBinVarJSONConverter().convertToJSON(data);
-
 		} catch (Exception e) {
 			LOGGER.log(Level.WARNING, "Error while trying to create json from process file variables.", e);
 		}
-		return json;
+		return new UploadedFiles(json, files);
 	}
-
-	private RepositoryService getRepositoryService() {
-		if (repository == null) {
-			ELUtil.getInstance().autowire(this);
-		}
-
-		return repository;
-	}
-
 
 	private CasesBPMDAO getCasesBPMDAO() {
 		if (casesBPMDAO == null) {
@@ -1475,22 +1543,5 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 		return casesBPMDAO;
 	}
-
-	private ICFileDAO getFileDAO() {
-		if (fileDAO == null) {
-			ELUtil.getInstance().autowire(this);
-		}
-		return fileDAO;
-	}
-
-	private CaseBusiness getCaseBusiness() {
-		try {
-			return IBOLookup.getServiceInstance(IWMainApplication.getDefaultIWApplicationContext(), CasesBusiness.class);
-		}
-		catch (IBOLookupException ile) {
-			throw new IBORuntimeException(ile);
-		}
-	}
-
 
 }
