@@ -112,6 +112,8 @@ public class EmailMessagesAttacherWorker extends DefaultSpringBean implements Ru
 
 	private static final String FETCH_EMAILS_TASK_NAME = "Email";
 
+	private static final char[] ALLOWED_CHARACTERS_IN_FILE_NAME = new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_', '.'};
+
 	@Autowired
 	private BPMContext idegaJbpmContext;
 
@@ -1243,6 +1245,11 @@ public class EmailMessagesAttacherWorker extends DefaultSpringBean implements Ru
 			String jsonForFileVariable = uploadedFiles == null ? null : uploadedFiles.json;
 			attachedFilesToTask = uploadedFiles == null ? null : uploadedFiles.files;
 
+			senderPersonalName = StringUtil.removeEmojis(senderPersonalName);
+			fromAddress = StringUtil.removeEmojis(fromAddress);
+			subject = StringUtil.removeEmojis(subject);
+			text = StringUtil.removeEmojis(text);
+
 			IWResourceBundle iwrb = getResourceBundle(getBundle(is.idega.idegaweb.egov.bpm.BPMConstants.IW_BUNDLE_IDENTIFIER));
 
 			String formFromApplicant = fromApplicant ? settings.getProperty("email_parser.from_appl_form") : null;
@@ -1263,10 +1270,14 @@ public class EmailMessagesAttacherWorker extends DefaultSpringBean implements Ru
 				finalText = finalText.concat(" ").concat(iwrb.getLocalizedString("wrote", "wrote", false)).concat(":\n");
 
 				if (!StringUtil.isEmpty(subject)) {
-					finalText = finalText.concat(subject).concat(">\n\n");
+					finalText = finalText.concat(subject).concat("\n\n");
 				}
 				if (!StringUtil.isEmpty(text)) {
+					text = settings.getBoolean("email_parser.html_text_to_plain_text", true) ?
+							StringUtil.doConvertHtmlToPlainText(text) :
+							text;
 					finalText = finalText.concat(text);
+					finalText = StringUtil.removeEmojis(finalText);
 				}
 
 				variables.put(settings.getProperty("email_parser." + (fromApplicant ? "from" : "to") + "_appl_text_var"), finalText);
@@ -1468,6 +1479,8 @@ public class EmailMessagesAttacherWorker extends DefaultSpringBean implements Ru
 						&& entry.getValue() != null
 				) {
 					String fileName = entry.getKey();
+					fileName = StringHandler.stripNonRomanCharacters(fileName, ALLOWED_CHARACTERS_IN_FILE_NAME);
+
 					InputStream fileIs = new ByteArrayInputStream(entry.getValue());
 
 					BinaryVariable binVar = new BinaryVariableImpl();
