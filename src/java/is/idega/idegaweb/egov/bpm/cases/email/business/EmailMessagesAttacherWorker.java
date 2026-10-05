@@ -55,6 +55,7 @@ import com.idega.business.IBORuntimeException;
 import com.idega.core.accesscontrol.business.AccessController;
 import com.idega.core.contact.data.Email;
 import com.idega.core.converter.util.StringConverterUtility;
+import com.idega.core.dao.ICFileDAO;
 import com.idega.core.file.util.MimeTypeUtil;
 import com.idega.core.messaging.EmailMessage;
 import com.idega.data.IDOLookup;
@@ -132,6 +133,10 @@ public class EmailMessagesAttacherWorker implements Runnable {
 
 	@Autowired
 	private CasesBPMDAO casesBPMDAO;
+
+	@Autowired
+	private ICFileDAO fileDAO;
+
 
 	public EmailMessagesAttacherWorker(ApplicationEmailEvent emailEvent) {
 		this.emailEvent = emailEvent;
@@ -1029,13 +1034,14 @@ public class EmailMessagesAttacherWorker implements Runnable {
 				return;
 			}
 
+			List<JCRItem> filesToAttachJcriItems = new ArrayList<>();
 			if (
 					ListUtil.isEmpty(attachedFiles)
 					&& !MapUtil.isEmpty(attachments)
 			) {
-				attachedFiles = addAttachmentsAsFiles(attachments);
+				filesToAttachJcriItems = addAttachmentsAsFiles(attachments);
 			}
-			File[] fileArray = ListUtil.isEmpty(attachedFiles) ? null : ArrayUtil.convertListToArray(attachedFiles);
+			File[] fileArray = ListUtil.isEmpty(filesToAttachJcriItems) ? null : ArrayUtil.convertListToArray(filesToAttachJcriItems);
 
 			//Improve text
 			if (!StringUtil.isEmpty(text)) {
@@ -1065,32 +1071,78 @@ public class EmailMessagesAttacherWorker implements Runnable {
 		}
 	}
 
-	private List<File> addAttachmentsAsFiles(Map<String, byte[]> attachments) {
+	private List<JCRItem> addAttachmentsAsFiles(Map<String, byte[]> attachments) {
 		if (attachments == null || attachments.isEmpty()) {
 			return null;
 		}
 
-		List<File> fileAttachments = new ArrayList<>();
-		String tmpDir = System.getProperty("java.io.tmpdir");
+		String uuid = UUID.randomUUID().toString();
+		String uploadPath = getBinaryVariablesHandler().getFolderForBinaryVariable(uuid);
+		if (!uploadPath.endsWith(CoreConstants.SLASH)) {
+			uploadPath = uploadPath.concat(CoreConstants.SLASH);
+		}
+		List<JCRItem> fileAttachments = new ArrayList<>();
 
-		for (String name: attachments.keySet()) {
-			File attachment = null;
-			InputStream stream = new ByteArrayInputStream(attachments.get(name));
-			try {
-				attachment = new File(tmpDir.concat(File.separator).concat(name));
-				if (!attachment.exists()) {
-					attachment.createNewFile();
+		for (Map.Entry<String, byte[]> entry : attachments.entrySet()) {
+			if (
+					entry != null
+					&& !StringUtil.isEmpty(entry.getKey())
+					&& entry.getValue() != null
+			) {
+				String fileName = entry.getKey();
+				InputStream fileIs = new ByteArrayInputStream(entry.getValue());
+
+				BinaryVariable binVar = new BinaryVariableImpl();
+
+				binVar.setFileName(fileName);
+				binVar.setDate(new Date(System.currentTimeMillis()));
+
+				binVar.setIdentifier(uploadPath + fileName);
+
+				binVar.setDescription(fileName);
+				binVar.setStorageType("repository");
+
+				String mimeType = MimeTypeUtil.resolveMimeTypeFromFileName(fileName);
+				binVar.setMimeType(mimeType);
+
+				Map<String, Object> metadata = new HashMap<>();
+				metadata.put(JBPMConstants.OVERWRITE, Boolean.FALSE);
+				metadata.put(JBPMConstants.PATH_IN_REPOSITORY, uploadPath + fileName);
+				binVar.setMetadata(metadata);
+				binVar.setPersistedToRepository(true);
+
+				JCRItem file = null;
+				try {
+					file = getRepositoryService().getRepositoryItemAsRootUser(binVar.getIdentifier());
+				} catch (Exception e) {
+					LOGGER.log(Level.WARNING, "Error getting file: " + binVar.getIdentifier(), e);
 				}
-				FileUtil.streamToFile(stream, attachment);
-				fileAttachments.add(attachment);
-			} catch(IOException e) {
-				LOGGER.log(Level.WARNING, "Could not put the files into the list while resending the email message to the handler.", e);
-			} finally {
-				IOUtil.closeInputStream(stream);
+				if (file == null) {
+					try {
+						getRepositoryService().uploadFileAndCreateFoldersFromStringAsRoot(uploadPath, fileName, fileIs, mimeType);
+						file = getRepositoryService().getRepositoryItemAsRootUser(binVar.getIdentifier());
+					} catch (Exception e) {}
+				}
+				Long length = file == null ? null : file.getLength();
+				if (length == null) {
+					try {
+						length = getRepositoryService().getLength(binVar.getIdentifier(), IWMainApplication.getDefaultIWMainApplication().getAccessController().getAdministratorUser());
+					} catch (Exception e) {}
+				}
+				if (length != null && length >= 0) {
+					binVar.setContentLength(length);
+				}
+				file.setReadable(true);
+				if (file != null) {
+					fileAttachments.add(file);
+				}
 			}
 		}
+
 		return fileAttachments;
 	}
+
+
 
 	private boolean doSubmitAttachDocumentsTask(
 			Long processInstanceId,
@@ -1422,6 +1474,13 @@ public class EmailMessagesAttacherWorker implements Runnable {
 			ELUtil.getInstance().autowire(this);
 		}
 		return casesBPMDAO;
+	}
+
+	private ICFileDAO getFileDAO() {
+		if (fileDAO == null) {
+			ELUtil.getInstance().autowire(this);
+		}
+		return fileDAO;
 	}
 
 	private CaseBusiness getCaseBusiness() {
