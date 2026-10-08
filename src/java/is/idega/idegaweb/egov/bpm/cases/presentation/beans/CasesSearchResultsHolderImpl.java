@@ -723,8 +723,7 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 			}
 
 			if (list) {
-				@SuppressWarnings("unchecked")
-				List<String> varValues = (List<String>) value;
+				List<?> varValues = (List<?>) value;
 				if (ListUtil.isEmpty(varValues)) {
 					continue;
 				}
@@ -740,7 +739,8 @@ public class CasesSearchResultsHolderImpl implements CasesSearchResultsHolder {
 
 					SXSSFCell cell = tmpRow.createCell(tmpCell);
 					cell.setCellStyle(normalStyle);
-					cell.setCellValue(varValues.get(j));
+					Object o = varValues.get(j);
+					cell.setCellValue(o == null ? CoreConstants.MINUS : String.valueOf(o));
 				}
 			} else {
 				SXSSFCell cell = row.createCell(cellIndex++);
